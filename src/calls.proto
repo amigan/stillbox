@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package stillbox.calls;
+
+import "google/protobuf/timestamp.proto";
+
+message Call {
+	CallMetadata metadata = 1;
+	bytes audio = 2;
+}
+
+message CallMetadata {
+	string id = 1;
+	google.protobuf.Timestamp timestamp = 2;
+	int32 talkgroup = 3;
+	string filename = 4;
+	string mime_type = 5;
+	repeated int64 frequencies = 6;
+	int64 frequency = 7;
+	repeated int32 patches = 8;
+	int32 source = 9;
+	repeated int32 sources = 10;
+	int32 system = 11;
+}
