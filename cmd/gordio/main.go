@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"dynatron.me/x/stillbox/pkg/gordio"
+	"dynatron.me/x/stillbox/pkg/gordio/admin"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 
 	"github.com/spf13/cobra"
@@ -24,7 +25,8 @@ func main() {
 		log.Fatal().Err(err).Msg("Config read failed")
 	}
 
-	rootCmd.AddCommand(gordio.Command(cfg))
+	cmds := []*cobra.Command{gordio.Command(cfg)}
+	rootCmd.AddCommand(append(cmds, admin.Command(cfg)...)...)
 
 	err = rootCmd.Execute()
 	if err != nil {

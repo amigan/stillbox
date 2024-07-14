@@ -1,0 +1,6 @@
+db:
+  driver: postgres
+  connect: 'postgres://postgres:password@localhost:5432/example'
+jwtsecret: 'super secret string'
+listen: ':3050'
+public: true

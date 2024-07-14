@@ -1,33 +1,37 @@
 package server
 
 import (
-	"log"
+	"context"
 	"net/http"
 
 	"dynatron.me/x/stillbox/pkg/gordio/config"
+	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/jackc/pgx/v5"
 )
 
 type Server struct {
 	conf *config.Config
+	db   *pgx.Conn
 	r    *chi.Mux
 	jwt  *jwtauth.JWTAuth
 }
 
 func New(cfg *config.Config) (*Server, error) {
+	db, err := database.NewClient(cfg.DB)
+	if err != nil {
+		return nil, err
+	}
+
 	r := chi.NewRouter()
 	srv := &Server{
 		conf: cfg,
+		db:   db,
 		r:    r,
 		jwt:  jwtauth.New("HS256", []byte(cfg.JWTSecret), nil),
 	}
-	_, tokenString, err := srv.jwt.Encode(map[string]interface{}{"user_id": 123})
-	if err != nil {
-		panic(err)
-	}
-	log.Printf("DEBUG token is %s", tokenString)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -38,7 +42,8 @@ func New(cfg *config.Config) (*Server, error) {
 }
 
 func (s *Server) Go() error {
+	defer s.db.Close(context.Background())
+
 	http.ListenAndServe(s.conf.Listen, s.r)
 	return nil
 }
-
