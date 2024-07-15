@@ -6,6 +6,10 @@ WHERE id = $1 LIMIT 1;
 SELECT * FROM users
 WHERE username = $1 LIMIT 1;
 
+-- name: GetUserByUID :one
+SELECT * FROM users
+WHERE id = $1 LIMIT 1;
+
 -- name: GetUsers :many
 SELECT * FROM users;
 
@@ -17,3 +21,9 @@ INSERT INTO users (
 		is_admin
 	) VALUES ($1, $2, $3, $4)
 RETURNING *;
+
+-- name: DeleteUser :exec
+DELETE FROM users WHERE username = $1;
+
+-- name: UpdatePassword :exec
+UPDATE users SET password = $2 WHERE username = $1;

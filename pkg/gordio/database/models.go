@@ -11,11 +11,43 @@ import (
 type Apikey struct {
 	ID     int32
 	Owner  pgtype.Int4
-	Apikey string
+	ApiKey string
 }
 
 type Call struct {
-	ID pgtype.UUID
+	ID          pgtype.UUID
+	Submitter   int32
+	System      int32
+	Talkgroup   int32
+	Date        pgtype.Timestamp
+	AudioName   pgtype.Text
+	AudioBlob   []byte
+	AudioType   pgtype.Text
+	AudioUrl    pgtype.Text
+	Frequency   pgtype.Int4
+	Frequencies []byte
+	Patches     []byte
+	TgLabel     pgtype.Text
+	Source      pgtype.Text
+}
+
+type Setting struct {
+	Name      string
+	UpdatedBy pgtype.Int4
+	Value     []byte
+}
+
+type System struct {
+	ID   int32
+	Name string
+}
+
+type Talkgroup struct {
+	ID        int32
+	System    int32
+	Name      pgtype.Text
+	Frequency pgtype.Int4
+	GroupID   pgtype.Int4
 }
 
 type User struct {

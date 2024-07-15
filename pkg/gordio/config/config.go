@@ -10,6 +10,7 @@ type Config struct {
 	JWTSecret string `yaml:"jwtsecret"`
 	Listen    string `yaml:"listen"`
 	Public    bool   `yaml:"public"`
+	Domain    string `yaml:"domain"`
 }
 
 type DB struct {
