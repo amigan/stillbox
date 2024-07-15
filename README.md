@@ -1,3 +1,3 @@
 # stillbox
 
-A Rust scanner call server, with the Calls webapp.
+A Golang scanner call server, with the Calls webapp.
