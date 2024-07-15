@@ -1,20 +1,18 @@
 package server
 
 import (
-	"context"
 	"net/http"
 
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth/v5"
-	"github.com/jackc/pgx/v5"
 )
 
 type Server struct {
 	conf *config.Config
-	db   *pgx.Conn
+	db   database.Conn
 	r    *chi.Mux
 	jwt  *jwtauth.JWTAuth
 }
@@ -42,7 +40,7 @@ func New(cfg *config.Config) (*Server, error) {
 }
 
 func (s *Server) Go() error {
-	defer s.db.Close(context.Background())
+	defer s.db.Close()
 
 	http.ListenAndServe(s.conf.Listen, s.r)
 	return nil

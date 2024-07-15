@@ -25,8 +25,8 @@ func main() {
 		log.Fatal().Err(err).Msg("Config read failed")
 	}
 
-	cmds := []*cobra.Command{gordio.Command(cfg)}
-	rootCmd.AddCommand(append(cmds, admin.Command(cfg)...)...)
+	cmds := append([]*cobra.Command{gordio.Command(cfg)}, admin.Command(cfg)...)
+	rootCmd.AddCommand(cmds...)
 
 	err = rootCmd.Execute()
 	if err != nil {

@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
@@ -12,6 +14,7 @@ import (
 
 func (s *Server) setupRoutes() {
 	r := s.r
+	r.Use(middleware.WithValue(database.DBCTXKeyValue, s.db))
 
 	r.Group(func(r chi.Router) {
 		r.Use(jwtauth.Verifier(s.jwt))
