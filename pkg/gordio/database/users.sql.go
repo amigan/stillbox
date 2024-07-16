@@ -11,6 +11,37 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createAPIKey = `-- name: CreateAPIKey :one
+INSERT INTO api_keys(
+	owner,
+	created_at,
+	expires,
+	disabled,
+	api_key
+	) VALUES ($1, NOW(), $2, $3, gen_random_uuid())
+RETURNING id, owner, created_at, expires, disabled, api_key
+`
+
+type CreateAPIKeyParams struct {
+	Owner    pgtype.Int4
+	Expires  pgtype.Timestamp
+	Disabled pgtype.Bool
+}
+
+func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) (ApiKey, error) {
+	row := q.db.QueryRow(ctx, createAPIKey, arg.Owner, arg.Expires, arg.Disabled)
+	var i ApiKey
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.CreatedAt,
+		&i.Expires,
+		&i.Disabled,
+		&i.ApiKey,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
 		username,
@@ -45,6 +76,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Prefs,
 	)
 	return i, err
+}
+
+const deleteAPIKey = `-- name: DeleteAPIKey :exec
+DELETE FROM api_keys WHERE api_key = $1
+`
+
+func (q *Queries) DeleteAPIKey(ctx context.Context, apiKey pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAPIKey, apiKey)
+	return err
 }
 
 const deleteUser = `-- name: DeleteUser :exec

@@ -27,3 +27,16 @@ DELETE FROM users WHERE username = $1;
 
 -- name: UpdatePassword :exec
 UPDATE users SET password = $2 WHERE username = $1;
+
+-- name: CreateAPIKey :one
+INSERT INTO api_keys(
+	owner,
+	created_at,
+	expires,
+	disabled,
+	api_key
+	) VALUES ($1, NOW(), $2, $3, gen_random_uuid())
+RETURNING *;
+
+-- name: DeleteAPIKey :exec
+DELETE FROM api_keys WHERE api_key = $1;

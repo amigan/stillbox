@@ -8,15 +8,18 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Apikey struct {
-	ID     int32
-	Owner  pgtype.Int4
-	ApiKey string
+type ApiKey struct {
+	ID        int32
+	Owner     pgtype.Int4
+	CreatedAt pgtype.Timestamp
+	Expires   pgtype.Timestamp
+	Disabled  pgtype.Bool
+	ApiKey    pgtype.UUID
 }
 
 type Call struct {
 	ID          pgtype.UUID
-	Submitter   int32
+	Submitter   pgtype.Int4
 	System      int32
 	Talkgroup   int32
 	Date        pgtype.Timestamp
@@ -29,6 +32,23 @@ type Call struct {
 	Patches     []byte
 	TgLabel     pgtype.Text
 	Source      pgtype.Text
+	Transcript  pgtype.Text
+}
+
+type Incident struct {
+	ID          pgtype.UUID
+	Name        string
+	Description pgtype.Text
+	StartTime   pgtype.Timestamp
+	EndTime     pgtype.Timestamp
+	Location    []byte
+	Metadata    []byte
+}
+
+type IncidentsCall struct {
+	IncidentID pgtype.UUID
+	CallID     pgtype.UUID
+	Notes      []byte
 }
 
 type Setting struct {
@@ -43,11 +63,13 @@ type System struct {
 }
 
 type Talkgroup struct {
-	ID        int32
-	System    int32
-	Name      pgtype.Text
-	Frequency pgtype.Int4
-	GroupID   pgtype.Int4
+	ID          int32
+	System      int32
+	Name        pgtype.Text
+	Frequency   pgtype.Int4
+	GroupID     pgtype.Int4
+	AutoCreated pgtype.Bool
+	Metadata    []byte
 }
 
 type User struct {
