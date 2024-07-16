@@ -42,12 +42,13 @@ func (s *Server) Login(ctx context.Context, username, password string) (token st
 	}
 
 	if found == nil {
+		_ = bcrypt.CompareHashAndPassword([]byte("lol@timing"), []byte(password))
 		return "", ErrLoginFailed
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(found.Password), []byte(password))
-	if err != nil {
-		return "", ErrLoginFailed
+	} else {
+		err = bcrypt.CompareHashAndPassword([]byte(found.Password), []byte(password))
+		if err != nil {
+			return "", ErrLoginFailed
+		}
 	}
 
 	return s.NewToken(found.ID), nil
