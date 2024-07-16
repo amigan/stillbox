@@ -26,7 +26,7 @@ var (
 )
 
 func (s *Server) Login(ctx context.Context, username, password string) (token string, err error) {
-	q := database.New(database.FromCtx(ctx))
+	q := database.New(database.Tx(ctx))
 	users, err := q.GetUsers(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("getUsers failed")
