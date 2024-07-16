@@ -37,10 +37,6 @@ func ReadConfig(opts ...ConfigOption) (*Config, error) {
 		opt(o)
 	}
 
-	if o.configPath == "" {
-		o.configPath = "config.yaml"
-	}
-
 	cfgBytes, err := os.ReadFile(o.configPath)
 	if err != nil {
 		return nil, err

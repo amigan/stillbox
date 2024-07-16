@@ -19,8 +19,19 @@ func main() {
 	rootCmd := cobra.Command{
 		Use: gordio.AppName,
 	}
+	rootCmd.PersistentFlags().StringP("config", "c", "config.yaml", "config file")
+	
+	err := rootCmd.ParseFlags(os.Args)
+	if err != nil {
+		log.Fatal().Err(err).Msg("parsing flags")
+	}
 
-	cfg, err := config.ReadConfig()
+	cfgPath, err := rootCmd.PersistentFlags().GetString("config")
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed parsing config path")
+	}
+
+	cfg, err := config.ReadConfig(config.WithConfigPath(cfgPath))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Config read failed")
 	}
