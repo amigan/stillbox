@@ -10,7 +10,6 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -46,8 +45,8 @@ type DBCtxKey string
 
 const DBCTXKeyValue DBCtxKey = "dbctx"
 
-func Tx(ctx context.Context) pgx.Tx {
-	c, ok := ctx.Value(DBCTXKeyValue).(pgx.Tx)
+func FromCtx(ctx context.Context) Conn {
+	c, ok := ctx.Value(DBCTXKeyValue).(Conn)
 	if !ok {
 		panic("no DB in context")
 	}
@@ -55,6 +54,6 @@ func Tx(ctx context.Context) pgx.Tx {
 	return c
 }
 
-func CtxWithTx(ctx context.Context, conn pgx.Tx) context.Context {
+func CtxWithDB(ctx context.Context, conn Conn) context.Context {
 	return context.WithValue(ctx, DBCTXKeyValue, conn)
 }
