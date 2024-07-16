@@ -22,7 +22,7 @@ type Call struct {
 	Submitter   pgtype.Int4
 	System      int32
 	Talkgroup   int32
-	Date        pgtype.Timestamp
+	CallDate    pgtype.Timestamp
 	AudioName   pgtype.Text
 	AudioBlob   []byte
 	AudioType   pgtype.Text

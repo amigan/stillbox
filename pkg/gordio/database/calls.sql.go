@@ -17,7 +17,7 @@ INSERT INTO calls (
 	submitter,
 	system,
 	talkgroup,
-	date,
+	call_date,
 	audio_name,
 	audio_blob,
 	audio_type,
@@ -28,14 +28,14 @@ INSERT INTO calls (
 	tg_label,
 	source
 	) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
-RETURNING id, submitter, system, talkgroup, date, audio_name, audio_blob, audio_type, audio_url, frequency, frequencies, patches, tg_label, source, transcript
+RETURNING id, submitter, system, talkgroup, call_date, audio_name, audio_blob, audio_type, audio_url, frequency, frequencies, patches, tg_label, source, transcript
 `
 
 type AddCallParams struct {
 	Submitter   pgtype.Int4
 	System      int32
 	Talkgroup   int32
-	Date        pgtype.Timestamp
+	CallDate    pgtype.Timestamp
 	AudioName   pgtype.Text
 	AudioBlob   []byte
 	AudioType   pgtype.Text
@@ -52,7 +52,7 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (Call, error) 
 		arg.Submitter,
 		arg.System,
 		arg.Talkgroup,
-		arg.Date,
+		arg.CallDate,
 		arg.AudioName,
 		arg.AudioBlob,
 		arg.AudioType,
@@ -69,7 +69,7 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (Call, error) 
 		&i.Submitter,
 		&i.System,
 		&i.Talkgroup,
-		&i.Date,
+		&i.CallDate,
 		&i.AudioName,
 		&i.AudioBlob,
 		&i.AudioType,

@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS calls(
 	submitter INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
 	system INTEGER NOT NULL,
 	talkgroup INTEGER NOT NULL,
-	date TIMESTAMP NOT NULL,
+	call_date TIMESTAMP NOT NULL,
 	audio_name TEXT,
 	audio_blob BYTEA,
 	audio_type TEXT,

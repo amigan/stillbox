@@ -4,7 +4,7 @@ INSERT INTO calls (
 	submitter,
 	system,
 	talkgroup,
-	date,
+	call_date,
 	audio_name,
 	audio_blob,
 	audio_type,
