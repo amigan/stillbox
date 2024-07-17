@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS api_keys(
 	api_key UUID UNIQUE NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS api_keys_api_key ON api_keys(api_key);
+
 CREATE TABLE IF NOT EXISTS systems(
 	id INTEGER PRIMARY KEY,
 	name TEXT NOT NULL
