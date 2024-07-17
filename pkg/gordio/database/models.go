@@ -63,16 +63,16 @@ type System struct {
 }
 
 type Talkgroup struct {
-	ID          int32
 	System      int32
+	Tgid        int32
 	Name        pgtype.Text
 	Frequency   pgtype.Int4
-	Tgid        int32
 	AutoCreated pgtype.Bool
 	Metadata    []byte
 }
 
 type TalkgroupsTag struct {
+	SystemID    int32
 	TalkgroupID int32
 	Tags        []string
 }

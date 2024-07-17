@@ -22,23 +22,28 @@ func (q *Queries) GetTalkgroupTags(ctx context.Context, talkgroupID int32) ([]st
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
-SELECT talkgroup_id FROM talkgroups_tags
+SELECT system_id, talkgroup_id FROM talkgroups_tags
 WHERE tags && ARRAY[$1]
 `
 
-func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]int32, error) {
+type GetTalkgroupsWithAllTagsRow struct {
+	SystemID    int32
+	TalkgroupID int32
+}
+
+func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAllTagsRow, error) {
 	rows, err := q.db.Query(ctx, getTalkgroupsWithAllTags, tags)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []int32
+	var items []GetTalkgroupsWithAllTagsRow
 	for rows.Next() {
-		var talkgroup_id int32
-		if err := rows.Scan(&talkgroup_id); err != nil {
+		var i GetTalkgroupsWithAllTagsRow
+		if err := rows.Scan(&i.SystemID, &i.TalkgroupID); err != nil {
 			return nil, err
 		}
-		items = append(items, talkgroup_id)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -47,23 +52,28 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 }
 
 const getTalkgroupsWithAnyTags = `-- name: GetTalkgroupsWithAnyTags :many
-SELECT talkgroup_id FROM talkgroups_tags
+SELECT system_id, talkgroup_id FROM talkgroups_tags
 WHERE tags @> ARRAY[$1]
 `
 
-func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]int32, error) {
+type GetTalkgroupsWithAnyTagsRow struct {
+	SystemID    int32
+	TalkgroupID int32
+}
+
+func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAnyTagsRow, error) {
 	rows, err := q.db.Query(ctx, getTalkgroupsWithAnyTags, tags)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []int32
+	var items []GetTalkgroupsWithAnyTagsRow
 	for rows.Next() {
-		var talkgroup_id int32
-		if err := rows.Scan(&talkgroup_id); err != nil {
+		var i GetTalkgroupsWithAnyTagsRow
+		if err := rows.Scan(&i.SystemID, &i.TalkgroupID); err != nil {
 			return nil, err
 		}
-		items = append(items, talkgroup_id)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

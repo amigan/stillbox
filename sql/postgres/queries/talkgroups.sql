@@ -1,9 +1,9 @@
 -- name: GetTalkgroupsWithAnyTags :many
-SELECT talkgroup_id FROM talkgroups_tags
+SELECT system_id, talkgroup_id FROM talkgroups_tags
 WHERE tags @> ARRAY[$1];
 
 -- name: GetTalkgroupsWithAllTags :many
-SELECT talkgroup_id FROM talkgroups_tags
+SELECT system_id, talkgroup_id FROM talkgroups_tags
 WHERE tags && ARRAY[$1];
 
 -- name: GetTalkgroupTags :one
