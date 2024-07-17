@@ -73,8 +73,7 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 
 const setTalkgroupTags = `-- name: SetTalkgroupTags :exec
 INSERT INTO talkgroups_tags(talkgroup_id, tags) VALUES($1, $2)
-ON CONFLICT (talkgroup_id) DO UPDATE
-SET tags = $2
+ON CONFLICT (talkgroup_id) DO UPDATE SET tags = $2
 `
 
 type SetTalkgroupTagsParams struct {

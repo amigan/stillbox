@@ -84,16 +84,16 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (Call, error) 
 	return i, err
 }
 
-const updateCallTranscript = `-- name: UpdateCallTranscript :exec
+const setCallTranscript = `-- name: SetCallTranscript :exec
 UPDATE calls SET transcript = $2 WHERE id = $1
 `
 
-type UpdateCallTranscriptParams struct {
+type SetCallTranscriptParams struct {
 	ID         pgtype.UUID
 	Transcript pgtype.Text
 }
 
-func (q *Queries) UpdateCallTranscript(ctx context.Context, arg UpdateCallTranscriptParams) error {
-	_, err := q.db.Exec(ctx, updateCallTranscript, arg.ID, arg.Transcript)
+func (q *Queries) SetCallTranscript(ctx context.Context, arg SetCallTranscriptParams) error {
+	_, err := q.db.Exec(ctx, setCallTranscript, arg.ID, arg.Transcript)
 	return err
 }
