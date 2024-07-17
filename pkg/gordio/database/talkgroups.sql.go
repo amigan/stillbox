@@ -22,23 +22,23 @@ func (q *Queries) GetTalkgroupTags(ctx context.Context, talkgroupID int32) ([]st
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
-SELECT talkgroup_id, tags FROM talkgroups_tags
+SELECT talkgroup_id FROM talkgroups_tags
 WHERE tags && ARRAY[$1]
 `
 
-func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]TalkgroupsTag, error) {
+func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]int32, error) {
 	rows, err := q.db.Query(ctx, getTalkgroupsWithAllTags, tags)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []TalkgroupsTag
+	var items []int32
 	for rows.Next() {
-		var i TalkgroupsTag
-		if err := rows.Scan(&i.TalkgroupID, &i.Tags); err != nil {
+		var talkgroup_id int32
+		if err := rows.Scan(&talkgroup_id); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, talkgroup_id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -47,23 +47,23 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 }
 
 const getTalkgroupsWithAnyTags = `-- name: GetTalkgroupsWithAnyTags :many
-SELECT talkgroup_id, tags FROM talkgroups_tags
+SELECT talkgroup_id FROM talkgroups_tags
 WHERE tags @> ARRAY[$1]
 `
 
-func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]TalkgroupsTag, error) {
+func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]int32, error) {
 	rows, err := q.db.Query(ctx, getTalkgroupsWithAnyTags, tags)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []TalkgroupsTag
+	var items []int32
 	for rows.Next() {
-		var i TalkgroupsTag
-		if err := rows.Scan(&i.TalkgroupID, &i.Tags); err != nil {
+		var talkgroup_id int32
+		if err := rows.Scan(&talkgroup_id); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, talkgroup_id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
