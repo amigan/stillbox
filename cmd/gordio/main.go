@@ -20,7 +20,7 @@ func main() {
 		Use: gordio.AppName,
 	}
 	rootCmd.PersistentFlags().StringP("config", "c", "config.yaml", "config file")
-	
+
 	err := rootCmd.ParseFlags(os.Args)
 	if err != nil {
 		log.Fatal().Err(err).Msg("parsing flags")

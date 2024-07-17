@@ -68,11 +68,11 @@ func (s *Server) routeAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
-		Name: "jwt",
-		Value: tok,
+		Name:     "jwt",
+		Value:    tok,
 		HttpOnly: true,
-		Secure: true,
-		Domain: s.conf.Domain,
+		Secure:   true,
+		Domain:   s.conf.Domain,
 	})
 
 	jr := struct {

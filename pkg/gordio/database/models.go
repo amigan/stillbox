@@ -67,9 +67,14 @@ type Talkgroup struct {
 	System      int32
 	Name        pgtype.Text
 	Frequency   pgtype.Int4
-	GroupID     pgtype.Int4
+	Tgid        int32
 	AutoCreated pgtype.Bool
 	Metadata    []byte
+}
+
+type TalkgroupsTag struct {
+	TalkgroupID int32
+	Tags        []string
 }
 
 type User struct {

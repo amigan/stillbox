@@ -28,11 +28,18 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	system INTEGER REFERENCES systems(id) NOT NULL,
 	name TEXT,
 	frequency INTEGER,
-	group_id INTEGER,
+	tgid INTEGER,
 	auto_created BOOLEAN,
 	metadata JSONB,
 	PRIMARY KEY (tgid, system)
 );
+
+CREATE TABLE IF NOT EXISTS talkgroups_tags(
+	talkgroup_id INTEGER NOT NULL REFERENCES talkgroups(id),
+	tags TEXT[] NOT NULL DEFAULT '{}'
+);
+CREATE UNIQUE INDEX IF NOT EXISTS talkgroups_tags_id_talkgroup_id ON talkgroups_tags(talkgroup_id);
+CREATE INDEX IF NOT EXISTS talkgroup_tags_id_tags ON talkgroups_tags USING GIN (tags);
 
 CREATE TABLE IF NOT EXISTS calls(
 	id UUID PRIMARY KEY,
