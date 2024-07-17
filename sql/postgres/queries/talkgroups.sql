@@ -11,6 +11,6 @@ SELECT tags FROM talkgroups_tags
 WHERE talkgroup_id = $1;
 
 -- name: SetTalkgroupTags :exec
-INSERT INTO talkgroups_tags(talkgroup_id, tags) VALUES($1, $2)
-ON CONFLICT (talkgroup_id) DO UPDATE SET tags = $2;
+INSERT INTO talkgroups_tags(system_id, talkgroup_id, tags) VALUES($1, $2, $3)
+ON CONFLICT (system_id, talkgroup_id) DO UPDATE SET tags = $3;
 

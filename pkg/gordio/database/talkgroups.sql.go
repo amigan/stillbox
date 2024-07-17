@@ -82,16 +82,17 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 }
 
 const setTalkgroupTags = `-- name: SetTalkgroupTags :exec
-INSERT INTO talkgroups_tags(talkgroup_id, tags) VALUES($1, $2)
-ON CONFLICT (talkgroup_id) DO UPDATE SET tags = $2
+INSERT INTO talkgroups_tags(system_id, talkgroup_id, tags) VALUES($1, $2, $3)
+ON CONFLICT (system_id, talkgroup_id) DO UPDATE SET tags = $3
 `
 
 type SetTalkgroupTagsParams struct {
+	SystemID    int32
 	TalkgroupID int32
 	Tags        []string
 }
 
 func (q *Queries) SetTalkgroupTags(ctx context.Context, arg SetTalkgroupTagsParams) error {
-	_, err := q.db.Exec(ctx, setTalkgroupTags, arg.TalkgroupID, arg.Tags)
+	_, err := q.db.Exec(ctx, setTalkgroupTags, arg.SystemID, arg.TalkgroupID, arg.Tags)
 	return err
 }

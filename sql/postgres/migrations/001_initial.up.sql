@@ -36,9 +36,10 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 );
 
 CREATE TABLE IF NOT EXISTS talkgroups_tags(
-	system_id INTEGER NOT NULL REFERENCES systems(id),
-	talkgroup_id INTEGER NOT NULL REFERENCES talkgroups(id),
-	tags TEXT[] NOT NULL DEFAULT '{}'
+	system_id INTEGER NOT NULL,
+	talkgroup_id INTEGER NOT NULL,
+	tags TEXT[] NOT NULL DEFAULT '{}',
+	FOREIGN KEY (system_id, talkgroup_id) REFERENCES talkgroups (system, tgid)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS talkgroups_tags_id_talkgroup_id ON talkgroups_tags(system_id, talkgroup_id);
 CREATE INDEX IF NOT EXISTS talkgroup_tags_id_tags ON talkgroups_tags USING GIN (tags);
