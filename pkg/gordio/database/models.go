@@ -63,7 +63,7 @@ type System struct {
 }
 
 type Talkgroup struct {
-	System      int32
+	SystemID    int32
 	Tgid        int32
 	Name        pgtype.Text
 	Frequency   pgtype.Int4
