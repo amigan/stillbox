@@ -18,8 +18,6 @@ CREATE TABLE IF NOT EXISTS api_keys(
 	api_key UUID UNIQUE NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS api_keys_api_key ON api_keys(api_key);
-
 CREATE TABLE IF NOT EXISTS systems(
 	id INTEGER PRIMARY KEY,
 	name TEXT NOT NULL
@@ -64,7 +62,7 @@ CREATE TABLE IF NOT EXISTS calls(
 
 
 CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector('english', transcript));
-CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(talkgroup, call_date);
+CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(system, talkgroup, call_date);
 
 CREATE TABLE IF NOT EXISTS settings(
 	name TEXT PRIMARY KEY,
