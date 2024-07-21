@@ -64,6 +64,42 @@ func addUser(cfg *config.Config, username, email string, isAdmin bool) error {
 	return err
 }
 
+func passwd(cfg *config.Config, username string) error {
+	if username == "" {
+		return ErrInvalidArguments
+	}
+
+	db, err := database.NewClient(cfg.DB)
+	if err != nil {
+		return err
+	}
+
+	pw, err := readPassword(PromptPassword)
+	if err != nil {
+		return err
+	}
+
+	pwAgain, err := readPassword(PromptAgain)
+	if err != nil {
+		return err
+	}
+
+	if pwAgain != pw {
+		return ErrDontMatch
+	}
+
+	if pw == "" {
+		return ErrInvalidArguments
+	}
+
+	hashpw, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+
+	return database.New(db).UpdatePassword(context.Background(), database.UpdatePasswordParams{
+		Username: username,
+		Password: string(hashpw),
+	})
+}
+
 func readPassword(prompt string) (string, error) {
 	fmt.Print(prompt)
 	pw, err := term.ReadPassword(int(syscall.Stdin))
@@ -77,7 +113,7 @@ func Command(cfg *config.Config) []*cobra.Command {
 		Aliases: []string{"u"},
 		Short:   "administers the server",
 	}
-	userCmd.AddCommand(addUserCommand(cfg))
+	userCmd.AddCommand(addUserCommand(cfg), passwdCommand(cfg))
 
 	return []*cobra.Command{userCmd}
 }
@@ -103,6 +139,20 @@ func addUserCommand(cfg *config.Config) *cobra.Command {
 	}
 	c.Flags().BoolP("admin", "a", false, "is admin")
 	c.Flags().StringP("email", "m", "", "email address")
+
+	return c
+}
+
+func passwdCommand(cfg *config.Config) *cobra.Command {
+	c := &cobra.Command{
+		Use:   "passwd",
+		Short: "changes password for a user",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			username := args[0]
+			return passwd(cfg, username)
+		},
+		Args: cobra.ExactArgs(1),
+	}
 
 	return c
 }
