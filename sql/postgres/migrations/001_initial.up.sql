@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	frequency INTEGER,
 	auto_created BOOLEAN,
 	metadata JSONB,
-	PRIMARY KEY (tgid, system)
+	PRIMARY KEY (system_id, tgid)
 );
 
 CREATE TABLE IF NOT EXISTS talkgroups_tags(
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS calls(
 
 
 CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector('english', transcript));
-CREATE INDEX IF NOT EXISTS calls_date_tg_idx ON calls(talkgroup, date);
+CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(talkgroup, call_date);
 
 CREATE TABLE IF NOT EXISTS settings(
 	name TEXT PRIMARY KEY,
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS incidents(
 	metadata JSONB
 );
 
-CREATE INDEX IF NOT EXISTS calls_name_description_idx ON calls USING GIN (
+CREATE INDEX IF NOT EXISTS incidents_name_description_idx ON incidents USING GIN (
 	(to_tsvector('english', name) || to_tsvector('english', coalesce(description, ''))
 	)
 );
