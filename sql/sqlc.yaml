@@ -8,3 +8,4 @@ sql:
         package: "database"
         out: "../pkg/gordio/database"
         sql_package: "pgx/v5"
+        query_parameter_limit: 3

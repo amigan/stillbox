@@ -86,13 +86,7 @@ INSERT INTO talkgroups_tags(system_id, talkgroup_id, tags) VALUES($1, $2, $3)
 ON CONFLICT (system_id, talkgroup_id) DO UPDATE SET tags = $3
 `
 
-type SetTalkgroupTagsParams struct {
-	SystemID    int32
-	TalkgroupID int32
-	Tags        []string
-}
-
-func (q *Queries) SetTalkgroupTags(ctx context.Context, arg SetTalkgroupTagsParams) error {
-	_, err := q.db.Exec(ctx, setTalkgroupTags, arg.SystemID, arg.TalkgroupID, arg.Tags)
+func (q *Queries) SetTalkgroupTags(ctx context.Context, systemID int32, talkgroupID int32, tags []string) error {
+	_, err := q.db.Exec(ctx, setTalkgroupTags, systemID, talkgroupID, tags)
 	return err
 }

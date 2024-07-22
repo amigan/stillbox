@@ -94,10 +94,7 @@ func passwd(cfg *config.Config, username string) error {
 
 	hashpw, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
 
-	return database.New(db).UpdatePassword(context.Background(), database.UpdatePasswordParams{
-		Username: username,
-		Password: string(hashpw),
-	})
+	return database.New(db).UpdatePassword(context.Background(), username, string(hashpw))
 }
 
 func readPassword(prompt string) (string, error) {

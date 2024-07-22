@@ -88,12 +88,7 @@ const setCallTranscript = `-- name: SetCallTranscript :exec
 UPDATE calls SET transcript = $2 WHERE id = $1
 `
 
-type SetCallTranscriptParams struct {
-	ID         pgtype.UUID
-	Transcript pgtype.Text
-}
-
-func (q *Queries) SetCallTranscript(ctx context.Context, arg SetCallTranscriptParams) error {
-	_, err := q.db.Exec(ctx, setCallTranscript, arg.ID, arg.Transcript)
+func (q *Queries) SetCallTranscript(ctx context.Context, iD pgtype.UUID, transcript pgtype.Text) error {
+	_, err := q.db.Exec(ctx, setCallTranscript, iD, transcript)
 	return err
 }

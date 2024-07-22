@@ -22,14 +22,8 @@ INSERT INTO api_keys(
 RETURNING id, owner, created_at, expires, disabled, api_key
 `
 
-type CreateAPIKeyParams struct {
-	Owner    pgtype.Int4
-	Expires  pgtype.Timestamp
-	Disabled pgtype.Bool
-}
-
-func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) (ApiKey, error) {
-	row := q.db.QueryRow(ctx, createAPIKey, arg.Owner, arg.Expires, arg.Disabled)
+func (q *Queries) CreateAPIKey(ctx context.Context, owner pgtype.Int4, expires pgtype.Timestamp, disabled pgtype.Bool) (ApiKey, error) {
+	row := q.db.QueryRow(ctx, createAPIKey, owner, expires, disabled)
 	var i ApiKey
 	err := row.Scan(
 		&i.ID,
@@ -188,12 +182,7 @@ const updatePassword = `-- name: UpdatePassword :exec
 UPDATE users SET password = $2 WHERE username = $1
 `
 
-type UpdatePasswordParams struct {
-	Username string
-	Password string
-}
-
-func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error {
-	_, err := q.db.Exec(ctx, updatePassword, arg.Username, arg.Password)
+func (q *Queries) UpdatePassword(ctx context.Context, username string, password string) error {
+	_, err := q.db.Exec(ctx, updatePassword, username, password)
 	return err
 }
