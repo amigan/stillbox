@@ -12,7 +12,7 @@ import (
 
 type Server struct {
 	conf *config.Config
-	db   database.Conn
+	db   *database.DB
 	r    *chi.Mux
 	jwt  *jwtauth.JWTAuth
 }

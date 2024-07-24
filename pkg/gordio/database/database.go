@@ -13,9 +13,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type DB struct {
+	*pgxpool.Pool
+	*Queries
+}
 type Conn = *pgxpool.Pool
 
-func NewClient(conf config.DB) (Conn, error) {
+func NewClient(conf config.DB) (*DB, error) {
 	dir, err := iofs.New(sqlembed.Migrations, "postgres/migrations")
 	if err != nil {
 		return nil, err
@@ -33,9 +37,14 @@ func NewClient(conf config.DB) (Conn, error) {
 
 	m.Close()
 
-	db, err := pgxpool.New(context.Background(), conf.Connect)
+	pool, err := pgxpool.New(context.Background(), conf.Connect)
 	if err != nil {
 		return nil, err
+	}
+
+	db := &DB{
+		Pool:    pool,
+		Queries: New(pool),
 	}
 
 	return db, nil
@@ -56,4 +65,8 @@ func FromCtx(ctx context.Context) Conn {
 
 func CtxWithDB(ctx context.Context, conn Conn) context.Context {
 	return context.WithValue(ctx, DBCTXKeyValue, conn)
+}
+
+func IsNoRows(err error) bool {
+	return strings.Contains(err.Error(), "no rows in result set")
 }

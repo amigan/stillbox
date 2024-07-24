@@ -24,7 +24,7 @@ var (
 	ErrInvalidArguments = errors.New("invalid arguments")
 )
 
-func addUser(cfg *config.Config, username, email string, isAdmin bool) error {
+func AddUser(ctx context.Context, cfg *config.Config, username, email string, isAdmin bool) error {
 	if username == "" || email == "" {
 		return ErrInvalidArguments
 	}
@@ -54,7 +54,7 @@ func addUser(cfg *config.Config, username, email string, isAdmin bool) error {
 
 	hashpw, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
 
-	_, err = database.New(db).CreateUser(context.Background(), database.CreateUserParams{
+	_, err = db.CreateUser(context.Background(), database.CreateUserParams{
 		Username: username,
 		Password: string(hashpw),
 		Email:    email,
@@ -64,12 +64,21 @@ func addUser(cfg *config.Config, username, email string, isAdmin bool) error {
 	return err
 }
 
-func passwd(cfg *config.Config, username string) error {
+func Passwd(ctx context.Context, cfg *config.Config, username string) error {
 	if username == "" {
 		return ErrInvalidArguments
 	}
 
 	db, err := database.NewClient(cfg.DB)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.GetUserByUsername(ctx, username)
+	if err != nil && database.IsNoRows(err) {
+		return fmt.Errorf("no such user %s", username)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -130,7 +139,7 @@ func addUserCommand(cfg *config.Config) *cobra.Command {
 				return err
 			}
 
-			return addUser(cfg, username, email, isAdmin)
+			return AddUser(context.Background(), cfg, username, email, isAdmin)
 		},
 		Args: cobra.ExactArgs(1),
 	}
@@ -146,7 +155,7 @@ func passwdCommand(cfg *config.Config) *cobra.Command {
 		Short: "changes password for a user",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			username := args[0]
-			return passwd(cfg, username)
+			return Passwd(context.Background(), cfg, username)
 		},
 		Args: cobra.ExactArgs(1),
 	}
