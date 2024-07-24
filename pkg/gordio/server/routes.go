@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -14,6 +16,7 @@ import (
 
 func (s *Server) setupRoutes() {
 	r := s.r
+	r.Use(middleware.Recoverer)
 	r.Use(middleware.WithValue(database.DBCTXKeyValue, s.db))
 
 	r.Group(func(r chi.Router) {
@@ -25,6 +28,7 @@ func (s *Server) setupRoutes() {
 	r.Group(func(r chi.Router) {
 		r.Use(rateLimiter())
 		r.Use(render.SetContentType(render.ContentTypeJSON))
+		//	r.Use(teeRequest())
 		// public routes
 		r.Post("/auth", s.routeAuth)
 		r.Post("/api/call-upload", s.routeCallUpload)
@@ -38,6 +42,13 @@ func (s *Server) setupRoutes() {
 
 		r.Get("/", s.routeIndex)
 	})
+}
+
+func teeRequest() func(http.Handler) http.Handler {
+	return middleware.New(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		by, err := io.ReadAll(r.Body)
+		fmt.Println(string(by), err)
+	}))
 }
 
 func rateLimiter() func(http.Handler) http.Handler {
