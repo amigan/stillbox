@@ -17,7 +17,6 @@ type DB struct {
 	*pgxpool.Pool
 	*Queries
 }
-type Conn = *pgxpool.Pool
 
 func NewClient(conf config.DB) (*DB, error) {
 	dir, err := iofs.New(sqlembed.Migrations, "postgres/migrations")
@@ -54,8 +53,8 @@ type DBCtxKey string
 
 const DBCTXKeyValue DBCtxKey = "dbctx"
 
-func FromCtx(ctx context.Context) Conn {
-	c, ok := ctx.Value(DBCTXKeyValue).(Conn)
+func FromCtx(ctx context.Context) *DB {
+	c, ok := ctx.Value(DBCTXKeyValue).(*DB)
 	if !ok {
 		panic("no DB in context")
 	}
@@ -63,7 +62,7 @@ func FromCtx(ctx context.Context) Conn {
 	return c
 }
 
-func CtxWithDB(ctx context.Context, conn Conn) context.Context {
+func CtxWithDB(ctx context.Context, conn *DB) context.Context {
 	return context.WithValue(ctx, DBCTXKeyValue, conn)
 }
 

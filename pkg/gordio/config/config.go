@@ -2,9 +2,9 @@ package config
 
 import (
 	"github.com/rs/zerolog/log"
-	"os"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+	"os"
 )
 
 type Config struct {

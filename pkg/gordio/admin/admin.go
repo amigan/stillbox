@@ -24,15 +24,12 @@ var (
 	ErrInvalidArguments = errors.New("invalid arguments")
 )
 
-func AddUser(ctx context.Context, cfg *config.Config, username, email string, isAdmin bool) error {
+func AddUser(ctx context.Context, username, email string, isAdmin bool) error {
 	if username == "" || email == "" {
 		return ErrInvalidArguments
 	}
 
-	db, err := database.NewClient(cfg.DB)
-	if err != nil {
-		return err
-	}
+	db := database.FromCtx(ctx)
 
 	pw, err := readPassword(PromptPassword)
 	if err != nil {
@@ -64,17 +61,14 @@ func AddUser(ctx context.Context, cfg *config.Config, username, email string, is
 	return err
 }
 
-func Passwd(ctx context.Context, cfg *config.Config, username string) error {
+func Passwd(ctx context.Context, username string) error {
 	if username == "" {
 		return ErrInvalidArguments
 	}
 
-	db, err := database.NewClient(cfg.DB)
-	if err != nil {
-		return err
-	}
+	db := database.FromCtx(ctx)
 
-	_, err = db.GetUserByUsername(ctx, username)
+	_, err := db.GetUserByUsername(ctx, username)
 	if err != nil && database.IsNoRows(err) {
 		return fmt.Errorf("no such user %s", username)
 	}
@@ -103,7 +97,7 @@ func Passwd(ctx context.Context, cfg *config.Config, username string) error {
 
 	hashpw, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
 
-	return database.New(db).UpdatePassword(context.Background(), username, string(hashpw))
+	return db.UpdatePassword(context.Background(), username, string(hashpw))
 }
 
 func readPassword(prompt string) (string, error) {
@@ -129,6 +123,11 @@ func addUserCommand(cfg *config.Config) *cobra.Command {
 		Use:   "add",
 		Short: "adds a user",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			db, err := database.NewClient(cfg.DB)
+			if err != nil {
+				return err
+			}
+
 			username := args[0]
 			isAdmin, err := cmd.Flags().GetBool("admin")
 			if err != nil {
@@ -139,7 +138,7 @@ func addUserCommand(cfg *config.Config) *cobra.Command {
 				return err
 			}
 
-			return AddUser(context.Background(), cfg, username, email, isAdmin)
+			return AddUser(database.CtxWithDB(context.Background(), db), username, email, isAdmin)
 		},
 		Args: cobra.ExactArgs(1),
 	}
@@ -151,13 +150,17 @@ func addUserCommand(cfg *config.Config) *cobra.Command {
 
 func passwdCommand(cfg *config.Config) *cobra.Command {
 	c := &cobra.Command{
-		Use:   "passwd",
+		Use:   "passwd userid",
 		Short: "changes password for a user",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			db, err := database.NewClient(cfg.DB)
+			if err != nil {
+				return err
+			}
 			username := args[0]
-			return Passwd(context.Background(), cfg, username)
+			return Passwd(database.CtxWithDB(context.Background(), db), username)
 		},
-		Args: cobra.ExactArgs(1),
 	}
 
 	return c
