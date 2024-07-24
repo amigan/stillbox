@@ -1,8 +1,10 @@
 package config
 
 import (
-	"gopkg.in/yaml.v3"
+	"github.com/rs/zerolog/log"
 	"os"
+	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
@@ -11,6 +13,8 @@ type Config struct {
 	Listen    string `yaml:"listen"`
 	Public    bool   `yaml:"public"`
 	Domain    string `yaml:"domain"`
+
+	configPath string
 }
 
 type DB struct {
@@ -18,36 +22,24 @@ type DB struct {
 	Driver  string `yaml:"driver"`
 }
 
-type ConfigOption func(*configOptions)
-
-type configOptions struct {
-	configPath string
+func New(cmd *cobra.Command) *Config {
+	c := &Config{}
+	cmd.PersistentFlags().StringVarP(&c.configPath, "config", "c", "config.yaml", "configuration file")
+	return c
 }
 
-func WithConfigPath(p string) ConfigOption {
-	return func(o *configOptions) {
-		o.configPath = p
-	}
-}
-
-func ReadConfig(opts ...ConfigOption) (*Config, error) {
-	o := new(configOptions)
-
-	for _, opt := range opts {
-		opt(o)
-	}
-
-	cfgBytes, err := os.ReadFile(o.configPath)
+func (c *Config) ReadConfig() error {
+	cfgBytes, err := os.ReadFile(c.configPath)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	c := new(Config)
 
 	err = yaml.Unmarshal(cfgBytes, c)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return c, nil
+	log.Info().Str("configPath", c.configPath).Msg("read gordio config")
+
+	return nil
 }
