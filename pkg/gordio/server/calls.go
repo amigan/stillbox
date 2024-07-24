@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -29,24 +31,24 @@ type callUploadRequest struct {
 	TalkgroupTag   string    `form:"talkgroupTag"`
 }
 
-func (car *callUploadRequest) Bind(r *http.Request) error {
-	return nil
-}
-
 func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 	call := new(callUploadRequest)
-	err := fillFields(r, call)
+	err := call.fill(r)
 	if err != nil {
-		http.Error(w, "cannot bind upload "+r.Header.Get("Content-Type")+err.Error(), 500)
+		http.Error(w, "cannot bind upload "+err.Error(), 500)
 		return
 	}
 
-	fmt.Printf("%#v\n", call)
-	w.Write([]byte("yay"))
+	w.Write([]byte(fmt.Sprintf("%#v", call)))
 }
 
-func fillFields(r *http.Request, v *callUploadRequest) error {
-	rv := reflect.ValueOf(v).Elem()
+func (car *callUploadRequest) fill(r *http.Request) error {
+	err := r.ParseMultipartForm(1024 * 1024 * 2) // 2MB
+	if err != nil {
+		return fmt.Errorf("multipart parse: %w", err)
+	}
+
+	rv := reflect.ValueOf(car).Elem()
 	rt := rv.Type()
 
 	for i := 0; i < rv.NumField(); i++ {
@@ -56,24 +58,49 @@ func fillFields(r *http.Request, v *callUploadRequest) error {
 		case "audio":
 			file, _, err := r.FormFile(ff)
 			if err != nil {
-				return err
+				return fmt.Errorf("get form file: %w", err)
 			}
 
 			audioBytes, err := io.ReadAll(file)
 			if err != nil {
-				return err
+				return fmt.Errorf("file read: %w", err)
 			}
 
 			f.SetBytes(audioBytes)
 		case "dateTime":
 			t, err := time.Parse(time.RFC3339, r.Form.Get(ff))
 			if err != nil {
-				return err
+				return fmt.Errorf("parse time: %w", err)
 			}
 			f.Set(reflect.ValueOf(t))
 		case "frequencies":
+			val := strings.Trim(r.Form.Get(ff), "[]")
+			if val == "" {
+				continue
+			}
+			vals := strings.Split(val, ",")
+			ar := make([]int, 0, len(vals))
+			for _, v := range vals {
+				i, err := strconv.Atoi(v)
+				if err == nil {
+					ar = append(ar, i)
+				}
+			}
+			f.Set(reflect.ValueOf(ar))
 		case "frequency", "talkgroup":
+			val, err := strconv.Atoi(r.Form.Get(ff))
+			if err != nil {
+				return fmt.Errorf("atoi('%s'): %w", ff, err)
+			}
+			f.SetInt(int64(val))
 		case "patches", "sources":
+			val := strings.Trim(r.Form.Get(ff), "[]")
+			if val == "" {
+				continue
+			}
+			vals := strings.Split(val, ",")
+			f.Set(reflect.ValueOf(vals))
+
 		default:
 			f.SetString(r.Form.Get(ff))
 		}
