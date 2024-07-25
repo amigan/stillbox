@@ -5,6 +5,7 @@
 package database
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -14,11 +15,11 @@ type ApiKey struct {
 	CreatedAt pgtype.Timestamp
 	Expires   pgtype.Timestamp
 	Disabled  pgtype.Bool
-	ApiKey    pgtype.UUID
+	ApiKey    uuid.UUID
 }
 
 type Call struct {
-	ID          pgtype.UUID
+	ID          uuid.UUID
 	Submitter   pgtype.Int4
 	System      int32
 	Talkgroup   int32
@@ -36,7 +37,7 @@ type Call struct {
 }
 
 type Incident struct {
-	ID          pgtype.UUID
+	ID          uuid.UUID
 	Name        string
 	Description pgtype.Text
 	StartTime   pgtype.Timestamp
@@ -46,8 +47,8 @@ type Incident struct {
 }
 
 type IncidentsCall struct {
-	IncidentID pgtype.UUID
-	CallID     pgtype.UUID
+	IncidentID uuid.UUID
+	CallID     uuid.UUID
 	Notes      []byte
 }
 

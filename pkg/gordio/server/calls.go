@@ -8,9 +8,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
-)
 
-//const timeFormat = "2006-01-02T15:04:05.999Z07:00"
+	"dynatron.me/x/stillbox/pkg/gordio/database"
+	"github.com/google/uuid"
+)
 
 type callUploadRequest struct {
 	Audio          []byte    `form:"audio"`
@@ -21,9 +22,9 @@ type callUploadRequest struct {
 	Frequency      int       `form:"frequency"`
 	Key            string    `form:"key"`
 	Patches        []string  `form:"patches"`
-	Source         string    `form:"source"`
+	Source         int       `form:"source"`
 	Sources        []string  `form:"sources"`
-	System         string    `form:"system"`
+	System         int       `form:"system"`
 	SystemLabel    string    `form:"systemLabel"`
 	Talkgroup      int       `form:"talkgroup"`
 	TalkgroupGroup string    `form:"talkgroupGroup"`
@@ -32,8 +33,35 @@ type callUploadRequest struct {
 }
 
 func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(1024 * 1024 * 2) // 2MB
+	if err != nil {
+		http.Error(w, "cannot parse form "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	keyUuid, err := uuid.Parse(r.Form.Get("key"))
+	if err != nil {
+		http.Error(w, "cannot parse key "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	apik, err := s.db.GetAPIKey(r.Context(), keyUuid)
+	if err != nil {
+		if database.IsNoRows(err) {
+			http.Error(w, "bad key", http.StatusUnauthorized)
+			return
+		}
+
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if apik.Disabled.Bool || (apik.Expires.Valid && time.Now().After(apik.Expires.Time)) {
+		http.Error(w, "disabled", http.StatusUnauthorized)
+		return
+	}
+
 	call := new(callUploadRequest)
-	err := call.fill(r)
+	err = call.fill(r)
 	if err != nil {
 		http.Error(w, "cannot bind upload "+err.Error(), 500)
 		return
@@ -43,11 +71,6 @@ func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (car *callUploadRequest) fill(r *http.Request) error {
-	err := r.ParseMultipartForm(1024 * 1024 * 2) // 2MB
-	if err != nil {
-		return fmt.Errorf("multipart parse: %w", err)
-	}
-
 	rv := reflect.ValueOf(car).Elem()
 	rt := rv.Type()
 
@@ -73,7 +96,7 @@ func (car *callUploadRequest) fill(r *http.Request) error {
 				return fmt.Errorf("parse time: %w", err)
 			}
 			f.Set(reflect.ValueOf(t))
-		case "frequencies":
+		case "frequencies", "patches", "sources":
 			val := strings.Trim(r.Form.Get(ff), "[]")
 			if val == "" {
 				continue
@@ -87,20 +110,12 @@ func (car *callUploadRequest) fill(r *http.Request) error {
 				}
 			}
 			f.Set(reflect.ValueOf(ar))
-		case "frequency", "talkgroup":
+		case "frequency", "talkgroup", "system", "source":
 			val, err := strconv.Atoi(r.Form.Get(ff))
 			if err != nil {
 				return fmt.Errorf("atoi('%s'): %w", ff, err)
 			}
 			f.SetInt(int64(val))
-		case "patches", "sources":
-			val := strings.Trim(r.Form.Get(ff), "[]")
-			if val == "" {
-				continue
-			}
-			vals := strings.Split(val, ",")
-			f.Set(reflect.ValueOf(vals))
-
 		default:
 			f.SetString(r.Form.Get(ff))
 		}

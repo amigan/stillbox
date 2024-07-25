@@ -9,3 +9,9 @@ sql:
         out: "../pkg/gordio/database"
         sql_package: "pgx/v5"
         query_parameter_limit: 3
+        overrides:
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+

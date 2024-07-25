@@ -40,3 +40,6 @@ RETURNING *;
 
 -- name: DeleteAPIKey :exec
 DELETE FROM api_keys WHERE api_key = $1;
+
+-- name: GetAPIKey :one
+SELECT * FROM api_keys WHERE api_key = $1;

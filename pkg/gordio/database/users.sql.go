@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -76,7 +77,7 @@ const deleteAPIKey = `-- name: DeleteAPIKey :exec
 DELETE FROM api_keys WHERE api_key = $1
 `
 
-func (q *Queries) DeleteAPIKey(ctx context.Context, apiKey pgtype.UUID) error {
+func (q *Queries) DeleteAPIKey(ctx context.Context, apiKey uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteAPIKey, apiKey)
 	return err
 }
@@ -88,6 +89,24 @@ DELETE FROM users WHERE username = $1
 func (q *Queries) DeleteUser(ctx context.Context, username string) error {
 	_, err := q.db.Exec(ctx, deleteUser, username)
 	return err
+}
+
+const getAPIKey = `-- name: GetAPIKey :one
+SELECT id, owner, created_at, expires, disabled, api_key FROM api_keys WHERE api_key = $1
+`
+
+func (q *Queries) GetAPIKey(ctx context.Context, apiKey uuid.UUID) (ApiKey, error) {
+	row := q.db.QueryRow(ctx, getAPIKey, apiKey)
+	var i ApiKey
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.CreatedAt,
+		&i.Expires,
+		&i.Disabled,
+		&i.ApiKey,
+	)
+	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one

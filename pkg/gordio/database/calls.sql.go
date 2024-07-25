@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -88,7 +89,7 @@ const setCallTranscript = `-- name: SetCallTranscript :exec
 UPDATE calls SET transcript = $2 WHERE id = $1
 `
 
-func (q *Queries) SetCallTranscript(ctx context.Context, iD pgtype.UUID, transcript pgtype.Text) error {
+func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript pgtype.Text) error {
 	_, err := q.db.Exec(ctx, setCallTranscript, iD, transcript)
 	return err
 }
