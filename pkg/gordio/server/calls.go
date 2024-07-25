@@ -21,9 +21,9 @@ type callUploadRequest struct {
 	Frequencies    []int     `form:"frequencies"`
 	Frequency      int       `form:"frequency"`
 	Key            string    `form:"key"`
-	Patches        []string  `form:"patches"`
+	Patches        []int     `form:"patches"`
 	Source         int       `form:"source"`
-	Sources        []string  `form:"sources"`
+	Sources        []int     `form:"sources"`
 	System         int       `form:"system"`
 	SystemLabel    string    `form:"systemLabel"`
 	Talkgroup      int       `form:"talkgroup"`
@@ -76,10 +76,11 @@ func (car *callUploadRequest) fill(r *http.Request) error {
 
 	for i := 0; i < rv.NumField(); i++ {
 		f := rv.Field(i)
-		ff := rt.Field(i).Tag.Get("form")
-		switch ff {
-		case "audio":
-			file, _, err := r.FormFile(ff)
+		fi := f.Interface()
+		formField := rt.Field(i).Tag.Get("form")
+		switch v := fi.(type) {
+		case []byte:
+			file, _, err := r.FormFile(formField)
 			if err != nil {
 				return fmt.Errorf("get form file: %w", err)
 			}
@@ -90,14 +91,14 @@ func (car *callUploadRequest) fill(r *http.Request) error {
 			}
 
 			f.SetBytes(audioBytes)
-		case "dateTime":
-			t, err := time.Parse(time.RFC3339, r.Form.Get(ff))
+		case time.Time:
+			t, err := time.Parse(time.RFC3339, r.Form.Get(formField))
 			if err != nil {
 				return fmt.Errorf("parse time: %w", err)
 			}
 			f.Set(reflect.ValueOf(t))
-		case "frequencies", "patches", "sources":
-			val := strings.Trim(r.Form.Get(ff), "[]")
+		case []int:
+			val := strings.Trim(r.Form.Get(formField), "[]")
 			if val == "" {
 				continue
 			}
@@ -110,14 +111,16 @@ func (car *callUploadRequest) fill(r *http.Request) error {
 				}
 			}
 			f.Set(reflect.ValueOf(ar))
-		case "frequency", "talkgroup", "system", "source":
-			val, err := strconv.Atoi(r.Form.Get(ff))
+		case int:
+			val, err := strconv.Atoi(r.Form.Get(formField))
 			if err != nil {
-				return fmt.Errorf("atoi('%s'): %w", ff, err)
+				return fmt.Errorf("atoi('%s'): %w", formField, err)
 			}
 			f.SetInt(int64(val))
+		case string:
+			f.SetString(r.Form.Get(formField))
 		default:
-			f.SetString(r.Form.Get(ff))
+			panic(fmt.Errorf("unsupported type %T", v))
 		}
 	}
 
