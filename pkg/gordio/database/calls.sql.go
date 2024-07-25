@@ -33,19 +33,19 @@ RETURNING id, submitter, system, talkgroup, call_date, audio_name, audio_blob, a
 `
 
 type AddCallParams struct {
-	Submitter   pgtype.Int4
-	System      int32
-	Talkgroup   int32
-	CallDate    pgtype.Timestamp
-	AudioName   pgtype.Text
-	AudioBlob   []byte
-	AudioType   pgtype.Text
-	AudioUrl    pgtype.Text
-	Frequency   pgtype.Int4
-	Frequencies []byte
-	Patches     []byte
-	TgLabel     pgtype.Text
-	Source      pgtype.Text
+	Submitter   *int32           `json:"submitter"`
+	System      int              `json:"system"`
+	Talkgroup   int              `json:"talkgroup"`
+	CallDate    pgtype.Timestamp `json:"call_date"`
+	AudioName   *string          `json:"audio_name"`
+	AudioBlob   []byte           `json:"audio_blob"`
+	AudioType   *string          `json:"audio_type"`
+	AudioUrl    *string          `json:"audio_url"`
+	Frequency   *int32           `json:"frequency"`
+	Frequencies []byte           `json:"frequencies"`
+	Patches     []byte           `json:"patches"`
+	TgLabel     *string          `json:"tg_label"`
+	Source      *string          `json:"source"`
 }
 
 func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (Call, error) {
@@ -89,7 +89,7 @@ const setCallTranscript = `-- name: SetCallTranscript :exec
 UPDATE calls SET transcript = $2 WHERE id = $1
 `
 
-func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript pgtype.Text) error {
+func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error {
 	_, err := q.db.Exec(ctx, setCallTranscript, iD, transcript)
 	return err
 }

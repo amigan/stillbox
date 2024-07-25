@@ -23,7 +23,7 @@ INSERT INTO api_keys(
 RETURNING id, owner, created_at, expires, disabled, api_key
 `
 
-func (q *Queries) CreateAPIKey(ctx context.Context, owner pgtype.Int4, expires pgtype.Timestamp, disabled pgtype.Bool) (ApiKey, error) {
+func (q *Queries) CreateAPIKey(ctx context.Context, owner *int32, expires pgtype.Timestamp, disabled *bool) (ApiKey, error) {
 	row := q.db.QueryRow(ctx, createAPIKey, owner, expires, disabled)
 	var i ApiKey
 	err := row.Scan(
@@ -48,10 +48,10 @@ RETURNING id, username, password, email, is_admin, prefs
 `
 
 type CreateUserParams struct {
-	Username string
-	Password string
-	Email    string
-	IsAdmin  pgtype.Bool
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	IsAdmin  *bool  `json:"is_admin"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {

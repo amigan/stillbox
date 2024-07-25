@@ -10,79 +10,79 @@ import (
 )
 
 type ApiKey struct {
-	ID        int32
-	Owner     pgtype.Int4
-	CreatedAt pgtype.Timestamp
-	Expires   pgtype.Timestamp
-	Disabled  pgtype.Bool
-	ApiKey    uuid.UUID
+	ID        int32            `json:"id"`
+	Owner     *int32           `json:"owner"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
+	Expires   pgtype.Timestamp `json:"expires"`
+	Disabled  *bool            `json:"disabled"`
+	ApiKey    uuid.UUID        `json:"api_key"`
 }
 
 type Call struct {
-	ID          uuid.UUID
-	Submitter   pgtype.Int4
-	System      int32
-	Talkgroup   int32
-	CallDate    pgtype.Timestamp
-	AudioName   pgtype.Text
-	AudioBlob   []byte
-	AudioType   pgtype.Text
-	AudioUrl    pgtype.Text
-	Frequency   pgtype.Int4
-	Frequencies []byte
-	Patches     []byte
-	TgLabel     pgtype.Text
-	Source      pgtype.Text
-	Transcript  pgtype.Text
+	ID          uuid.UUID        `json:"id"`
+	Submitter   *int32           `json:"submitter"`
+	System      int              `json:"system"`
+	Talkgroup   int              `json:"talkgroup"`
+	CallDate    pgtype.Timestamp `json:"call_date"`
+	AudioName   *string          `json:"audio_name"`
+	AudioBlob   []byte           `json:"audio_blob"`
+	AudioType   *string          `json:"audio_type"`
+	AudioUrl    *string          `json:"audio_url"`
+	Frequency   *int32           `json:"frequency"`
+	Frequencies []byte           `json:"frequencies"`
+	Patches     []byte           `json:"patches"`
+	TgLabel     *string          `json:"tg_label"`
+	Source      *string          `json:"source"`
+	Transcript  *string          `json:"transcript"`
 }
 
 type Incident struct {
-	ID          uuid.UUID
-	Name        string
-	Description pgtype.Text
-	StartTime   pgtype.Timestamp
-	EndTime     pgtype.Timestamp
-	Location    []byte
-	Metadata    []byte
+	ID          uuid.UUID        `json:"id"`
+	Name        string           `json:"name"`
+	Description *string          `json:"description"`
+	StartTime   pgtype.Timestamp `json:"start_time"`
+	EndTime     pgtype.Timestamp `json:"end_time"`
+	Location    []byte           `json:"location"`
+	Metadata    []byte           `json:"metadata"`
 }
 
 type IncidentsCall struct {
-	IncidentID uuid.UUID
-	CallID     uuid.UUID
-	Notes      []byte
+	IncidentID uuid.UUID `json:"incident_id"`
+	CallID     uuid.UUID `json:"call_id"`
+	Notes      []byte    `json:"notes"`
 }
 
 type Setting struct {
-	Name      string
-	UpdatedBy pgtype.Int4
-	Value     []byte
+	Name      string `json:"name"`
+	UpdatedBy *int32 `json:"updated_by"`
+	Value     []byte `json:"value"`
 }
 
 type System struct {
-	ID   int32
-	Name string
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 type Talkgroup struct {
-	SystemID    int32
-	Tgid        int32
-	Name        pgtype.Text
-	Frequency   pgtype.Int4
-	AutoCreated pgtype.Bool
-	Metadata    []byte
+	SystemID    int     `json:"system_id"`
+	Tgid        int     `json:"tgid"`
+	Name        *string `json:"name"`
+	Frequency   *int32  `json:"frequency"`
+	AutoCreated *bool   `json:"auto_created"`
+	Metadata    []byte  `json:"metadata"`
 }
 
 type TalkgroupsTag struct {
-	SystemID    int32
-	TalkgroupID int32
-	Tags        []string
+	SystemID    int      `json:"system_id"`
+	TalkgroupID int      `json:"talkgroup_id"`
+	Tags        []string `json:"tags"`
 }
 
 type User struct {
-	ID       int32
-	Username string
-	Password string
-	Email    string
-	IsAdmin  pgtype.Bool
-	Prefs    []byte
+	ID       int32  `json:"id"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	IsAdmin  *bool  `json:"is_admin"`
+	Prefs    []byte `json:"prefs"`
 }

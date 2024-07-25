@@ -14,7 +14,7 @@ SELECT tags FROM talkgroups_tags
 WHERE talkgroup_id = $1
 `
 
-func (q *Queries) GetTalkgroupTags(ctx context.Context, talkgroupID int32) ([]string, error) {
+func (q *Queries) GetTalkgroupTags(ctx context.Context, talkgroupID int) ([]string, error) {
 	row := q.db.QueryRow(ctx, getTalkgroupTags, talkgroupID)
 	var tags []string
 	err := row.Scan(&tags)
@@ -27,8 +27,8 @@ WHERE tags && ARRAY[$1]
 `
 
 type GetTalkgroupsWithAllTagsRow struct {
-	SystemID    int32
-	TalkgroupID int32
+	SystemID    int `json:"system_id"`
+	TalkgroupID int `json:"talkgroup_id"`
 }
 
 func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAllTagsRow, error) {
@@ -57,8 +57,8 @@ WHERE tags @> ARRAY[$1]
 `
 
 type GetTalkgroupsWithAnyTagsRow struct {
-	SystemID    int32
-	TalkgroupID int32
+	SystemID    int `json:"system_id"`
+	TalkgroupID int `json:"talkgroup_id"`
 }
 
 func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAnyTagsRow, error) {
@@ -86,7 +86,7 @@ INSERT INTO talkgroups_tags(system_id, talkgroup_id, tags) VALUES($1, $2, $3)
 ON CONFLICT (system_id, talkgroup_id) DO UPDATE SET tags = $3
 `
 
-func (q *Queries) SetTalkgroupTags(ctx context.Context, systemID int32, talkgroupID int32, tags []string) error {
+func (q *Queries) SetTalkgroupTags(ctx context.Context, systemID int, talkgroupID int, tags []string) error {
 	_, err := q.db.Exec(ctx, setTalkgroupTags, systemID, talkgroupID, tags)
 	return err
 }

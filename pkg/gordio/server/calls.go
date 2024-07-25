@@ -11,6 +11,8 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"github.com/google/uuid"
+	"github.com/jackc/pgtype"
+	"github.com/rs/zerolog/log"
 )
 
 type callUploadRequest struct {
@@ -32,6 +34,29 @@ type callUploadRequest struct {
 	TalkgroupTag   string    `form:"talkgroupTag"`
 }
 
+type AddCallParams struct {
+	Submitter   pgtype.Int4      `json:"submitter"`
+	System      int32            `json:"system"`
+	Talkgroup   int32            `json:"talkgroup"`
+	CallDate    pgtype.Timestamp `json:"call_date"`
+	AudioName   pgtype.Text      `json:"audio_name"`
+	AudioBlob   []byte           `json:"audio_blob"`
+	AudioType   pgtype.Text      `json:"audio_type"`
+	AudioUrl    pgtype.Text      `json:"audio_url"`
+	Frequency   pgtype.Int4      `json:"frequency"`
+	Frequencies []byte           `json:"frequencies"`
+	Patches     []byte           `json:"patches"`
+	TgLabel     pgtype.Text      `json:"tg_label"`
+	Source      pgtype.Text      `json:"source"`
+}
+
+func (car *callUploadRequest) ToAddCallParams(submitter int) database.AddCallParams {
+	return database.AddCallParams{
+		Submitter: submitter,
+		System:    car.System,
+	}
+}
+
 func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(1024 * 1024 * 2) // 2MB
 	if err != nil {
@@ -44,7 +69,8 @@ func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "cannot parse key "+err.Error(), http.StatusBadRequest)
 		return
 	}
-	apik, err := s.db.GetAPIKey(r.Context(), keyUuid)
+	db := database.FromCtx(r.Context())
+	apik, err := db.GetAPIKey(r.Context(), keyUuid)
 	if err != nil {
 		if database.IsNoRows(err) {
 			http.Error(w, "bad key", http.StatusUnauthorized)
@@ -57,6 +83,7 @@ func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 
 	if apik.Disabled.Bool || (apik.Expires.Valid && time.Now().After(apik.Expires.Time)) {
 		http.Error(w, "disabled", http.StatusUnauthorized)
+		log.Error().Str("key", apik.ApiKey.String()).Msg("key disabled")
 		return
 	}
 
@@ -67,7 +94,12 @@ func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("%#v", call)))
+	dbCall, err := db.AddCall(r.Context(), call.ToAddCallParams())
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		log.Error().Err(err).Msg("add call")
+		return
+	}
 }
 
 func (car *callUploadRequest) fill(r *http.Request) error {
