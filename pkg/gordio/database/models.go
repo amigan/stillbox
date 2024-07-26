@@ -5,6 +5,8 @@
 package database
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -12,28 +14,28 @@ import (
 type ApiKey struct {
 	ID        int32            `json:"id"`
 	Owner     *int32           `json:"owner"`
-	CreatedAt pgtype.Timestamp `json:"created_at"`
+	CreatedAt time.Time        `json:"created_at"`
 	Expires   pgtype.Timestamp `json:"expires"`
 	Disabled  *bool            `json:"disabled"`
 	ApiKey    uuid.UUID        `json:"api_key"`
 }
 
 type Call struct {
-	ID          uuid.UUID        `json:"id"`
-	Submitter   *int32           `json:"submitter"`
-	System      int              `json:"system"`
-	Talkgroup   int              `json:"talkgroup"`
-	CallDate    pgtype.Timestamp `json:"call_date"`
-	AudioName   *string          `json:"audio_name"`
-	AudioBlob   []byte           `json:"audio_blob"`
-	AudioType   *string          `json:"audio_type"`
-	AudioUrl    *string          `json:"audio_url"`
-	Frequency   *int32           `json:"frequency"`
-	Frequencies []byte           `json:"frequencies"`
-	Patches     []byte           `json:"patches"`
-	TgLabel     *string          `json:"tg_label"`
-	Source      *string          `json:"source"`
-	Transcript  *string          `json:"transcript"`
+	ID          uuid.UUID `json:"id"`
+	Submitter   *int32    `json:"submitter"`
+	System      int       `json:"system"`
+	Talkgroup   int       `json:"talkgroup"`
+	CallDate    time.Time `json:"call_date"`
+	AudioName   *string   `json:"audio_name"`
+	AudioBlob   []byte    `json:"audio_blob"`
+	AudioType   *string   `json:"audio_type"`
+	AudioUrl    *string   `json:"audio_url"`
+	Frequency   *int32    `json:"frequency"`
+	Frequencies []byte    `json:"frequencies"`
+	Patches     []byte    `json:"patches"`
+	TgLabel     *string   `json:"tg_label"`
+	Source      *string   `json:"source"`
+	Transcript  *string   `json:"transcript"`
 }
 
 type Incident struct {
