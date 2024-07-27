@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users(
 	username VARCHAR (255) UNIQUE NOT NULL,
 	password TEXT NOT NULL,
 	email TEXT NOT NULL,
-	is_admin BOOLEAN,
+	is_admin BOOLEAN NOT NULL,
 	prefs JSONB
 );
 
@@ -11,7 +11,7 @@ CREATE INDEX IF NOT EXISTS users_username_idx ON users(username);
 
 CREATE TABLE IF NOT EXISTS api_keys(
 	id SERIAL PRIMARY KEY,
-	owner INTEGER REFERENCES users(id),
+	owner INTEGER REFERENCES users(id) NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	expires TIMESTAMP,
 	disabled BOOLEAN,
@@ -33,6 +33,37 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	PRIMARY KEY (system_id, tgid)
 );
 
+CREATE TABLE IF NOT EXISTS talkgroups_learned(
+	id SERIAL PRIMARY KEY,
+	system_id INTEGER REFERENCES systems(id) NOT NULL,
+	tgid INTEGER NOT NULL,
+	group_name TEXT NOT NULL,
+	group_tag TEXT,
+	UNIQUE (system_id, tgid, group_name, group_tag)
+);
+
+CREATE OR REPLACE FUNCTION learn_talkgroup()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF NOT EXISTS (SELECT *
+		FROM talkgroups
+		JOIN talkgroups_tags
+		ON talkgroups_tags.system_id = talkgroups.system_id AND talkgroups_tags.talkgroup_id = talkgroups.tgid
+		WHERE
+			talkgroups.system_id = NEW.system AND talkgroups.tgid = NEW.talkgroup AND
+			(
+				talkgroups.name != NEW.tg_label
+				OR NOT (talkgroups_tags.tags @> ARRAY[NEW.tg_tag])
+			)
+	) THEN
+		INSERT INTO talkgroups_learned(system_id, tgid, group_name, group_tag) VALUES(
+			NEW.system, NEW.talkgroup, NEW.tg_label, NEW.tg_tag
+		) ON CONFLICT DO NOTHING;
+	END IF;
+	RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+
 CREATE TABLE IF NOT EXISTS talkgroups_tags(
 	system_id INTEGER NOT NULL,
 	talkgroup_id INTEGER NOT NULL,
@@ -52,14 +83,19 @@ CREATE TABLE IF NOT EXISTS calls(
 	audio_blob BYTEA,
 	audio_type TEXT,
 	audio_url TEXT,
-	frequency INTEGER,
-	frequencies JSONB,
-	patches JSONB,
+	frequency INTEGER NOT NULL,
+	frequencies INTEGER[],
+	patches INTEGER[],
 	tg_label TEXT,
-	source TEXT,
+	tg_tag TEXT,
+	tg_group TEXT,
+	source INTEGER NOT NULL,
 	transcript TEXT
 );
 
+
+CREATE OR REPLACE TRIGGER learn_tg AFTER INSERT ON calls
+FOR EACH ROW EXECUTE FUNCTION learn_talkgroup();
 
 CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector('english', transcript));
 CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(system, talkgroup, call_date);
@@ -89,6 +125,5 @@ CREATE TABLE IF NOT EXISTS incidents_calls(
 	incident_id UUID REFERENCES incidents(id) ON UPDATE CASCADE ON DELETE CASCADE,
 	call_id UUID REFERENCES calls(id) ON UPDATE CASCADE,
 	notes JSONB,
-	-- CONSTRAINT incident_call_pkey PRIMARY KEY (incident_id, call_id)
 	PRIMARY KEY (incident_id, call_id)
 );

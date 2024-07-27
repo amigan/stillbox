@@ -13,7 +13,7 @@ import (
 
 type ApiKey struct {
 	ID        int32            `json:"id"`
-	Owner     *int32           `json:"owner"`
+	Owner     int              `json:"owner"`
 	CreatedAt time.Time        `json:"created_at"`
 	Expires   pgtype.Timestamp `json:"expires"`
 	Disabled  *bool            `json:"disabled"`
@@ -30,11 +30,13 @@ type Call struct {
 	AudioBlob   []byte    `json:"audio_blob"`
 	AudioType   *string   `json:"audio_type"`
 	AudioUrl    *string   `json:"audio_url"`
-	Frequency   *int32    `json:"frequency"`
-	Frequencies []byte    `json:"frequencies"`
-	Patches     []byte    `json:"patches"`
+	Frequency   int       `json:"frequency"`
+	Frequencies []int     `json:"frequencies"`
+	Patches     []int     `json:"patches"`
 	TgLabel     *string   `json:"tg_label"`
-	Source      *string   `json:"source"`
+	TgTag       *string   `json:"tg_tag"`
+	TgGroup     *string   `json:"tg_group"`
+	Source      int       `json:"source"`
 	Transcript  *string   `json:"transcript"`
 }
 
@@ -74,6 +76,14 @@ type Talkgroup struct {
 	Metadata    []byte  `json:"metadata"`
 }
 
+type TalkgroupsLearned struct {
+	ID        int32   `json:"id"`
+	SystemID  int     `json:"system_id"`
+	Tgid      int     `json:"tgid"`
+	GroupName string  `json:"group_name"`
+	GroupTag  *string `json:"group_tag"`
+}
+
 type TalkgroupsTag struct {
 	SystemID    int      `json:"system_id"`
 	TalkgroupID int      `json:"talkgroup_id"`
@@ -85,6 +95,6 @@ type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
-	IsAdmin  *bool  `json:"is_admin"`
+	IsAdmin  bool   `json:"is_admin"`
 	Prefs    []byte `json:"prefs"`
 }

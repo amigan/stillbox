@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"github.com/google/uuid"
-	"github.com/jackc/pgtype"
 	"github.com/rs/zerolog/log"
 )
 
@@ -34,26 +34,22 @@ type callUploadRequest struct {
 	TalkgroupTag   string    `form:"talkgroupTag"`
 }
 
-type AddCallParams struct {
-	Submitter   pgtype.Int4      `json:"submitter"`
-	System      int32            `json:"system"`
-	Talkgroup   int32            `json:"talkgroup"`
-	CallDate    pgtype.Timestamp `json:"call_date"`
-	AudioName   pgtype.Text      `json:"audio_name"`
-	AudioBlob   []byte           `json:"audio_blob"`
-	AudioType   pgtype.Text      `json:"audio_type"`
-	AudioUrl    pgtype.Text      `json:"audio_url"`
-	Frequency   pgtype.Int4      `json:"frequency"`
-	Frequencies []byte           `json:"frequencies"`
-	Patches     []byte           `json:"patches"`
-	TgLabel     pgtype.Text      `json:"tg_label"`
-	Source      pgtype.Text      `json:"source"`
-}
-
 func (car *callUploadRequest) ToAddCallParams(submitter int) database.AddCallParams {
 	return database.AddCallParams{
-		Submitter: submitter,
-		System:    car.System,
+		Submitter:   common.PtrTo(int32(submitter)),
+		System:      car.System,
+		Talkgroup:   car.Talkgroup,
+		CallDate:    car.DateTime,
+		AudioName:   common.PtrOrNull(car.AudioName),
+		AudioBlob:   car.Audio,
+		AudioType:   common.PtrOrNull(car.AudioType),
+		Frequency:   car.Frequency,
+		Frequencies: car.Frequencies,
+		Patches:     car.Patches,
+		TgLabel:     common.PtrOrNull(car.TalkgroupLabel),
+		TgTag:       common.PtrOrNull(car.TalkgroupTag),
+		TgGroup:     common.PtrOrNull(car.TalkgroupGroup),
+		Source:      car.Source,
 	}
 }
 
@@ -81,7 +77,7 @@ func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if apik.Disabled.Bool || (apik.Expires.Valid && time.Now().After(apik.Expires.Time)) {
+	if (apik.Disabled != nil && *apik.Disabled) || (apik.Expires.Valid && time.Now().After(apik.Expires.Time)) {
 		http.Error(w, "disabled", http.StatusUnauthorized)
 		log.Error().Str("key", apik.ApiKey.String()).Msg("key disabled")
 		return
@@ -94,12 +90,14 @@ func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbCall, err := db.AddCall(r.Context(), call.ToAddCallParams())
+	dbCall, err := db.AddCall(r.Context(), call.ToAddCallParams(apik.Owner))
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		log.Error().Err(err).Msg("add call")
 		return
 	}
+
+	_ = dbCall
 }
 
 func (car *callUploadRequest) fill(r *http.Request) error {
@@ -124,7 +122,12 @@ func (car *callUploadRequest) fill(r *http.Request) error {
 
 			f.SetBytes(audioBytes)
 		case time.Time:
-			t, err := time.Parse(time.RFC3339, r.Form.Get(formField))
+			tval := r.Form.Get(formField)
+			if iv, err := strconv.Atoi(tval); err == nil {
+				f.Set(reflect.ValueOf(time.Unix(int64(iv), 0)))
+				break
+			}
+			t, err := time.Parse(time.RFC3339, tval)
 			if err != nil {
 				return fmt.Errorf("parse time: %w", err)
 			}

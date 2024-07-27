@@ -8,7 +8,6 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
@@ -55,7 +54,7 @@ func AddUser(ctx context.Context, username, email string, isAdmin bool) error {
 		Username: username,
 		Password: string(hashpw),
 		Email:    email,
-		IsAdmin:  pgtype.Bool{Bool: isAdmin, Valid: true},
+		IsAdmin:  isAdmin,
 	})
 
 	return err

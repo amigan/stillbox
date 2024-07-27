@@ -25,3 +25,16 @@ func RunE(c cmdOptions) func(cmd *cobra.Command, args []string) error {
 		return err
 	}
 }
+
+func PtrTo[T any](t T) *T {
+	return &t
+}
+
+func PtrOrNull[T comparable](val T) *T {
+	var zero T
+	if val == zero {
+		return nil
+	}
+
+	return &val
+}

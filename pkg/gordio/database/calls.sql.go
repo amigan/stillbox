@@ -27,9 +27,11 @@ INSERT INTO calls (
 	frequencies,
 	patches,
 	tg_label,
+	tg_tag,
+	tg_group,
 	source
-	) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
-RETURNING id, submitter, system, talkgroup, call_date, audio_name, audio_blob, audio_type, audio_url, frequency, frequencies, patches, tg_label, source, transcript
+	) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
+RETURNING id, submitter, system, talkgroup, call_date, audio_name, audio_blob, audio_type, audio_url, frequency, frequencies, patches, tg_label, tg_tag, tg_group, source, transcript
 `
 
 type AddCallParams struct {
@@ -41,11 +43,13 @@ type AddCallParams struct {
 	AudioBlob   []byte    `json:"audio_blob"`
 	AudioType   *string   `json:"audio_type"`
 	AudioUrl    *string   `json:"audio_url"`
-	Frequency   *int32    `json:"frequency"`
-	Frequencies []byte    `json:"frequencies"`
-	Patches     []byte    `json:"patches"`
+	Frequency   int       `json:"frequency"`
+	Frequencies []int     `json:"frequencies"`
+	Patches     []int     `json:"patches"`
 	TgLabel     *string   `json:"tg_label"`
-	Source      *string   `json:"source"`
+	TgTag       *string   `json:"tg_tag"`
+	TgGroup     *string   `json:"tg_group"`
+	Source      int       `json:"source"`
 }
 
 func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (Call, error) {
@@ -62,6 +66,8 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (Call, error) 
 		arg.Frequencies,
 		arg.Patches,
 		arg.TgLabel,
+		arg.TgTag,
+		arg.TgGroup,
 		arg.Source,
 	)
 	var i Call
@@ -79,6 +85,8 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (Call, error) 
 		&i.Frequencies,
 		&i.Patches,
 		&i.TgLabel,
+		&i.TgTag,
+		&i.TgGroup,
 		&i.Source,
 		&i.Transcript,
 	)
