@@ -55,11 +55,10 @@ BEGIN
 		WHERE
 			talkgroups.system_id = NEW.system AND talkgroups.tgid = NEW.talkgroup AND
 			(
-				talkgroups.name != NEW.tg_label
-				OR NOT (talkgroups_tags.tags @> ARRAY[NEW.tg_tag])
-				OR talkgroups.tg_group != NEW.tg_group
+				talkgroups.name = NEW.tg_label
+				AND (NEW.tg_tag IS NULL OR (talkgroups_tags.tags @> ARRAY[NEW.tg_tag]))
+				AND (NEW.tg_group IS NULL OR talkgroups.tg_group = NEW.tg_group)
 			)
-			AND talkgroups_learned.ignored IS NOT TRUE
 	) THEN
 		INSERT INTO talkgroups_learned(system_id, tgid, group_name, group_tag) VALUES(
 			NEW.system, NEW.talkgroup, NEW.tg_label, NEW.tg_tag
