@@ -68,12 +68,12 @@ type System struct {
 }
 
 type Talkgroup struct {
-	SystemID    int     `json:"system_id"`
-	Tgid        int     `json:"tgid"`
-	Name        *string `json:"name"`
-	Frequency   *int32  `json:"frequency"`
-	AutoCreated *bool   `json:"auto_created"`
-	Metadata    []byte  `json:"metadata"`
+	SystemID  int     `json:"system_id"`
+	Tgid      int     `json:"tgid"`
+	Name      *string `json:"name"`
+	TgGroup   *string `json:"tg_group"`
+	Frequency *int32  `json:"frequency"`
+	Metadata  []byte  `json:"metadata"`
 }
 
 type TalkgroupsLearned struct {
@@ -82,6 +82,7 @@ type TalkgroupsLearned struct {
 	Tgid      int     `json:"tgid"`
 	GroupName string  `json:"group_name"`
 	GroupTag  *string `json:"group_tag"`
+	Ignored   *bool   `json:"ignored"`
 }
 
 type TalkgroupsTag struct {

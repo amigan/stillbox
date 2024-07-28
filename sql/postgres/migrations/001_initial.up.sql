@@ -27,8 +27,8 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	system_id INTEGER REFERENCES systems(id) NOT NULL,
 	tgid INTEGER,
 	name TEXT,
+	tg_group TEXT,
 	frequency INTEGER,
-	auto_created BOOLEAN,
 	metadata JSONB,
 	PRIMARY KEY (system_id, tgid)
 );
@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS talkgroups_learned(
 	tgid INTEGER NOT NULL,
 	group_name TEXT NOT NULL,
 	group_tag TEXT,
-	UNIQUE (system_id, tgid, group_name, group_tag)
+	ignored BOOLEAN,
+	UNIQUE (system_id, tgid, group_name)
 );
 
 CREATE OR REPLACE FUNCTION learn_talkgroup()
@@ -47,18 +48,22 @@ RETURNS TRIGGER AS $$
 BEGIN
 	IF NOT EXISTS (SELECT *
 		FROM talkgroups
-		JOIN talkgroups_tags
+		LEFT JOIN talkgroups_tags
 		ON talkgroups_tags.system_id = talkgroups.system_id AND talkgroups_tags.talkgroup_id = talkgroups.tgid
+		LEFT JOIN talkgroups_learned
+		ON talkgroups_learned.system_id = talkgroups.system_id AND talkgroups_learned.tgid = talkgroups.tgid
 		WHERE
 			talkgroups.system_id = NEW.system AND talkgroups.tgid = NEW.talkgroup AND
 			(
 				talkgroups.name != NEW.tg_label
 				OR NOT (talkgroups_tags.tags @> ARRAY[NEW.tg_tag])
+				OR talkgroups.tg_group != NEW.tg_group
 			)
+			AND talkgroups_learned.ignored IS NOT TRUE
 	) THEN
 		INSERT INTO talkgroups_learned(system_id, tgid, group_name, group_tag) VALUES(
 			NEW.system, NEW.talkgroup, NEW.tg_label, NEW.tg_tag
-		) ON CONFLICT DO NOTHING;
+		) ON CONFLICT (system_id, tgid, group_name) DO UPDATE SET group_tag = EXCLUDED.group_tag;
 	END IF;
 	RETURN NEW;
 END

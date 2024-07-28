@@ -16,8 +16,8 @@ import (
 )
 
 type callUploadRequest struct {
-	Audio          []byte    `form:"audio"`
-	AudioName      string    `form:"audioName"`
+	Audio          []byte `form:"audio"`
+	AudioName      string
 	AudioType      string    `form:"audioType"`
 	DateTime       time.Time `form:"dateTime"`
 	Frequencies    []int     `form:"frequencies"`
@@ -83,15 +83,16 @@ func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Form.Get("test") == "1" {
-		w.Write([]byte("Test succeeded"))
+	if strings.Trim(r.Form.Get("test"), "\r\n") == "1" {
+		// fudge the official response
+		http.Error(w, "incomplete call data: no talkgroup", http.StatusExpectationFailed)
 		return
 	}
 
 	call := new(callUploadRequest)
 	err = call.fill(r)
 	if err != nil {
-		http.Error(w, "cannot bind upload "+err.Error(), 500)
+		http.Error(w, "cannot bind upload "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -101,6 +102,8 @@ func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		log.Error().Err(err).Msg("add call")
 		return
 	}
+
+	w.Write([]byte("Call imported successfully."))
 
 	_ = dbCall
 }
@@ -112,14 +115,18 @@ func (car *callUploadRequest) fill(r *http.Request) error {
 	for i := 0; i < rv.NumField(); i++ {
 		f := rv.Field(i)
 		fi := f.Interface()
-		formField := rt.Field(i).Tag.Get("form")
+		formField, has := rt.Field(i).Tag.Lookup("form")
+		if !has {
+			continue
+		}
 		switch v := fi.(type) {
 		case []byte:
-			file, _, err := r.FormFile(formField)
+			file, hdr, err := r.FormFile(formField)
 			if err != nil {
 				return fmt.Errorf("get form file: %w", err)
 			}
 
+			car.AudioName = hdr.Filename
 			audioBytes, err := io.ReadAll(file)
 			if err != nil {
 				return fmt.Errorf("file read: %w", err)
