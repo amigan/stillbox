@@ -31,7 +31,7 @@ INSERT INTO calls (
 	tg_group,
 	source
 	) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
-RETURNING id, submitter, system, talkgroup, call_date, audio_name, audio_blob, audio_type, audio_url, frequency, frequencies, patches, tg_label, tg_tag, tg_group, source, transcript
+RETURNING id
 `
 
 type AddCallParams struct {
@@ -52,7 +52,7 @@ type AddCallParams struct {
 	Source      int       `json:"source"`
 }
 
-func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (Call, error) {
+func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, addCall,
 		arg.Submitter,
 		arg.System,
@@ -70,27 +70,9 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (Call, error) 
 		arg.TgGroup,
 		arg.Source,
 	)
-	var i Call
-	err := row.Scan(
-		&i.ID,
-		&i.Submitter,
-		&i.System,
-		&i.Talkgroup,
-		&i.CallDate,
-		&i.AudioName,
-		&i.AudioBlob,
-		&i.AudioType,
-		&i.AudioUrl,
-		&i.Frequency,
-		&i.Frequencies,
-		&i.Patches,
-		&i.TgLabel,
-		&i.TgTag,
-		&i.TgGroup,
-		&i.Source,
-		&i.Transcript,
-	)
-	return i, err
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const setCallTranscript = `-- name: SetCallTranscript :exec

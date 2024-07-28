@@ -17,7 +17,7 @@ INSERT INTO calls (
 	tg_group,
 	source
 	) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
-RETURNING *;
+RETURNING id;
 
 -- name: SetCallTranscript :exec
 UPDATE calls SET transcript = $2 WHERE id = $1;
