@@ -83,6 +83,11 @@ func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.Form.Get("test") == "1" {
+		w.Write([]byte("Test succeeded"))
+		return
+	}
+
 	call := new(callUploadRequest)
 	err = call.fill(r)
 	if err != nil {
