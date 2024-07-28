@@ -77,12 +77,12 @@ type Talkgroup struct {
 }
 
 type TalkgroupsLearned struct {
-	ID        int32   `json:"id"`
-	SystemID  int     `json:"system_id"`
-	Tgid      int     `json:"tgid"`
-	GroupName string  `json:"group_name"`
-	GroupTag  *string `json:"group_tag"`
-	Ignored   *bool   `json:"ignored"`
+	ID       int32   `json:"id"`
+	SystemID int     `json:"system_id"`
+	Tgid     int     `json:"tgid"`
+	Name     string  `json:"name"`
+	GroupTag *string `json:"group_tag"`
+	Ignored  *bool   `json:"ignored"`
 }
 
 type TalkgroupsTag struct {

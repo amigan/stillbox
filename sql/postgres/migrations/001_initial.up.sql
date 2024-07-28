@@ -37,32 +37,23 @@ CREATE TABLE IF NOT EXISTS talkgroups_learned(
 	id SERIAL PRIMARY KEY,
 	system_id INTEGER REFERENCES systems(id) NOT NULL,
 	tgid INTEGER NOT NULL,
-	group_name TEXT NOT NULL,
+	name TEXT NOT NULL,
 	group_tag TEXT,
 	ignored BOOLEAN,
-	UNIQUE (system_id, tgid, group_name)
+	UNIQUE (system_id, tgid, name)
 );
 
 CREATE OR REPLACE FUNCTION learn_talkgroup()
 RETURNS TRIGGER AS $$
 BEGIN
-	IF NOT EXISTS (SELECT *
-		FROM talkgroups
-		LEFT JOIN talkgroups_tags
-		ON talkgroups_tags.system_id = talkgroups.system_id AND talkgroups_tags.talkgroup_id = talkgroups.tgid
-		LEFT JOIN talkgroups_learned
-		ON talkgroups_learned.system_id = talkgroups.system_id AND talkgroups_learned.tgid = talkgroups.tgid
-		WHERE
-			talkgroups.system_id = NEW.system AND talkgroups.tgid = NEW.talkgroup AND
-			(
-				talkgroups.name = NEW.tg_label
-				AND (NEW.tg_tag IS NULL OR (talkgroups_tags.tags @> ARRAY[NEW.tg_tag]))
-				AND (NEW.tg_group IS NULL OR talkgroups.tg_group = NEW.tg_group)
-			)
+	IF NOT EXISTS (
+		SELECT tg.system_id, tg.tgid, tg.name FROM talkgroups tg WHERE tg.system_id = NEW.system AND tg.tgid = NEW.talkgroup
+		UNION
+		SELECT tgl.system_id, tgl.tgid, tgl.name FROM talkgroups_learned tgl WHERE tgl.system_id = NEW.system AND tgl.tgid = NEW.talkgroup
 	) THEN
-		INSERT INTO talkgroups_learned(system_id, tgid, group_name, group_tag) VALUES(
+		INSERT INTO talkgroups_learned(system_id, tgid, name, group_tag) VALUES(
 			NEW.system, NEW.talkgroup, NEW.tg_label, NEW.tg_tag
-		) ON CONFLICT (system_id, tgid, group_name) DO UPDATE SET group_tag = EXCLUDED.group_tag;
+		) ON CONFLICT DO NOTHING;
 	END IF;
 	RETURN NEW;
 END
