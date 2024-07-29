@@ -10,19 +10,25 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/pkg/gordio/auth"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
+// HTTPIngestor is an ingestor that accepts calls over HTTP.
 type HTTPIngestor struct {
+	auth *auth.Authenticator
 }
 
-func NewHTTPIngestor() *HTTPIngestor {
-	return new(HTTPIngestor)
+// NewHTTPIngestor creates a new HTTPIngestor. It requires an Authenticator.
+func NewHTTPIngestor(auth *auth.Authenticator) *HTTPIngestor {
+	return &HTTPIngestor{
+		auth: auth,
+	}
 }
 
+// InstallRoutes installs the HTTP ingestor's routes to the provided chi Router.
 func (h *HTTPIngestor) InstallRoutes(r chi.Router) {
 	r.Post("/api/call-upload", h.routeCallUpload)
 }
@@ -46,7 +52,7 @@ type callUploadRequest struct {
 	TalkgroupTag   string    `form:"talkgroupTag"`
 }
 
-func (car *callUploadRequest) ToAddCallParams(submitter int) database.AddCallParams {
+func (car *callUploadRequest) toAddCallParams(submitter int) database.AddCallParams {
 	return database.AddCallParams{
 		Submitter:   common.PtrTo(int32(submitter)),
 		System:      car.System,
@@ -72,28 +78,15 @@ func (h *HTTPIngestor) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keyUuid, err := uuid.Parse(r.Form.Get("key"))
-	if err != nil {
-		http.Error(w, "cannot parse key "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	db := database.FromCtx(r.Context())
-	apik, err := db.GetAPIKey(r.Context(), keyUuid)
-	if err != nil {
-		if database.IsNoRows(err) {
-			http.Error(w, "bad key", http.StatusUnauthorized)
-			return
-		}
+	ctx := r.Context()
 
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	apik, err := h.auth.CheckAPIKey(ctx, r.Form.Get("key"))
+	if err != nil {
+		auth.ErrorResponse(w, err)
 		return
 	}
 
-	if (apik.Disabled != nil && *apik.Disabled) || (apik.Expires.Valid && time.Now().After(apik.Expires.Time)) {
-		http.Error(w, "disabled", http.StatusUnauthorized)
-		log.Error().Str("key", apik.ApiKey.String()).Msg("key disabled")
-		return
-	}
+	db := database.FromCtx(ctx)
 
 	if strings.Trim(r.Form.Get("test"), "\r\n") == "1" {
 		// fudge the official response
@@ -108,7 +101,7 @@ func (h *HTTPIngestor) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbCall, err := db.AddCall(r.Context(), call.ToAddCallParams(apik.Owner))
+	dbCall, err := db.AddCall(ctx, call.toAddCallParams(apik.Owner))
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		log.Error().Err(err).Msg("add call")

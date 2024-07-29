@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-
 type claims map[string]interface{}
 
 func (a *Authenticator) Authenticated(r *http.Request) (claims, bool) {

@@ -13,11 +13,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// DB is a database handle.
 type DB struct {
 	*pgxpool.Pool
 	*Queries
 }
 
+// NewClient creates a new DB using the provided config.
 func NewClient(conf config.DB) (*DB, error) {
 	dir, err := iofs.New(sqlembed.Migrations, "postgres/migrations")
 	if err != nil {
@@ -53,6 +55,7 @@ type DBCtxKey string
 
 const DBCTXKeyValue DBCtxKey = "dbctx"
 
+// FromCtx returns the database handle from the provided Context.
 func FromCtx(ctx context.Context) *DB {
 	c, ok := ctx.Value(DBCTXKeyValue).(*DB)
 	if !ok {
@@ -62,10 +65,13 @@ func FromCtx(ctx context.Context) *DB {
 	return c
 }
 
+// CtxWithDB returns a Context with the provided database handle.
 func CtxWithDB(ctx context.Context, conn *DB) context.Context {
 	return context.WithValue(ctx, DBCTXKeyValue, conn)
 }
 
+// IsNoRows is a convenience function that returns whether a returned error is a database
+// no rows error.
 func IsNoRows(err error) bool {
 	return strings.Contains(err.Error(), "no rows in result set")
 }

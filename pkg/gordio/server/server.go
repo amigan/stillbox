@@ -3,20 +3,20 @@ package server
 import (
 	"net/http"
 
+	"dynatron.me/x/stillbox/pkg/gordio/auth"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"dynatron.me/x/stillbox/pkg/gordio/ingestors"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/jwtauth/v5"
 )
 
 type Server struct {
-	conf *config.Config
-	db   *database.DB
-	r    *chi.Mux
-	jwt  *jwtauth.JWTAuth
-	hi   *ingestors.HTTPIngestor
+	auth         *auth.Authenticator
+	conf         *config.Config
+	db           *database.DB
+	r            *chi.Mux
+	httpIngestor *ingestors.HTTPIngestor
 }
 
 func New(cfg *config.Config) (*Server, error) {
@@ -26,12 +26,13 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 
 	r := chi.NewRouter()
+	authenticator := auth.NewAuthenticator(cfg.JWTSecret, cfg.Domain)
 	srv := &Server{
-		conf: cfg,
-		db:   db,
-		r:    r,
-		jwt:  jwtauth.New("HS256", []byte(cfg.JWTSecret), nil),
-		hi:   ingestors.NewHTTPIngestor(),
+		auth:         authenticator,
+		conf:         cfg,
+		db:           db,
+		r:            r,
+		httpIngestor: ingestors.NewHTTPIngestor(authenticator),
 	}
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)

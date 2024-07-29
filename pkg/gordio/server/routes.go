@@ -8,7 +8,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
-	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
 )
 
@@ -17,22 +16,22 @@ func (s *Server) setupRoutes() {
 	r.Use(middleware.WithValue(database.DBCTXKeyValue, s.db))
 
 	r.Group(func(r chi.Router) {
-		r.Use(jwtauth.Verifier(s.jwt))
-		r.Use(jwtauth.Authenticator(s.jwt))
-
+		// authenticated routes
+		s.auth.InstallVerifyMiddleware(r)
+		s.auth.InstallAuthMiddleware(r)
 	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(rateLimiter())
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		// public routes
-		r.Post("/auth", s.routeAuth)
-		s.hi.InstallRoutes(r)
+		s.auth.InstallRoutes(r)
+		s.httpIngestor.InstallRoutes(r)
 	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(rateLimiter())
-		r.Use(jwtauth.Verifier(s.jwt))
+		s.auth.InstallVerifyMiddleware(r)
 
 		// optional auth routes
 
@@ -45,41 +44,8 @@ func rateLimiter() func(http.Handler) http.Handler {
 }
 
 func (s *Server) routeIndex(w http.ResponseWriter, r *http.Request) {
-	if cl, authenticated := s.Authenticated(r); authenticated {
+	if cl, authenticated := s.auth.Authenticated(r); authenticated {
 		w.Write([]byte("Hello " + cl["user"].(string) + "\n"))
 	}
 	w.Write([]byte("Welcome to gordio\n"))
-}
-
-func (s *Server) routeAuth(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	username, password := r.PostFormValue("username"), r.PostFormValue("password")
-	if username == "" || password == "" {
-		http.Error(w, "blank credentials", http.StatusBadRequest)
-		return
-	}
-
-	tok, err := s.Login(r.Context(), username, password)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "jwt",
-		Value:    tok,
-		HttpOnly: true,
-		Secure:   true,
-		Domain:   s.conf.Domain,
-	})
-
-	jr := struct {
-		JWT string `json:"jwt"`
-	}{
-		JWT: tok,
-	}
-	render.JSON(w, r, &jr)
 }

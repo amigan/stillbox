@@ -23,6 +23,7 @@ var (
 	ErrInvalidArguments = errors.New("invalid arguments")
 )
 
+// AddUser adds a new user to the database. It asks for the password on the terminal.
 func AddUser(ctx context.Context, username, email string, isAdmin bool) error {
 	if username == "" || email == "" {
 		return ErrInvalidArguments
@@ -60,6 +61,7 @@ func AddUser(ctx context.Context, username, email string, isAdmin bool) error {
 	return err
 }
 
+// Passwd changes a user's password. It asks for the password on the terminal.
 func Passwd(ctx context.Context, username string) error {
 	if username == "" {
 		return ErrInvalidArguments
@@ -106,6 +108,7 @@ func readPassword(prompt string) (string, error) {
 	return string(pw), err
 }
 
+// Command is the users command.
 func Command(cfg *config.Config) []*cobra.Command {
 	userCmd := &cobra.Command{
 		Use:     "users",
