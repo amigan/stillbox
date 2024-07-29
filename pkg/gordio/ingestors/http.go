@@ -1,4 +1,4 @@
-package server
+package ingestors
 
 import (
 	"fmt"
@@ -11,9 +11,21 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
+
+type HTTPIngestor struct {
+}
+
+func NewHTTPIngestor() *HTTPIngestor {
+	return new(HTTPIngestor)
+}
+
+func (h *HTTPIngestor) InstallRoutes(r chi.Router) {
+	r.Post("/api/call-upload", h.routeCallUpload)
+}
 
 type callUploadRequest struct {
 	Audio          []byte `form:"audio"`
@@ -53,7 +65,7 @@ func (car *callUploadRequest) ToAddCallParams(submitter int) database.AddCallPar
 	}
 }
 
-func (s *Server) routeCallUpload(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPIngestor) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(1024 * 1024 * 2) // 2MB
 	if err != nil {
 		http.Error(w, "cannot parse form "+err.Error(), http.StatusBadRequest)

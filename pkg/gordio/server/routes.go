@@ -27,7 +27,7 @@ func (s *Server) setupRoutes() {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		// public routes
 		r.Post("/auth", s.routeAuth)
-		r.Post("/api/call-upload", s.routeCallUpload)
+		s.hi.InstallRoutes(r)
 	})
 
 	r.Group(func(r chi.Router) {

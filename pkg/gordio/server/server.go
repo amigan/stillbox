@@ -5,6 +5,7 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
+	"dynatron.me/x/stillbox/pkg/gordio/ingestors"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
@@ -15,6 +16,7 @@ type Server struct {
 	db   *database.DB
 	r    *chi.Mux
 	jwt  *jwtauth.JWTAuth
+	hi   *ingestors.HTTPIngestor
 }
 
 func New(cfg *config.Config) (*Server, error) {
@@ -29,6 +31,7 @@ func New(cfg *config.Config) (*Server, error) {
 		db:   db,
 		r:    r,
 		jwt:  jwtauth.New("HS256", []byte(cfg.JWTSecret), nil),
+		hi:   ingestors.NewHTTPIngestor(),
 	}
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
