@@ -108,9 +108,9 @@ func (h *HTTPIngestor) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("Call imported successfully."))
+	log.Info().Str("id", dbCall.String()).Int("system", call.System).Int("tgid", call.Talkgroup).Msg("ingested")
 
-	_ = dbCall
+	w.Write([]byte("Call imported successfully."))
 }
 
 func (car *callUploadRequest) fill(r *http.Request) error {
