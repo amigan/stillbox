@@ -10,6 +10,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// CheckAPIKey validates the provided key and returns the API key record.
+// An error is returned if validation fails for any reason.
 func (a *Authenticator) CheckAPIKey(ctx context.Context, key string) (*database.ApiKey, error) {
 	keyUuid, err := uuid.Parse(key)
 	if err != nil {
@@ -25,6 +27,7 @@ func (a *Authenticator) CheckAPIKey(ctx context.Context, key string) (*database.
 			return nil, ErrUnauthorized
 		}
 
+		log.Error().Str("apikey", keyUuid.String()).Err(err).Msg("error looking up key")
 		return nil, ErrInternal
 	}
 
