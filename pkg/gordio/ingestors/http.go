@@ -18,11 +18,11 @@ import (
 
 // HTTPIngestor is an ingestor that accepts calls over HTTP.
 type HTTPIngestor struct {
-	auth *auth.Authenticator
+	auth auth.Authenticator
 }
 
 // NewHTTPIngestor creates a new HTTPIngestor. It requires an Authenticator.
-func NewHTTPIngestor(auth *auth.Authenticator) *HTTPIngestor {
+func NewHTTPIngestor(auth auth.Authenticator) *HTTPIngestor {
 	return &HTTPIngestor{
 		auth: auth,
 	}

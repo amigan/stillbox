@@ -12,7 +12,7 @@ import (
 )
 
 type Server struct {
-	auth         *auth.Authenticator
+	auth         auth.Authenticator
 	conf         *config.Config
 	db           *database.DB
 	r            *chi.Mux

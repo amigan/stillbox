@@ -15,27 +15,40 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type jwtAuth interface {
+	// Authenticated returns whether the request is authenticated. It also returns the claims.
+	Authenticated(r *http.Request) (claims, bool)
+
+	// Login attempts to return a JWT for the provided user and password.
+	Login(ctx context.Context, username, password string) (token string, err error)
+
+	// InstallVerifyMiddleware installs the JWT verifier middleware to the provided chi Router.
+	InstallVerifyMiddleware(r chi.Router)
+
+	// InstallAuthMiddleware installs the JWT authenticator middleware to the provided chi Router.
+	InstallAuthMiddleware(r chi.Router)
+
+	// InstallRoutes installs the auth route to the provided chi Router.
+	InstallRoutes(r chi.Router)
+}
+
 type claims map[string]interface{}
 
-// Authenticated returns whether the request is authenticated. It also returns the claims.
-func (a *Authenticator) Authenticated(r *http.Request) (claims, bool) {
+func (a *authenticator) Authenticated(r *http.Request) (claims, bool) {
 	// TODO: check IP against ACL, or conf.Public, and against map of routes
 	tok, cl, err := jwtauth.FromContext(r.Context())
 	return cl, err != nil && tok != nil
 }
 
-// InstallVerifyMiddleware installs the JWT verifier middleware to the provided chi Router.
-func (a *Authenticator) InstallVerifyMiddleware(r chi.Router) {
+func (a *authenticator) InstallVerifyMiddleware(r chi.Router) {
 	r.Use(jwtauth.Verifier(a.jwt))
 }
 
-// InstallVerifyMiddleware installs the JWT authenticator middleware to the provided chi Router.
-func (a *Authenticator) InstallAuthMiddleware(r chi.Router) {
+func (a *authenticator) InstallAuthMiddleware(r chi.Router) {
 	r.Use(jwtauth.Authenticator(a.jwt))
 }
 
-// Login attempts to return a JWT for the provided user and password.
-func (a *Authenticator) Login(ctx context.Context, username, password string) (token string, err error) {
+func (a *authenticator) Login(ctx context.Context, username, password string) (token string, err error) {
 	q := database.New(database.FromCtx(ctx))
 	users, err := q.GetUsers(ctx)
 	if err != nil {
@@ -64,7 +77,7 @@ func (a *Authenticator) Login(ctx context.Context, username, password string) (t
 	return a.newToken(found.ID), nil
 }
 
-func (a *Authenticator) newToken(uid int32) string {
+func (a *authenticator) newToken(uid int32) string {
 	claims := claims{
 		"user_id": uid,
 	}
@@ -76,12 +89,11 @@ func (a *Authenticator) newToken(uid int32) string {
 	return tokenString
 }
 
-// InstallRoutes installs the auth route to the provided chi Router.
-func (a *Authenticator) InstallRoutes(r chi.Router) {
+func (a *authenticator) InstallRoutes(r chi.Router) {
 	r.Post("/auth", a.routeAuth)
 }
 
-func (a *Authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
+func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

@@ -8,14 +8,19 @@ import (
 )
 
 // Authenticator performs API key and user JWT authentication.
-type Authenticator struct {
+type Authenticator interface {
+	jwtAuth
+	apiKeyAuth
+}
+
+type authenticator struct {
 	domain string
 	jwt    *jwtauth.JWTAuth
 }
 
 // NewAuthenticator creates a new Authenticator with the provided JWT secret and cookie domain.
-func NewAuthenticator(jwtSecret string, domain string) *Authenticator {
-	return &Authenticator{
+func NewAuthenticator(jwtSecret string, domain string) Authenticator {
+	return &authenticator{
 		domain: domain,
 		jwt:    jwtauth.New("HS256", []byte(jwtSecret), nil),
 	}

@@ -10,9 +10,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// CheckAPIKey validates the provided key and returns the API key record.
-// An error is returned if validation fails for any reason.
-func (a *Authenticator) CheckAPIKey(ctx context.Context, key string) (*database.ApiKey, error) {
+type apiKeyAuth interface {
+	// CheckAPIKey validates the provided key and returns the API key record.
+	// An error is returned if validation fails for any reason.
+	CheckAPIKey(ctx context.Context, key string) (*database.ApiKey, error)
+}
+
+func (a *authenticator) CheckAPIKey(ctx context.Context, key string) (*database.ApiKey, error) {
 	keyUuid, err := uuid.Parse(key)
 	if err != nil {
 		log.Error().Str("apikey", key).Msg("cannot parse key")
