@@ -30,8 +30,11 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	tg_group TEXT,
 	frequency INTEGER,
 	metadata JSONB,
+	tags TEXT[] NOT NULL DEFAULT '{}',
 	PRIMARY KEY (system_id, tgid)
 );
+
+CREATE INDEX IF NOT EXISTS talkgroup_id_tags ON talkgroups USING GIN (tags);
 
 CREATE TABLE IF NOT EXISTS talkgroups_learned(
 	id SERIAL PRIMARY KEY,
@@ -58,15 +61,6 @@ BEGIN
 	RETURN NEW;
 END
 $$ LANGUAGE plpgsql;
-
-CREATE TABLE IF NOT EXISTS talkgroups_tags(
-	system_id INTEGER NOT NULL,
-	talkgroup_id INTEGER NOT NULL,
-	tags TEXT[] NOT NULL DEFAULT '{}',
-	FOREIGN KEY (system_id, talkgroup_id) REFERENCES talkgroups (system_id, tgid),
-	PRIMARY KEY (system_id, talkgroup_id)
-);
-CREATE INDEX IF NOT EXISTS talkgroup_tags_id_tags ON talkgroups_tags USING GIN (tags);
 
 CREATE TABLE IF NOT EXISTS calls(
 	id UUID PRIMARY KEY,

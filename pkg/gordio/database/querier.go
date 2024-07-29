@@ -18,15 +18,15 @@ type Querier interface {
 	DeleteAPIKey(ctx context.Context, apiKey uuid.UUID) error
 	DeleteUser(ctx context.Context, username string) error
 	GetAPIKey(ctx context.Context, apiKey uuid.UUID) (ApiKey, error)
-	GetTalkgroupTags(ctx context.Context, talkgroupID int) ([]string, error)
-	GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAllTagsRow, error)
-	GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAnyTagsRow, error)
+	GetTalkgroupTags(ctx context.Context, systemID int, tgid int) ([]string, error)
+	GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]Talkgroup, error)
+	GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]Talkgroup, error)
 	GetUserByID(ctx context.Context, id int32) (User, error)
 	GetUserByUID(ctx context.Context, id int32) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUsers(ctx context.Context) ([]User, error)
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error
-	SetTalkgroupTags(ctx context.Context, systemID int, talkgroupID int, tags []string) error
+	SetTalkgroupTags(ctx context.Context, tags []string, tgid int) error
 	UpdatePassword(ctx context.Context, username string, password string) error
 }
 

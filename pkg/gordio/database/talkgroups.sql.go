@@ -10,37 +10,40 @@ import (
 )
 
 const getTalkgroupTags = `-- name: GetTalkgroupTags :one
-SELECT tags FROM talkgroups_tags
-WHERE talkgroup_id = $1
+SELECT tags FROM talkgroups
+WHERE system_id = $1 AND tgid = $2
 `
 
-func (q *Queries) GetTalkgroupTags(ctx context.Context, talkgroupID int) ([]string, error) {
-	row := q.db.QueryRow(ctx, getTalkgroupTags, talkgroupID)
+func (q *Queries) GetTalkgroupTags(ctx context.Context, systemID int, tgid int) ([]string, error) {
+	row := q.db.QueryRow(ctx, getTalkgroupTags, systemID, tgid)
 	var tags []string
 	err := row.Scan(&tags)
 	return tags, err
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
-SELECT system_id, talkgroup_id FROM talkgroups_tags
+SELECT system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups
 WHERE tags && ARRAY[$1]
 `
 
-type GetTalkgroupsWithAllTagsRow struct {
-	SystemID    int `json:"system_id"`
-	TalkgroupID int `json:"talkgroup_id"`
-}
-
-func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAllTagsRow, error) {
+func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]Talkgroup, error) {
 	rows, err := q.db.Query(ctx, getTalkgroupsWithAllTags, tags)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetTalkgroupsWithAllTagsRow
+	var items []Talkgroup
 	for rows.Next() {
-		var i GetTalkgroupsWithAllTagsRow
-		if err := rows.Scan(&i.SystemID, &i.TalkgroupID); err != nil {
+		var i Talkgroup
+		if err := rows.Scan(
+			&i.SystemID,
+			&i.Tgid,
+			&i.Name,
+			&i.TgGroup,
+			&i.Frequency,
+			&i.Metadata,
+			&i.Tags,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -52,25 +55,28 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 }
 
 const getTalkgroupsWithAnyTags = `-- name: GetTalkgroupsWithAnyTags :many
-SELECT system_id, talkgroup_id FROM talkgroups_tags
+SELECT system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups
 WHERE tags @> ARRAY[$1]
 `
 
-type GetTalkgroupsWithAnyTagsRow struct {
-	SystemID    int `json:"system_id"`
-	TalkgroupID int `json:"talkgroup_id"`
-}
-
-func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAnyTagsRow, error) {
+func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]Talkgroup, error) {
 	rows, err := q.db.Query(ctx, getTalkgroupsWithAnyTags, tags)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetTalkgroupsWithAnyTagsRow
+	var items []Talkgroup
 	for rows.Next() {
-		var i GetTalkgroupsWithAnyTagsRow
-		if err := rows.Scan(&i.SystemID, &i.TalkgroupID); err != nil {
+		var i Talkgroup
+		if err := rows.Scan(
+			&i.SystemID,
+			&i.Tgid,
+			&i.Name,
+			&i.TgGroup,
+			&i.Frequency,
+			&i.Metadata,
+			&i.Tags,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -82,11 +88,11 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 }
 
 const setTalkgroupTags = `-- name: SetTalkgroupTags :exec
-INSERT INTO talkgroups_tags(system_id, talkgroup_id, tags) VALUES($1, $2, $3)
-ON CONFLICT (system_id, talkgroup_id) DO UPDATE SET tags = $3
+UPDATE talkgroups SET tags = $1
+WHERE system_id = $1 AND tgid = $2
 `
 
-func (q *Queries) SetTalkgroupTags(ctx context.Context, systemID int, talkgroupID int, tags []string) error {
-	_, err := q.db.Exec(ctx, setTalkgroupTags, systemID, talkgroupID, tags)
+func (q *Queries) SetTalkgroupTags(ctx context.Context, tags []string, tgid int) error {
+	_, err := q.db.Exec(ctx, setTalkgroupTags, tags, tgid)
 	return err
 }
