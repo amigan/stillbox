@@ -1,0 +1,19 @@
+syntax = "proto3";
+package stillbox;
+option go_package = "./pb";
+
+import "google/protobuf/timestamp.proto";
+
+message Call {
+  string audio_name = 1;
+  string audio_type = 2;
+  google.protobuf.Timestamp date_time = 3;
+  int32 system = 4;
+  int32 talkgroup = 5;
+  int32 source = 6;
+  int64 frequency = 7;
+  repeated int64 frequencies = 8;
+  repeated int32 patches = 9;
+  repeated int32 sources = 10;
+  bytes audio = 11;
+}
