@@ -55,5 +55,4 @@ func (s *DatabaseSink) toAddCallParams(call *calls.Call) database.AddCallParams 
 		TgGroup:     call.TalkgroupGroup,
 		Source:      call.Source,
 	}
-
 }
