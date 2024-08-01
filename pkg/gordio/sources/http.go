@@ -1,4 +1,4 @@
-package ingestors
+package sources
 
 import (
 	"fmt"
@@ -11,25 +11,31 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/gordio/auth"
-	"dynatron.me/x/stillbox/pkg/gordio/database"
+	"dynatron.me/x/stillbox/pkg/gordio/calls"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
-// HTTPIngestor is an ingestor that accepts calls over HTTP.
-type HTTPIngestor struct {
+// RdioHTTP is an source that accepts calls using the rdio-scanner HTTP interface.
+type RdioHTTP struct {
 	auth auth.Authenticator
+	ing  Ingestor
+}
+
+func (r *RdioHTTP) SourceType() string {
+	return "rdio-http"
 }
 
 // NewHTTPIngestor creates a new HTTPIngestor. It requires an Authenticator.
-func NewHTTPIngestor(auth auth.Authenticator) *HTTPIngestor {
-	return &HTTPIngestor{
+func NewRdioHTTP(auth auth.Authenticator, ing Ingestor) *RdioHTTP {
+	return &RdioHTTP{
 		auth: auth,
+		ing:  ing,
 	}
 }
 
-// InstallRoutes installs the HTTP ingestor's routes to the provided chi Router.
-func (h *HTTPIngestor) InstallRoutes(r chi.Router) {
+// InstallPublicRoutes installs the HTTP source's routes to the provided chi Router.
+func (h *RdioHTTP) InstallPublicRoutes(r chi.Router) {
 	r.Post("/api/call-upload", h.routeCallUpload)
 }
 
@@ -52,26 +58,41 @@ type callUploadRequest struct {
 	TalkgroupTag   string    `form:"talkgroupTag"`
 }
 
-func (car *callUploadRequest) toAddCallParams(submitter int) database.AddCallParams {
-	return database.AddCallParams{
-		Submitter:   common.PtrTo(int32(submitter)),
-		System:      car.System,
-		Talkgroup:   car.Talkgroup,
-		CallDate:    car.DateTime,
-		AudioName:   common.PtrOrNull(car.AudioName),
-		AudioBlob:   car.Audio,
-		AudioType:   common.PtrOrNull(car.AudioType),
-		Frequency:   car.Frequency,
-		Frequencies: car.Frequencies,
-		Patches:     car.Patches,
-		TgLabel:     common.PtrOrNull(car.TalkgroupLabel),
-		TgTag:       common.PtrOrNull(car.TalkgroupTag),
-		TgGroup:     common.PtrOrNull(car.TalkgroupGroup),
-		Source:      car.Source,
+func (car *callUploadRequest) mimeType() string {
+	// this is super naïve
+	fn := car.AudioName
+	switch {
+	case car.AudioType != "":
+		return car.AudioType
+	case strings.HasSuffix(fn, ".mp3"):
+		return "audio/mpeg"
+	case strings.HasSuffix(fn, ".wav"):
+		return "audio/wav"
+	}
+
+	return ""
+}
+
+func (car *callUploadRequest) toCall(submitter auth.UserID) *calls.Call {
+	return &calls.Call{
+		Submitter:      &submitter,
+		System:         car.System,
+		Talkgroup:      car.Talkgroup,
+		DateTime:       car.DateTime,
+		AudioName:      car.AudioName,
+		Audio:          car.Audio,
+		AudioType:      car.mimeType(),
+		Frequency:      car.Frequency,
+		Frequencies:    car.Frequencies,
+		Patches:        car.Patches,
+		TalkgroupLabel: common.PtrOrNull(car.TalkgroupLabel),
+		TalkgroupTag:   common.PtrOrNull(car.TalkgroupTag),
+		TalkgroupGroup: common.PtrOrNull(car.TalkgroupGroup),
+		Source:         car.Source,
 	}
 }
 
-func (h *HTTPIngestor) routeCallUpload(w http.ResponseWriter, r *http.Request) {
+func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(1024 * 1024 * 2) // 2MB
 	if err != nil {
 		http.Error(w, "cannot parse form "+err.Error(), http.StatusBadRequest)
@@ -80,13 +101,11 @@ func (h *HTTPIngestor) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	apik, err := h.auth.CheckAPIKey(ctx, r.Form.Get("key"))
+	submitter, err := h.auth.CheckAPIKey(ctx, r.Form.Get("key"))
 	if err != nil {
 		auth.ErrorResponse(w, err)
 		return
 	}
-
-	db := database.FromCtx(ctx)
 
 	if strings.Trim(r.Form.Get("test"), "\r\n") == "1" {
 		// fudge the official response
@@ -94,21 +113,16 @@ func (h *HTTPIngestor) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	call := new(callUploadRequest)
-	err = call.fill(r)
+	cur := new(callUploadRequest)
+	err = cur.fill(r)
 	if err != nil {
 		http.Error(w, "cannot bind upload "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
-	dbCall, err := db.AddCall(ctx, call.toAddCallParams(apik.Owner))
-	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
-		log.Error().Err(err).Msg("add call")
-		return
-	}
+	h.ing.Ingest(ctx, cur.toCall(*submitter))
 
-	log.Info().Str("id", dbCall.String()).Int("system", call.System).Int("tgid", call.Talkgroup).Msg("ingested")
+	log.Info().Int("system", cur.System).Int("tgid", cur.Talkgroup).Msg("ingested")
 
 	w.Write([]byte("Call imported successfully."))
 }

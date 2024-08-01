@@ -26,7 +26,7 @@ func (s *Server) setupRoutes() {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		// public routes
 		s.auth.InstallRoutes(r)
-		s.httpIngestor.InstallRoutes(r)
+		s.sources.InstallPublicRoutes(r)
 	})
 
 	r.Group(func(r chi.Router) {

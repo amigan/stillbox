@@ -6,17 +6,19 @@ import (
 	"dynatron.me/x/stillbox/pkg/gordio/auth"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
-	"dynatron.me/x/stillbox/pkg/gordio/ingestors"
+	"dynatron.me/x/stillbox/pkg/gordio/sinks"
+	"dynatron.me/x/stillbox/pkg/gordio/sources"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
 type Server struct {
-	auth         auth.Authenticator
-	conf         *config.Config
-	db           *database.DB
-	r            *chi.Mux
-	httpIngestor *ingestors.HTTPIngestor
+	auth    auth.Authenticator
+	conf    *config.Config
+	db      *database.DB
+	r       *chi.Mux
+	sources sources.Sources
+	sinks   sinks.Sinks
 }
 
 func New(cfg *config.Config) (*Server, error) {
@@ -28,12 +30,15 @@ func New(cfg *config.Config) (*Server, error) {
 	r := chi.NewRouter()
 	authenticator := auth.NewAuthenticator(cfg.JWTSecret, cfg.Domain)
 	srv := &Server{
-		auth:         authenticator,
-		conf:         cfg,
-		db:           db,
-		r:            r,
-		httpIngestor: ingestors.NewHTTPIngestor(authenticator),
+		auth: authenticator,
+		conf: cfg,
+		db:   db,
+		r:    r,
 	}
+
+	srv.sinks.Register("database", sinks.NewDatabaseSink(db))
+	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
+
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)

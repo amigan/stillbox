@@ -7,6 +7,18 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 )
 
+type UserID int
+
+func (u *UserID) Int32Ptr() *int32 {
+	if u == nil {
+		return nil
+	}
+
+	i := int32(*u)
+
+	return &i
+}
+
 // Authenticator performs API key and user JWT authentication.
 type Authenticator interface {
 	jwtAuth

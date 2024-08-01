@@ -11,12 +11,12 @@ import (
 )
 
 type apiKeyAuth interface {
-	// CheckAPIKey validates the provided key and returns the API key record.
+	// CheckAPIKey validates the provided key and returns the API owner's UserID.
 	// An error is returned if validation fails for any reason.
-	CheckAPIKey(ctx context.Context, key string) (*database.ApiKey, error)
+	CheckAPIKey(ctx context.Context, key string) (*UserID, error)
 }
 
-func (a *authenticator) CheckAPIKey(ctx context.Context, key string) (*database.ApiKey, error) {
+func (a *authenticator) CheckAPIKey(ctx context.Context, key string) (*UserID, error) {
 	keyUuid, err := uuid.Parse(key)
 	if err != nil {
 		log.Error().Str("apikey", key).Msg("cannot parse key")
@@ -40,5 +40,7 @@ func (a *authenticator) CheckAPIKey(ctx context.Context, key string) (*database.
 		return nil, ErrUnauthorized
 	}
 
-	return &apik, nil
+	owner := UserID(apik.Owner)
+
+	return &owner, nil
 }
