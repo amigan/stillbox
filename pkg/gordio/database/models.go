@@ -17,7 +17,7 @@ type ApiKey struct {
 	CreatedAt time.Time        `json:"created_at"`
 	Expires   pgtype.Timestamp `json:"expires"`
 	Disabled  *bool            `json:"disabled"`
-	ApiKey    uuid.UUID        `json:"api_key"`
+	ApiKey    string           `json:"api_key"`
 }
 
 type Call struct {

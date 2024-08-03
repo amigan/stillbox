@@ -15,9 +15,9 @@ type Querier interface {
 	AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, error)
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeleteAPIKey(ctx context.Context, apiKey uuid.UUID) error
+	DeleteAPIKey(ctx context.Context, apiKey string) error
 	DeleteUser(ctx context.Context, username string) error
-	GetAPIKey(ctx context.Context, apiKey uuid.UUID) (ApiKey, error)
+	GetAPIKey(ctx context.Context, apiKey string) (ApiKey, error)
 	GetTalkgroupTags(ctx context.Context, systemID int, tgid int) ([]string, error)
 	GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]Talkgroup, error)
 	GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]Talkgroup, error)

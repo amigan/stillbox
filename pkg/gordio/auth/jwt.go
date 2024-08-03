@@ -23,13 +23,13 @@ type jwtAuth interface {
 	Login(ctx context.Context, username, password string) (token string, err error)
 
 	// InstallVerifyMiddleware installs the JWT verifier middleware to the provided chi Router.
-	InstallVerifyMiddleware(r chi.Router)
+	VerifyMiddleware() func(http.Handler) http.Handler
 
 	// InstallAuthMiddleware installs the JWT authenticator middleware to the provided chi Router.
-	InstallAuthMiddleware(r chi.Router)
+	AuthMiddleware() func(http.Handler) http.Handler
 
 	// InstallRoutes installs the auth route to the provided chi Router.
-	InstallRoutes(r chi.Router)
+	Routes() chi.Router
 }
 
 type claims map[string]interface{}
@@ -40,12 +40,12 @@ func (a *authenticator) Authenticated(r *http.Request) (claims, bool) {
 	return cl, err != nil && tok != nil
 }
 
-func (a *authenticator) InstallVerifyMiddleware(r chi.Router) {
-	r.Use(jwtauth.Verifier(a.jwt))
+func (a *authenticator) VerifyMiddleware() func(http.Handler) http.Handler {
+	return jwtauth.Verifier(a.jwt)
 }
 
-func (a *authenticator) InstallAuthMiddleware(r chi.Router) {
-	r.Use(jwtauth.Authenticator(a.jwt))
+func (a *authenticator) AuthMiddleware() func(http.Handler) http.Handler {
+	return jwtauth.Authenticator(a.jwt)
 }
 
 func (a *authenticator) Login(ctx context.Context, username, password string) (token string, err error) {
@@ -89,8 +89,11 @@ func (a *authenticator) newToken(uid int32) string {
 	return tokenString
 }
 
-func (a *authenticator) InstallRoutes(r chi.Router) {
+func (a *authenticator) Routes() chi.Router {
+	r := chi.NewRouter()
 	r.Post("/auth", a.routeAuth)
+
+	return r
 }
 
 func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {

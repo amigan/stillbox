@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS api_keys(
 	created_at TIMESTAMP NOT NULL,
 	expires TIMESTAMP,
 	disabled BOOLEAN,
-	api_key UUID UNIQUE NOT NULL
+	api_key TEXT UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS systems(

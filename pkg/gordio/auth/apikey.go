@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/gordio/database"
@@ -24,7 +26,9 @@ func (a *authenticator) CheckAPIKey(ctx context.Context, key string) (*UserID, e
 	}
 
 	db := database.FromCtx(ctx)
-	apik, err := db.GetAPIKey(ctx, keyUuid)
+	hash := sha256.Sum256([]byte(keyUuid.String()))
+	b64hash := base64.StdEncoding.EncodeToString(hash[:])
+	apik, err := db.GetAPIKey(ctx, b64hash)
 	if err != nil {
 		if database.IsNoRows(err) {
 			log.Error().Str("apikey", keyUuid.String()).Msg("no such key")
@@ -36,7 +40,7 @@ func (a *authenticator) CheckAPIKey(ctx context.Context, key string) (*UserID, e
 	}
 
 	if (apik.Disabled != nil && *apik.Disabled) || (apik.Expires.Valid && time.Now().After(apik.Expires.Time)) {
-		log.Error().Str("key", apik.ApiKey.String()).Msg("key disabled")
+		log.Error().Str("key", apik.ApiKey).Msg("key disabled")
 		return nil, ErrUnauthorized
 	}
 

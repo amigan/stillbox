@@ -17,21 +17,19 @@ func (s *Server) setupRoutes() {
 
 	r.Group(func(r chi.Router) {
 		// authenticated routes
-		s.auth.InstallVerifyMiddleware(r)
-		s.auth.InstallAuthMiddleware(r)
+		r.Use(s.auth.AuthMiddleware(), s.auth.VerifyMiddleware())
 	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(rateLimiter())
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		// public routes
-		s.auth.InstallRoutes(r)
-		s.sources.InstallPublicRoutes(r)
+		r.Mount("/", s.auth.Routes())
+		r.Mount("/", s.sources.PublicRoutes())
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(rateLimiter())
-		s.auth.InstallVerifyMiddleware(r)
+		r.Use(rateLimiter(), s.auth.VerifyMiddleware())
 
 		// optional auth routes
 

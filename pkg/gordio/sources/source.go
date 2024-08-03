@@ -2,6 +2,7 @@ package sources
 
 import (
 	"context"
+
 	"dynatron.me/x/stillbox/pkg/gordio/calls"
 
 	"github.com/go-chi/chi/v5"
@@ -25,12 +26,15 @@ func (s *Sources) Register(name string, src Source) {
 	})
 }
 
-func (s *Sources) InstallPublicRoutes(r chi.Router) {
+func (s *Sources) PublicRoutes() chi.Router {
+	r := chi.NewRouter()
 	for _, si := range *s {
 		if rs, ok := si.Source.(PublicRouteSource); ok {
 			rs.InstallPublicRoutes(r)
 		}
 	}
+
+	return r
 }
 
 type Ingestor interface {
