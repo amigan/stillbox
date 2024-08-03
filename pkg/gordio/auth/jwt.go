@@ -29,7 +29,7 @@ type jwtAuth interface {
 	AuthMiddleware() func(http.Handler) http.Handler
 
 	// InstallRoutes installs the auth route to the provided chi Router.
-	Routes() chi.Router
+	PublicRoutes(chi.Router)
 }
 
 type claims map[string]interface{}
@@ -89,11 +89,8 @@ func (a *authenticator) newToken(uid int32) string {
 	return tokenString
 }
 
-func (a *authenticator) Routes() chi.Router {
-	r := chi.NewRouter()
+func (a *authenticator) PublicRoutes(r chi.Router) {
 	r.Post("/auth", a.routeAuth)
-
-	return r
 }
 
 func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {

@@ -24,8 +24,8 @@ func (s *Server) setupRoutes() {
 		r.Use(rateLimiter())
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		// public routes
-		r.Mount("/", s.auth.Routes())
-		r.Mount("/", s.sources.PublicRoutes())
+		s.auth.PublicRoutes(r)
+		s.sources.PublicRoutes(r)
 	})
 
 	r.Group(func(r chi.Router) {

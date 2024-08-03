@@ -26,15 +26,12 @@ func (s *Sources) Register(name string, src Source) {
 	})
 }
 
-func (s *Sources) PublicRoutes() chi.Router {
-	r := chi.NewRouter()
+func (s *Sources) PublicRoutes(r chi.Router) {
 	for _, si := range *s {
 		if rs, ok := si.Source.(PublicRouteSource); ok {
 			rs.InstallPublicRoutes(r)
 		}
 	}
-
-	return r
 }
 
 type Ingestor interface {
