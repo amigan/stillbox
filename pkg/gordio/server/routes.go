@@ -17,7 +17,7 @@ func (s *Server) setupRoutes() {
 
 	r.Group(func(r chi.Router) {
 		// authenticated routes
-		r.Use(s.auth.AuthMiddleware(), s.auth.VerifyMiddleware())
+		r.Use(s.auth.VerifyMiddleware(), s.auth.AuthMiddleware())
 		s.nex.InstallPrivateRoutes(r)
 	})
 

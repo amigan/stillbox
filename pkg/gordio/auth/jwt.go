@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -115,7 +116,7 @@ func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 		Name:     "jwt",
 		Value:    tok,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   !strings.HasPrefix(r.Host, "localhost:"),
 		Domain:   a.domain,
 	})
 
