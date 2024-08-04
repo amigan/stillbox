@@ -4,10 +4,18 @@ option go_package = "./pb";
 
 import "google/protobuf/timestamp.proto";
 
+message Message {
+  oneof toClient_message {
+    Call call = 1;
+    Notification notification = 2;
+    UserPopup popup = 3;
+  }
+}
+
 message Call {
-  string audio_name = 1;
-  string audio_type = 2;
-  google.protobuf.Timestamp date_time = 3;
+  string audioName = 1;
+  string audioType = 2;
+  google.protobuf.Timestamp dateTime = 3;
   int32 system = 4;
   int32 talkgroup = 5;
   int32 source = 6;
@@ -16,4 +24,34 @@ message Call {
   repeated int32 patches = 9;
   repeated int32 sources = 10;
   bytes audio = 11;
+}
+
+message UserPopup {
+  string msg = 1;
+}
+
+message Notification {
+  google.protobuf.Timestamp dateTime = 1;
+  string msg = 2;
+  string actionUrl = 3;
+}
+
+message Command {
+  oneof command {
+    Live liveCommand = 1;
+    Search searchCommand = 2;
+  }
+}
+
+enum LiveState {
+  LS_STOPPED = 0;
+  LS_LIVE = 1;
+  LS_PAUSED = 2;
+}
+
+message Live {
+  LiveState state = 1;
+}
+
+message Search {
 }

@@ -6,6 +6,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/gordio/auth"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
+	"dynatron.me/x/stillbox/pkg/gordio/nexus"
 	"dynatron.me/x/stillbox/pkg/gordio/sinks"
 	"dynatron.me/x/stillbox/pkg/gordio/sources"
 	"github.com/go-chi/chi/middleware"
@@ -19,6 +20,7 @@ type Server struct {
 	r       *chi.Mux
 	sources sources.Sources
 	sinks   sinks.Sinks
+	nex     *nexus.Nexus
 }
 
 func New(cfg *config.Config) (*Server, error) {
@@ -34,6 +36,7 @@ func New(cfg *config.Config) (*Server, error) {
 		conf: cfg,
 		db:   db,
 		r:    r,
+		nex:  nexus.New(),
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(db))

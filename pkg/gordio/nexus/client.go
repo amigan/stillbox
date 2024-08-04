@@ -1,0 +1,63 @@
+package nexus
+
+import (
+	"io"
+	"sync"
+
+	"dynatron.me/x/stillbox/pkg/pb"
+
+	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/proto"
+)
+
+type Client interface {
+	sync.Locker
+
+	Connection
+
+	Conn() Connection
+	HandleCommand(*pb.Command)
+	HandleMessage([]byte)
+}
+
+type client struct {
+	sync.RWMutex
+
+	Connection
+
+	nexus *Nexus
+}
+
+type Connection interface {
+	io.Closer
+
+	Send(*pb.Message)
+}
+
+func (n *Nexus) NewClient(conn Connection) Client {
+	sess := &client{
+		Connection: conn,
+		nexus:      n,
+	}
+
+	return sess
+}
+
+func (c *client) Registry() Registry {
+	return c.nexus
+}
+
+func (c *client) Conn() Connection {
+	return c.Connection
+}
+
+func (c *client) HandleMessage(mesgBytes []byte) {
+	var msg pb.Command
+	err := proto.Unmarshal(mesgBytes, &msg)
+	if err != nil {
+		log.Error().Err(err).Msg("command unmarshal")
+		return
+	}
+
+	c.HandleCommand(&msg)
+}

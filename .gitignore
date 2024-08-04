@@ -1,4 +1,5 @@
 config.yaml
 mydb.sql
 /gordio
+/calls
 Session.vim

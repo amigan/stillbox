@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -90,7 +91,7 @@ func (a *authenticator) newToken(uid int32) string {
 }
 
 func (a *authenticator) PublicRoutes(r chi.Router) {
-	r.Post("/auth", a.routeAuth)
+	r.Post("/login", a.routeAuth)
 }
 
 func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
@@ -101,7 +102,7 @@ func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 	}
 	username, password := r.PostFormValue("username"), r.PostFormValue("password")
 	if username == "" || password == "" {
-		http.Error(w, "blank credentials", http.StatusBadRequest)
+		http.Error(w, "blank credentials"+fmt.Sprint(r.Form), http.StatusBadRequest)
 		return
 	}
 
