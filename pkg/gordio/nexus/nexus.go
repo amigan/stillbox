@@ -44,7 +44,7 @@ func (n *Nexus) Go(done <-chan struct{}) {
 				return
 			}
 
-			go n.broadcastCallToClients(call)
+			n.broadcastCallToClients(call)
 		case <-done:
 			return
 		}
@@ -56,16 +56,17 @@ func (n *Nexus) BroadcastCall(call *calls.Call) {
 }
 
 func (n *Nexus) broadcastCallToClients(call *calls.Call) {
-	log.Info().Msg("broadcast")
 	message := &pb.Message{
 		ToClientMessage: &pb.Message_Call{Call: call.ToPB()},
 	}
-	n.RLock()
-	defer n.RUnlock()
+	n.Lock()
+	defer n.Unlock()
 
 	for cl, _ := range n.clients {
-		log.Info().Msg("client")
-		cl.Send(message)
+		if cl.Send(message) {
+			// we already hold the lock, and the channel is closed anyway
+			delete(n.clients, cl)
+		}
 	}
 }
 

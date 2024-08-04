@@ -115,13 +115,17 @@ func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
+	cookie := &http.Cookie{
 		Name:     "jwt",
 		Value:    tok,
 		HttpOnly: true,
 		Secure:   !a.allowInsecureCookie(r),
-		Domain:   a.cfg.Domain,
-	})
+	}
+
+	if cookie.Secure {
+		cookie.Domain = a.cfg.Domain
+	}
+	http.SetCookie(w, cookie)
 
 	jr := struct {
 		JWT string `json:"jwt"`

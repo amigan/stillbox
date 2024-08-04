@@ -32,7 +32,7 @@ type Connection interface {
 	io.Closer
 	CloseCh()
 
-	Send(*pb.Message)
+	Send(*pb.Message) (closed bool)
 }
 
 func (n *Nexus) NewClient(conn Connection) Client {

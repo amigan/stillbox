@@ -39,8 +39,15 @@ type wsConn struct {
 	out chan *pb.Message
 }
 
-func (w *wsConn) Send(msg *pb.Message) {
-	w.out <- msg
+func (w *wsConn) Send(msg *pb.Message) (closed bool) {
+	select {
+	case w.out <- msg:
+	default:
+		close(w.out)
+		return true
+	}
+
+	return false
 }
 
 func newWsConn(c *websocket.Conn) *wsConn {
@@ -79,7 +86,7 @@ func (conn *wsConn) readPump(reg Registry, c Client) {
 	defer func() {
 		reg.Unregister(c)
 		conn.Close()
-		log.Info().Msg("readpump exiting")
+		conn.CloseCh()
 	}()
 
 	conn.SetReadLimit(maxMessageSize)
@@ -107,7 +114,6 @@ func (conn *wsConn) writePump() {
 	defer func() {
 		pingTicker.Stop()
 		conn.Close()
-		log.Info().Msg("writepump exiting")
 	}()
 
 	for {
