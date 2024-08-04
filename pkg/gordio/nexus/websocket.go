@@ -109,7 +109,7 @@ func (conn *wsConn) writePump() {
 		case msg, ok := <-conn.out:
 			conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				// nexus closed
+				// nexus closed us
 				conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}

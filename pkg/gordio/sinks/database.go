@@ -12,13 +12,10 @@ import (
 )
 
 type DatabaseSink struct {
-	db *database.DB
 }
 
-func NewDatabaseSink(db *database.DB) *DatabaseSink {
-	return &DatabaseSink{
-		db: db,
-	}
+func NewDatabaseSink() *DatabaseSink {
+	return &DatabaseSink{}
 }
 
 func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
