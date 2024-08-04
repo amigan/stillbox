@@ -5,6 +5,8 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/gordio/calls"
 	"dynatron.me/x/stillbox/pkg/gordio/nexus"
+
+	"github.com/rs/zerolog/log"
 )
 
 type NexusSink struct {
@@ -24,6 +26,7 @@ func (ns *NexusSink) SinkType() string {
 }
 
 func (ns *NexusSink) Call(ctx context.Context, call *calls.Call) error {
+	log.Debug().Msg("nexus Call()")
 	ns.nexus.BroadcastCall(call)
 	return nil
 }

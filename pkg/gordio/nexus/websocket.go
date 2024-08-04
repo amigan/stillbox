@@ -40,8 +40,10 @@ type wsConn struct {
 }
 
 func (w *wsConn) Send(msg *pb.Message) (closed bool) {
+	log.Debug().Msg("sending wsc")
 	select {
 	case w.out <- msg:
+		log.Debug().Str("msg", msg.String()).Msg("sent wsc")
 	default:
 		close(w.out)
 		return true
