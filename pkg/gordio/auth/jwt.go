@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -103,7 +102,7 @@ func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 	}
 	username, password := r.PostFormValue("username"), r.PostFormValue("password")
 	if username == "" || password == "" {
-		http.Error(w, "blank credentials"+fmt.Sprint(r.Form), http.StatusBadRequest)
+		http.Error(w, "blank credentials", http.StatusBadRequest)
 		return
 	}
 

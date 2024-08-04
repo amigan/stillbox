@@ -87,7 +87,7 @@ func (conn *wsConn) readPump(reg Registry, c Client) {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Error().Err(err).Msg("read failed")
+				return
 			}
 
 			break
@@ -153,6 +153,6 @@ func (conn *wsConn) writeMessage(w io.WriteCloser, msg *pb.Message) {
 	}
 }
 
-func (n *wsManager) InstallPrivateRoutes(r chi.Router) {
+func (n *wsManager) PrivateRoutes(r chi.Router) {
 	r.HandleFunc("/ws", n.serveWS)
 }
