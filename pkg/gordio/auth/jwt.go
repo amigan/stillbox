@@ -120,7 +120,7 @@ func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 		Value:    tok,
 		HttpOnly: true,
 		Secure:   a.allowInsecureCookie(r),
-		Domain:   a.domain,
+		Domain:   a.cfg.Domain,
 	})
 
 	jr := struct {

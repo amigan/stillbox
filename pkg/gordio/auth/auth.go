@@ -27,16 +27,15 @@ type Authenticator interface {
 }
 
 type authenticator struct {
-	domain string
-	jwt    *jwtauth.JWTAuth
-	cfg    *config.Auth
+	jwt *jwtauth.JWTAuth
+	cfg config.Auth
 }
 
 // NewAuthenticator creates a new Authenticator with the provided config.
-func NewAuthenticator(cfg *config.Auth) Authenticator {
+func NewAuthenticator(cfg config.Auth) Authenticator {
 	return &authenticator{
-		domain: cfg.Domain,
-		jwt:    jwtauth.New("HS256", []byte(cfg.JWTSecret), nil),
+		jwt: jwtauth.New("HS256", []byte(cfg.JWTSecret), nil),
+		cfg: cfg,
 	}
 }
 
