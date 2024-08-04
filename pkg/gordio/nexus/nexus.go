@@ -5,8 +5,6 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/gordio/calls"
 	"dynatron.me/x/stillbox/pkg/pb"
-
-	"github.com/rs/zerolog/log"
 )
 
 type Nexus struct {
