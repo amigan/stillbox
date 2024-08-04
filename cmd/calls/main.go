@@ -77,6 +77,7 @@ func main() {
 		log.Fatal("dial:", err)
 	}
 	defer c.Close()
+	log.Printf("connected")
 
 	done := make(chan struct{})
 
@@ -99,10 +100,15 @@ func main() {
 
 				switch v := m.ToClientMessage.(type) {
 				case *pb.Message_Call:
+					log.Printf("%#v", v)
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
+				default:
+					log.Printf("received other message not known")
 				}
 
+			} else {
+				log.Printf("received other msg")
 			}
 		}
 	}()
