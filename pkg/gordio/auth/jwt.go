@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"net/http"
-	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -94,6 +93,11 @@ func (a *authenticator) PublicRoutes(r chi.Router) {
 	r.Post("/login", a.routeAuth)
 }
 
+func (a *authenticator) allowInsecureCookie(r *http.Request) bool {
+	v, has := a.cfg.AllowInsecure[r.Host]
+	return has && v == true
+}
+
 func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -115,7 +119,7 @@ func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 		Name:     "jwt",
 		Value:    tok,
 		HttpOnly: true,
-		Secure:   !strings.HasPrefix(r.Host, "localhost:"),
+		Secure:   a.allowInsecureCookie(r),
 		Domain:   a.domain,
 	})
 

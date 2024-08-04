@@ -1,6 +1,12 @@
 db:
   driver: pgx
   connect: 'postgres://postgres:password@localhost:5432/example'
-jwtsecret: 'super secret string'
+auth:
+  jwtsecret: 'super secret string'
+  # this is the JWT cookie domain
+  domain: example.com
+  # this allows the JWT cookie to be served over plain HTTP only for these Host: header values
+  allowInsecureFor:
+    "localhost:3050": true
 listen: ':3050'
 public: true

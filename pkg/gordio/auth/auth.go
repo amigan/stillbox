@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"github.com/go-chi/jwtauth/v5"
 )
 
@@ -28,13 +29,14 @@ type Authenticator interface {
 type authenticator struct {
 	domain string
 	jwt    *jwtauth.JWTAuth
+	cfg    *config.Auth
 }
 
-// NewAuthenticator creates a new Authenticator with the provided JWT secret and cookie domain.
-func NewAuthenticator(jwtSecret string, domain string) Authenticator {
+// NewAuthenticator creates a new Authenticator with the provided config.
+func NewAuthenticator(cfg *config.Auth) Authenticator {
 	return &authenticator{
-		domain: domain,
-		jwt:    jwtauth.New("HS256", []byte(jwtSecret), nil),
+		domain: cfg.Domain,
+		jwt:    jwtauth.New("HS256", []byte(cfg.JWTSecret), nil),
 	}
 }
 

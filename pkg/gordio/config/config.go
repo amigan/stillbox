@@ -1,20 +1,26 @@
 package config
 
 import (
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
-	"os"
 )
 
 type Config struct {
-	DB        DB     `yaml:"db"`
-	JWTSecret string `yaml:"jwtsecret"`
-	Listen    string `yaml:"listen"`
-	Public    bool   `yaml:"public"`
-	Domain    string `yaml:"domain"`
+	DB     DB     `yaml:"db"`
+	Auth   Auth   `yaml:"auth"`
+	Listen string `yaml:"listen"`
+	Public bool   `yaml:"public"`
 
 	configPath string
+}
+
+type Auth struct {
+	JWTSecret     string          `yaml:"jwtsecret"`
+	Domain        string          `yaml:"domain"`
+	AllowInsecure map[string]bool `yaml:"allowInsecureFor"`
 }
 
 type DB struct {
