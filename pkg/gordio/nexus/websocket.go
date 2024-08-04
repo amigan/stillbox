@@ -46,13 +46,17 @@ func (w *wsConn) Send(msg *pb.Message) {
 func newWsConn(c *websocket.Conn) *wsConn {
 	return &wsConn{
 		Conn: c,
-		out:  make(chan *pb.Message, qSize),
+		out:  make(chan *pb.Message),
 	}
 }
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+}
+
+func (w *wsConn) CloseCh() {
+	close(w.out)
 }
 
 func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
@@ -75,6 +79,7 @@ func (conn *wsConn) readPump(reg Registry, c Client) {
 	defer func() {
 		reg.Unregister(c)
 		conn.Close()
+		log.Info().Msg("readpump exiting")
 	}()
 
 	conn.SetReadLimit(maxMessageSize)
@@ -102,6 +107,7 @@ func (conn *wsConn) writePump() {
 	defer func() {
 		pingTicker.Stop()
 		conn.Close()
+		log.Info().Msg("writepump exiting")
 	}()
 
 	for {

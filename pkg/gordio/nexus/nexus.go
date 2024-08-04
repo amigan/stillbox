@@ -5,6 +5,8 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/gordio/calls"
 	"dynatron.me/x/stillbox/pkg/pb"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Nexus struct {
@@ -26,7 +28,7 @@ type Registry interface {
 func New() *Nexus {
 	n := &Nexus{
 		clients: make(map[*client]struct{}),
-		callCh:  make(chan *calls.Call, 256),
+		callCh:  make(chan *calls.Call),
 	}
 
 	n.wsManager = newWsManager(n)
@@ -34,9 +36,7 @@ func New() *Nexus {
 	return n
 }
 
-func (n *Nexus) Go(wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (n *Nexus) Go(done <-chan struct{}) {
 	for {
 		select {
 		case call, ok := <-n.callCh:
@@ -44,12 +44,19 @@ func (n *Nexus) Go(wg *sync.WaitGroup) {
 				return
 			}
 
-			go n.emitCall(call)
+			go n.broadcastCallToClients(call)
+		case <-done:
+			return
 		}
 	}
 }
 
-func (n *Nexus) emitCall(call *calls.Call) {
+func (n *Nexus) BroadcastCall(call *calls.Call) {
+	n.callCh <- call
+}
+
+func (n *Nexus) broadcastCallToClients(call *calls.Call) {
+	log.Info().Msg("broadcast")
 	message := &pb.Message{
 		ToClientMessage: &pb.Message_Call{Call: call.ToPB()},
 	}
@@ -57,6 +64,7 @@ func (n *Nexus) emitCall(call *calls.Call) {
 	defer n.RUnlock()
 
 	for cl, _ := range n.clients {
+		log.Info().Msg("client")
 		cl.Send(message)
 	}
 }
@@ -73,5 +81,6 @@ func (n *Nexus) Unregister(c Client) {
 	defer n.Unlock()
 
 	cl := c.(*client)
+	cl.Connection.CloseCh()
 	delete(n.clients, cl)
 }

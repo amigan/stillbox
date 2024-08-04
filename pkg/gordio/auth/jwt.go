@@ -95,7 +95,7 @@ func (a *authenticator) PublicRoutes(r chi.Router) {
 
 func (a *authenticator) allowInsecureCookie(r *http.Request) bool {
 	v, has := a.cfg.AllowInsecure[r.Host]
-	return has && v == true
+	return has && v
 }
 
 func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +119,7 @@ func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 		Name:     "jwt",
 		Value:    tok,
 		HttpOnly: true,
-		Secure:   a.allowInsecureCookie(r),
+		Secure:   !a.allowInsecureCookie(r),
 		Domain:   a.cfg.Domain,
 	})
 

@@ -12,16 +12,15 @@ import (
 )
 
 type DatabaseSink struct {
+	db *database.DB
 }
 
-func NewDatabaseSink() *DatabaseSink {
-	return &DatabaseSink{}
+func NewDatabaseSink(db *database.DB) *DatabaseSink {
+	return &DatabaseSink{db: db}
 }
 
 func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
-	db := database.FromCtx(ctx)
-
-	dbCall, err := db.AddCall(ctx, s.toAddCallParams(call))
+	dbCall, err := s.db.AddCall(ctx, s.toAddCallParams(call))
 	if err != nil {
 		return fmt.Errorf("add call: %w", err)
 	}

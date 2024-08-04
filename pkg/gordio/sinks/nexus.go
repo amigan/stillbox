@@ -24,5 +24,6 @@ func (ns *NexusSink) SinkType() string {
 }
 
 func (ns *NexusSink) Call(ctx context.Context, call *calls.Call) error {
+	ns.nexus.BroadcastCall(call)
 	return nil
 }

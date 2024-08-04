@@ -2,6 +2,7 @@ package sinks
 
 import (
 	"context"
+
 	"dynatron.me/x/stillbox/pkg/gordio/calls"
 
 	"github.com/rs/zerolog/log"
@@ -27,8 +28,8 @@ func (s *Sinks) Register(name string, toAdd Sink) {
 }
 
 func (s *Sinks) EmitCall(ctx context.Context, call *calls.Call) {
-	for _, sink := range *s {
-		go sink.emitCallLogErr(ctx, call)
+	for i := range *s {
+		go (*s)[i].emitCallLogErr(ctx, call)
 	}
 }
 

@@ -39,7 +39,7 @@ func New(cfg *config.Config) (*Server, error) {
 		nex:  nexus.New(),
 	}
 
-	srv.sinks.Register("database", sinks.NewDatabaseSink())
+	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db))
 	srv.sinks.Register("nexus", sinks.NewNexusSink(srv.nex))
 	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
 
@@ -54,6 +54,12 @@ func New(cfg *config.Config) (*Server, error) {
 
 func (s *Server) Go() error {
 	defer s.db.Close()
+	done := make(chan struct{})
+
+	defer func() {
+		close(done)
+	}()
+	go s.nex.Go(done)
 
 	http.ListenAndServe(s.conf.Listen, s.r)
 	return nil

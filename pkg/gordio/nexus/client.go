@@ -30,6 +30,7 @@ type client struct {
 
 type Connection interface {
 	io.Closer
+	CloseCh()
 
 	Send(*pb.Message)
 }
