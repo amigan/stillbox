@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/minimp3"
 	"github.com/hajimehoshi/oto"
-	"github.com/tosone/minimp3"
 )
 
 type Player struct {
