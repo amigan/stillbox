@@ -5,8 +5,6 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/gordio/calls"
 	"dynatron.me/x/stillbox/pkg/pb"
-
-	"github.com/rs/zerolog/log"
 )
 
 type Nexus struct {
@@ -40,12 +38,10 @@ func (n *Nexus) Go(done <-chan struct{}) {
 	for {
 		select {
 		case call, ok := <-n.callCh:
-			log.Debug().Msg("call received from ch")
 			if !ok {
 				return
 			}
 
-			log.Debug().Msg("broadcasting call")
 			n.broadcastCallToClients(call)
 		case <-done:
 			return
@@ -55,7 +51,6 @@ func (n *Nexus) Go(done <-chan struct{}) {
 
 func (n *Nexus) BroadcastCall(call *calls.Call) {
 	n.callCh <- call
-	log.Debug().Msg("call sent to ch")
 }
 
 func (n *Nexus) broadcastCallToClients(call *calls.Call) {
@@ -66,9 +61,7 @@ func (n *Nexus) broadcastCallToClients(call *calls.Call) {
 	defer n.Unlock()
 
 	for cl, _ := range n.clients {
-		log.Debug().Msg("sending")
 		if cl.Send(message) {
-			log.Debug().Msg("channel was closed")
 			// we already hold the lock, and the channel is closed anyway
 			delete(n.clients, cl)
 		}

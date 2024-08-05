@@ -40,10 +40,8 @@ type wsConn struct {
 }
 
 func (w *wsConn) Send(msg *pb.Message) (closed bool) {
-	log.Debug().Msg("sending wsc")
 	select {
 	case w.out <- msg:
-		log.Debug().Str("msg", msg.String()).Msg("sent wsc")
 	default:
 		close(w.out)
 		return true
@@ -53,10 +51,12 @@ func (w *wsConn) Send(msg *pb.Message) (closed bool) {
 }
 
 func newWsConn(c *websocket.Conn) *wsConn {
-	return &wsConn{
+	wc := &wsConn{
 		Conn: c,
-		out:  make(chan *pb.Message),
+		out:  make(chan *pb.Message, qSize),
 	}
+
+	return wc
 }
 
 var upgrader = websocket.Upgrader{
@@ -76,10 +76,10 @@ func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cli := wm.NewClient(newWsConn(conn))
+	wsc := newWsConn(conn)
+	cli := wm.NewClient(wsc)
 	wm.Register(cli)
 
-	wsc := newWsConn(conn)
 	go wsc.readPump(wm, cli)
 	go wsc.writePump()
 }
