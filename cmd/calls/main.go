@@ -30,6 +30,7 @@ func main() {
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
+	play := NewPlayer()
 
 	loginForm := url.Values{}
 	loginForm.Add("username", *username)
@@ -101,6 +102,11 @@ func main() {
 				switch v := m.ToClientMessage.(type) {
 				case *pb.Message_Call:
 					log.Printf("call tg %d", v.Call.Talkgroup)
+					err := play.Play(v.Call.Audio, v.Call.AudioType)
+					if err != nil {
+						log.Println(err)
+						os.WriteFile("failed.mp3", v.Call.Audio, 0644)
+					}
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
 				default:
