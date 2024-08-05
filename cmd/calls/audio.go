@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"dynatron.me/x/stillbox/internal/minimp3"
+	"dynatron.me/x/go-minimp3"
 	"github.com/hajimehoshi/oto"
 )
 

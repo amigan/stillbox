@@ -1,3 +1,5 @@
+dynatron.me/x/go-minimp3 v0.0.0-20240805171536-7ea857e216d6 h1:04vlkvfe/mkY4CFpMj0TnrwS2uUiYnyAxe/WxhR0Xgs=
+dynatron.me/x/go-minimp3 v0.0.0-20240805171536-7ea857e216d6/go.mod h1:zgYpOsy9VkbzyavLQARfhavkKybknoJyQz0pSBjnWwU=
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25UVaW/CKtUDjefjrs0SPonmDGUVOYP0=
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=

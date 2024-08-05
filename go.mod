@@ -1,8 +1,9 @@
 module dynatron.me/x/stillbox
 
-go 1.21.12
+go 1.22.5
 
 require (
+	dynatron.me/x/go-minimp3 v0.0.0-20240805171536-7ea857e216d6
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/httprate v0.9.0
