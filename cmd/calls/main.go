@@ -100,7 +100,7 @@ func main() {
 
 				switch v := m.ToClientMessage.(type) {
 				case *pb.Message_Call:
-					log.Printf("%#v", v)
+					log.Printf("call tg %d", v.Call.Talkgroup)
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
 				default:
