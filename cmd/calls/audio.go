@@ -9,7 +9,9 @@ import (
 )
 
 type Player struct {
-	ctx *oto.Context
+	ctx        *oto.Context
+	sampleRate int
+	channels   int
 }
 
 func NewPlayer() *Player {
@@ -19,13 +21,18 @@ func NewPlayer() *Player {
 }
 
 func (p *Player) initOto(samp, channels int) error {
-	if p.ctx != nil {
-		return nil
-	}
+	if samp != p.sampleRate || channels != p.channels {
+		if p.ctx != nil {
+			err := p.ctx.Close()
+			if err != nil {
+				return err
+			}
+		}
 
-	var err error
-	if p.ctx, err = oto.NewContext(samp, channels, 2, 1024); err != nil {
-		return err
+		var err error
+		if p.ctx, err = oto.NewContext(samp, channels, 2, 1024); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -62,6 +69,7 @@ func (p *Player) Play(audio []byte, mimeType string) error {
 	case "audio/mpeg":
 		return p.playMP3(audio)
 	case "audio/wav":
+		panic("wav not implemented yet")
 	default:
 		return fmt.Errorf("unknown format %s", mimeType)
 	}
