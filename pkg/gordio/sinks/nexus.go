@@ -3,7 +3,7 @@ package sinks
 import (
 	"context"
 
-	"dynatron.me/x/stillbox/pkg/gordio/calls"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/gordio/nexus"
 )
 

@@ -3,7 +3,7 @@ package sinks
 import (
 	"context"
 
-	"dynatron.me/x/stillbox/pkg/gordio/calls"
+	"dynatron.me/x/stillbox/pkg/calls"
 
 	"github.com/rs/zerolog/log"
 )

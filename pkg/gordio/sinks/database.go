@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"dynatron.me/x/stillbox/internal/common"
-	"dynatron.me/x/stillbox/pkg/gordio/calls"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 
 	"github.com/rs/zerolog/log"

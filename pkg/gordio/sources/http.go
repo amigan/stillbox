@@ -11,7 +11,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/gordio/auth"
-	"dynatron.me/x/stillbox/pkg/gordio/calls"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )

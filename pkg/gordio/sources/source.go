@@ -3,7 +3,7 @@ package sources
 import (
 	"context"
 
-	"dynatron.me/x/stillbox/pkg/gordio/calls"
+	"dynatron.me/x/stillbox/pkg/calls"
 
 	"github.com/go-chi/chi/v5"
 )
