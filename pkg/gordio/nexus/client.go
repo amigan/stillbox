@@ -15,7 +15,6 @@ type Client interface {
 
 	Connection
 
-	Conn() Connection
 	HandleCommand(*pb.Command)
 	HandleMessage([]byte)
 }
@@ -42,14 +41,6 @@ func (n *Nexus) NewClient(conn Connection) Client {
 	}
 
 	return sess
-}
-
-func (c *client) Registry() Registry {
-	return c.nexus
-}
-
-func (c *client) Conn() Connection {
-	return c.Connection
 }
 
 func (c *client) HandleMessage(mesgBytes []byte) {
