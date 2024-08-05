@@ -4,6 +4,7 @@ import (
 	"io"
 	"sync"
 
+	"dynatron.me/x/stillbox/pkg/live"
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	"github.com/rs/zerolog/log"
@@ -24,6 +25,7 @@ type client struct {
 
 	Connection
 
+	live  live.Listener
 	nexus *Nexus
 }
 
