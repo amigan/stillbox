@@ -81,6 +81,10 @@ func main() {
 	log.Printf("connected")
 
 	done := make(chan struct{})
+	playDone := make(chan struct{})
+
+	go play.Go(playDone)
+	defer close(playDone)
 
 	go func() {
 		defer close(done)
@@ -101,11 +105,8 @@ func main() {
 
 				switch v := m.ToClientMessage.(type) {
 				case *pb.Message_Call:
-					log.Printf("call tg %d", v.Call.Talkgroup)
-					err := play.Play(v.Call.Audio, v.Call.AudioType)
-					if err != nil {
-						log.Println(err)
-					}
+					log.Printf("call tg %d [Q: %d]", v.Call.Talkgroup, play.Queue())
+					play.Play(v.Call.Audio, v.Call.AudioType)
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
 				default:

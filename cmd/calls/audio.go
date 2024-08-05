@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"dynatron.me/x/go-minimp3"
@@ -9,15 +10,22 @@ import (
 )
 
 type Player struct {
+	c          chan playReq
 	ctx        *oto.Context
 	sampleRate int
 	channels   int
 }
 
 func NewPlayer() *Player {
-	p := &Player{}
+	p := &Player{
+		c: make(chan playReq, 256),
+	}
 
 	return p
+}
+
+func (p *Player) Queue() int {
+	return len(p.c)
 }
 
 func (p *Player) initOto(samp, channels int) error {
@@ -64,15 +72,45 @@ func (p *Player) playMP3(audio []byte) error {
 	return nil
 }
 
-func (p *Player) Play(audio []byte, mimeType string) error {
-	switch mimeType {
+type playReq struct {
+	audio    []byte
+	mimeType string
+}
+
+func (p *Player) Play(audio []byte, mimeType string) {
+	p.c <- playReq{audio, mimeType}
+}
+
+func (p *Player) play(req playReq) error {
+	switch req.mimeType {
 	case "audio/mpeg":
-		return p.playMP3(audio)
+		return p.playMP3(req.audio)
 	case "audio/wav":
 		panic("wav not implemented yet")
 	default:
-		return fmt.Errorf("unknown format %s", mimeType)
+		return fmt.Errorf("unknown format %s", req.mimeType)
 	}
+}
 
-	return nil
+func (p *Player) Go(done <-chan struct{}) {
+	for {
+		select {
+		case <-done:
+			close(p.c)
+			p.ctx.Close()
+			return
+		case r, ok := <-p.c:
+			if !ok {
+				p.ctx.Close()
+				return
+			}
+
+			fmt.Printf("> [Q: %d]\r", p.Queue())
+			err := p.play(r)
+			fmt.Printf("\033[2K")
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}
 }
