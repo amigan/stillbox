@@ -43,6 +43,7 @@ func (w *wsConn) Send(msg *pb.Message) (closed bool) {
 	select {
 	case w.out <- msg:
 	default:
+		log.Debug().Str("conn", w.RemoteAddr().String()).Msg("send channel not ready, closing")
 		close(w.out)
 		return true
 	}
@@ -101,9 +102,11 @@ func (conn *wsConn) readPump(reg Registry, c Client) {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Debug().Err(err).Str("conn", conn.RemoteAddr().String()).Msg("unexpected close")
 				return
 			}
 
+			log.Debug().Err(err).Str("conn", conn.RemoteAddr().String()).Msg("closing connection")
 			break
 		}
 
@@ -130,17 +133,20 @@ func (conn *wsConn) writePump() {
 
 			w, err := conn.NextWriter(websocket.BinaryMessage)
 			if err != nil {
+				log.Debug().Err(err).Str("conn", conn.RemoteAddr().String()).Msg("nextWriter error")
 				return
 			}
 
 			conn.writeMessage(w, msg)
 
 			if err := w.Close(); err != nil {
+				log.Debug().Err(err).Str("conn", conn.RemoteAddr().String()).Msg("close error")
 				return
 			}
 		case <-pingTicker.C:
 			conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.Debug().Err(err).Msg("x ping failed")
 				return
 			}
 		}
