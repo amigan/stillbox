@@ -105,7 +105,6 @@ func main() {
 					err := play.Play(v.Call.Audio, v.Call.AudioType)
 					if err != nil {
 						log.Println(err)
-						os.WriteFile("failed.mp3", v.Call.Audio, 0644)
 					}
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)

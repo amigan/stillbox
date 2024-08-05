@@ -1,19 +1,15 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"time"
 
-	"github.com/gopxl/beep"
-	"github.com/gopxl/beep/mp3"
-	"github.com/gopxl/beep/speaker"
-	"github.com/gopxl/beep/wav"
+	"github.com/hajimehoshi/oto"
+	"github.com/tosone/minimp3"
 )
 
 type Player struct {
-	rate beep.SampleRate
+	ctx *oto.Context
 }
 
 func NewPlayer() *Player {
@@ -22,38 +18,53 @@ func NewPlayer() *Player {
 	return p
 }
 
-func (p *Player) initSpeaker(rate beep.SampleRate) {
-	if p.rate != rate {
-		speaker.Init(rate, rate.N(time.Second/10))
+func (p *Player) initOto(samp, channels int) error {
+	if p.ctx != nil {
+		return nil
 	}
+
+	var err error
+	if p.ctx, err = oto.NewContext(samp, channels, 2, 1024); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Player) playMP3(audio []byte) error {
+	var dec *minimp3.Decoder
+	var data []byte
+	var err error
+	if dec, data, err = minimp3.DecodeFull(audio); err != nil {
+		return err
+	}
+
+	err = p.initOto(dec.SampleRate, dec.Channels)
+	if err != nil {
+		return err
+	}
+
+	var player = p.ctx.NewPlayer()
+	player.Write(data)
+
+	<-time.After(time.Second)
+
+	dec.Close()
+	if err = player.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *Player) Play(audio []byte, mimeType string) error {
-	var streamer beep.StreamCloser
-	var err error
-	var format beep.Format
-	r := io.NopCloser(bytes.NewBuffer(audio))
 	switch mimeType {
 	case "audio/mpeg":
-		streamer, format, err = mp3.Decode(r)
-		if err != nil {
-			return err
-		}
-		defer streamer.Close()
-		p.initSpeaker(format.SampleRate)
-
+		return p.playMP3(audio)
 	case "audio/wav":
-		streamer, format, err = wav.Decode(r)
-		if err != nil {
-			return err
-		}
-		defer streamer.Close()
-		p.initSpeaker(format.SampleRate)
 	default:
 		return fmt.Errorf("unknown format %s", mimeType)
 	}
-
-	speaker.Play(streamer)
 
 	return nil
 }

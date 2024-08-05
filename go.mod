@@ -12,9 +12,12 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/gopxl/beep v1.4.1
 	github.com/gorilla/websocket v1.5.3
+	github.com/hajimehoshi/oto v1.0.1
 	github.com/jackc/pgx/v5 v5.6.0
+	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
+	github.com/tosone/minimp3 v1.0.2
 	golang.org/x/crypto v0.21.0
 	golang.org/x/term v0.18.0
 	google.golang.org/protobuf v1.33.0
@@ -25,10 +28,7 @@ require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
-	github.com/ebitengine/oto/v3 v3.1.0 // indirect
-	github.com/ebitengine/purego v0.7.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/hajimehoshi/go-mp3 v0.3.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -45,11 +45,13 @@ require (
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
+	golang.org/x/exp/shiny v0.0.0-20240719175910-8a7402abbf56 // indirect
+	golang.org/x/image v0.14.0 // indirect
+	golang.org/x/mobile v0.0.0-20231127183840-76ac6878050a // indirect
 	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
