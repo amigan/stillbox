@@ -6,6 +6,12 @@ WHERE tags @> ARRAY[$1];
 SELECT * FROM talkgroups
 WHERE tags && ARRAY[$1];
 
+-- name: GetTalkgroupIDsByTags :many
+SELECT system_id, tgid FROM talkgroups
+WHERE (tags @> ARRAY[sqlc.arg(anyTags)])
+AND (tags && ARRAY[sqlc.arg(allTags)])
+AND NOT (tags @> ARRAY[sqlc.arg(notTags)]);
+
 -- name: GetTalkgroupTags :one
 SELECT tags FROM talkgroups
 WHERE id = systg2id($1, $2);

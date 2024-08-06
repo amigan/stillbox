@@ -1,9 +1,9 @@
 package calls
 
 import (
-	"cmp"
-	"encoding/json"
-	"slices"
+	"context"
+
+	"dynatron.me/x/stillbox/pkg/gordio/database"
 )
 
 type FilterQuery struct {
@@ -28,24 +28,7 @@ type Filter struct {
 	TalkgroupTagsAny []string    `json:"talkgroupTagsAny,omitempty"`
 	TalkgroupTagsNot []string    `json:"talkgroupTagsNot,omitempty"`
 
-	talkgroups       map[Talkgroup]bool
-	talkgroupTagsAll map[string]bool
-	talkgroupTagsAny map[string]bool
-	talkgroupTagsNot map[string]bool
-
-	query *FilterQuery
-}
-
-func queryParams(q string, p ...any) FilterQuery {
-	return FilterQuery{Query: q, Params: p}
-}
-
-func (f *Filter) filterQuery() *FilterQuery {
-	fq := queryParams(
-		`((talkgroups.id = ANY(?) OR talkgroups.tags @> ARRAY[?]) OR (talkgroups.tags && ARRAY[?])) AND (talkgroups.id != ANY(?) AND NOT talkgroups.tags @> ARRAY[?])`,
-		f.Talkgroups, f.TalkgroupTagsAny, f.TalkgroupTagsAll, f.TalkgroupsNot, f.TalkgroupTagsNot)
-
-	return &fq
+	talkgroups map[Talkgroup]bool
 }
 
 func PackedTGs(tg []Talkgroup) []int64 {
@@ -58,71 +41,50 @@ func PackedTGs(tg []Talkgroup) []int64 {
 	return s
 }
 
-func (f *Filter) compile() *Filter {
+func (f *Filter) hasTags() bool {
+	return len(f.TalkgroupTagsAny) > 0 || len(f.TalkgroupTagsAll) > 0 || len(f.TalkgroupTagsNot) > 0
+}
+
+func (f *Filter) GetFinalTalkgroups() map[Talkgroup]bool {
+	return f.talkgroups
+}
+
+func (f *Filter) compile(ctx context.Context) error {
 	f.talkgroups = make(map[Talkgroup]bool)
 	for _, tg := range f.Talkgroups {
 		f.talkgroups[tg] = true
+	}
+
+	if f.hasTags() { // don't bother with DB if no tags
+		db := database.FromCtx(ctx)
+		tagTGs, err := db.GetTalkgroupIDsByTags(ctx, f.TalkgroupTagsAny, f.TalkgroupTagsAll, f.TalkgroupTagsNot)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, tg := range tagTGs {
+			f.talkgroups[Talkgroup{System: uint32(tg.SystemID), Talkgroup: uint32(tg.Tgid)}] = true
+		}
 	}
 
 	for _, tg := range f.TalkgroupsNot {
 		f.talkgroups[tg] = false
 	}
 
-	f.talkgroupTagsAll = make(map[string]bool)
-	for _, tag := range f.TalkgroupTagsAll {
-		f.talkgroupTagsAll[tag] = true
-	}
-
-	f.talkgroupTagsAny = make(map[string]bool)
-	for _, tag := range f.TalkgroupTagsAny {
-		f.talkgroupTagsAny[tag] = true
-	}
-
-	for _, tag := range f.TalkgroupTagsNot {
-		f.talkgroupTagsNot[tag] = true
-	}
-
-	f.query = f.filterQuery()
-
-	return f
+	return nil
 }
 
-func (f *Filter) normalize() {
-	tgSort := func(a, b Talkgroup) int {
-		if n := cmp.Compare(a.System, b.System); n != 0 {
-			return n
+func (f *Filter) Test(ctx context.Context, call *Call) bool {
+	if f == nil { // no filter means all calls
+		return true
+	}
+
+	if f.talkgroups == nil {
+		err := f.compile(ctx)
+		if err != nil {
+			panic(err)
 		}
-
-		return cmp.Compare(a.Talkgroup, b.Talkgroup)
 	}
 
-	slices.SortFunc(f.Talkgroups, tgSort)
-	slices.SortFunc(f.TalkgroupsNot, tgSort)
-	slices.SortFunc(f.TalkgroupTagsAll, cmp.Compare)
-	slices.SortFunc(f.TalkgroupTagsAny, cmp.Compare)
-	slices.SortFunc(f.TalkgroupTagsNot, cmp.Compare)
-}
-
-func (f *Filter) cacheKey() string {
-	f.normalize()
-	buf, err := json.Marshal(f)
-	if err != nil {
-		panic(err)
-	}
-
-	return string(buf)
-}
-
-func (f *Filter) Test(call *Call) bool {
 	return false
-}
-
-type FilterCache struct {
-	cache map[string]Filter
-}
-
-func NewFilterCache() *FilterCache {
-	return &FilterCache{
-		cache: make(map[string]Filter),
-	}
 }

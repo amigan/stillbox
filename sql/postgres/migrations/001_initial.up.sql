@@ -46,8 +46,8 @@ $$;
 
 CREATE TABLE IF NOT EXISTS talkgroups(
 	id INT8 PRIMARY KEY,
-	system_id INTEGER REFERENCES systems(id) NOT NULL GENERATED ALWAYS AS (id >> 32) STORED,
-	tgid INTEGER GENERATED ALWAYS AS (id & x'ffffffff'::BIGINT) STORED,
+	system_id INT4 REFERENCES systems(id) NOT NULL GENERATED ALWAYS AS (id >> 32) STORED,
+	tgid INT4 NOT NULL GENERATED ALWAYS AS (id & x'ffffffff'::BIGINT) STORED,
 	name TEXT,
 	tg_group TEXT,
 	frequency INTEGER,

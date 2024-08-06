@@ -19,6 +19,38 @@ func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []str
 	return err
 }
 
+const getTalkgroupIDsByTags = `-- name: GetTalkgroupIDsByTags :many
+SELECT system_id, tgid FROM talkgroups
+WHERE (tags @> ARRAY[$1])
+AND (tags && ARRAY[$2])
+AND NOT (tags @> ARRAY[$3])
+`
+
+type GetTalkgroupIDsByTagsRow struct {
+	SystemID int32 `json:"system_id"`
+	Tgid     int32 `json:"tgid"`
+}
+
+func (q *Queries) GetTalkgroupIDsByTags(ctx context.Context, anytags []string, alltags []string, nottags []string) ([]GetTalkgroupIDsByTagsRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupIDsByTags, anytags, alltags, nottags)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTalkgroupIDsByTagsRow
+	for rows.Next() {
+		var i GetTalkgroupIDsByTagsRow
+		if err := rows.Scan(&i.SystemID, &i.Tgid); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTalkgroupTags = `-- name: GetTalkgroupTags :one
 SELECT tags FROM talkgroups
 WHERE id = systg2id($1, $2)

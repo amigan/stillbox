@@ -69,8 +69,8 @@ type System struct {
 
 type Talkgroup struct {
 	ID        int64    `json:"id"`
-	SystemID  int      `json:"system_id"`
-	Tgid      *int32   `json:"tgid"`
+	SystemID  int32    `json:"system_id"`
+	Tgid      int32    `json:"tgid"`
 	Name      *string  `json:"name"`
 	TgGroup   *string  `json:"tg_group"`
 	Frequency *int32   `json:"frequency"`
