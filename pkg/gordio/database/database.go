@@ -13,6 +13,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// This file will eventually turn into a postgres driver.
+
 // DB is a database handle.
 type DB struct {
 	*pgxpool.Pool

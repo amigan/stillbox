@@ -23,18 +23,41 @@ CREATE TABLE IF NOT EXISTS systems(
 	name TEXT NOT NULL
 );
 
+CREATE OR REPLACE FUNCTION systg2id(_sys INTEGER, _tg INTEGER) RETURNS INT8 LANGUAGE plpgsql AS
+$$
+BEGIN
+	RETURN ((_sys::BIGINT << 32) | _tg);
+END
+$$;
+
+CREATE OR REPLACE FUNCTION tgfromid(_id INT8) RETURNS INTEGER LANGUAGE plpgsql AS
+$$
+BEGIN
+	RETURN (_id & x'ffffffff'::BIGINT);
+END
+$$;
+
+CREATE OR REPLACE FUNCTION sysfromid(_id INT8) RETURNS INTEGER LANGUAGE plpgsql AS
+$$
+BEGIN
+	RETURN (_id >> 32);
+END
+$$;
+
 CREATE TABLE IF NOT EXISTS talkgroups(
-	system_id INTEGER REFERENCES systems(id) NOT NULL,
-	tgid INTEGER,
+	id INT8 PRIMARY KEY,
+	system_id INTEGER REFERENCES systems(id) NOT NULL GENERATED ALWAYS AS (id >> 32) STORED,
+	tgid INTEGER GENERATED ALWAYS AS (id & x'ffffffff'::BIGINT) STORED,
 	name TEXT,
 	tg_group TEXT,
 	frequency INTEGER,
 	metadata JSONB,
-	tags TEXT[] NOT NULL DEFAULT '{}',
-	PRIMARY KEY (system_id, tgid)
+	tags TEXT[] NOT NULL DEFAULT '{}'
 );
 
 CREATE INDEX IF NOT EXISTS talkgroup_id_tags ON talkgroups USING GIN (tags);
+
+
 
 CREATE TABLE IF NOT EXISTS talkgroups_learned(
 	id SERIAL PRIMARY KEY,

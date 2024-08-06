@@ -13,12 +13,13 @@ import (
 
 type Querier interface {
 	AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, error)
+	BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []string) error
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteAPIKey(ctx context.Context, apiKey string) error
 	DeleteUser(ctx context.Context, username string) error
 	GetAPIKey(ctx context.Context, apiKey string) (ApiKey, error)
-	GetTalkgroupTags(ctx context.Context, systemID int, tgid int) ([]string, error)
+	GetTalkgroupTags(ctx context.Context, sys int, tg int) ([]string, error)
 	GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]Talkgroup, error)
 	GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]Talkgroup, error)
 	GetUserByID(ctx context.Context, id int32) (User, error)
@@ -26,7 +27,7 @@ type Querier interface {
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUsers(ctx context.Context) ([]User, error)
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error
-	SetTalkgroupTags(ctx context.Context, tags []string, tgid int) error
+	SetTalkgroupTags(ctx context.Context, sys int, tg int, tags []string) error
 	UpdatePassword(ctx context.Context, username string, password string) error
 }
 

@@ -8,8 +8,12 @@ WHERE tags && ARRAY[$1];
 
 -- name: GetTalkgroupTags :one
 SELECT tags FROM talkgroups
-WHERE system_id = $1 AND tgid = $2;
+WHERE id = systg2id($1, $2);
 
 -- name: SetTalkgroupTags :exec
-UPDATE talkgroups SET tags = $1
-WHERE system_id = $1 AND tgid = $2;
+UPDATE talkgroups SET tags = $3
+WHERE id = systg2id($1, $2);
+
+-- name: BulkSetTalkgroupTags :exec
+UPDATE talkgroups SET tags = $2
+WHERE id = ANY($1);
