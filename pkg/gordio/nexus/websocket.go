@@ -1,6 +1,7 @@
 package nexus
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"time"
@@ -81,11 +82,11 @@ func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
 	cli := wm.NewClient(wsc)
 	wm.Register(cli)
 
-	go wsc.readPump(wm, cli)
+	go wsc.readPump(r.Context(), wm, cli)
 	go wsc.writePump()
 }
 
-func (conn *wsConn) readPump(reg Registry, c Client) {
+func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {
 	defer func() {
 		reg.Unregister(c)
 		conn.Close()
@@ -110,7 +111,7 @@ func (conn *wsConn) readPump(reg Registry, c Client) {
 			break
 		}
 
-		go c.HandleMessage(message)
+		go c.HandleMessage(ctx, message)
 	}
 }
 

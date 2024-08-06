@@ -9,20 +9,62 @@ import (
 	"context"
 )
 
-const getTalkgroupTags = `-- name: GetTalkgroupTags :one
-SELECT tags FROM talkgroups
-WHERE system_id = $1 AND tgid = $2
+const bulkSetTalkgroupTags = `-- name: BulkSetTalkgroupTags :exec
+UPDATE talkgroups SET tags = $2
+WHERE id = ANY($1)
 `
 
-func (q *Queries) GetTalkgroupTags(ctx context.Context, systemID int, tgid int) ([]string, error) {
-	row := q.db.QueryRow(ctx, getTalkgroupTags, systemID, tgid)
+func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []string) error {
+	_, err := q.db.Exec(ctx, bulkSetTalkgroupTags, iD, tags)
+	return err
+}
+
+const getTalkgroupIDsByTags = `-- name: GetTalkgroupIDsByTags :many
+SELECT system_id, tgid FROM talkgroups
+WHERE (tags @> ARRAY[$1])
+AND (tags && ARRAY[$2])
+AND NOT (tags @> ARRAY[$3])
+`
+
+type GetTalkgroupIDsByTagsRow struct {
+	SystemID int32 `json:"system_id"`
+	Tgid     int32 `json:"tgid"`
+}
+
+func (q *Queries) GetTalkgroupIDsByTags(ctx context.Context, anytags []string, alltags []string, nottags []string) ([]GetTalkgroupIDsByTagsRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupIDsByTags, anytags, alltags, nottags)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTalkgroupIDsByTagsRow
+	for rows.Next() {
+		var i GetTalkgroupIDsByTagsRow
+		if err := rows.Scan(&i.SystemID, &i.Tgid); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTalkgroupTags = `-- name: GetTalkgroupTags :one
+SELECT tags FROM talkgroups
+WHERE id = systg2id($1, $2)
+`
+
+func (q *Queries) GetTalkgroupTags(ctx context.Context, sys int, tg int) ([]string, error) {
+	row := q.db.QueryRow(ctx, getTalkgroupTags, sys, tg)
 	var tags []string
 	err := row.Scan(&tags)
 	return tags, err
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
-SELECT system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups
+SELECT id, system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups
 WHERE tags && ARRAY[$1]
 `
 
@@ -36,6 +78,7 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 	for rows.Next() {
 		var i Talkgroup
 		if err := rows.Scan(
+			&i.ID,
 			&i.SystemID,
 			&i.Tgid,
 			&i.Name,
@@ -55,7 +98,7 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 }
 
 const getTalkgroupsWithAnyTags = `-- name: GetTalkgroupsWithAnyTags :many
-SELECT system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups
+SELECT id, system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups
 WHERE tags @> ARRAY[$1]
 `
 
@@ -69,6 +112,7 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 	for rows.Next() {
 		var i Talkgroup
 		if err := rows.Scan(
+			&i.ID,
 			&i.SystemID,
 			&i.Tgid,
 			&i.Name,
@@ -88,11 +132,11 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 }
 
 const setTalkgroupTags = `-- name: SetTalkgroupTags :exec
-UPDATE talkgroups SET tags = $1
-WHERE system_id = $1 AND tgid = $2
+UPDATE talkgroups SET tags = $3
+WHERE id = systg2id($1, $2)
 `
 
-func (q *Queries) SetTalkgroupTags(ctx context.Context, tags []string, tgid int) error {
-	_, err := q.db.Exec(ctx, setTalkgroupTags, tags, tgid)
+func (q *Queries) SetTalkgroupTags(ctx context.Context, sys int, tg int, tags []string) error {
+	_, err := q.db.Exec(ctx, setTalkgroupTags, sys, tg, tags)
 	return err
 }
