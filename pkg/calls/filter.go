@@ -1,6 +1,12 @@
 package calls
 
-type filterQuery struct {
+import (
+	"cmp"
+	"encoding/json"
+	"slices"
+)
+
+type FilterQuery struct {
 	Query  string
 	Params []interface{}
 }
@@ -16,25 +22,25 @@ func (t Talkgroup) Pack() int64 {
 }
 
 type Filter struct {
-	Talkgroups       []Talkgroup `json:"talkgroups"`
-	TalkgroupsNot    []Talkgroup `json:"talkgroupsNot"`
-	TalkgroupTagsAll []string    `json:"talkgroupTagsAll"`
-	TalkgroupTagsAny []string    `json:"talkgroupTagsAny"`
-	TalkgroupTagsNot []string    `json:"talkgroupTagsNot"`
+	Talkgroups       []Talkgroup `json:"talkgroups,omitempty"`
+	TalkgroupsNot    []Talkgroup `json:"talkgroupsNot,omitempty"`
+	TalkgroupTagsAll []string    `json:"talkgroupTagsAll,omitempty"`
+	TalkgroupTagsAny []string    `json:"talkgroupTagsAny,omitempty"`
+	TalkgroupTagsNot []string    `json:"talkgroupTagsNot,omitempty"`
 
 	talkgroups       map[Talkgroup]bool
 	talkgroupTagsAll map[string]bool
 	talkgroupTagsAny map[string]bool
 	talkgroupTagsNot map[string]bool
 
-	query *filterQuery
+	query *FilterQuery
 }
 
 func queryParams(s string, p ...any) (string, []any) {
 	return s, p
 }
 
-func (f *Filter) filterQuery() filterQuery {
+func (f *Filter) filterQuery() FilterQuery {
 	var q string
 	var args []interface{}
 
@@ -42,11 +48,11 @@ func (f *Filter) filterQuery() filterQuery {
 		`((talkgroups.id = ANY(?) OR talkgroups.tags @> ARRAY[?]) OR (talkgroups.tags && ARRAY[?])) AND (talkgroups.id != ANY(?) AND NOT talkgroups.tags @> ARRAY[?])`,
 		f.Talkgroups, f.TalkgroupTagsAny, f.TalkgroupTagsAll, f.TalkgroupsNot, f.TalkgroupTagsNot)
 
-	return filterQuery{Query: q, Params: args}
+	return FilterQuery{Query: q, Params: args}
 }
 
-func (f *Filter) Packed(tg []Talkgroup) []int64 {
-	s := make([]int64, len(f.Talkgroups))
+func PackedTGs(tg []Talkgroup) []int64 {
+	s := make([]int64, len(tg))
 
 	for i, v := range tg {
 		s[i] = v.Pack()
@@ -55,7 +61,7 @@ func (f *Filter) Packed(tg []Talkgroup) []int64 {
 	return s
 }
 
-func (f *Filter) Compile() *Filter {
+func (f *Filter) compile() *Filter {
 	f.talkgroups = make(map[Talkgroup]bool)
 	for _, tg := range f.Talkgroups {
 		f.talkgroups[tg] = true
@@ -85,6 +91,42 @@ func (f *Filter) Compile() *Filter {
 	return f
 }
 
+func (f *Filter) normalize() {
+	tgSort := func(a, b Talkgroup) int {
+		if n := cmp.Compare(a.System, b.System); n != 0 {
+			return n
+		}
+
+		return cmp.Compare(a.Talkgroup, b.Talkgroup)
+	}
+
+	slices.SortFunc(f.Talkgroups, tgSort)
+	slices.SortFunc(f.TalkgroupsNot, tgSort)
+	slices.SortFunc(f.TalkgroupTagsAll, cmp.Compare)
+	slices.SortFunc(f.TalkgroupTagsAny, cmp.Compare)
+	slices.SortFunc(f.TalkgroupTagsNot, cmp.Compare)
+}
+
+func (f *Filter) cacheKey() string {
+	f.normalize()
+	buf, err := json.Marshal(f)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(buf)
+}
+
+func (f *Filter) Test(call *Call) bool {
+	return false
+}
+
 type FilterCache struct {
 	cache map[string]Filter
+}
+
+func NewFilterCache() *FilterCache {
+	return &FilterCache{
+		cache: make(map[string]Filter),
+	}
 }

@@ -61,6 +61,9 @@ func (n *Nexus) broadcastCallToClients(call *calls.Call) {
 	defer n.Unlock()
 
 	for cl, _ := range n.clients {
+		if cl.filter != nil && !cl.filter.Test(call) {
+			continue
+		}
 		if cl.Send(message) {
 			// we already hold the lock, and the channel is closed anyway
 			delete(n.clients, cl)

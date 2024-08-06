@@ -4,6 +4,7 @@ import (
 	"io"
 	"sync"
 
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/live"
 	"dynatron.me/x/stillbox/pkg/pb"
 
@@ -25,8 +26,9 @@ type client struct {
 
 	Connection
 
-	live  live.Listener
-	nexus *Nexus
+	filter *calls.Filter
+	live   live.Listener
+	nexus  *Nexus
 }
 
 type Connection interface {
