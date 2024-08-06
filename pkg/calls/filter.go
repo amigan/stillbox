@@ -36,19 +36,16 @@ type Filter struct {
 	query *FilterQuery
 }
 
-func queryParams(s string, p ...any) (string, []any) {
-	return s, p
+func queryParams(q string, p ...any) FilterQuery {
+	return FilterQuery{Query: q, Params: p}
 }
 
-func (f *Filter) filterQuery() FilterQuery {
-	var q string
-	var args []interface{}
-
-	q, args = queryParams(
+func (f *Filter) filterQuery() *FilterQuery {
+	fq := queryParams(
 		`((talkgroups.id = ANY(?) OR talkgroups.tags @> ARRAY[?]) OR (talkgroups.tags && ARRAY[?])) AND (talkgroups.id != ANY(?) AND NOT talkgroups.tags @> ARRAY[?])`,
 		f.Talkgroups, f.TalkgroupTagsAny, f.TalkgroupTagsAll, f.TalkgroupsNot, f.TalkgroupTagsNot)
 
-	return FilterQuery{Query: q, Params: args}
+	return &fq
 }
 
 func PackedTGs(tg []Talkgroup) []int64 {
@@ -85,8 +82,7 @@ func (f *Filter) compile() *Filter {
 		f.talkgroupTagsNot[tag] = true
 	}
 
-	q := f.filterQuery()
-	f.query = &q
+	f.query = f.filterQuery()
 
 	return f
 }
