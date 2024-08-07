@@ -1,11 +1,11 @@
 package nexus
 
 import (
+	"context"
 	"io"
 	"sync"
 
 	"dynatron.me/x/stillbox/pkg/calls"
-	"dynatron.me/x/stillbox/pkg/live"
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	"github.com/rs/zerolog/log"
@@ -17,8 +17,8 @@ type Client interface {
 
 	Connection
 
-	HandleCommand(*pb.Command)
-	HandleMessage([]byte)
+	HandleCommand(context.Context, *pb.Command)
+	HandleMessage(context.Context, []byte)
 }
 
 type client struct {
@@ -29,7 +29,7 @@ type client struct {
 	liveState pb.LiveState
 	filter    *calls.TalkgroupFilter
 
-	nexus     *Nexus
+	nexus *Nexus
 }
 
 type Connection interface {
@@ -48,7 +48,7 @@ func (n *Nexus) NewClient(conn Connection) Client {
 	return sess
 }
 
-func (c *client) HandleMessage(mesgBytes []byte) {
+func (c *client) HandleMessage(ctx context.Context, mesgBytes []byte) {
 	var msg pb.Command
 	err := proto.Unmarshal(mesgBytes, &msg)
 	if err != nil {
@@ -56,5 +56,5 @@ func (c *client) HandleMessage(mesgBytes []byte) {
 		return
 	}
 
-	c.HandleCommand(&msg)
+	c.HandleCommand(ctx, &msg)
 }

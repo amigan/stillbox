@@ -31,7 +31,7 @@ type TalkgroupFilter struct {
 	talkgroups map[Talkgroup]bool
 }
 
-func TalkgroupFilterFromPB(p *pb.Filter) *TalkgroupFilter {
+func TalkgroupFilterFromPB(ctx context.Context, p *pb.Filter) (*TalkgroupFilter, error) {
 	tgf := &TalkgroupFilter{
 		TalkgroupTagsAll: p.TalkgroupTagsAll,
 		TalkgroupTagsAny: p.TalkgroupTagsAny,
@@ -42,7 +42,7 @@ func TalkgroupFilterFromPB(p *pb.Filter) *TalkgroupFilter {
 		tgf.Talkgroups = make([]Talkgroup, l)
 		for i, t := range p.Talkgroups {
 			tgf.Talkgroups[i] = Talkgroup{
-				System: uint32(t.System),
+				System:    uint32(t.System),
 				Talkgroup: uint32(t.Talkgroup),
 			}
 		}
@@ -52,13 +52,13 @@ func TalkgroupFilterFromPB(p *pb.Filter) *TalkgroupFilter {
 		tgf.TalkgroupsNot = make([]Talkgroup, l)
 		for i, t := range p.TalkgroupsNot {
 			tgf.TalkgroupsNot[i] = Talkgroup{
-				System: uint32(t.System),
+				System:    uint32(t.System),
 				Talkgroup: uint32(t.Talkgroup),
 			}
 		}
 	}
 
-	return tgf
+	return tgf, tgf.compile(ctx)
 }
 
 func PackedTGs(tg []Talkgroup) []int64 {

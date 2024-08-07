@@ -9,6 +9,7 @@ message Message {
     Call call = 1;
     Notification notification = 2;
     UserPopup popup = 3;
+    Error error = 4;
   }
 }
 
@@ -28,6 +29,10 @@ message Call {
 
 message UserPopup {
   string msg = 1;
+}
+
+message Error {
+  string error = 1;
 }
 
 message Notification {
