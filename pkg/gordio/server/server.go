@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 
 	"dynatron.me/x/stillbox/pkg/gordio/auth"
@@ -54,12 +55,11 @@ func New(cfg *config.Config) (*Server, error) {
 
 func (s *Server) Go() error {
 	defer s.db.Close()
-	done := make(chan struct{})
 
-	defer func() {
-		close(done)
-	}()
-	go s.nex.Go(done)
+	ctx, cancel := context.WithCancel(database.CtxWithDB(context.Background(), s.db))
+	defer cancel()
+
+	go s.nex.Go(ctx)
 
 	http.ListenAndServe(s.conf.Listen, s.r)
 	return nil

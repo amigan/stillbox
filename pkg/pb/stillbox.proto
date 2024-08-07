@@ -50,7 +50,21 @@ enum LiveState {
 }
 
 message Live {
-  LiveState state = 1;
+  optional LiveState state = 1;
+  optional Filter filter = 2;
+}
+
+message Talkgroup {
+  int32 system = 1;
+  int32 talkgroup = 2;
+}
+
+message Filter {
+  repeated Talkgroup talkgroups = 1;
+  repeated Talkgroup talkgroups_not = 2;
+  repeated string talkgroup_tags_all = 3;
+  repeated string talkgroup_tags_any = 4;
+  repeated string talkgroup_tags_not = 5;
 }
 
 message Search {

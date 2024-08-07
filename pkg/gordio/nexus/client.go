@@ -26,9 +26,10 @@ type client struct {
 
 	Connection
 
-	filter *calls.Filter
-	live   live.Listener
-	nexus  *Nexus
+	liveState pb.LiveState
+	filter    *calls.TalkgroupFilter
+
+	nexus     *Nexus
 }
 
 type Connection interface {

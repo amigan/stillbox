@@ -17,9 +17,7 @@ func (c *client) HandleCommand(cmd *pb.Command) {
 }
 
 func (c *client) Live(cmd *pb.Live) {
-	switch cmd.State {
-	case pb.LiveState_LS_STOPPED:
-	case pb.LiveState_LS_LIVE:
-	case pb.LiveState_LS_PAUSED:
+	if cmd.State != nil {
+		c.liveState = *cmd.State
 	}
 }
