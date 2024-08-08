@@ -1,6 +1,7 @@
 package nexus
 
 import (
+	"context"
 	"sync"
 
 	"dynatron.me/x/stillbox/pkg/calls"
@@ -34,7 +35,7 @@ func New() *Nexus {
 	return n
 }
 
-func (n *Nexus) Go(done <-chan struct{}) {
+func (n *Nexus) Go(ctx context.Context) {
 	for {
 		select {
 		case call, ok := <-n.callCh:
@@ -42,8 +43,8 @@ func (n *Nexus) Go(done <-chan struct{}) {
 				return
 			}
 
-			n.broadcastCallToClients(call)
-		case <-done:
+			n.broadcastCallToClients(ctx, call)
+		case <-ctx.Done():
 			return
 		}
 	}
@@ -53,14 +54,18 @@ func (n *Nexus) BroadcastCall(call *calls.Call) {
 	n.callCh <- call
 }
 
-func (n *Nexus) broadcastCallToClients(call *calls.Call) {
+func (n *Nexus) broadcastCallToClients(ctx context.Context, call *calls.Call) {
 	message := &pb.Message{
 		ToClientMessage: &pb.Message_Call{Call: call.ToPB()},
 	}
 	n.Lock()
 	defer n.Unlock()
 
-	for cl, _ := range n.clients {
+	for cl := range n.clients {
+		if !cl.filter.Test(ctx, call) {
+			continue
+		}
+
 		if cl.Send(message) {
 			// we already hold the lock, and the channel is closed anyway
 			delete(n.clients, cl)
