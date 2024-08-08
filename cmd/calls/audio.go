@@ -41,6 +41,9 @@ func (p *Player) initOto(samp, channels int) error {
 		if p.ctx, err = oto.NewContext(samp, channels, 2, 1024); err != nil {
 			return err
 		}
+
+		p.sampleRate = samp
+		p.channels = channels
 	}
 
 	return nil
