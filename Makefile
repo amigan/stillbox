@@ -5,3 +5,4 @@ all:
 generate:
 	sqlc generate -f sql/sqlc.yaml
 	protoc -I=pkg/pb/ --go_out=pkg/ pkg/pb/stillbox.proto
+
