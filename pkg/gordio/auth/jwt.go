@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/go-chi/render"
 	"github.com/rs/zerolog/log"
 )
@@ -28,8 +30,11 @@ type jwtAuth interface {
 	// InstallAuthMiddleware installs the JWT authenticator middleware to the provided chi Router.
 	AuthMiddleware() func(http.Handler) http.Handler
 
-	// InstallRoutes installs the auth route to the provided chi Router.
+	// PublicRoutes installs the auth route to the provided chi Router.
 	PublicRoutes(chi.Router)
+
+	// PublicRoutes installs the refresh route to the provided chi Router.
+	PrivateRoutes(chi.Router)
 }
 
 type claims map[string]interface{}
@@ -79,7 +84,7 @@ func (a *authenticator) Login(ctx context.Context, username, password string) (t
 
 func (a *authenticator) newToken(uid int32) string {
 	claims := claims{
-		"user_id": uid,
+		"sub": strconv.Itoa(int(uid)),
 	}
 	jwtauth.SetExpiryIn(claims, time.Hour*24*30) // one month
 	_, tokenString, err := a.jwt.Encode(claims)
@@ -93,9 +98,49 @@ func (a *authenticator) PublicRoutes(r chi.Router) {
 	r.Post("/login", a.routeAuth)
 }
 
+func (a *authenticator) PrivateRoutes(r chi.Router) {
+	r.Get("/refresh", a.routeRefresh)
+}
+
 func (a *authenticator) allowInsecureCookie(r *http.Request) bool {
 	v, has := a.cfg.AllowInsecure[r.Host]
 	return has && v
+}
+
+func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
+	existingSubjectUID := r.Context().Value(jwtauth.TokenCtxKey).(jwt.Token).Subject()
+	if existingSubjectUID == "" {
+		http.Error(w, "Invalid token", http.StatusBadRequest)
+		return
+	}
+	uid, err := strconv.Atoi(existingSubjectUID)
+	if err != nil {
+		log.Error().Str("sub", existingSubjectUID).Err(err).Msg("atoi uid for token refresh")
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	tok := a.newToken(int32(uid))
+
+	cookie := &http.Cookie{
+		Name:     "jwt",
+		Value:    tok,
+		HttpOnly: true,
+		Secure:   !a.allowInsecureCookie(r),
+	}
+
+	if cookie.Secure {
+		cookie.Domain = a.cfg.Domain
+	}
+	http.SetCookie(w, cookie)
+
+	jr := struct {
+		JWT string `json:"jwt"`
+	}{
+		JWT: tok,
+	}
+
+	render.JSON(w, r, &jr)
 }
 
 func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
