@@ -7,7 +7,7 @@ clean:
 	rm -f gordio calls
 
 checkcalls:
-	test ! -e client/calls/index.html && make getcalls
+	@test -e client/calls/index.html || make getcalls
 
 getcalls:
 	rm -rf client/calls/*
