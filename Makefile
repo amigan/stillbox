@@ -1,6 +1,15 @@
 all:
+	@[ ! -e client/calls/index.html ] && make getcalls
 	go build -o gordio ./cmd/gordio/
 	go build -o calls ./cmd/calls/
+
+clean:
+	rm -rf client/calls/ && mkdir client/calls && touch client/calls/.gitkeep
+	rm -f gordio calls
+
+getcalls:
+	rm -rf client/calls/*
+	cd client/calls/ && curl -OL https://nightly.link/amigan/calls/workflows/build-web/trunk/webBuild.zip && unzip -o webBuild.zip && rm webBuild.zip
 
 generate:
 	sqlc generate -f sql/sqlc.yaml

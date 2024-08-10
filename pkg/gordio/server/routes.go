@@ -15,7 +15,7 @@ import (
 )
 
 func (s *Server) setupRoutes() {
-	clientRoot, err := fs.Sub(client.Calls, "calls/build/web")
+	clientRoot, err := fs.Sub(client.Calls, "calls")
 	if err != nil {
 		panic(err)
 	}

@@ -1,5 +1,7 @@
 config.yaml
 mydb.sql
+client/calls/
+!client/calls/.gitkeep
 /gordio
 /calls
 Session.vim
