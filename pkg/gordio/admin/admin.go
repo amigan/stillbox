@@ -5,12 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"syscall"
+	"time"
 
+	"dynatron.me/x/stillbox/internal/audio"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
+	"github.com/google/uuid"
 )
 
 const (
@@ -121,7 +126,7 @@ func Command(cfg *config.Config) []*cobra.Command {
 		Aliases: []string{"u"},
 		Short:   "administers the server",
 	}
-	userCmd.AddCommand(addUserCommand(cfg), passwdCommand(cfg))
+	userCmd.AddCommand(addUserCommand(cfg), passwdCommand(cfg), migrateCommand(cfg))
 
 	return []*cobra.Command{userCmd}
 }
@@ -168,6 +173,63 @@ func passwdCommand(cfg *config.Config) *cobra.Command {
 			}
 			username := args[0]
 			return Passwd(database.CtxWithDB(context.Background(), db), username)
+		},
+	}
+
+	return c
+}
+
+func migrateCommand(cfg *config.Config) *cobra.Command {
+	c := &cobra.Command{
+		Use:   "migrate",
+		Short: "does DB migration",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			db, err := database.NewClient(cfg.DB)
+			if err != nil {
+				return err
+			}
+			ctx := context.Background()
+
+			for {
+				rows, err := db.Query(ctx, "SELECT id, audio_blob FROM calls WHERE duration IS NULL LIMIT 100;")
+				if err == pgx.ErrNoRows {
+					break
+				}
+				if err != nil {
+					return nil
+				}
+
+				var id pgtype.UUID
+				var blob []byte
+				for rows.Next() {
+					err = rows.Scan(&id, &blob)
+					if err != nil {
+						return err
+					}
+					var d time.Duration
+					var err error
+					d, err = audio.MP3Duration(blob)
+
+					if err != nil {
+						fmt.Println("error", err.Error())
+						continue
+					}
+
+					dMs := d.Milliseconds()
+					uu, _ := uuid.FromBytes(id.Bytes[:])
+					fmt.Printf("%s dur %d\n", uu.String(), dMs)
+					cTag, err := db.Exec(ctx, "UPDATE calls SET duration = $1 WHERE id = $2;", dMs, id)
+					if cTag.RowsAffected() != 1 {
+						panic("no rows!")
+					}
+					if err != nil {
+						panic(err)
+					}
+				}
+			}
+
+			return nil
 		},
 	}
 
