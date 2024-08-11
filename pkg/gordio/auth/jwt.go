@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
-	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/go-chi/render"
 	"github.com/rs/zerolog/log"
 )
@@ -108,7 +107,12 @@ func (a *authenticator) allowInsecureCookie(r *http.Request) bool {
 }
 
 func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
-	existingSubjectUID := r.Context().Value(jwtauth.TokenCtxKey).(jwt.Token).Subject()
+	jwToken, _, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Invalid token", http.StatusBadRequest)
+		return
+	}
+	existingSubjectUID := jwToken.Subject()
 	if existingSubjectUID == "" {
 		http.Error(w, "Invalid token", http.StatusBadRequest)
 		return

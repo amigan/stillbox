@@ -105,7 +105,7 @@ func main() {
 
 				switch v := m.ToClientMessage.(type) {
 				case *pb.Message_Call:
-					log.Printf("call tg %d [Q: %d]", v.Call.Talkgroup, play.Queue())
+					log.Printf("call tg %d (%s) [Q: %d]", v.Call.Talkgroup, timeLength(v.Call.Duration), play.Queue())
 					play.Play(v.Call.Audio, v.Call.AudioType)
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
@@ -140,4 +140,13 @@ func main() {
 			return
 		}
 	}
+}
+
+func timeLength(t *int32) string {
+	if t == nil {
+		return ""
+	}
+
+	d := time.Duration(*t) * time.Millisecond
+	return d.String()
 }

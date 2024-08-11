@@ -50,10 +50,8 @@ func (p *Player) initOto(samp, channels int) error {
 }
 
 func (p *Player) playMP3(audio []byte) error {
-	var dec *minimp3.Decoder
-	var data []byte
-	var err error
-	if dec, data, err = minimp3.DecodeFull(audio); err != nil {
+	dec, data, err := minimp3.DecodeFull(audio)
+	if err != nil {
 		return err
 	}
 

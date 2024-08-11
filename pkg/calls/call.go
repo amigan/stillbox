@@ -1,17 +1,40 @@
 package calls
 
 import (
+	"fmt"
+	"time"
+
+	"dynatron.me/x/stillbox/internal/audio"
 	"dynatron.me/x/stillbox/pkg/gordio/auth"
 	"dynatron.me/x/stillbox/pkg/pb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"time"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+type CallDuration time.Duration
+
+func (d CallDuration) Duration() time.Duration {
+	return time.Duration(d)
+}
+
+func (d CallDuration) Int32Ptr() *int32 {
+	if time.Duration(d) == 0 {
+		return nil
+	}
+
+	i := int32(time.Duration(d).Milliseconds())
+	return &i
+}
+
+func (d CallDuration) Seconds() int32 {
+	return int32(time.Duration(d).Seconds())
+}
 
 type Call struct {
 	Audio          []byte
 	AudioName      string
 	AudioType      string
+	Duration       CallDuration
 	DateTime       time.Time
 	Frequencies    []int
 	Frequency      int
@@ -57,6 +80,30 @@ func (c *Call) ToPB() *pb.Call {
 		Frequencies: toInt64Slice(c.Frequencies),
 		Patches:     toInt32Slice(c.Patches),
 		Sources:     toInt32Slice(c.Sources),
+		Duration:    c.Duration.Int32Ptr(),
 		Audio:       c.Audio,
 	}
+}
+
+func (c *Call) ComputeLength() (err error) {
+	var td time.Duration
+
+	switch c.AudioType {
+	case "audio/mpeg":
+		td, err = audio.MP3Duration(c.Audio)
+		if err != nil {
+			return fmt.Errorf("mp3: %w", err)
+		}
+	case "audio/wav":
+		td, err = audio.WAVDuration(c.Audio)
+		if err != nil {
+			return fmt.Errorf("wav: %w", err)
+		}
+	default:
+		return fmt.Errorf("length not implemented for mime type %s", c.AudioType)
+	}
+
+	c.Duration = CallDuration(td)
+
+	return nil
 }

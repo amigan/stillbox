@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS calls(
 	call_date TIMESTAMP NOT NULL,
 	audio_name TEXT,
 	audio_blob BYTEA,
+	duration INTEGER,
 	audio_type TEXT,
 	audio_url TEXT,
 	frequency INTEGER NOT NULL,

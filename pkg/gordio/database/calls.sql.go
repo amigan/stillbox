@@ -23,6 +23,7 @@ INSERT INTO calls (
 	audio_blob,
 	audio_type,
 	audio_url,
+	duration,
 	frequency,
 	frequencies,
 	patches,
@@ -30,7 +31,7 @@ INSERT INTO calls (
 	tg_tag,
 	tg_group,
 	source
-	) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
+	) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
 RETURNING id
 `
 
@@ -43,6 +44,7 @@ type AddCallParams struct {
 	AudioBlob   []byte    `json:"audio_blob"`
 	AudioType   *string   `json:"audio_type"`
 	AudioUrl    *string   `json:"audio_url"`
+	Duration    *int32    `json:"duration"`
 	Frequency   int       `json:"frequency"`
 	Frequencies []int     `json:"frequencies"`
 	Patches     []int     `json:"patches"`
@@ -62,6 +64,7 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, er
 		arg.AudioBlob,
 		arg.AudioType,
 		arg.AudioUrl,
+		arg.Duration,
 		arg.Frequency,
 		arg.Frequencies,
 		arg.Patches,

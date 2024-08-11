@@ -43,6 +43,7 @@ func (s *DatabaseSink) toAddCallParams(call *calls.Call) database.AddCallParams 
 		AudioName:   common.PtrOrNull(call.AudioName),
 		AudioBlob:   call.Audio,
 		AudioType:   common.PtrOrNull(call.AudioType),
+		Duration:    call.Duration.Int32Ptr(),
 		Frequency:   call.Frequency,
 		Frequencies: call.Frequencies,
 		Patches:     call.Patches,

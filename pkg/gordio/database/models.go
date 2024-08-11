@@ -28,6 +28,7 @@ type Call struct {
 	CallDate    time.Time `json:"call_date"`
 	AudioName   *string   `json:"audio_name"`
 	AudioBlob   []byte    `json:"audio_blob"`
+	Duration    *int32    `json:"duration"`
 	AudioType   *string   `json:"audio_type"`
 	AudioUrl    *string   `json:"audio_url"`
 	Frequency   int       `json:"frequency"`
