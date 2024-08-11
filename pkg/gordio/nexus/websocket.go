@@ -94,10 +94,12 @@ func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {
 	}()
 
 	conn.SetReadLimit(maxMessageSize)
-	conn.SetReadDeadline(time.Now().Add(pongWait))
+	err := conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		log.Error().Err(err).Msg("SetReadDeadline")
+	}
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(pongWait))
-		return nil
+		return conn.SetReadDeadline(time.Now().Add(pongWait))
 	})
 	for {
 		_, message, err := conn.ReadMessage()
@@ -125,10 +127,16 @@ func (conn *wsConn) writePump() {
 	for {
 		select {
 		case msg, ok := <-conn.out:
-			conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				log.Error().Err(err).Msg("SetWriteDeadline")
+			}
 			if !ok {
 				// nexus closed us
-				conn.WriteMessage(websocket.CloseMessage, []byte{})
+				err := conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err != nil {
+					log.Error().Err(err).Msg("writing close message")
+				}
 				return
 			}
 
@@ -145,7 +153,10 @@ func (conn *wsConn) writePump() {
 				return
 			}
 		case <-pingTicker.C:
-			conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				log.Error().Err(err).Msg("SetWriteDeadline")
+			}
 			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.Debug().Err(err).Msg("x ping failed")
 				return
@@ -162,7 +173,7 @@ func (conn *wsConn) writeMessage(w io.WriteCloser, msg *pb.Message) {
 			return
 		}
 
-		w.Write(packed)
+		_, _ = w.Write(packed)
 	}
 
 	packWrite(msg)

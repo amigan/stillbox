@@ -50,6 +50,9 @@ func AddUser(ctx context.Context, username, email string, isAdmin bool) error {
 	}
 
 	hashpw, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
 
 	_, err = db.CreateUser(context.Background(), database.CreateUserParams{
 		Username: username,
@@ -97,6 +100,9 @@ func Passwd(ctx context.Context, username string) error {
 	}
 
 	hashpw, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
 
 	return db.UpdatePassword(context.Background(), username, string(hashpw))
 }

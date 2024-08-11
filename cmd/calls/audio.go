@@ -61,7 +61,10 @@ func (p *Player) playMP3(audio []byte) error {
 	}
 
 	var player = p.ctx.NewPlayer()
-	player.Write(data)
+	_, err = player.Write(data)
+	if err != nil {
+		return err
+	}
 
 	<-time.After(time.Second)
 

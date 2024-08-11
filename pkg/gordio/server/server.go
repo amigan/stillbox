@@ -61,6 +61,5 @@ func (s *Server) Go() error {
 
 	go s.nex.Go(ctx)
 
-	http.ListenAndServe(s.conf.Listen, s.r)
-	return nil
+	return http.ListenAndServe(s.conf.Listen, s.r)
 }

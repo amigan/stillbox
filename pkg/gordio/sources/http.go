@@ -124,7 +124,7 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().Int("system", cur.System).Int("tgid", cur.Talkgroup).Msg("ingested")
 
-	w.Write([]byte("Call imported successfully."))
+	_, _ = w.Write([]byte("Call imported successfully."))
 }
 
 func (car *callUploadRequest) fill(r *http.Request) error {
