@@ -50,6 +50,15 @@ type Call struct {
 	TalkgroupTag   *string
 }
 
+func Make(call *Call) (*Call, error) {
+	err := call.computeLength()
+	if err != nil {
+		return nil, err
+	}
+
+	return call, nil
+}
+
 func toInt64Slice(s []int) []int64 {
 	n := make([]int64, len(s))
 	for i := range s {
@@ -85,7 +94,7 @@ func (c *Call) ToPB() *pb.Call {
 	}
 }
 
-func (c *Call) ComputeLength() (err error) {
+func (c *Call) computeLength() (err error) {
 	var td time.Duration
 
 	switch c.AudioType {

@@ -73,8 +73,8 @@ func (car *callUploadRequest) mimeType() string {
 	return ""
 }
 
-func (car *callUploadRequest) toCall(submitter auth.UserID) *calls.Call {
-	return &calls.Call{
+func (car *callUploadRequest) toCall(submitter auth.UserID) (*calls.Call, error) {
+	return calls.Make(&calls.Call{
 		Submitter:      &submitter,
 		System:         car.System,
 		Talkgroup:      car.Talkgroup,
@@ -89,7 +89,7 @@ func (car *callUploadRequest) toCall(submitter auth.UserID) *calls.Call {
 		TalkgroupTag:   common.PtrOrNull(car.TalkgroupTag),
 		TalkgroupGroup: common.PtrOrNull(car.TalkgroupGroup),
 		Source:         car.Source,
-	}
+	})
 }
 
 func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
@@ -120,7 +120,13 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.ing.Ingest(ctx, cur.toCall(*submitter))
+	call, err := cur.toCall(*submitter)
+	if err != nil {
+		log.Error().Err(err).Msg("toCall failed")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	h.ing.Ingest(ctx, call)
 
 	log.Info().Int("system", cur.System).Int("tgid", cur.Talkgroup).Msg("ingested")
 
