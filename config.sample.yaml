@@ -1,6 +1,10 @@
 db:
   driver: pgx
   connect: 'postgres://postgres:password@localhost:5432/example'
+cors:
+  allowedOrigins:
+    - 'http://localhost:*'
+    - 'https://stillbox.server'
 auth:
   jwtsecret: 'super secret string'
   # this is the JWT cookie domain

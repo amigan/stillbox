@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	DB     DB     `yaml:"db"`
+	CORS   CORS   `yaml:"cors"`
 	Auth   Auth   `yaml:"auth"`
 	Listen string `yaml:"listen"`
 	Public bool   `yaml:"public"`
@@ -21,6 +22,10 @@ type Auth struct {
 	JWTSecret     string          `yaml:"jwtsecret"`
 	Domain        string          `yaml:"domain"`
 	AllowInsecure map[string]bool `yaml:"allowInsecureFor"`
+}
+
+type CORS struct {
+	AllowedOrigins []string `yaml:"allowedOrigins"`
 }
 
 type DB struct {
