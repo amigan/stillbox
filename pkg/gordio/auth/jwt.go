@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -102,7 +103,8 @@ func (a *authenticator) PrivateRoutes(r chi.Router) {
 }
 
 func (a *authenticator) allowInsecureCookie(r *http.Request) bool {
-	v, has := a.cfg.AllowInsecure[r.Host]
+	host := strings.Split(r.Host, ":")
+	v, has := a.cfg.AllowInsecure[host[0]]
 	return has && v
 }
 
@@ -130,7 +132,13 @@ func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
 		Name:     "jwt",
 		Value:    tok,
 		HttpOnly: true,
-		Secure:   !a.allowInsecureCookie(r),
+		Secure:   true,
+	}
+
+	if a.allowInsecureCookie(r) {
+		cookie.Secure = false
+		cookie.SameSite = http.SameSiteNoneMode
+		log.Debug().Msg("same site none")
 	}
 
 	if cookie.Secure {
@@ -168,12 +176,16 @@ func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 		Name:     "jwt",
 		Value:    tok,
 		HttpOnly: true,
-		Secure:   !a.allowInsecureCookie(r),
+		Secure:   true,
 	}
 
-	if cookie.Secure {
+	if a.allowInsecureCookie(r) {
+		cookie.Secure = false
+		cookie.SameSite = http.SameSiteNoneMode
+	} else {
 		cookie.Domain = a.cfg.Domain
 	}
+
 	http.SetCookie(w, cookie)
 
 	jr := struct {

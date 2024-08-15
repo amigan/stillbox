@@ -11,6 +11,6 @@ auth:
   domain: example.com
   # this allows the JWT cookie to be served over plain HTTP only for these Host: header values
   allowInsecureFor:
-    "localhost:3050": true
+    "localhost": true
 listen: ':3050'
 public: true
