@@ -8,9 +8,10 @@ import "google/protobuf/struct.proto";
 message Message {
   oneof toClient_message {
     Call call = 1;
-    Notification notification = 2;
-    UserPopup popup = 3;
-    Error error = 4;
+    TalkgroupInfo tgInfo = 2;
+    Notification notification = 3;
+    UserPopup popup = 4;
+    Error error = 5;
   }
 }
 
