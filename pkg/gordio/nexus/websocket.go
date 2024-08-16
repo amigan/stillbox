@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	"github.com/go-chi/chi/v5"
@@ -93,6 +94,10 @@ func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {
 		conn.CloseCh()
 	}()
 
+	db := database.FromCtx(ctx)
+	ctx, cancel := context.WithCancel(database.CtxWithDB(context.Background(), db))
+	defer cancel()
+
 	conn.SetReadLimit(maxMessageSize)
 	err := conn.SetReadDeadline(time.Now().Add(pongWait))
 	if err != nil {
@@ -133,10 +138,7 @@ func (conn *wsConn) writePump() {
 			}
 			if !ok {
 				// nexus closed us
-				err := conn.WriteMessage(websocket.CloseMessage, []byte{})
-				if err != nil {
-					log.Error().Err(err).Msg("writing close message")
-				}
+				_ = conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 

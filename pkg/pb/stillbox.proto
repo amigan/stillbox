@@ -60,6 +60,7 @@ message TalkgroupInfo {
   optional int32 frequency = 4;
   repeated string tags = 5;
   optional google.protobuf.Struct metadata = 6;
+  bool learned = 7;
 }
 
 enum LiveState {

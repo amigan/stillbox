@@ -20,7 +20,8 @@ func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []str
 }
 
 const getTalkgroup = `-- name: GetTalkgroup :one
-SELECT id, system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups WHERE id = systg2id($1, $2)
+SELECT id, system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups
+WHERE id = systg2id($1, $2)
 `
 
 func (q *Queries) GetTalkgroup(ctx context.Context, systemID int, tgid int) (Talkgroup, error) {
@@ -81,6 +82,51 @@ func (q *Queries) GetTalkgroupTags(ctx context.Context, sys int, tg int) ([]stri
 	var tags []string
 	err := row.Scan(&tags)
 	return tags, err
+}
+
+const getTalkgroupWithLearned = `-- name: GetTalkgroupWithLearned :one
+SELECT
+tg.id, tg.system_id, tg.tgid, tg.name,
+tg.tg_group, tg.frequency, tg.metadata, tg.tags,
+FALSE learned
+FROM talkgroups tg
+WHERE id = systg2id($1, $2)
+UNION
+SELECT
+tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+tgl.group_tag, NULL::INTEGER, NULL::JSONB, ARRAY[group_tag],
+TRUE learned
+FROM talkgroups_learned tgl
+WHERE system_id = $1 AND tgid = $2 AND ignored IS NOT TRUE
+`
+
+type GetTalkgroupWithLearnedRow struct {
+	ID        int64    `json:"id"`
+	SystemID  int32    `json:"system_id"`
+	Tgid      int32    `json:"tgid"`
+	Name      *string  `json:"name"`
+	TgGroup   *string  `json:"tg_group"`
+	Frequency *int32   `json:"frequency"`
+	Metadata  []byte   `json:"metadata"`
+	Tags      []string `json:"tags"`
+	Learned   bool     `json:"learned"`
+}
+
+func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int, tgid int) (GetTalkgroupWithLearnedRow, error) {
+	row := q.db.QueryRow(ctx, getTalkgroupWithLearned, systemID, tgid)
+	var i GetTalkgroupWithLearnedRow
+	err := row.Scan(
+		&i.ID,
+		&i.SystemID,
+		&i.Tgid,
+		&i.Name,
+		&i.TgGroup,
+		&i.Frequency,
+		&i.Metadata,
+		&i.Tags,
+		&i.Learned,
+	)
+	return i, err
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many

@@ -25,4 +25,20 @@ UPDATE talkgroups SET tags = $2
 WHERE id = ANY($1);
 
 -- name: GetTalkgroup :one
-SELECT * FROM talkgroups WHERE id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid));
+SELECT * FROM talkgroups
+WHERE id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid));
+
+-- name: GetTalkgroupWithLearned :one
+SELECT
+tg.id, tg.system_id, tg.tgid, tg.name,
+tg.tg_group, tg.frequency, tg.metadata, tg.tags,
+FALSE learned
+FROM talkgroups tg
+WHERE id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid))
+UNION
+SELECT
+tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+tgl.group_tag, NULL::INTEGER, NULL::JSONB, ARRAY[group_tag],
+TRUE learned
+FROM talkgroups_learned tgl
+WHERE system_id = sqlc.arg(system_id) AND tgid = sqlc.arg(tgid) AND ignored IS NOT TRUE;

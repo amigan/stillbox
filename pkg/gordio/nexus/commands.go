@@ -43,8 +43,9 @@ func (c *client) SendError(cmd *pb.Command, err error) {
 
 func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 	db := database.FromCtx(ctx)
-	tgi, err := db.GetTalkgroup(ctx, int(tg.System), int(tg.Talkgroup))
+	tgi, err := db.GetTalkgroupWithLearned(ctx, int(tg.System), int(tg.Talkgroup))
 	if err != nil {
+		log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("get tg fail")
 		return err
 	}
 
@@ -66,8 +67,9 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 		Name:      tgi.Name,
 		Group:     tgi.TgGroup,
 		Frequency: tgi.Frequency,
-		Tags:      tgi.Tags,
 		Metadata:  md,
+		Tags:      tgi.Tags,
+		Learned:   tgi.Learned,
 	}
 
 	c.Send(&pb.Message{
