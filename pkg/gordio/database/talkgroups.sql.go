@@ -19,6 +19,26 @@ func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []str
 	return err
 }
 
+const getTalkgroup = `-- name: GetTalkgroup :one
+SELECT id, system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups WHERE id = systg2id($1, $2)
+`
+
+func (q *Queries) GetTalkgroup(ctx context.Context, systemID int, tgid int) (Talkgroup, error) {
+	row := q.db.QueryRow(ctx, getTalkgroup, systemID, tgid)
+	var i Talkgroup
+	err := row.Scan(
+		&i.ID,
+		&i.SystemID,
+		&i.Tgid,
+		&i.Name,
+		&i.TgGroup,
+		&i.Frequency,
+		&i.Metadata,
+		&i.Tags,
+	)
+	return i, err
+}
+
 const getTalkgroupIDsByTags = `-- name: GetTalkgroupIDsByTags :many
 SELECT system_id, tgid FROM talkgroups
 WHERE (tags @> ARRAY[$1])

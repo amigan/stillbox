@@ -23,3 +23,6 @@ WHERE id = systg2id($1, $2);
 -- name: BulkSetTalkgroupTags :exec
 UPDATE talkgroups SET tags = $2
 WHERE id = ANY($1);
+
+-- name: GetTalkgroup :one
+SELECT * FROM talkgroups WHERE id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid));

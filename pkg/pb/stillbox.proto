@@ -36,6 +36,7 @@ message UserPopup {
 
 message Error {
   string error = 1;
+  Command command = 2;
 }
 
 message Notification {

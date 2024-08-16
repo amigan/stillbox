@@ -19,6 +19,7 @@ type Querier interface {
 	DeleteAPIKey(ctx context.Context, apiKey string) error
 	DeleteUser(ctx context.Context, username string) error
 	GetAPIKey(ctx context.Context, apiKey string) (ApiKey, error)
+	GetTalkgroup(ctx context.Context, systemID int, tgid int) (Talkgroup, error)
 	GetTalkgroupIDsByTags(ctx context.Context, anytags []string, alltags []string, nottags []string) ([]GetTalkgroupIDsByTagsRow, error)
 	GetTalkgroupTags(ctx context.Context, sys int, tg int) ([]string, error)
 	GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]Talkgroup, error)
