@@ -94,7 +94,8 @@ WHERE id = systg2id($1, $2)
 UNION
 SELECT
 tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
-tgl.group_tag, NULL::INTEGER, NULL::JSONB, ARRAY[group_tag],
+tgl.group_tag, NULL::INTEGER, NULL::JSONB,
+CASE WHEN tgl.group_tag IS NULL THEN NULL ELSE ARRAY[tgl.group_tag] END,
 TRUE learned
 FROM talkgroups_learned tgl
 WHERE system_id = $1 AND tgid = $2 AND ignored IS NOT TRUE

@@ -45,7 +45,7 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 	db := database.FromCtx(ctx)
 	tgi, err := db.GetTalkgroupWithLearned(ctx, int(tg.System), int(tg.Talkgroup))
 	if err != nil {
-		log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("get tg fail")
+		log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("get talkgroup fail")
 		return err
 	}
 
