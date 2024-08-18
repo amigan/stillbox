@@ -56,6 +56,7 @@ type callUploadRequest struct {
 	TalkgroupGroup string    `form:"talkgroupGroup"`
 	TalkgroupLabel string    `form:"talkgroupLabel"`
 	TalkgroupTag   string    `form:"talkgroupTag"`
+	DontStore      bool      `form:"dontStore"`
 }
 
 func (car *callUploadRequest) mimeType() string {
@@ -89,7 +90,7 @@ func (car *callUploadRequest) toCall(submitter auth.UserID) (*calls.Call, error)
 		TalkgroupTag:   common.PtrOrNull(car.TalkgroupTag),
 		TalkgroupGroup: common.PtrOrNull(car.TalkgroupGroup),
 		Source:         car.Source,
-	})
+	}, !car.DontStore)
 }
 
 func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
@@ -184,13 +185,24 @@ func (car *callUploadRequest) fill(r *http.Request) error {
 			}
 			f.Set(reflect.ValueOf(ar))
 		case int:
-			val, err := strconv.Atoi(r.Form.Get(formField))
+			ff := r.Form.Get(formField)
+			val, err := strconv.Atoi(ff)
 			if err != nil {
-				return fmt.Errorf("atoi('%s'): %w", formField, err)
+				return fmt.Errorf("atoi('%s'): %w", ff, err)
 			}
 			f.SetInt(int64(val))
 		case string:
 			f.SetString(r.Form.Get(formField))
+		case bool:
+			ff := r.Form.Get(formField)
+			if ff == "" {
+				continue
+			}
+			val, err := strconv.ParseBool(ff)
+			if err != nil {
+				return fmt.Errorf("parsebool('%s'): %w", ff, err)
+			}
+			f.SetBool(val)
 		default:
 			panic(fmt.Errorf("unsupported type %T", v))
 		}

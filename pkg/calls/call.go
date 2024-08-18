@@ -48,13 +48,25 @@ type Call struct {
 	TalkgroupGroup *string
 	TalkgroupLabel *string
 	TalkgroupTag   *string
+
+	shouldStore bool
 }
 
-func Make(call *Call) (*Call, error) {
+func (c *Call) String() string {
+	return fmt.Sprintf("%s to %d from %d", c.AudioName, c.Talkgroup, c.Source)
+}
+
+func (c *Call) ShouldStore() bool {
+	return c.shouldStore
+}
+
+func Make(call *Call, dontStore bool) (*Call, error) {
 	err := call.computeLength()
 	if err != nil {
 		return nil, err
 	}
+
+	call.shouldStore = dontStore
 
 	return call, nil
 }

@@ -20,6 +20,10 @@ func NewDatabaseSink(db *database.DB) *DatabaseSink {
 }
 
 func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
+	if !call.ShouldStore() {
+		log.Debug().Str("call", call.String()).Msg("received dontStore call")
+		return nil
+	}
 	dbCall, err := s.db.AddCall(ctx, s.toAddCallParams(call))
 	if err != nil {
 		return fmt.Errorf("add call: %w", err)

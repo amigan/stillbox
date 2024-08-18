@@ -8,6 +8,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"dynatron.me/x/stillbox/pkg/pb"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -45,7 +46,9 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 	db := database.FromCtx(ctx)
 	tgi, err := db.GetTalkgroupWithLearned(ctx, int(tg.System), int(tg.Talkgroup))
 	if err != nil {
-		log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("get talkgroup fail")
+		if err != pgx.ErrNoRows {
+			log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("get talkgroup fail")
+		}
 		return err
 	}
 
