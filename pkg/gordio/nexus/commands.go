@@ -66,13 +66,14 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 	}
 
 	resp := &pb.TalkgroupInfo{
-		Tg:        tg,
-		Name:      tgi.Name,
-		Group:     tgi.TgGroup,
-		Frequency: tgi.Frequency,
-		Metadata:  md,
-		Tags:      tgi.Tags,
-		Learned:   tgi.Learned,
+		Tg:         tg,
+		Name:       tgi.Name,
+		Group:      tgi.TgGroup,
+		Frequency:  tgi.Frequency,
+		Metadata:   md,
+		Tags:       tgi.Tags,
+		Learned:    tgi.Learned,
+		SystemName: tgi.SystemName,
 	}
 
 	c.Send(&pb.Message{

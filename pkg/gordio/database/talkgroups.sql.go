@@ -86,31 +86,34 @@ func (q *Queries) GetTalkgroupTags(ctx context.Context, sys int, tg int) ([]stri
 
 const getTalkgroupWithLearned = `-- name: GetTalkgroupWithLearned :one
 SELECT
-tg.id, tg.system_id, tg.tgid, tg.name,
+tg.id, tg.system_id, sys.name system_name, tg.tgid, tg.name,
 tg.tg_group, tg.frequency, tg.metadata, tg.tags,
 FALSE learned
 FROM talkgroups tg
-WHERE id = systg2id($1, $2)
+JOIN systems sys ON tg.system_id = sys.id
+WHERE tg.id = systg2id($1, $2)
 UNION
 SELECT
-tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+tgl.id::INT8, tgl.system_id::INT4, sys.name system_name, tgl.tgid::INT4, tgl.name,
 tgl.group_tag, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.group_tag IS NULL THEN NULL ELSE ARRAY[tgl.group_tag] END,
 TRUE learned
 FROM talkgroups_learned tgl
-WHERE system_id = $1 AND tgid = $2 AND ignored IS NOT TRUE
+JOIN systems sys ON tgl.system_id = sys.id
+WHERE tgl.system_id = $1 AND tgl.tgid = $2 AND ignored IS NOT TRUE
 `
 
 type GetTalkgroupWithLearnedRow struct {
-	ID        int64    `json:"id"`
-	SystemID  int32    `json:"system_id"`
-	Tgid      int32    `json:"tgid"`
-	Name      *string  `json:"name"`
-	TgGroup   *string  `json:"tg_group"`
-	Frequency *int32   `json:"frequency"`
-	Metadata  []byte   `json:"metadata"`
-	Tags      []string `json:"tags"`
-	Learned   bool     `json:"learned"`
+	ID         int64    `json:"id"`
+	SystemID   int32    `json:"system_id"`
+	SystemName string   `json:"system_name"`
+	Tgid       int32    `json:"tgid"`
+	Name       *string  `json:"name"`
+	TgGroup    *string  `json:"tg_group"`
+	Frequency  *int32   `json:"frequency"`
+	Metadata   []byte   `json:"metadata"`
+	Tags       []string `json:"tags"`
+	Learned    bool     `json:"learned"`
 }
 
 func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int, tgid int) (GetTalkgroupWithLearnedRow, error) {
@@ -119,6 +122,7 @@ func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int, tgi
 	err := row.Scan(
 		&i.ID,
 		&i.SystemID,
+		&i.SystemName,
 		&i.Tgid,
 		&i.Name,
 		&i.TgGroup,

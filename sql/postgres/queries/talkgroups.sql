@@ -30,16 +30,18 @@ WHERE id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid));
 
 -- name: GetTalkgroupWithLearned :one
 SELECT
-tg.id, tg.system_id, tg.tgid, tg.name,
+tg.id, tg.system_id, sys.name system_name, tg.tgid, tg.name,
 tg.tg_group, tg.frequency, tg.metadata, tg.tags,
 FALSE learned
 FROM talkgroups tg
-WHERE id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid))
+JOIN systems sys ON tg.system_id = sys.id
+WHERE tg.id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid))
 UNION
 SELECT
-tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+tgl.id::INT8, tgl.system_id::INT4, sys.name system_name, tgl.tgid::INT4, tgl.name,
 tgl.group_tag, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.group_tag IS NULL THEN NULL ELSE ARRAY[tgl.group_tag] END,
 TRUE learned
 FROM talkgroups_learned tgl
-WHERE system_id = sqlc.arg(system_id) AND tgid = sqlc.arg(tgid) AND ignored IS NOT TRUE;
+JOIN systems sys ON tgl.system_id = sys.id
+WHERE tgl.system_id = sqlc.arg(system_id) AND tgl.tgid = sqlc.arg(tgid) AND ignored IS NOT TRUE;
