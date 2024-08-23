@@ -127,7 +127,12 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	h.ing.Ingest(ctx, call)
+	err = h.ing.Ingest(ctx, call)
+	if err != nil {
+		log.Error().Err(err).Msg("ingest failed")
+		http.Error(w, "Call ingest failed.", http.StatusInternalServerError)
+		return
+	}
 
 	log.Info().Int("system", cur.System).Int("tgid", cur.Talkgroup).Msg("ingested")
 

@@ -35,7 +35,7 @@ func (s *Sources) PublicRoutes(r chi.Router) {
 }
 
 type Ingestor interface {
-	Ingest(context.Context, *calls.Call)
+	Ingest(context.Context, *calls.Call) error
 }
 
 type PublicRouteSource interface {

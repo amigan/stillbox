@@ -41,8 +41,8 @@ func New(cfg *config.Config) (*Server, error) {
 		nex:  nexus.New(),
 	}
 
-	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db))
-	srv.sinks.Register("nexus", sinks.NewNexusSink(srv.nex))
+	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)
+	srv.sinks.Register("nexus", sinks.NewNexusSink(srv.nex), false)
 	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
 
 	r.Use(middleware.RequestID)

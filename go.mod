@@ -20,6 +20,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	golang.org/x/crypto v0.21.0
+	golang.org/x/sync v0.5.0
 	golang.org/x/term v0.18.0
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -55,7 +56,6 @@ require (
 	golang.org/x/exp/shiny v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/image v0.14.0 // indirect
 	golang.org/x/mobile v0.0.0-20231127183840-76ac6878050a // indirect
-	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )
