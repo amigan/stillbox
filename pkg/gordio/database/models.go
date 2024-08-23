@@ -35,7 +35,7 @@ type Call struct {
 	Frequencies []int     `json:"frequencies"`
 	Patches     []int     `json:"patches"`
 	TgLabel     *string   `json:"tg_label"`
-	TgTag       *string   `json:"tg_tag"`
+	TgAlphaTag  *string   `json:"tg_alpha_tag"`
 	TgGroup     *string   `json:"tg_group"`
 	Source      int       `json:"source"`
 	Transcript  *string   `json:"transcript"`
@@ -73,6 +73,7 @@ type Talkgroup struct {
 	SystemID  int32    `json:"system_id"`
 	Tgid      int32    `json:"tgid"`
 	Name      *string  `json:"name"`
+	AlphaTag  *string  `json:"alpha_tag"`
 	TgGroup   *string  `json:"tg_group"`
 	Frequency *int32   `json:"frequency"`
 	Metadata  []byte   `json:"metadata"`
@@ -84,7 +85,7 @@ type TalkgroupsLearned struct {
 	SystemID int     `json:"system_id"`
 	Tgid     int     `json:"tgid"`
 	Name     string  `json:"name"`
-	GroupTag *string `json:"group_tag"`
+	AlphaTag *string `json:"alpha_tag"`
 	Ignored  *bool   `json:"ignored"`
 }
 

@@ -20,7 +20,7 @@ func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []str
 }
 
 const getTalkgroup = `-- name: GetTalkgroup :one
-SELECT id, system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups
+SELECT id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags FROM talkgroups
 WHERE id = systg2id($1, $2)
 `
 
@@ -32,6 +32,7 @@ func (q *Queries) GetTalkgroup(ctx context.Context, systemID int, tgid int) (Tal
 		&i.SystemID,
 		&i.Tgid,
 		&i.Name,
+		&i.AlphaTag,
 		&i.TgGroup,
 		&i.Frequency,
 		&i.Metadata,
@@ -87,7 +88,7 @@ func (q *Queries) GetTalkgroupTags(ctx context.Context, sys int, tg int) ([]stri
 const getTalkgroupWithLearned = `-- name: GetTalkgroupWithLearned :one
 SELECT
 tg.id, tg.system_id, sys.name system_name, tg.tgid, tg.name,
-tg.tg_group, tg.frequency, tg.metadata, tg.tags,
+tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alpha_tag,
 FALSE learned
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
@@ -96,7 +97,7 @@ UNION
 SELECT
 tgl.id::INT8, tgl.system_id::INT4, sys.name system_name, tgl.tgid::INT4, tgl.name,
 tgl.group_tag, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.group_tag IS NULL THEN NULL ELSE ARRAY[tgl.group_tag] END,
+CASE WHEN tgl.group_tag IS NULL THEN NULL ELSE ARRAY[tgl.group_tag] END, tgl.alpha_tag,
 TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
@@ -113,6 +114,7 @@ type GetTalkgroupWithLearnedRow struct {
 	Frequency  *int32   `json:"frequency"`
 	Metadata   []byte   `json:"metadata"`
 	Tags       []string `json:"tags"`
+	AlphaTag   *string  `json:"alpha_tag"`
 	Learned    bool     `json:"learned"`
 }
 
@@ -129,13 +131,14 @@ func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int, tgi
 		&i.Frequency,
 		&i.Metadata,
 		&i.Tags,
+		&i.AlphaTag,
 		&i.Learned,
 	)
 	return i, err
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
-SELECT id, system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups
+SELECT id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags FROM talkgroups
 WHERE tags && ARRAY[$1]
 `
 
@@ -153,6 +156,7 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 			&i.SystemID,
 			&i.Tgid,
 			&i.Name,
+			&i.AlphaTag,
 			&i.TgGroup,
 			&i.Frequency,
 			&i.Metadata,
@@ -169,7 +173,7 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 }
 
 const getTalkgroupsWithAnyTags = `-- name: GetTalkgroupsWithAnyTags :many
-SELECT id, system_id, tgid, name, tg_group, frequency, metadata, tags FROM talkgroups
+SELECT id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags FROM talkgroups
 WHERE tags @> ARRAY[$1]
 `
 
@@ -187,6 +191,7 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 			&i.SystemID,
 			&i.Tgid,
 			&i.Name,
+			&i.AlphaTag,
 			&i.TgGroup,
 			&i.Frequency,
 			&i.Metadata,

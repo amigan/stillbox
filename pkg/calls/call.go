@@ -47,7 +47,7 @@ type Call struct {
 	Talkgroup      int
 	TalkgroupGroup *string
 	TalkgroupLabel *string
-	TalkgroupTag   *string
+	TGAlphaTag     *string
 
 	shouldStore bool
 }

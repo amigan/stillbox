@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	system_id INT4 REFERENCES systems(id) NOT NULL GENERATED ALWAYS AS (id >> 32) STORED,
 	tgid INT4 NOT NULL GENERATED ALWAYS AS (id & x'ffffffff'::BIGINT) STORED,
 	name TEXT,
+	alpha_tag TEXT,
 	tg_group TEXT,
 	frequency INTEGER,
 	metadata JSONB,
@@ -64,7 +65,7 @@ CREATE TABLE IF NOT EXISTS talkgroups_learned(
 	system_id INTEGER REFERENCES systems(id) NOT NULL,
 	tgid INTEGER NOT NULL,
 	name TEXT NOT NULL,
-	group_tag TEXT,
+	alpha_tag TEXT,
 	ignored BOOLEAN,
 	UNIQUE (system_id, tgid, name)
 );
@@ -73,12 +74,12 @@ CREATE OR REPLACE FUNCTION learn_talkgroup()
 RETURNS TRIGGER AS $$
 BEGIN
 	IF NOT EXISTS (
-		SELECT tg.system_id, tg.tgid, tg.name FROM talkgroups tg WHERE tg.system_id = NEW.system AND tg.tgid = NEW.talkgroup
+		SELECT tg.system_id, tg.tgid, tg.name, tg.alpha_tag FROM talkgroups tg WHERE tg.system_id = NEW.system AND tg.tgid = NEW.talkgroup
 		UNION
-		SELECT tgl.system_id, tgl.tgid, tgl.name FROM talkgroups_learned tgl WHERE tgl.system_id = NEW.system AND tgl.tgid = NEW.talkgroup
+		SELECT tgl.system_id, tgl.tgid, tgl.name, tg.alpha_tag FROM talkgroups_learned tgl WHERE tgl.system_id = NEW.system AND tgl.tgid = NEW.talkgroup
 	) THEN
 		INSERT INTO talkgroups_learned(system_id, tgid, name, group_tag) VALUES(
-			NEW.system, NEW.talkgroup, NEW.tg_label, NEW.tg_tag
+			NEW.system, NEW.talkgroup, NEW.tg_label, NEW.alpha_tag
 		) ON CONFLICT DO NOTHING;
 	END IF;
 	RETURN NEW;
@@ -100,7 +101,7 @@ CREATE TABLE IF NOT EXISTS calls(
 	frequencies INTEGER[],
 	patches INTEGER[],
 	tg_label TEXT,
-	tg_tag TEXT,
+	tg_alpha_tag TEXT,
 	tg_group TEXT,
 	source INTEGER NOT NULL,
 	transcript TEXT

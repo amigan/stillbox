@@ -73,6 +73,7 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 		Metadata:   md,
 		Tags:       tgi.Tags,
 		Learned:    tgi.Learned,
+		AlphaTag:   tgi.AlphaTag,
 		SystemName: tgi.SystemName,
 	}
 

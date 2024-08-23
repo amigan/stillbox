@@ -28,7 +28,7 @@ INSERT INTO calls (
 	frequencies,
 	patches,
 	tg_label,
-	tg_tag,
+	tg_alpha_tag,
 	tg_group,
 	source
 	) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
@@ -49,7 +49,7 @@ type AddCallParams struct {
 	Frequencies []int     `json:"frequencies"`
 	Patches     []int     `json:"patches"`
 	TgLabel     *string   `json:"tg_label"`
-	TgTag       *string   `json:"tg_tag"`
+	TgAlphaTag  *string   `json:"tg_alpha_tag"`
 	TgGroup     *string   `json:"tg_group"`
 	Source      int       `json:"source"`
 }
@@ -69,7 +69,7 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, er
 		arg.Frequencies,
 		arg.Patches,
 		arg.TgLabel,
-		arg.TgTag,
+		arg.TgAlphaTag,
 		arg.TgGroup,
 		arg.Source,
 	)

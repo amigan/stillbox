@@ -52,7 +52,7 @@ func (s *DatabaseSink) toAddCallParams(call *calls.Call) database.AddCallParams 
 		Frequencies: call.Frequencies,
 		Patches:     call.Patches,
 		TgLabel:     call.TalkgroupLabel,
-		TgTag:       call.TalkgroupTag,
+		TgAlphaTag:  call.TGAlphaTag,
 		TgGroup:     call.TalkgroupGroup,
 		Source:      call.Source,
 	}

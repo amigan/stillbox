@@ -14,7 +14,7 @@ INSERT INTO calls (
 	frequencies,
 	patches,
 	tg_label,
-	tg_tag,
+	tg_alpha_tag,
 	tg_group,
 	source
 	) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
