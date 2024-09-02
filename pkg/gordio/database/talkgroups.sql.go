@@ -96,8 +96,8 @@ WHERE tg.id = systg2id($1, $2)
 UNION
 SELECT
 tgl.id::INT8, tgl.system_id::INT4, sys.name system_name, tgl.tgid::INT4, tgl.name,
-tgl.group_tag, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.group_tag IS NULL THEN NULL ELSE ARRAY[tgl.group_tag] END, tgl.alpha_tag,
+tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
+CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END, tgl.alpha_tag,
 TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id

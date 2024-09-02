@@ -78,7 +78,7 @@ BEGIN
 		UNION
 		SELECT tgl.system_id, tgl.tgid, tgl.name, tg.alpha_tag FROM talkgroups_learned tgl WHERE tgl.system_id = NEW.system AND tgl.tgid = NEW.talkgroup
 	) THEN
-		INSERT INTO talkgroups_learned(system_id, tgid, name, group_tag) VALUES(
+		INSERT INTO talkgroups_learned(system_id, tgid, name, alpha_tag) VALUES(
 			NEW.system, NEW.talkgroup, NEW.tg_label, NEW.alpha_tag
 		) ON CONFLICT DO NOTHING;
 	END IF;
