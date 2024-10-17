@@ -9,11 +9,12 @@ import (
 )
 
 type Config struct {
-	DB     DB     `yaml:"db"`
-	CORS   CORS   `yaml:"cors"`
-	Auth   Auth   `yaml:"auth"`
-	Listen string `yaml:"listen"`
-	Public bool   `yaml:"public"`
+	DB     DB       `yaml:"db"`
+	CORS   CORS     `yaml:"cors"`
+	Auth   Auth     `yaml:"auth"`
+	Log    []Logger `yaml:"log"`
+	Listen string   `yaml:"listen"`
+	Public bool     `yaml:"public"`
 
 	configPath string
 }
@@ -31,6 +32,11 @@ type CORS struct {
 type DB struct {
 	Connect string `yaml:"connect"`
 	Driver  string `yaml:"driver"`
+}
+
+type Logger struct {
+	File   *string `yaml:"file"`
+	Level  *string `yaml:"level"`
 }
 
 func New(cmd *cobra.Command) *Config {

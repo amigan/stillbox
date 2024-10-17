@@ -23,9 +23,15 @@ type Server struct {
 	sources sources.Sources
 	sinks   sinks.Sinks
 	nex     *nexus.Nexus
+	logger  *Logger
 }
 
 func New(cfg *config.Config) (*Server, error) {
+	logger, err := NewLogger(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	db, err := database.NewClient(cfg.DB)
 	if err != nil {
 		return nil, err
@@ -39,6 +45,7 @@ func New(cfg *config.Config) (*Server, error) {
 		db:   db,
 		r:    r,
 		nex:  nexus.New(),
+		logger: logger,
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)
