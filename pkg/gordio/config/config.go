@@ -35,13 +35,21 @@ type DB struct {
 }
 
 type Logger struct {
-	File   *string `yaml:"file"`
-	Level  *string `yaml:"level"`
+	File  *string `yaml:"file"`
+	Level *string `yaml:"level"`
 }
 
-func New(cmd *cobra.Command) *Config {
+func (c *Config) PreRunE() func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		return c.ReadConfig()
+	}
+}
+
+func New(rootCommand *cobra.Command) *Config {
 	c := &Config{}
-	cmd.PersistentFlags().StringVarP(&c.configPath, "config", "c", "config.yaml", "configuration file")
+
+	rootCommand.PersistentFlags().StringVarP(&c.configPath, "config", "c", "config.yaml", "configuration file")
+
 	return c
 }
 

@@ -40,11 +40,11 @@ func New(cfg *config.Config) (*Server, error) {
 	r := chi.NewRouter()
 	authenticator := auth.NewAuthenticator(cfg.Auth)
 	srv := &Server{
-		auth: authenticator,
-		conf: cfg,
-		db:   db,
-		r:    r,
-		nex:  nexus.New(),
+		auth:   authenticator,
+		conf:   cfg,
+		db:     db,
+		r:      r,
+		nex:    nexus.New(),
 		logger: logger,
 	}
 

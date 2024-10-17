@@ -20,13 +20,14 @@ const (
 type Logger struct {
 	console io.Writer
 	writers []io.Writer
-	hup chan os.Signal
+	hup     chan os.Signal
 }
 
 func NewLogger(cfg *config.Config) (*Logger, error) {
 	l := &Logger{
 		console: &zerolog.ConsoleWriter{Out: os.Stderr},
 	}
+
 	l.hup = make(chan os.Signal, 1)
 	go func() {
 		for sig := range l.hup {
