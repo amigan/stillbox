@@ -10,8 +10,8 @@ import (
 	"dynatron.me/x/stillbox/pkg/gordio/nexus"
 	"dynatron.me/x/stillbox/pkg/gordio/sinks"
 	"dynatron.me/x/stillbox/pkg/gordio/sources"
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 
@@ -54,8 +54,7 @@ func New(cfg *config.Config) (*Server, error) {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(RequestLogger())
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   srv.conf.CORS.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
