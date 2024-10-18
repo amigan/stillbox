@@ -109,6 +109,9 @@ func main() {
 					play.Play(v.Call.Audio, v.Call.AudioType)
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
+				case *pb.Message_Hello:
+					ver := v.Hello.Version
+					log.Printf("server says: welcome to %s %s built %s for %s", ver.ServerName, ver.Version, ver.Built, ver.Platform)
 				default:
 					log.Printf("received other message not known")
 				}
