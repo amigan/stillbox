@@ -1,4 +1,4 @@
-VER!=git describe --tags --always
+VER!=git describe --tags --always --dirty
 HASH!=git describe --always
 LDFLAGS=-ldflags="-X 'main.Version=${VER}' -X 'main.Commit=${HASH}'"
 all: checkcalls
