@@ -2,6 +2,8 @@ package config
 
 import (
 	"os"
+	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -9,12 +11,13 @@ import (
 )
 
 type Config struct {
-	DB     DB       `yaml:"db"`
-	CORS   CORS     `yaml:"cors"`
-	Auth   Auth     `yaml:"auth"`
-	Log    []Logger `yaml:"log"`
-	Listen string   `yaml:"listen"`
-	Public bool     `yaml:"public"`
+	DB        DB        `yaml:"db"`
+	CORS      CORS      `yaml:"cors"`
+	Auth      Auth      `yaml:"auth"`
+	Log       []Logger  `yaml:"log"`
+	Listen    string    `yaml:"listen"`
+	Public    bool      `yaml:"public"`
+	RateLimit RateLimit `yaml:"rateLimit"`
 
 	configPath string
 }
@@ -37,6 +40,28 @@ type DB struct {
 type Logger struct {
 	File  *string `yaml:"file"`
 	Level *string `yaml:"level"`
+}
+
+type RateLimit struct {
+	Enable   bool          `yaml:"enable"`
+	Requests int           `yaml:"requests"`
+	Over     time.Duration `yaml:"over"`
+
+	verifyError sync.Once
+}
+
+func (rl *RateLimit) Verify() bool {
+	if rl.Enable {
+		if rl.Requests > 0 && rl.Over > 0 {
+			return true
+		}
+
+		rl.verifyError.Do(func() {
+			log.Error().Int("requests", rl.Requests).Str("over", rl.Over.String()).Msg("rate limit config makes no sense, disabled")
+		})
+	}
+
+	return false
 }
 
 func (c *Config) PreRunE() func(*cobra.Command, []string) error {

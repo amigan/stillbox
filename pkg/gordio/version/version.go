@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	Name = "gordio"
+	Name    = "gordio"
 	Version = "unset"
 	Built   = "unset"
 )

@@ -21,3 +21,7 @@ log:
   - level: debug
   - level: error
     file: error.log
+rateLimit:
+  enable: true
+  requests: 200
+  over: 2m

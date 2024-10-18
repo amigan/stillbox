@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
-
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 

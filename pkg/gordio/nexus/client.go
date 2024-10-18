@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"sync"
 
-	"dynatron.me/x/stillbox/pkg/gordio/version"
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/gordio/version"
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	"github.com/rs/zerolog/log"
@@ -65,9 +65,9 @@ func (c *client) HandleMessage(ctx context.Context, mesgBytes []byte) {
 func pbVersion() *pb.Version {
 	return &pb.Version{
 		ServerName: version.Name,
-		Version: version.Version,
-		Built: version.Built,
-		Platform: runtime.GOOS + "-" + runtime.GOARCH,
+		Version:    version.Version,
+		Built:      version.Built,
+		Platform:   runtime.GOOS + "-" + runtime.GOARCH,
 	}
 }
 

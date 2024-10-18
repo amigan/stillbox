@@ -4,9 +4,9 @@ import (
 	"io/fs"
 	"net/http"
 	"strings"
-	"time"
 
 	"dynatron.me/x/stillbox/client"
+	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -31,7 +31,7 @@ func (s *Server) setupRoutes() {
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(rateLimiter())
+		s.rateLimit(r)
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		// public routes
 		s.auth.PublicRoutes(r)
@@ -39,7 +39,8 @@ func (s *Server) setupRoutes() {
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(rateLimiter(), s.auth.VerifyMiddleware())
+		s.rateLimit(r)
+		r.Use(s.auth.VerifyMiddleware())
 
 		// optional auth routes
 
@@ -47,8 +48,13 @@ func (s *Server) setupRoutes() {
 	})
 }
 
-func rateLimiter() func(http.Handler) http.Handler {
-	return httprate.LimitByRealIP(100, 1*time.Minute)
+func (s *Server) rateLimit(r chi.Router) {
+	if s.conf.RateLimit.Verify() {
+		r.Use(rateLimiter(&s.conf.RateLimit))
+	}
+}
+func rateLimiter(cfg *config.RateLimit) func(http.Handler) http.Handler {
+	return httprate.LimitByRealIP(cfg.Requests, cfg.Over)
 }
 
 func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
@@ -57,11 +63,5 @@ func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
 		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
 		fs := http.StripPrefix(pathPrefix, http.FileServer(http.FS(clientRoot)))
 		fs.ServeHTTP(w, r)
-		/*
-			if cl, authenticated := s.auth.Authenticated(r); authenticated {
-				w.Write([]byte("Hello " + cl["user"].(string) + "\n"))
-			}
-			w.Write([]byte("Welcome to gordio\n"))
-		*/
 	})
 }
