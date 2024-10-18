@@ -14,3 +14,10 @@ auth:
     "localhost": true
 listen: ':3050'
 public: true
+log:
+  # level logs at or above the specified level
+  # levels are trace, debug, info, warn, error, fatal, panic
+  # an entry without a file: property indicates stderr
+  - level: debug
+  - level: error
+    file: error.log

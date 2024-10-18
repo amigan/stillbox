@@ -1,0 +1,207 @@
+package server
+
+import (
+	"fmt"
+	"io"
+	"io/fs"
+	"net/http"
+	"os"
+	"os/signal"
+	"runtime/debug"
+	"syscall"
+	"time"
+
+	"dynatron.me/x/stillbox/pkg/gordio/config"
+
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+)
+
+const (
+	LOGPERM fs.FileMode = 0600
+)
+
+type Logger struct {
+	console io.Writer
+	writers []io.Writer
+	hup     chan os.Signal
+
+	lastFieldName string
+	noColor       bool
+}
+
+func NewLogger(cfg *config.Config) (*Logger, error) {
+	l := &Logger{}
+	cw := &zerolog.ConsoleWriter{
+		Out:              os.Stderr,
+		TimeFormat:       "Jan 2 15:04:05",
+		FormatFieldName:  l.fieldNameFormat,
+		FormatFieldValue: l.fieldValueFormat,
+	}
+
+	l.console = cw
+
+	l.hup = make(chan os.Signal, 1)
+	go func() {
+		for sig := range l.hup {
+			log.Logger = log.Output(l.console)
+			log.Info().Msgf("received %s, closing and reopening logfiles", sig)
+			l.Close()
+			err := l.OpenLogs(cfg)
+			if err != nil {
+				log.Error().Err(err).Msg("error reopening logs")
+				continue
+			}
+
+			l.Install()
+		}
+	}()
+
+	signal.Notify(l.hup, syscall.SIGHUP)
+
+	err := l.OpenLogs(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	l.Install()
+
+	return l, nil
+}
+
+func (l *Logger) Install() {
+	log.Logger = log.Output(zerolog.MultiLevelWriter(l.writers...))
+}
+
+func (l *Logger) Close() {
+	for _, lg := range l.writers {
+		if _, isConsole := lg.(*zerolog.ConsoleWriter); isConsole {
+			continue
+		}
+
+		if cl, isCloser := lg.(io.Closer); isCloser {
+			err := cl.Close()
+			if err != nil {
+				log.Error().Err(err).Msg("closing writer")
+			}
+		}
+	}
+
+	l.writers = nil
+}
+
+func (l *Logger) OpenLogs(cfg *config.Config) error {
+	l.writers = make([]io.Writer, 0, len(cfg.Log))
+	for _, lc := range cfg.Log {
+		level := zerolog.TraceLevel
+		if lc.Level != nil {
+			var err error
+
+			level, err = zerolog.ParseLevel(*lc.Level)
+			if err != nil {
+				return err
+			}
+		}
+
+		w := &zerolog.FilteredLevelWriter{
+			Level: level,
+		}
+
+		switch lc.File {
+		case nil:
+			w.Writer = &zerolog.LevelWriterAdapter{Writer: l.console}
+		default:
+			f, err := os.OpenFile(*lc.File, os.O_APPEND|os.O_WRONLY|os.O_CREATE, LOGPERM)
+			if err != nil {
+				return err
+			}
+
+			w.Writer = &zerolog.LevelWriterAdapter{
+				Writer: f,
+			}
+		}
+
+		l.writers = append(l.writers, w)
+	}
+
+	return nil
+}
+
+func RequestLogger() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			t1 := time.Now()
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			defer func() {
+				if r := recover(); r != nil && r != http.ErrAbortHandler {
+					log.Error().Interface("recover", r).Bytes("stack", debug.Stack()).Msg("incoming_request_panic")
+					ww.WriteHeader(http.StatusInternalServerError)
+				}
+				log.Info().Fields(map[string]interface{}{
+					"remote_addr": r.RemoteAddr,
+					"path":        r.URL.Path,
+					"proto":       r.Proto,
+					"method":      r.Method,
+					"user_agent":  r.UserAgent(),
+					"status":      http.StatusText(ww.Status()),
+					"status_code": ww.Status(),
+					"bytes_in":    r.ContentLength,
+					"bytes_out":   ww.BytesWritten(),
+					"duration":    time.Since(t1).String(),
+					"reqID":       middleware.GetReqID(r.Context()),
+				}).Msg("incoming_request")
+			}()
+			next.ServeHTTP(ww, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+const (
+	colorBlack = iota + 30
+	colorRed
+	colorGreen
+	colorYellow
+	colorBlue
+	colorMagenta
+	colorCyan
+	colorWhite
+	colorNone
+
+	colorBold     = 1
+	colorDarkGray = 90
+)
+
+func (l *Logger) fieldNameFormat(i interface{}) string {
+	l.lastFieldName = fmt.Sprint(i)
+	return l.colorize(l.lastFieldName+"=", colorCyan)
+}
+
+func (l *Logger) fieldValueFormat(i interface{}) string {
+	color := colorNone
+	switch l.lastFieldName {
+	case "method":
+		color = colorMagenta
+	case "reqID":
+		color = colorYellow
+	case "duration":
+		color = colorBlue
+	}
+
+	l.lastFieldName = ""
+
+	if color == colorNone {
+		return fmt.Sprint(i)
+	}
+
+	return l.colorize(i, color)
+}
+
+// colorize returns the string s wrapped in ANSI code c, unless disabled is true or c is 0.
+func (l *Logger) colorize(s interface{}, c int) string {
+	if l.noColor {
+		return fmt.Sprintf("%v", s)
+	}
+	return fmt.Sprintf("\x1b[%dm%v\x1b[0m", c, s)
+}

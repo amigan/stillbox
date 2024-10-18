@@ -1,5 +1,8 @@
+VER!=git describe --tags --always
+HASH!=git describe --always
+LDFLAGS=-ldflags="-X 'main.Version=${VER}' -X 'main.Commit=${HASH}'"
 all: checkcalls
-	go build -o gordio ./cmd/gordio/
+	go build -o gordio ${LDFLAGS} ./cmd/gordio/
 	go build -o calls ./cmd/calls/
 
 clean:

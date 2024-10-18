@@ -5,3 +5,4 @@ client/calls/
 /gordio
 /calls
 Session.vim
+*.log

@@ -9,11 +9,12 @@ import (
 )
 
 type Config struct {
-	DB     DB     `yaml:"db"`
-	CORS   CORS   `yaml:"cors"`
-	Auth   Auth   `yaml:"auth"`
-	Listen string `yaml:"listen"`
-	Public bool   `yaml:"public"`
+	DB     DB       `yaml:"db"`
+	CORS   CORS     `yaml:"cors"`
+	Auth   Auth     `yaml:"auth"`
+	Log    []Logger `yaml:"log"`
+	Listen string   `yaml:"listen"`
+	Public bool     `yaml:"public"`
 
 	configPath string
 }
@@ -33,9 +34,22 @@ type DB struct {
 	Driver  string `yaml:"driver"`
 }
 
-func New(cmd *cobra.Command) *Config {
+type Logger struct {
+	File  *string `yaml:"file"`
+	Level *string `yaml:"level"`
+}
+
+func (c *Config) PreRunE() func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		return c.ReadConfig()
+	}
+}
+
+func New(rootCommand *cobra.Command) *Config {
 	c := &Config{}
-	cmd.PersistentFlags().StringVarP(&c.configPath, "config", "c", "config.yaml", "configuration file")
+
+	rootCommand.PersistentFlags().StringVarP(&c.configPath, "config", "c", "config.yaml", "configuration file")
+
 	return c
 }
 

@@ -10,8 +10,8 @@ import (
 	"dynatron.me/x/stillbox/pkg/gordio/nexus"
 	"dynatron.me/x/stillbox/pkg/gordio/sinks"
 	"dynatron.me/x/stillbox/pkg/gordio/sources"
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 
@@ -23,9 +23,15 @@ type Server struct {
 	sources sources.Sources
 	sinks   sinks.Sinks
 	nex     *nexus.Nexus
+	logger  *Logger
 }
 
 func New(cfg *config.Config) (*Server, error) {
+	logger, err := NewLogger(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	db, err := database.NewClient(cfg.DB)
 	if err != nil {
 		return nil, err
@@ -34,11 +40,12 @@ func New(cfg *config.Config) (*Server, error) {
 	r := chi.NewRouter()
 	authenticator := auth.NewAuthenticator(cfg.Auth)
 	srv := &Server{
-		auth: authenticator,
-		conf: cfg,
-		db:   db,
-		r:    r,
-		nex:  nexus.New(),
+		auth:   authenticator,
+		conf:   cfg,
+		db:     db,
+		r:      r,
+		nex:    nexus.New(),
+		logger: logger,
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)
@@ -47,8 +54,7 @@ func New(cfg *config.Config) (*Server, error) {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(RequestLogger())
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   srv.conf.CORS.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

@@ -17,9 +17,10 @@ type ServeOptions struct {
 func Command(cfg *config.Config) *cobra.Command {
 	opts := makeOptions(cfg)
 	serveCmd := &cobra.Command{
-		Use:   "serve",
-		Short: "starts the" + AppName + " server",
-		RunE:  common.RunE(opts),
+		Use:               "serve",
+		Short:             "starts the" + AppName + " server",
+		PersistentPreRunE: cfg.PreRunE(),
+		RunE:              common.RunE(opts),
 	}
 
 	return serveCmd
