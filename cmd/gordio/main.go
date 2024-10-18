@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -11,19 +10,12 @@ import (
 	"dynatron.me/x/stillbox/pkg/gordio"
 	"dynatron.me/x/stillbox/pkg/gordio/admin"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
+	"dynatron.me/x/stillbox/pkg/gordio/version"
 
 	"github.com/spf13/cobra"
 )
 
-var (
-	Version = "unset"
-	Commit  = "unset"
-)
 
-func version() {
-	fmt.Printf("gordio %s (%s)\nbuilt for %s-%s\n",
-		Version, Commit, runtime.GOOS, runtime.GOARCH)
-}
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
@@ -36,7 +28,7 @@ func main() {
 	rootCmd.Run = func(cmd *cobra.Command, args []string) {
 		v, _ := rootCmd.PersistentFlags().GetBool("version")
 		if v {
-			version()
+			fmt.Print(version.String())
 			os.Exit(0)
 		}
 	}

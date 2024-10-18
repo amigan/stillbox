@@ -3,8 +3,10 @@ package nexus
 import (
 	"context"
 	"io"
+	"runtime"
 	"sync"
 
+	"dynatron.me/x/stillbox/pkg/gordio/version"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/pb"
 
@@ -17,6 +19,7 @@ type Client interface {
 
 	Connection
 
+	Hello()
 	HandleCommand(context.Context, *pb.Command)
 	HandleMessage(context.Context, []byte)
 }
@@ -57,4 +60,23 @@ func (c *client) HandleMessage(ctx context.Context, mesgBytes []byte) {
 	}
 
 	c.HandleCommand(ctx, &msg)
+}
+
+func pbVersion() *pb.Version {
+	return &pb.Version{
+		ServerName: version.Name,
+		Version: version.Version,
+		Built: version.Built,
+		Platform: runtime.GOOS + "-" + runtime.GOARCH,
+	}
+}
+
+func (c *client) Hello() {
+	c.Send(&pb.Message{
+		ToClientMessage: &pb.Message_Hello{
+			Hello: &pb.Hello{
+				Version: pbVersion(),
+			},
+		},
+	})
 }

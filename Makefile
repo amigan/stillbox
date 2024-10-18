@@ -1,6 +1,7 @@
+VPKG=dynatron.me/x/stillbox/pkg/gordio/version
 VER!=git describe --tags --always --dirty
-HASH!=git describe --always
-LDFLAGS=-ldflags="-X 'main.Version=${VER}' -X 'main.Commit=${HASH}'"
+BUILDDATE!=date '+%Y-%m-%e'
+LDFLAGS=-ldflags="-X '${VPKG}.Version=${VER}' -X '${VPKG}.Built=${BUILDDATE}'"
 all: checkcalls
 	go build -o gordio ${LDFLAGS} ./cmd/gordio/
 	go build -o calls ./cmd/calls/
