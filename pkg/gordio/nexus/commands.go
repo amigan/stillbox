@@ -96,6 +96,7 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 	}
 
 	c.Send(&pb.Response{
+		CommandId: CommandID(ctx),
 		CommandResponse: &pb.Response_TgInfo{
 			TgInfo: resp,
 		},
