@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/gordio/database"
-	"dynatron.me/x/stillbox/pkg/pb"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
@@ -38,10 +37,10 @@ func newWsManager(r Registry) *wsManager {
 type wsConn struct {
 	*websocket.Conn
 
-	out chan *pb.Message
+	out chan ToClient
 }
 
-func (w *wsConn) Send(msg *pb.Message) (closed bool) {
+func (w *wsConn) Send(msg ToClient) (closed bool) {
 	select {
 	case w.out <- msg:
 	default:
@@ -56,7 +55,7 @@ func (w *wsConn) Send(msg *pb.Message) (closed bool) {
 func newWsConn(c *websocket.Conn) *wsConn {
 	wc := &wsConn{
 		Conn: c,
-		out:  make(chan *pb.Message, qSize),
+		out:  make(chan ToClient, qSize),
 	}
 
 	return wc
@@ -149,7 +148,7 @@ func (conn *wsConn) writePump() {
 				return
 			}
 
-			conn.writeMessage(w, msg)
+			conn.writeToClient(w, msg)
 
 			if err := w.Close(); err != nil {
 				log.Debug().Err(err).Str("conn", conn.RemoteAddr().String()).Msg("close error")
@@ -168,8 +167,8 @@ func (conn *wsConn) writePump() {
 	}
 }
 
-func (conn *wsConn) writeMessage(w io.WriteCloser, msg *pb.Message) {
-	packWrite := func(msg *pb.Message) {
+func (conn *wsConn) writeToClient(w io.WriteCloser, msg ToClient) {
+	packWrite := func(msg ToClient) {
 		packed, err := proto.Marshal(msg)
 		if err != nil {
 			log.Error().Err(err).Msg("pack message")

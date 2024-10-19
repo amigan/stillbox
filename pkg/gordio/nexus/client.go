@@ -12,6 +12,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type Client interface {
@@ -35,11 +36,15 @@ type client struct {
 	nexus *Nexus
 }
 
+type ToClient interface {
+	protoreflect.ProtoMessage
+}
+
 type Connection interface {
 	io.Closer
 	CloseCh()
 
-	Send(*pb.Message) (closed bool)
+	Send(ToClient) (closed bool)
 }
 
 func (n *Nexus) NewClient(conn Connection) Client {

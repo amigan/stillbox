@@ -8,11 +8,17 @@ import "google/protobuf/struct.proto";
 message Message {
   oneof toClient_message {
     Call call = 1;
+    Notification notification = 2;
+    UserPopup popup = 3;
+    Error error = 4;
+    Hello hello = 5;
+  }
+}
+
+message Response {
+  optional int64 command_id = 1;
+  oneof command_response {
     TalkgroupInfo tg_info = 2;
-    Notification notification = 3;
-    UserPopup popup = 4;
-    Error error = 5;
-    Hello hello = 6;
   }
 }
 
@@ -51,10 +57,11 @@ message Notification {
 }
 
 message Command {
+  optional int64 command_id = 1;
   oneof command {
-    Live live_command = 1;
-    Search search_command = 2;
-    Talkgroup tg_command = 3;
+    Live live_command = 2;
+    Search search_command = 3;
+    Talkgroup tg_command = 4;
   }
 }
 

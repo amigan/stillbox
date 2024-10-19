@@ -13,7 +13,25 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+type CommandIDKeyT int64
+
+const CommandIDKey CommandIDKeyT = 0
+
+func CtxWithCID(ctx context.Context, cmd *pb.Command) context.Context {
+	return context.WithValue(ctx, CommandIDKey, cmd.CommandId)
+}
+
+func CommandID(ctx context.Context) *int64 {
+	id, has := ctx.Value(CommandIDKey).(*int64)
+	if !has {
+		return nil
+	}
+
+	return id
+}
+
 func (c *client) HandleCommand(ctx context.Context, cmd *pb.Command) {
+	ctx = CtxWithCID(ctx, cmd)
 	var err error
 	switch cc := cmd.Command.(type) {
 	case *pb.Command_LiveCommand:
@@ -77,8 +95,8 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 		SystemName: tgi.SystemName,
 	}
 
-	c.Send(&pb.Message{
-		ToClientMessage: &pb.Message_TgInfo{
+	c.Send(&pb.Response{
+		CommandResponse: &pb.Response_TgInfo{
 			TgInfo: resp,
 		},
 	})
