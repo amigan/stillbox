@@ -76,7 +76,7 @@ BEGIN
 	IF NOT EXISTS (
 		SELECT tg.system_id, tg.tgid, tg.name, tg.alpha_tag FROM talkgroups tg WHERE tg.system_id = NEW.system AND tg.tgid = NEW.talkgroup
 		UNION
-		SELECT tgl.system_id, tgl.tgid, tgl.name, tg.alpha_tag FROM talkgroups_learned tgl WHERE tgl.system_id = NEW.system AND tgl.tgid = NEW.talkgroup
+		SELECT tgl.system_id, tgl.tgid, tgl.name, tgl.alpha_tag FROM talkgroups_learned tgl WHERE tgl.system_id = NEW.system AND tgl.tgid = NEW.talkgroup
 	) THEN
 		INSERT INTO talkgroups_learned(system_id, tgid, name, alpha_tag) VALUES(
 			NEW.system, NEW.talkgroup, NEW.tg_label, NEW.alpha_tag

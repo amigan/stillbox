@@ -137,7 +137,7 @@ func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
 
 	if a.allowInsecureCookie(r) {
 		cookie.Secure = false
-		cookie.SameSite = http.SameSiteNoneMode
+		cookie.SameSite = http.SameSiteLaxMode
 		log.Debug().Msg("same site none")
 	}
 
@@ -181,7 +181,7 @@ func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
 
 	if a.allowInsecureCookie(r) {
 		cookie.Secure = false
-		cookie.SameSite = http.SameSiteNoneMode
+		cookie.SameSite = http.SameSiteLaxMode
 	} else {
 		cookie.Domain = a.cfg.Domain
 	}
