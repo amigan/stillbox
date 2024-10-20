@@ -110,8 +110,8 @@ func main() {
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
 				case *pb.Message_Hello:
-					ver := v.Hello.Version
-					log.Printf("server says: welcome to %s %s built %s for %s calls table size %s", ver.ServerName, ver.Version, ver.Built, ver.Platform, ver.CallsSize)
+					si := v.Hello.ServerInfo
+					log.Printf("server says: welcome to %s %s built %s for %s database size %s", si.ServerName, si.Version, si.Built, si.Platform, si.DbSize)
 				default:
 					log.Printf("received other message not known")
 				}
