@@ -78,6 +78,17 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, er
 	return id, err
 }
 
+const getCallsTableSize = `-- name: GetCallsTableSize :one
+SELECT pg_size_pretty(pg_total_relation_size('calls'))
+`
+
+func (q *Queries) GetCallsTableSize(ctx context.Context) (string, error) {
+	row := q.db.QueryRow(ctx, getCallsTableSize)
+	var pg_size_pretty string
+	err := row.Scan(&pg_size_pretty)
+	return pg_size_pretty, err
+}
+
 const setCallTranscript = `-- name: SetCallTranscript :exec
 UPDATE calls SET transcript = $2 WHERE id = $1
 `

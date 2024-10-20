@@ -22,3 +22,6 @@ RETURNING id;
 
 -- name: SetCallTranscript :exec
 UPDATE calls SET transcript = $2 WHERE id = $1;
+
+-- name: GetCallsTableSize :one
+SELECT pg_size_pretty(pg_total_relation_size('calls'));

@@ -78,13 +78,14 @@ func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
 	wsc := newWsConn(conn)
 	cli := wm.NewClient(wsc)
 	wm.Register(cli)
 
-	go wsc.readPump(r.Context(), wm, cli)
+	go wsc.readPump(ctx, wm, cli)
 	go wsc.writePump()
-	cli.Hello()
+	cli.Hello(ctx)
 }
 
 func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {

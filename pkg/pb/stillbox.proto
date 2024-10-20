@@ -110,4 +110,5 @@ message Version {
   string version = 2;
   string built = 3;
   string platform = 4;
+  string calls_size = 5;
 }

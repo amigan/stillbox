@@ -111,7 +111,7 @@ func main() {
 					log.Println(v.Notification.Msg)
 				case *pb.Message_Hello:
 					ver := v.Hello.Version
-					log.Printf("server says: welcome to %s %s built %s for %s", ver.ServerName, ver.Version, ver.Built, ver.Platform)
+					log.Printf("server says: welcome to %s %s built %s for %s calls table size %s", ver.ServerName, ver.Version, ver.Built, ver.Platform, ver.CallsSize)
 				default:
 					log.Printf("received other message not known")
 				}

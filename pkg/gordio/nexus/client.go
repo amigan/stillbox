@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"dynatron.me/x/stillbox/pkg/gordio/version"
 	"dynatron.me/x/stillbox/pkg/pb"
 
@@ -20,7 +21,7 @@ type Client interface {
 
 	Connection
 
-	Hello()
+	Hello(context.Context)
 	HandleCommand(context.Context, *pb.Command)
 	HandleMessage(context.Context, []byte)
 }
@@ -67,20 +68,27 @@ func (c *client) HandleMessage(ctx context.Context, mesgBytes []byte) {
 	c.HandleCommand(ctx, &msg)
 }
 
-func pbVersion() *pb.Version {
+func pbVersion(ctx context.Context) *pb.Version {
+	cts, err := database.FromCtx(ctx).GetCallsTableSize(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("get calls table size")
+		cts = "unknown"
+	}
+
 	return &pb.Version{
 		ServerName: version.Name,
 		Version:    version.Version,
 		Built:      version.Built,
 		Platform:   runtime.GOOS + "-" + runtime.GOARCH,
+		CallsSize:  cts,
 	}
 }
 
-func (c *client) Hello() {
+func (c *client) Hello(ctx context.Context) {
 	c.Send(&pb.Message{
 		ToClientMessage: &pb.Message_Hello{
 			Hello: &pb.Hello{
-				Version: pbVersion(),
+				Version: pbVersion(ctx),
 			},
 		},
 	})
