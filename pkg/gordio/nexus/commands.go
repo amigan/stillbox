@@ -95,10 +95,14 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 		SystemName: tgi.SystemName,
 	}
 
-	c.Send(&pb.Response{
-		CommandId: CommandID(ctx),
-		CommandResponse: &pb.Response_TgInfo{
-			TgInfo: resp,
+	c.Send(&pb.Message{
+		ToClientMessage: &pb.Message_Response{
+			Response: &pb.CommandResponse{
+				CommandId: CommandID(ctx),
+				CommandResponse: &pb.CommandResponse_TgInfo{
+					TgInfo: resp,
+				},
+			},
 		},
 	})
 

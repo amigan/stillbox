@@ -7,15 +7,16 @@ import "google/protobuf/struct.proto";
 
 message Message {
   oneof toClient_message {
-    Call call = 1;
-    Notification notification = 2;
-    UserPopup popup = 3;
-    Error error = 4;
-    Hello hello = 5;
+    CommandResponse response = 1;
+    Call call = 2;
+    Notification notification = 3;
+    UserPopup popup = 4;
+    Error error = 5;
+    Hello hello = 6;
   }
 }
 
-message Response {
+message CommandResponse {
   optional int64 command_id = 1;
   oneof command_response {
     TalkgroupInfo tg_info = 2;
