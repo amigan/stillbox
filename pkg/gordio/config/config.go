@@ -34,7 +34,6 @@ type CORS struct {
 
 type DB struct {
 	Connect string `yaml:"connect"`
-	Driver  string `yaml:"driver"`
 }
 
 type Logger struct {
