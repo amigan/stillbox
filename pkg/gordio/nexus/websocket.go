@@ -115,7 +115,7 @@ func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {
 			break
 		}
 
-		go c.HandleMessage(ctx, message)
+		go c.HandleMessage(context.WithoutCancel(ctx), message)
 	}
 }
 
