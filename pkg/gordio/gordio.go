@@ -1,6 +1,10 @@
 package gordio
 
 import (
+	"context"
+	"os"
+	"os/signal"
+
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/server"
@@ -37,15 +41,27 @@ func (o *ServeOptions) Options(_ *cobra.Command, args []string) error {
 }
 
 func (o *ServeOptions) Execute() error {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+	defer func() {
+		signal.Stop(sig)
+		cancel()
+	}()
+
+	go func() {
+		select {
+		case <-sig:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+
 	srv, err := server.New(o.cfg)
 	if err != nil {
 		return err
 	}
 
-	err = srv.Go()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return srv.Go(ctx)
 }

@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/gordio/database"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
@@ -87,15 +85,15 @@ func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
 	cli.Hello(ctx)
 }
 
+func (conn *wsConn) Shutdown() {
+	conn.Conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseGoingAway, ""), time.Now().Add(writeWait))
+}
+
 func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {
 	defer func() {
 		reg.Unregister(c)
 		conn.CloseCh()
 	}()
-
-	db := database.FromCtx(ctx)
-	ctx, cancel := context.WithCancel(database.CtxWithDB(context.Background(), db))
-	defer cancel()
 
 	conn.SetReadLimit(maxMessageSize)
 	err := conn.SetReadDeadline(time.Now().Add(pongWait))

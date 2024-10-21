@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"dynatron.me/x/stillbox/pkg/gordio/auth"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
@@ -13,7 +14,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/rs/zerolog/log"
 )
+
+const shutdownTimeout = 5 * time.Second
 
 type Server struct {
 	auth    auth.Authenticator
@@ -68,13 +72,33 @@ func New(cfg *config.Config) (*Server, error) {
 	return srv, nil
 }
 
-func (s *Server) Go() error {
+func (s *Server) Go(ctx context.Context) error {
 	defer s.db.Close()
 
-	ctx, cancel := context.WithCancel(database.CtxWithDB(context.Background(), s.db))
-	defer cancel()
+	ctx = database.CtxWithDB(ctx, s.db)
+
+	httpSrv := &http.Server{
+		Addr:    s.conf.Listen,
+		Handler: s.r,
+	}
 
 	go s.nex.Go(ctx)
 
-	return http.ListenAndServe(s.conf.Listen, s.r)
+	var err error
+	go func() {
+		err = httpSrv.ListenAndServe()
+	}()
+	<-ctx.Done()
+
+	ctxShutdown, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	if err := httpSrv.Shutdown(ctxShutdown); err != nil {
+		log.Fatal().Err(err).Msg("shutdown failed")
+	}
+	if err == http.ErrServerClosed {
+		err = nil
+	}
+
+	return err
 }

@@ -45,6 +45,7 @@ func (n *Nexus) Go(ctx context.Context) {
 
 			n.broadcastCallToClients(ctx, call)
 		case <-ctx.Done():
+			n.Shutdown()
 			return
 		}
 	}
@@ -86,4 +87,10 @@ func (n *Nexus) Unregister(c Client) {
 
 	cl := c.(*client)
 	delete(n.clients, cl)
+}
+
+func (n *Nexus) Shutdown() {
+	for c := range n.clients {
+		c.Shutdown()
+	}
 }

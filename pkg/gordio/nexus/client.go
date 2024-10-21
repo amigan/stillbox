@@ -45,6 +45,8 @@ type Connection interface {
 	io.Closer
 	CloseCh()
 
+	Shutdown()
+
 	Send(ToClient) (closed bool)
 }
 
