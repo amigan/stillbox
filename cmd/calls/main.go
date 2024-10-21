@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"log"
 	"net/http"
@@ -90,8 +91,11 @@ func main() {
 		defer close(done)
 		for {
 			t, message, err := c.ReadMessage()
+			closeErr := &websocket.CloseError{}
 			if err != nil {
-				log.Println("read:", err)
+				if !(errors.As(err, &closeErr) && closeErr.Code == 1000) { // normal closure
+					log.Println("read:", err)
+				}
 				return
 			}
 
@@ -127,7 +131,7 @@ func main() {
 		case <-done:
 			return
 		case <-interrupt:
-			log.Println("interrupt")
+			log.Println()
 
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.

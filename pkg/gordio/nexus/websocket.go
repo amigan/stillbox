@@ -110,7 +110,7 @@ func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNormalClosure) {
 				log.Debug().Err(err).Str("conn", conn.RemoteAddr().String()).Msg("unexpected close")
 				return
 			}
