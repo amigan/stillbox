@@ -30,13 +30,13 @@ type Server struct {
 	logger  *Logger
 }
 
-func New(cfg *config.Config) (*Server, error) {
+func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 	logger, err := NewLogger(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	db, err := database.NewClient(cfg.DB)
+	db, err := database.NewClient(ctx, cfg.DB)
 	if err != nil {
 		return nil, err
 	}

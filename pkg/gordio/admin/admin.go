@@ -132,7 +132,7 @@ func addUserCommand(cfg *config.Config) *cobra.Command {
 		Use:   "add",
 		Short: "adds a user",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db, err := database.NewClient(cfg.DB)
+			db, err := database.NewClient(context.Background(), cfg.DB)
 			if err != nil {
 				return err
 			}
@@ -163,7 +163,7 @@ func passwdCommand(cfg *config.Config) *cobra.Command {
 		Short: "changes password for a user",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db, err := database.NewClient(cfg.DB)
+			db, err := database.NewClient(context.Background(), cfg.DB)
 			if err != nil {
 				return err
 			}

@@ -58,7 +58,7 @@ func (o *ServeOptions) Execute() error {
 		}
 	}()
 
-	srv, err := server.New(o.cfg)
+	srv, err := server.New(ctx, o.cfg)
 	if err != nil {
 		return err
 	}

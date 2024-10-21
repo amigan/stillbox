@@ -22,7 +22,7 @@ type DB struct {
 }
 
 // NewClient creates a new DB using the provided config.
-func NewClient(conf config.DB) (*DB, error) {
+func NewClient(ctx context.Context, conf config.DB) (*DB, error) {
 	dir, err := iofs.New(sqlembed.Migrations, "postgres/migrations")
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func NewClient(conf config.DB) (*DB, error) {
 
 	m.Close()
 
-	pool, err := pgxpool.New(context.Background(), conf.Connect)
+	pool, err := pgxpool.New(ctx, conf.Connect)
 	if err != nil {
 		return nil, err
 	}
