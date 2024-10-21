@@ -45,7 +45,6 @@ func (w *wsConn) Send(msg ToClient) (closed bool) {
 	case w.out <- msg:
 	default:
 		log.Debug().Str("conn", w.RemoteAddr().String()).Msg("send channel not ready, closing")
-		close(w.out)
 		return true
 	}
 
@@ -91,7 +90,6 @@ func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
 func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {
 	defer func() {
 		reg.Unregister(c)
-		conn.Close()
 		conn.CloseCh()
 	}()
 
@@ -115,7 +113,7 @@ func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {
 				return
 			}
 
-			log.Debug().Err(err).Str("conn", conn.RemoteAddr().String()).Msg("closing connection")
+			log.Debug().Str("conn", conn.RemoteAddr().String()).Msg("closing connection")
 			break
 		}
 
@@ -137,9 +135,7 @@ func (conn *wsConn) writePump() {
 			if err != nil {
 				log.Error().Err(err).Msg("SetWriteDeadline")
 			}
-			if !ok {
-				// nexus closed us
-				_ = conn.WriteMessage(websocket.CloseMessage, []byte{})
+			if !ok { // channel is closed
 				return
 			}
 
