@@ -13,10 +13,15 @@ import (
 	"strings"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
+)
+
+const (
+	AppName = "calls-tui"
 )
 
 var (
@@ -41,7 +46,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	loginReq.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	loginReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	version.UserAgent(loginReq.Header, AppName)
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -74,7 +80,9 @@ func main() {
 		HandshakeTimeout: 45 * time.Second,
 		Jar:              jar,
 	}
-	c, _, err := dialer.Dial(u.String(), nil)
+	wsHdr := make(http.Header)
+	version.UserAgent(wsHdr, AppName)
+	c, _, err := dialer.Dial(u.String(), wsHdr)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}

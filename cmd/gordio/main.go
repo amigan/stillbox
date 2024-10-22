@@ -10,7 +10,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/gordio"
 	"dynatron.me/x/stillbox/pkg/gordio/admin"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
-	"dynatron.me/x/stillbox/pkg/gordio/version"
+	"dynatron.me/x/stillbox/internal/version"
 
 	"github.com/spf13/cobra"
 )

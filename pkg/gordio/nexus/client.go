@@ -9,7 +9,7 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
-	"dynatron.me/x/stillbox/pkg/gordio/version"
+	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	"github.com/rs/zerolog/log"
