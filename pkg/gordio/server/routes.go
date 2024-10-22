@@ -6,12 +6,17 @@ import (
 	"strings"
 
 	"dynatron.me/x/stillbox/client"
+	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/go-chi/render"
+)
+
+const (
+	serverHeader = "Server"
 )
 
 func (s *Server) setupRoutes() {
@@ -64,4 +69,13 @@ func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
 		fs := http.StripPrefix(pathPrefix, http.FileServer(http.FS(clientRoot)))
 		fs.ServeHTTP(w, r)
 	})
+}
+
+func ServerHeaderAdd(next http.Handler) http.Handler {
+	serverString := version.HttpString("gordio")
+	hfn := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Server", serverString)
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(hfn)
 }

@@ -29,7 +29,13 @@ var (
 	username = flag.String("user", "", "username")
 	password = flag.String("password", "", "password")
 	secure   = flag.Bool("s", false, "secure (https/wss)")
+
+	uaString = version.HttpString(AppName)
 )
+
+func userAgent(h http.Header) {
+	h.Set("User-Agent", uaString)
+}
 
 func main() {
 	flag.Parse()
@@ -56,7 +62,7 @@ func main() {
 		log.Fatal(err)
 	}
 	loginReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	version.UserAgent(loginReq.Header, AppName)
+	userAgent(loginReq.Header)
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -90,7 +96,7 @@ func main() {
 		Jar:              jar,
 	}
 	wsHdr := make(http.Header)
-	version.UserAgent(wsHdr, AppName)
+	userAgent(wsHdr)
 	c, _, err := dialer.Dial(u.String(), wsHdr)
 	if err != nil {
 		log.Fatal("dial:", err)

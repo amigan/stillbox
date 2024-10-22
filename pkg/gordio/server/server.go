@@ -61,6 +61,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(RequestLogger())
+	r.Use(ServerHeaderAdd)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   srv.conf.CORS.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

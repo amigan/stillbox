@@ -2,7 +2,6 @@ package version
 
 import (
 	"fmt"
-	"net/http"
 	"runtime"
 )
 
@@ -17,6 +16,6 @@ func String() string {
 		Version, Built, runtime.GOOS, runtime.GOARCH)
 }
 
-func UserAgent(hdr http.Header, app string) {
-	hdr.Set("User-Agent", fmt.Sprintf("stillbox %s/%s (%s/%s)", app, Version, runtime.GOOS, runtime.GOARCH))
+func HttpString(app string) string {
+	return fmt.Sprintf("stillbox %s/%s (%s/%s)", app, Version, runtime.GOOS, runtime.GOARCH)
 }
