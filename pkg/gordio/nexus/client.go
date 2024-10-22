@@ -2,6 +2,7 @@ package nexus
 
 import (
 	"context"
+	"errors"
 	"io"
 	"runtime"
 	"sync"
@@ -41,13 +42,17 @@ type ToClient interface {
 	protoreflect.ProtoMessage
 }
 
+var (
+	ErrSentToClosed = errors.New("sent to closed connection")
+)
+
 type Connection interface {
 	io.Closer
 	CloseCh()
 
 	Shutdown()
 
-	Send(ToClient) (closed bool)
+	Send(ToClient) error
 }
 
 func (n *Nexus) NewClient(conn Connection) Client {

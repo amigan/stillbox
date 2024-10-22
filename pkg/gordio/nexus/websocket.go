@@ -38,15 +38,15 @@ type wsConn struct {
 	out chan ToClient
 }
 
-func (w *wsConn) Send(msg ToClient) (closed bool) {
+func (w *wsConn) Send(msg ToClient) error {
 	select {
 	case w.out <- msg:
 	default:
 		log.Debug().Str("conn", w.RemoteAddr().String()).Msg("send channel not ready, closing")
-		return true
+		return ErrSentToClosed
 	}
 
-	return false
+	return nil
 }
 
 func newWsConn(c *websocket.Conn) *wsConn {

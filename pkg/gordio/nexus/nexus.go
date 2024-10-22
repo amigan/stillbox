@@ -6,6 +6,8 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/pb"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Nexus struct {
@@ -67,9 +69,13 @@ func (n *Nexus) broadcastCallToClients(ctx context.Context, call *calls.Call) {
 			continue
 		}
 
-		if cl.Send(message) {
+		switch err := cl.Send(message); err {
+		case ErrSentToClosed:
 			// we already hold the lock, and the channel is closed anyway
 			delete(n.clients, cl)
+		case nil:
+		default:
+			log.Error().Err(err).Msg("broadcast send failed")
 		}
 	}
 }
@@ -90,6 +96,11 @@ func (n *Nexus) Unregister(c Client) {
 }
 
 func (n *Nexus) Shutdown() {
+	n.Lock()
+	defer n.Unlock()
+
+	close(n.callCh)
+
 	for c := range n.clients {
 		c.Shutdown()
 	}

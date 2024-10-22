@@ -2,6 +2,8 @@ package sinks
 
 import (
 	"context"
+	"sync"
+
 	"golang.org/x/sync/errgroup"
 
 	"dynatron.me/x/stillbox/pkg/calls"
@@ -22,10 +24,16 @@ type sinkInstance struct {
 	Required bool
 }
 
-type Sinks []sinkInstance
+type Sinks struct {
+	sync.RWMutex
+	sinks []sinkInstance
+}
 
 func (s *Sinks) Register(name string, toAdd Sink, required bool) {
-	*s = append(*s, sinkInstance{
+	s.Lock()
+	defer s.Unlock()
+
+	s.sinks = append(s.sinks, sinkInstance{
 		Name:     name,
 		Sink:     toAdd,
 		Required: required,
@@ -33,9 +41,12 @@ func (s *Sinks) Register(name string, toAdd Sink, required bool) {
 }
 
 func (s *Sinks) EmitCall(ctx context.Context, call *calls.Call) error {
+	s.Lock()
+	defer s.Unlock()
+
 	g, ctx := errgroup.WithContext(ctx)
-	for i := range *s {
-		sink := (*s)[i]
+	for i := range s.sinks {
+		sink := s.sinks[i]
 		g.Go(sink.callEmitter(ctx, call))
 	}
 
