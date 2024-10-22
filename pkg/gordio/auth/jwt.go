@@ -46,11 +46,23 @@ func (a *Auth) Authenticated(r *http.Request) (claims, bool) {
 }
 
 func (a *Auth) VerifyMiddleware() func(http.Handler) http.Handler {
-	return jwtauth.Verifier(a.jwt)
+	return func(next http.Handler) http.Handler {
+		hfn := func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			token, err := jwtauth.VerifyRequest(a.jwt, r, jwtauth.TokenFromHeader, jwtauth.TokenFromCookie)
+			ctx = jwtauth.NewContext(ctx, token, err)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
+		return http.HandlerFunc(hfn)
+	}
 }
 
 func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
 	return jwtauth.Authenticator(a.jwt)
+}
+
+func (a *Auth) initJWT() {
+	a.jwt = jwtauth.New("HS256", []byte(a.cfg.JWTSecret), nil)
 }
 
 func (a *Auth) Login(ctx context.Context, username, password string) (token string, err error) {

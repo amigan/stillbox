@@ -16,6 +16,7 @@ type hupper interface {
 func (s *Server) huppers() []hupper {
 	return []hupper{
 		s.logger,
+		s.auth,
 	}
 }
 

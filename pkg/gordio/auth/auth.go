@@ -33,10 +33,17 @@ type Auth struct {
 
 // NewAuthenticator creates a new Authenticator with the provided config.
 func NewAuthenticator(cfg config.Auth) *Auth {
-	return &Auth{
-		jwt: jwtauth.New("HS256", []byte(cfg.JWTSecret), nil),
+	a := &Auth{
 		cfg: cfg,
 	}
+	a.initJWT()
+
+	return a
+}
+
+func (a *Auth) HUP(cfg *config.Config) {
+	a.cfg = cfg.Auth
+	a.initJWT()
 }
 
 var (
