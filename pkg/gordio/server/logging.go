@@ -6,11 +6,10 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
-	"os/signal"
 	"runtime/debug"
-	"syscall"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -25,40 +24,24 @@ const (
 type Logger struct {
 	console io.Writer
 	writers []io.Writer
-	hup     chan os.Signal
+	cfg     []config.Logger
 
 	lastFieldName string
 	noColor       bool
 }
 
-func NewLogger(cfg *config.Config) (*Logger, error) {
-	l := &Logger{}
+func NewLogger(cfg []config.Logger) (*Logger, error) {
+	l := &Logger{
+		cfg: cfg,
+	}
 	cw := &zerolog.ConsoleWriter{
 		Out:              os.Stderr,
-		TimeFormat:       "Jan 2 15:04:05",
+		TimeFormat:       common.TimeFormat,
 		FormatFieldName:  l.fieldNameFormat,
 		FormatFieldValue: l.fieldValueFormat,
 	}
 
 	l.console = cw
-
-	l.hup = make(chan os.Signal, 1)
-	go func() {
-		for sig := range l.hup {
-			log.Logger = log.Output(l.console)
-			log.Info().Msgf("received %s, closing and reopening logfiles", sig)
-			l.Close()
-			err := l.OpenLogs(cfg)
-			if err != nil {
-				log.Error().Err(err).Msg("error reopening logs")
-				continue
-			}
-
-			l.Install()
-		}
-	}()
-
-	signal.Notify(l.hup, syscall.SIGHUP)
 
 	err := l.OpenLogs(cfg)
 	if err != nil {
@@ -68,6 +51,21 @@ func NewLogger(cfg *config.Config) (*Logger, error) {
 	l.Install()
 
 	return l, nil
+}
+
+func (l *Logger) HUP(cfg *config.Config) {
+	l.cfg = cfg.Log
+
+	log.Logger = log.Output(l.console)
+	log.Info().Msg("closing and reopening logfiles")
+	l.Close()
+	err := l.OpenLogs(l.cfg)
+	if err != nil {
+		log.Error().Err(err).Msg("error reopening logs")
+		return
+	}
+
+	l.Install()
 }
 
 func (l *Logger) Install() {
@@ -91,9 +89,9 @@ func (l *Logger) Close() {
 	l.writers = nil
 }
 
-func (l *Logger) OpenLogs(cfg *config.Config) error {
-	l.writers = make([]io.Writer, 0, len(cfg.Log))
-	for _, lc := range cfg.Log {
+func (l *Logger) OpenLogs(cfg []config.Logger) error {
+	l.writers = make([]io.Writer, 0, len(cfg))
+	for _, lc := range cfg {
 		level := zerolog.TraceLevel
 		if lc.Level != nil {
 			var err error

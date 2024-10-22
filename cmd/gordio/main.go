@@ -7,16 +7,17 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/gordio"
 	"dynatron.me/x/stillbox/pkg/gordio/admin"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
-	"dynatron.me/x/stillbox/internal/version"
 
 	"github.com/spf13/cobra"
 )
 
 func main() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: common.TimeFormat})
 
 	rootCmd := &cobra.Command{
 		Use: gordio.AppName,

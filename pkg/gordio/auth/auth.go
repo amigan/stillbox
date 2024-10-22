@@ -26,14 +26,14 @@ type Authenticator interface {
 	apiKeyAuth
 }
 
-type authenticator struct {
+type Auth struct {
 	jwt *jwtauth.JWTAuth
 	cfg config.Auth
 }
 
 // NewAuthenticator creates a new Authenticator with the provided config.
-func NewAuthenticator(cfg config.Auth) Authenticator {
-	return &authenticator{
+func NewAuthenticator(cfg config.Auth) *Auth {
+	return &Auth{
 		jwt: jwtauth.New("HS256", []byte(cfg.JWTSecret), nil),
 		cfg: cfg,
 	}

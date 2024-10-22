@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/gordio/auth"
@@ -20,7 +21,7 @@ import (
 const shutdownTimeout = 5 * time.Second
 
 type Server struct {
-	auth    auth.Authenticator
+	auth    *auth.Auth
 	conf    *config.Config
 	db      *database.DB
 	r       *chi.Mux
@@ -28,10 +29,11 @@ type Server struct {
 	sinks   sinks.Sinks
 	nex     *nexus.Nexus
 	logger  *Logger
+	hup     chan os.Signal
 }
 
 func New(ctx context.Context, cfg *config.Config) (*Server, error) {
-	logger, err := NewLogger(cfg)
+	logger, err := NewLogger(cfg.Log)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +76,8 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 func (s *Server) Go(ctx context.Context) error {
 	defer s.db.Close()
+
+	s.installHupHandler()
 
 	ctx = database.CtxWithDB(ctx, s.db)
 

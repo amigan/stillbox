@@ -4,6 +4,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	TimeFormat = "Jan 2 15:04:05"
+)
+
 type cmdOptions interface {
 	Options(*cobra.Command, []string) error
 	Execute() error

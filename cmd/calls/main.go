@@ -81,7 +81,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	u := url.URL{Scheme: "ws"+secureSuffix(), Host: *addr, Path: "/ws"}
+	u := url.URL{Scheme: "ws" + secureSuffix(), Host: *addr, Path: "/ws"}
 	log.Printf("connecting to %s", u.String())
 
 	dialer := websocket.Dialer{

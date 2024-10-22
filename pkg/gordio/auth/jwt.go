@@ -39,21 +39,21 @@ type jwtAuth interface {
 
 type claims map[string]interface{}
 
-func (a *authenticator) Authenticated(r *http.Request) (claims, bool) {
+func (a *Auth) Authenticated(r *http.Request) (claims, bool) {
 	// TODO: check IP against ACL, or conf.Public, and against map of routes
 	tok, cl, err := jwtauth.FromContext(r.Context())
 	return cl, err != nil && tok != nil
 }
 
-func (a *authenticator) VerifyMiddleware() func(http.Handler) http.Handler {
+func (a *Auth) VerifyMiddleware() func(http.Handler) http.Handler {
 	return jwtauth.Verifier(a.jwt)
 }
 
-func (a *authenticator) AuthMiddleware() func(http.Handler) http.Handler {
+func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
 	return jwtauth.Authenticator(a.jwt)
 }
 
-func (a *authenticator) Login(ctx context.Context, username, password string) (token string, err error) {
+func (a *Auth) Login(ctx context.Context, username, password string) (token string, err error) {
 	q := database.New(database.FromCtx(ctx))
 	users, err := q.GetUsers(ctx)
 	if err != nil {
@@ -82,7 +82,7 @@ func (a *authenticator) Login(ctx context.Context, username, password string) (t
 	return a.newToken(found.ID), nil
 }
 
-func (a *authenticator) newToken(uid int32) string {
+func (a *Auth) newToken(uid int32) string {
 	claims := claims{
 		"sub": strconv.Itoa(int(uid)),
 	}
@@ -94,21 +94,21 @@ func (a *authenticator) newToken(uid int32) string {
 	return tokenString
 }
 
-func (a *authenticator) PublicRoutes(r chi.Router) {
+func (a *Auth) PublicRoutes(r chi.Router) {
 	r.Post("/login", a.routeAuth)
 }
 
-func (a *authenticator) PrivateRoutes(r chi.Router) {
+func (a *Auth) PrivateRoutes(r chi.Router) {
 	r.Get("/refresh", a.routeRefresh)
 }
 
-func (a *authenticator) allowInsecureCookie(r *http.Request) bool {
+func (a *Auth) allowInsecureCookie(r *http.Request) bool {
 	host := strings.Split(r.Host, ":")
 	v, has := a.cfg.AllowInsecure[host[0]]
 	return has && v
 }
 
-func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
+func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	jwToken, _, err := jwtauth.FromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Invalid token", http.StatusBadRequest)
@@ -155,7 +155,7 @@ func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
-func (a *authenticator) routeAuth(w http.ResponseWriter, r *http.Request) {
+func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

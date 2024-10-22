@@ -18,7 +18,7 @@ type apiKeyAuth interface {
 	CheckAPIKey(ctx context.Context, key string) (*UserID, error)
 }
 
-func (a *authenticator) CheckAPIKey(ctx context.Context, key string) (*UserID, error) {
+func (a *Auth) CheckAPIKey(ctx context.Context, key string) (*UserID, error) {
 	keyUuid, err := uuid.Parse(key)
 	if err != nil {
 		log.Error().Str("apikey", key).Msg("cannot parse key")
