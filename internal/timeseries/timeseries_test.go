@@ -3,8 +3,6 @@ package timeseries
 import (
 	"testing"
 	"time"
-
-	"github.com/benbjohnson/clock"
 )
 
 // TODO: do table based testing

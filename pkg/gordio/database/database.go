@@ -13,8 +13,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// This file will eventually turn into a postgres driver.
-
 // DB is a database handle.
 type DB struct {
 	*pgxpool.Pool
@@ -40,7 +38,12 @@ func NewClient(ctx context.Context, conf config.DB) (*DB, error) {
 
 	m.Close()
 
-	pool, err := pgxpool.New(ctx, conf.Connect)
+	pgConf, err := pgxpool.ParseConfig(conf.Connect)
+	if err != nil {
+		return nil, err
+	}
+
+	pool, err := pgxpool.NewWithConfig(ctx, pgConf)
 	if err != nil {
 		return nil, err
 	}

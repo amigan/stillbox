@@ -24,6 +24,7 @@ type Querier interface {
 	GetTalkgroupIDsByTags(ctx context.Context, anytags []string, alltags []string, nottags []string) ([]GetTalkgroupIDsByTagsRow, error)
 	GetTalkgroupTags(ctx context.Context, sys int, tg int) ([]string, error)
 	GetTalkgroupWithLearned(ctx context.Context, systemID int, tgid int) (GetTalkgroupWithLearnedRow, error)
+	GetTalkgroupsByPackedIDs(ctx context.Context, dollar_1 []int64) ([]GetTalkgroupsByPackedIDsRow, error)
 	GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]Talkgroup, error)
 	GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]Talkgroup, error)
 	GetUserByID(ctx context.Context, id int32) (User, error)

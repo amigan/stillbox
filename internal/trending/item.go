@@ -3,25 +3,27 @@ package trending
 import (
 	"math"
 	"time"
+
+	timeseries "dynatron.me/x/stillbox/internal/timeseries"
 )
 
-type item struct {
+type item[K comparable] struct {
 	eventSeries TimeSeries
 	maxSeries   SlidingWindow
 
 	max     float64
 	maxTime time.Time
-	options *options
+	options *options[K]
 
 	// TODO: move outside of item because it's the same for all items
 	defaultExpectation float64
 	defaultHourlyCount float64
 }
 
-func newItem(id string, options *options) *item {
+func newItem[K comparable](id K, options *options[K]) *item[K] {
 	defaultHourlyCount := float64(options.baseCount) * float64(options.storageDuration/time.Hour)
 	defaultExpectation := float64(options.baseCount) / float64(time.Hour/options.recentDuration)
-	return &item{
+	return &item[K]{
 		eventSeries: options.creator(id),
 		maxSeries:   options.slidingWindowCreator(id),
 		options:     options,
@@ -31,10 +33,10 @@ func newItem(id string, options *options) *item {
 	}
 }
 
-func (i *item) score() score {
+func (i *item[K]) score() Score[K] {
 	recentCount, count := i.computeCounts()
 	if recentCount < i.options.countThreshold {
-		return score{}
+		return Score[K]{}
 	}
 	if recentCount == count {
 		// we see this for the first time so there is no historical data
@@ -58,39 +60,41 @@ func (i *item) score() score {
 	}
 	i.decayMax()
 
-	mixedScore := 0.5 * (klScore + i.max)
+	mixedScore := 5 * (klScore + i.max)
 
-	return score{
+	return Score[K]{
 		Score:       mixedScore,
 		Probability: probability,
 		Expectation: expectation,
 		Maximum:     i.max,
 		KLScore:     klScore,
+		Count:       count,
+		RecentCount: recentCount,
 	}
 }
 
-func (i *item) computeCounts() (float64, float64) {
-	now := time.Now()
+func (i *item[K]) computeCounts() (float64, float64) {
+	now := timeseries.DefaultClock.Now()
 	totalCount, _ := i.eventSeries.Range(now.Add(-i.options.storageDuration), now)
 	count, _ := i.eventSeries.Range(now.Add(-i.options.recentDuration), now)
 	return count, totalCount
 }
 
-func (i *item) computeRecentMax() float64 {
+func (i *item[K]) computeRecentMax() float64 {
 	return i.maxSeries.Max()
 }
 
-func (i *item) decayMax() {
+func (i *item[K]) decayMax() {
 	i.updateMax(i.max * i.computeExponentialDecayMultiplier())
 }
 
-func (i *item) updateMax(score float64) {
+func (i *item[K]) updateMax(score float64) {
 	i.max = score
-	i.maxTime = time.Now()
+	i.maxTime = timeseries.DefaultClock.Now()
 }
 
-func (i *item) computeExponentialDecayMultiplier() float64 {
-	return math.Pow(0.5, float64(time.Now().Unix()-i.maxTime.Unix())/i.options.halfLife.Seconds())
+func (i *item[K]) computeExponentialDecayMultiplier() float64 {
+	return math.Pow(0.5, float64(timeseries.DefaultClock.Now().Unix()-i.maxTime.Unix())/i.options.halfLife.Seconds())
 }
 
 func computeKullbackLeibler(probability float64, expectation float64) float64 {

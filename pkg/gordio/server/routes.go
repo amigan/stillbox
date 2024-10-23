@@ -33,6 +33,7 @@ func (s *Server) setupRoutes() {
 		r.Use(s.auth.VerifyMiddleware(), s.auth.AuthMiddleware())
 		s.nex.PrivateRoutes(r)
 		s.auth.PrivateRoutes(r)
+		s.alerter.PrivateRoutes(r)
 	})
 
 	r.Group(func(r chi.Router) {

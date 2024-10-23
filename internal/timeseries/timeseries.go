@@ -85,8 +85,10 @@ type Clock interface {
 	Now() time.Time
 }
 
-// defaultClock is used in case no clock is provided to the constructor.
+// DefaultClock is used in case no clock is provided to the constructor.
 type defaultClock struct{}
+
+var DefaultClock Clock = &defaultClock{}
 
 func (c *defaultClock) Now() time.Time {
 	return time.Now()
@@ -137,7 +139,7 @@ func NewTimeSeries(os ...Option) (*TimeSeries, error) {
 		o(&opts)
 	}
 	if opts.clock == nil {
-		opts.clock = &defaultClock{}
+		opts.clock = DefaultClock
 	}
 	if opts.granularities == nil {
 		opts.granularities = defaultGranularities

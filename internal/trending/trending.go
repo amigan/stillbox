@@ -25,13 +25,13 @@ var defaultHalfLife = 2 * time.Hour
 var defaultRecentDuration = 5 * time.Minute
 var defaultStorageDuration = 7 * 24 * time.Hour
 var defaultMaxResults = 100
-var defaultBaseCount = 3
+var defaultBaseCount = 1
 var defaultScoreThreshold = 0.01
 var defaultCountThreshold = 3.0
 
-type options struct {
-	creator              TimeSeriesCreator
-	slidingWindowCreator SlidingWindowCreator
+type options[K comparable] struct {
+	creator              TimeSeriesCreator[K]
+	slidingWindowCreator SlidingWindowCreator[K]
 
 	halfLife time.Duration
 
@@ -44,59 +44,59 @@ type options struct {
 	countThreshold float64
 }
 
-type Option func(*options)
+type Option[K comparable] func(*options[K])
 
-func WithTimeSeries(creator TimeSeriesCreator) Option {
-	return func(o *options) {
+func WithTimeSeries[K comparable](creator TimeSeriesCreator[K]) Option[K] {
+	return func(o *options[K]) {
 		o.creator = creator
 	}
 }
 
-func WithSlidingWindow(creator SlidingWindowCreator) Option {
-	return func(o *options) {
+func WithSlidingWindow[K comparable](creator SlidingWindowCreator[K]) Option[K] {
+	return func(o *options[K]) {
 		o.slidingWindowCreator = creator
 	}
 }
 
-func WithHalfLife(halfLife time.Duration) Option {
-	return func(o *options) {
+func WithHalfLife[K comparable](halfLife time.Duration) Option[K] {
+	return func(o *options[K]) {
 		o.halfLife = halfLife
 	}
 }
 
-func WithRecentDuration(recentDuration time.Duration) Option {
-	return func(o *options) {
+func WithRecentDuration[K comparable](recentDuration time.Duration) Option[K] {
+	return func(o *options[K]) {
 		o.recentDuration = recentDuration
 	}
 }
 
-func WithStorageDuration(storageDuration time.Duration) Option {
-	return func(o *options) {
+func WithStorageDuration[K comparable](storageDuration time.Duration) Option[K] {
+	return func(o *options[K]) {
 		o.storageDuration = storageDuration
 	}
 }
 
-func WithMaxResults(maxResults int) Option {
-	return func(o *options) {
+func WithMaxResults[K comparable](maxResults int) Option[K] {
+	return func(o *options[K]) {
 		o.maxResults = maxResults
 	}
 }
 
-func WithScoreThreshold(threshold float64) Option {
-	return func(o *options) {
+func WithScoreThreshold[K comparable](threshold float64) Option[K] {
+	return func(o *options[K]) {
 		o.scoreThreshold = threshold
 	}
 }
 
-func WithCountThreshold(threshold float64) Option {
-	return func(o *options) {
+func WithCountThreshold[K comparable](threshold float64) Option[K] {
+	return func(o *options[K]) {
 		o.countThreshold = threshold
 	}
 }
 
-type Scorer struct {
-	options options
-	items   map[string]*item
+type Scorer[K comparable] struct {
+	options options[K]
+	items   map[K]*item[K]
 }
 
 type SlidingWindow interface {
@@ -104,16 +104,16 @@ type SlidingWindow interface {
 	Max() float64
 }
 
-type SlidingWindowCreator func(string) SlidingWindow
+type SlidingWindowCreator[K comparable] func(K) SlidingWindow
 
 type TimeSeries interface {
 	IncreaseAtTime(amount int, time time.Time)
 	Range(start, end time.Time) (float64, error)
 }
 
-type TimeSeriesCreator func(string) TimeSeries
+type TimeSeriesCreator[K comparable] func(K) TimeSeries
 
-func NewMemoryTimeSeries(id string) TimeSeries {
+func NewMemoryTimeSeries[K comparable](id K) TimeSeries {
 	ts, _ := timeseries.NewTimeSeries(timeseries.WithGranularities(
 		[]timeseries.Granularity{
 			{Granularity: time.Second, Count: 60},
@@ -125,13 +125,13 @@ func NewMemoryTimeSeries(id string) TimeSeries {
 	return ts
 }
 
-func NewScorer(options ...Option) Scorer {
-	scorer := Scorer{items: make(map[string]*item)}
+func NewScorer[K comparable](options ...Option[K]) Scorer[K] {
+	scorer := Scorer[K]{items: make(map[K]*item[K])}
 	for _, o := range options {
 		o(&scorer.options)
 	}
 	if scorer.options.creator == nil {
-		scorer.options.creator = NewMemoryTimeSeries
+		scorer.options.creator = NewMemoryTimeSeries[K]
 	}
 	if scorer.options.halfLife == 0 {
 		scorer.options.halfLife = defaultHalfLife
@@ -155,7 +155,7 @@ func NewScorer(options ...Option) Scorer {
 		scorer.options.baseCount = defaultBaseCount
 	}
 	if scorer.options.slidingWindowCreator == nil {
-		scorer.options.slidingWindowCreator = func(id string) SlidingWindow {
+		scorer.options.slidingWindowCreator = func(id K) SlidingWindow {
 			return slidingwindow.NewSlidingWindow(
 				slidingwindow.WithStep(time.Hour*24),
 				slidingwindow.WithDuration(scorer.options.storageDuration),
@@ -165,7 +165,7 @@ func NewScorer(options ...Option) Scorer {
 	return scorer
 }
 
-func (s *Scorer) AddEvent(id string, time time.Time) {
+func (s *Scorer[K]) AddEvent(id K, time time.Time) {
 	item := s.items[id]
 	if item == nil {
 		item = newItem(id, &s.options)
@@ -174,12 +174,12 @@ func (s *Scorer) AddEvent(id string, time time.Time) {
 	s.addToItem(item, time)
 }
 
-func (s *Scorer) addToItem(item *item, time time.Time) {
-	item.eventSeries.IncreaseAtTime(1, time)
+func (s *Scorer[K]) addToItem(item *item[K], tm time.Time) {
+	item.eventSeries.IncreaseAtTime(1, tm)
 }
 
-func (s *Scorer) Score() Scores {
-	var scores Scores
+func (s *Scorer[K]) Score() Scores[K] {
+	var scores Scores[K]
 	for id, item := range s.items {
 		score := item.score()
 		score.ID = id

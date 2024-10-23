@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS calls(
 	submitter INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
 	system INTEGER NOT NULL,
 	talkgroup INTEGER NOT NULL,
-	call_date TIMESTAMP NOT NULL,
+	call_date TIMESTAMPTZ NOT NULL,
 	audio_name TEXT,
 	audio_blob BYTEA,
 	duration INTEGER,
@@ -106,7 +106,6 @@ CREATE TABLE IF NOT EXISTS calls(
 	source INTEGER NOT NULL,
 	transcript TEXT
 );
-
 
 CREATE OR REPLACE TRIGGER learn_tg AFTER INSERT ON calls
 FOR EACH ROW EXECUTE FUNCTION learn_talkgroup();

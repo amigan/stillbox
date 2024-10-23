@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Stats</title>
+    <style>
+      *, *:before, *:after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #105469;
+        font-family: sans-serif;
+      }
+      table {
+        background: #012B39;
+        border-radius: 0.25em;
+        border-collapse: collapse;
+        margin-top: 1em;
+        margin-bottom: 1em;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      th {
+        border-bottom: 1px solid #364043;
+        color: #E2B842;
+        font-size: 0.85em;
+        font-weight: 600;
+        padding: 0.5em 1em;
+        text-align: left;
+      }
+      td {
+        color: #fff;
+        font-weight: 400;
+        padding: 0.65em 1em;
+      }
+      .disabled td {
+        color: #4F5F64;
+      }
+      tbody tr {
+        transition: background 0.25s ease;
+      }
+      tbody tr:hover {
+        background: #014055;
+      }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <th>System</th>
+        <th>TG</th>
+        <th>TG ID</th>
+	<th>Count</th>
+	<th>Recent</th>
+        <th>Score</th>
+        <th>Probab</th>
+        <th>Expect</th>
+        <th>Max</th>
+        <th>KL</th>
+      </tr>
+      {{ range .Scores }}
+      {{ $tg := (index $.TGs .ID) }}
+      <tr>
+	<td>{{ $tg.Name_2}}</td>
+	<td>{{ $tg.Name}}</td>
+	<td>{{ .ID.Talkgroup }}</td>
+	<td>{{ .Count }}</td>
+	<td>{{ f .RecentCount }}</td>
+	<td>{{ f .Score }}</td>
+	<td>{{ f .Probability }}</td>
+	<td>{{ f .Expectation }}</td>
+	<td>{{ f .Maximum }}</td>
+	<td>{{ f .KLScore }}</td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="10">No Data</td>
+      </tr>
+      {{ end }}
+      <tr>
+      <td colspan="10">Last updated at {{ .LastScore }}</td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/gordio/alerting"
 	"dynatron.me/x/stillbox/pkg/gordio/auth"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
@@ -29,6 +30,7 @@ type Server struct {
 	sinks   sinks.Sinks
 	nex     *nexus.Nexus
 	logger  *Logger
+	alerter *alerting.Alerter
 	hup     chan os.Signal
 }
 
@@ -43,19 +45,23 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
+	ctx = database.CtxWithDB(ctx, db)
+
 	r := chi.NewRouter()
 	authenticator := auth.NewAuthenticator(cfg.Auth)
 	srv := &Server{
-		auth:   authenticator,
-		conf:   cfg,
-		db:     db,
-		r:      r,
-		nex:    nexus.New(),
-		logger: logger,
+		auth:    authenticator,
+		conf:    cfg,
+		db:      db,
+		r:       r,
+		nex:     nexus.New(),
+		logger:  logger,
+		alerter: alerting.New(),
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)
 	srv.sinks.Register("nexus", sinks.NewNexusSink(srv.nex), false)
+	srv.sinks.Register("alerting", sinks.NewAlerterSink(srv.alerter), false)
 	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
 
 	r.Use(middleware.RequestID)
@@ -88,12 +94,15 @@ func (s *Server) Go(ctx context.Context) error {
 	}
 
 	go s.nex.Go(ctx)
+	go s.alerter.Go(ctx)
 
 	var err error
 	go func() {
 		err = httpSrv.ListenAndServe()
 	}()
 	<-ctx.Done()
+
+	s.sinks.Shutdown()
 
 	ctxShutdown, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()

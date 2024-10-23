@@ -8,6 +8,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,6 +25,7 @@ func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
 		log.Debug().Str("call", call.String()).Msg("received dontStore call")
 		return nil
 	}
+
 	dbCall, err := s.db.AddCall(ctx, s.toAddCallParams(call))
 	if err != nil {
 		return fmt.Errorf("add call: %w", err)
@@ -43,7 +45,7 @@ func (s *DatabaseSink) toAddCallParams(call *calls.Call) database.AddCallParams 
 		Submitter:   call.Submitter.Int32Ptr(),
 		System:      call.System,
 		Talkgroup:   call.Talkgroup,
-		CallDate:    call.DateTime,
+		CallDate:    pgtype.Timestamptz{Time: call.DateTime, Valid: true},
 		AudioName:   common.PtrOrNull(call.AudioName),
 		AudioBlob:   call.Audio,
 		AudioType:   common.PtrOrNull(call.AudioType),

@@ -28,6 +28,11 @@ WHERE id = ANY($1);
 SELECT * FROM talkgroups
 WHERE id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid));
 
+-- name: GetTalkgroupsByPackedIDs :many
+SELECT * FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+WHERE tg.id = ANY($1::INT8[]);
+
 -- name: GetTalkgroupWithLearned :one
 SELECT
 tg.id, tg.system_id, sys.name system_name, tg.tgid, tg.name,

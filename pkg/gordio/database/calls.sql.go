@@ -7,9 +7,9 @@ package database
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addCall = `-- name: AddCall :one
@@ -36,22 +36,22 @@ RETURNING id
 `
 
 type AddCallParams struct {
-	Submitter   *int32    `json:"submitter"`
-	System      int       `json:"system"`
-	Talkgroup   int       `json:"talkgroup"`
-	CallDate    time.Time `json:"call_date"`
-	AudioName   *string   `json:"audio_name"`
-	AudioBlob   []byte    `json:"audio_blob"`
-	AudioType   *string   `json:"audio_type"`
-	AudioUrl    *string   `json:"audio_url"`
-	Duration    *int32    `json:"duration"`
-	Frequency   int       `json:"frequency"`
-	Frequencies []int     `json:"frequencies"`
-	Patches     []int     `json:"patches"`
-	TgLabel     *string   `json:"tg_label"`
-	TgAlphaTag  *string   `json:"tg_alpha_tag"`
-	TgGroup     *string   `json:"tg_group"`
-	Source      int       `json:"source"`
+	Submitter   *int32             `json:"submitter"`
+	System      int                `json:"system"`
+	Talkgroup   int                `json:"talkgroup"`
+	CallDate    pgtype.Timestamptz `json:"call_date"`
+	AudioName   *string            `json:"audio_name"`
+	AudioBlob   []byte             `json:"audio_blob"`
+	AudioType   *string            `json:"audio_type"`
+	AudioUrl    *string            `json:"audio_url"`
+	Duration    *int32             `json:"duration"`
+	Frequency   int                `json:"frequency"`
+	Frequencies []int              `json:"frequencies"`
+	Patches     []int              `json:"patches"`
+	TgLabel     *string            `json:"tg_label"`
+	TgAlphaTag  *string            `json:"tg_alpha_tag"`
+	TgGroup     *string            `json:"tg_group"`
+	Source      int                `json:"source"`
 }
 
 func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, error) {

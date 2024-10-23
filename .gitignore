@@ -1,4 +1,5 @@
 config.yaml
+config.test.yaml
 mydb.sql
 client/calls/
 !client/calls/.gitkeep
@@ -6,3 +7,4 @@ client/calls/
 /calls
 Session.vim
 *.log
+*.dlv

@@ -40,6 +40,13 @@ func (s *Sinks) Register(name string, toAdd Sink, required bool) {
 	})
 }
 
+func (s *Sinks) Shutdown() {
+	s.Lock()
+	defer s.Unlock()
+
+	s.sinks = nil
+}
+
 func (s *Sinks) EmitCall(ctx context.Context, call *calls.Call) error {
 	s.Lock()
 	defer s.Unlock()
