@@ -30,7 +30,7 @@ type Server struct {
 	sinks   sinks.Sinks
 	nex     *nexus.Nexus
 	logger  *Logger
-	alerter *alerting.Alerter
+	alerter alerting.Alerter
 	hup     chan os.Signal
 }
 
@@ -56,12 +56,16 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		r:       r,
 		nex:     nexus.New(),
 		logger:  logger,
-		alerter: alerting.New(),
+		alerter: alerting.New(cfg.Alerting),
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)
 	srv.sinks.Register("nexus", sinks.NewNexusSink(srv.nex), false)
-	srv.sinks.Register("alerting", sinks.NewAlerterSink(srv.alerter), false)
+
+	if srv.alerter.Enabled() {
+		srv.sinks.Register("alerting", srv.alerter, false)
+	}
+
 	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
 
 	r.Use(middleware.RequestID)

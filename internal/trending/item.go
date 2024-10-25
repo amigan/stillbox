@@ -22,7 +22,7 @@ func newItem[K comparable](id K, options *options[K]) *item[K] {
 	defaultHourlyCount := float64(options.baseCount) * float64(options.storageDuration/time.Hour)
 	defaultExpectation := float64(options.baseCount) / float64(time.Hour/options.recentDuration)
 	return &item[K]{
-		eventSeries: options.creator(id, options.clock),
+		eventSeries: options.creator(id),
 		maxSeries:   options.slidingWindowCreator(id),
 		options:     options,
 

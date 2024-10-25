@@ -19,6 +19,10 @@ import (
 //go:embed stats.html
 var statsTemplateFile string
 
+type stats interface {
+	PrivateRoutes(chi.Router)
+}
+
 var (
 	funcMap = template.FuncMap{
 		"f": func(v float64) string {
@@ -28,11 +32,13 @@ var (
 	statTmpl = template.Must(template.New("stats").Funcs(funcMap).Parse(statsTemplateFile))
 )
 
-func (as *Alerter) PrivateRoutes(r chi.Router) {
+func (as *alerter) PrivateRoutes(r chi.Router) {
 	r.Get("/tgstats", as.tgStats)
 }
 
-func (as *Alerter) tgStats(w http.ResponseWriter, r *http.Request) {
+func (as *noopAlerter) PrivateRoutes(r chi.Router) {}
+
+func (as *alerter) tgStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	db := database.FromCtx(ctx)
 

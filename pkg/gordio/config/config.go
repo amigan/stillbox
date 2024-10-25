@@ -14,6 +14,7 @@ type Config struct {
 	DB        DB        `yaml:"db"`
 	CORS      CORS      `yaml:"cors"`
 	Auth      Auth      `yaml:"auth"`
+	Alerting  Alerting  `yaml:"alerting"`
 	Log       []Logger  `yaml:"log"`
 	Listen    string    `yaml:"listen"`
 	Public    bool      `yaml:"public"`
@@ -47,6 +48,13 @@ type RateLimit struct {
 	Over     time.Duration `yaml:"over"`
 
 	verifyError sync.Once
+}
+
+type Alerting struct {
+	Enable       bool          `yaml:"enable"`
+	LookbackDays uint          `yaml:"lookbackDays"`
+	HalfLife     time.Duration `yaml:"halfLife"`
+	Recent       time.Duration `yaml:"recent"`
 }
 
 func (rl *RateLimit) Verify() bool {

@@ -118,9 +118,9 @@ type TimeSeries interface {
 	Range(start, end time.Time) (float64, error)
 }
 
-type TimeSeriesCreator[K comparable] func(K, timeseries.Clock) TimeSeries
+type TimeSeriesCreator[K comparable] func(K) TimeSeries
 
-func NewMemoryTimeSeries[K comparable](id K, clock timeseries.Clock) TimeSeries {
+func NewMemoryTimeSeries[K comparable](id K) TimeSeries {
 	ts, _ := timeseries.NewTimeSeries(timeseries.WithGranularities(
 		[]timeseries.Granularity{
 			{Granularity: time.Second, Count: 60},
@@ -128,7 +128,7 @@ func NewMemoryTimeSeries[K comparable](id K, clock timeseries.Clock) TimeSeries 
 			{Granularity: time.Hour, Count: 24},
 			{Granularity: time.Hour * 24, Count: 7},
 		},
-	), timeseries.WithClock(clock))
+	))
 	return ts
 }
 

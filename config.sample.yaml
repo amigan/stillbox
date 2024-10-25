@@ -24,3 +24,8 @@ rateLimit:
   enable: true
   requests: 200
   over: 2m
+alerting:
+  enable: true
+  lookbackDays: 7
+  halfLife: 30m
+  recent: 2h
