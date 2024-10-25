@@ -32,6 +32,7 @@ var defaultCountThreshold = 3.0
 type options[K comparable] struct {
 	creator              TimeSeriesCreator[K]
 	slidingWindowCreator SlidingWindowCreator[K]
+	clock                timeseries.Clock
 
 	halfLife time.Duration
 
@@ -94,6 +95,12 @@ func WithCountThreshold[K comparable](threshold float64) Option[K] {
 	}
 }
 
+func WithClock[K comparable](clock timeseries.Clock) Option[K] {
+	return func(o *options[K]) {
+		o.clock = clock
+	}
+}
+
 type Scorer[K comparable] struct {
 	options options[K]
 	items   map[K]*item[K]
@@ -111,9 +118,9 @@ type TimeSeries interface {
 	Range(start, end time.Time) (float64, error)
 }
 
-type TimeSeriesCreator[K comparable] func(K) TimeSeries
+type TimeSeriesCreator[K comparable] func(K, timeseries.Clock) TimeSeries
 
-func NewMemoryTimeSeries[K comparable](id K) TimeSeries {
+func NewMemoryTimeSeries[K comparable](id K, clock timeseries.Clock) TimeSeries {
 	ts, _ := timeseries.NewTimeSeries(timeseries.WithGranularities(
 		[]timeseries.Granularity{
 			{Granularity: time.Second, Count: 60},
@@ -121,7 +128,7 @@ func NewMemoryTimeSeries[K comparable](id K) TimeSeries {
 			{Granularity: time.Hour, Count: 24},
 			{Granularity: time.Hour * 24, Count: 7},
 		},
-	))
+	), timeseries.WithClock(clock))
 	return ts
 }
 
@@ -154,11 +161,15 @@ func NewScorer[K comparable](options ...Option[K]) Scorer[K] {
 	if scorer.options.baseCount == 0.0 {
 		scorer.options.baseCount = defaultBaseCount
 	}
+	if scorer.options.clock == nil {
+		scorer.options.clock = timeseries.DefaultClock
+	}
 	if scorer.options.slidingWindowCreator == nil {
 		scorer.options.slidingWindowCreator = func(id K) SlidingWindow {
 			return slidingwindow.NewSlidingWindow(
 				slidingwindow.WithStep(time.Hour*24),
 				slidingwindow.WithDuration(scorer.options.storageDuration),
+				slidingwindow.WithClock(scorer.options.clock),
 			)
 		}
 	}

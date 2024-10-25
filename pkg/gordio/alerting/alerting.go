@@ -72,7 +72,7 @@ func (as *Alerter) Go(ctx context.Context) {
 
 }
 
-func newTimeSeries(id cl.Talkgroup) trending.TimeSeries {
+func newTimeSeries(id cl.Talkgroup, clock timeseries.Clock) trending.TimeSeries {
 	ts, _ := timeseries.NewTimeSeries(timeseries.WithGranularities(
 		[]timeseries.Granularity{
 			{Granularity: time.Second, Count: 60},
@@ -80,7 +80,7 @@ func newTimeSeries(id cl.Talkgroup) trending.TimeSeries {
 			{Granularity: time.Hour, Count: 24},
 			{Granularity: time.Hour * 24, Count: StorageLookbackDays},
 		},
-	))
+	), timeseries.WithClock(clock))
 	return ts
 }
 

@@ -3,8 +3,6 @@ package trending
 import (
 	"math"
 	"time"
-
-	timeseries "dynatron.me/x/stillbox/internal/timeseries"
 )
 
 type item[K comparable] struct {
@@ -24,7 +22,7 @@ func newItem[K comparable](id K, options *options[K]) *item[K] {
 	defaultHourlyCount := float64(options.baseCount) * float64(options.storageDuration/time.Hour)
 	defaultExpectation := float64(options.baseCount) / float64(time.Hour/options.recentDuration)
 	return &item[K]{
-		eventSeries: options.creator(id),
+		eventSeries: options.creator(id, options.clock),
 		maxSeries:   options.slidingWindowCreator(id),
 		options:     options,
 
@@ -74,7 +72,7 @@ func (i *item[K]) score() Score[K] {
 }
 
 func (i *item[K]) computeCounts() (float64, float64) {
-	now := timeseries.DefaultClock.Now()
+	now := i.options.clock.Now()
 	totalCount, _ := i.eventSeries.Range(now.Add(-i.options.storageDuration), now)
 	count, _ := i.eventSeries.Range(now.Add(-i.options.recentDuration), now)
 	return count, totalCount
@@ -90,11 +88,11 @@ func (i *item[K]) decayMax() {
 
 func (i *item[K]) updateMax(score float64) {
 	i.max = score
-	i.maxTime = timeseries.DefaultClock.Now()
+	i.maxTime = i.options.clock.Now()
 }
 
 func (i *item[K]) computeExponentialDecayMultiplier() float64 {
-	return math.Pow(0.5, float64(timeseries.DefaultClock.Now().Unix()-i.maxTime.Unix())/i.options.halfLife.Seconds())
+	return math.Pow(0.5, float64(i.options.clock.Now().Unix()-i.maxTime.Unix())/i.options.halfLife.Seconds())
 }
 
 func computeKullbackLeibler(probability float64, expectation float64) float64 {
