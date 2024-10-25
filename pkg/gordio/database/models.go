@@ -11,6 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Alert struct {
+	ID        int32              `json:"id"`
+	Time      pgtype.Timestamptz `json:"time"`
+	Talkgroup int64              `json:"talkgroup"`
+	SystemID  int32              `json:"system_id"`
+	Tgid      int32              `json:"tgid"`
+	Weight    *float32           `json:"weight"`
+	Score     *float32           `json:"score"`
+	Metadata  []byte             `json:"metadata"`
+}
+
 type ApiKey struct {
 	ID        int32            `json:"id"`
 	Owner     int              `json:"owner"`
@@ -78,6 +89,8 @@ type Talkgroup struct {
 	Frequency *int32   `json:"frequency"`
 	Metadata  []byte   `json:"metadata"`
 	Tags      []string `json:"tags"`
+	Notify    bool     `json:"notify"`
+	Weight    float32  `json:"weight"`
 }
 
 type TalkgroupsLearned struct {

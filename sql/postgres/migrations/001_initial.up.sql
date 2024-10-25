@@ -53,12 +53,12 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	tg_group TEXT,
 	frequency INTEGER,
 	metadata JSONB,
-	tags TEXT[] NOT NULL DEFAULT '{}'
+	tags TEXT[] NOT NULL DEFAULT '{}',
+	notify BOOLEAN NOT NULL DEFAULT 'true',
+	weight REAL NOT NULL DEFAULT 1.0
 );
 
 CREATE INDEX IF NOT EXISTS talkgroup_id_tags ON talkgroups USING GIN (tags);
-
-
 
 CREATE TABLE IF NOT EXISTS talkgroups_learned(
 	id SERIAL PRIMARY KEY,
@@ -68,6 +68,17 @@ CREATE TABLE IF NOT EXISTS talkgroups_learned(
 	alpha_tag TEXT,
 	ignored BOOLEAN,
 	UNIQUE (system_id, tgid, name)
+);
+
+CREATE TABLE IF NOT EXISTS alerts(
+	id SERIAL PRIMARY KEY,
+	time TIMESTAMPTZ NOT NULL, 
+	talkgroup INT8 REFERENCES talkgroups(id) NOT NULL,
+	system_id INT4 REFERENCES systems(id) NOT NULL GENERATED ALWAYS AS (talkgroup >> 32) STORED,
+	tgid INT4 NOT NULL GENERATED ALWAYS AS (talkgroup & x'ffffffff'::BIGINT) STORED,
+	weight REAL,
+	score REAL,
+	metadata JSONB
 );
 
 CREATE OR REPLACE FUNCTION learn_talkgroup()

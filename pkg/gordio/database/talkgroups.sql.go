@@ -20,7 +20,7 @@ func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []str
 }
 
 const getTalkgroup = `-- name: GetTalkgroup :one
-SELECT id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags FROM talkgroups
+SELECT id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, notify, weight FROM talkgroups
 WHERE id = systg2id($1, $2)
 `
 
@@ -37,6 +37,8 @@ func (q *Queries) GetTalkgroup(ctx context.Context, systemID int, tgid int) (Tal
 		&i.Frequency,
 		&i.Metadata,
 		&i.Tags,
+		&i.Notify,
+		&i.Weight,
 	)
 	return i, err
 }
@@ -138,7 +140,7 @@ func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int, tgi
 }
 
 const getTalkgroupsByPackedIDs = `-- name: GetTalkgroupsByPackedIDs :many
-SELECT tg.id, system_id, tgid, tg.name, alpha_tag, tg_group, frequency, metadata, tags, sys.id, sys.name FROM talkgroups tg
+SELECT tg.id, system_id, tgid, tg.name, alpha_tag, tg_group, frequency, metadata, tags, notify, weight, sys.id, sys.name FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE tg.id = ANY($1::INT8[])
 `
@@ -153,6 +155,8 @@ type GetTalkgroupsByPackedIDsRow struct {
 	Frequency *int32   `json:"frequency"`
 	Metadata  []byte   `json:"metadata"`
 	Tags      []string `json:"tags"`
+	Notify    bool     `json:"notify"`
+	Weight    float32  `json:"weight"`
 	ID_2      int      `json:"id_2"`
 	Name_2    string   `json:"name_2"`
 }
@@ -176,6 +180,8 @@ func (q *Queries) GetTalkgroupsByPackedIDs(ctx context.Context, dollar_1 []int64
 			&i.Frequency,
 			&i.Metadata,
 			&i.Tags,
+			&i.Notify,
+			&i.Weight,
 			&i.ID_2,
 			&i.Name_2,
 		); err != nil {
@@ -190,7 +196,7 @@ func (q *Queries) GetTalkgroupsByPackedIDs(ctx context.Context, dollar_1 []int64
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
-SELECT id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags FROM talkgroups
+SELECT id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, notify, weight FROM talkgroups
 WHERE tags && ARRAY[$1]
 `
 
@@ -213,6 +219,8 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 			&i.Frequency,
 			&i.Metadata,
 			&i.Tags,
+			&i.Notify,
+			&i.Weight,
 		); err != nil {
 			return nil, err
 		}
@@ -225,7 +233,7 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 }
 
 const getTalkgroupsWithAnyTags = `-- name: GetTalkgroupsWithAnyTags :many
-SELECT id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags FROM talkgroups
+SELECT id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, notify, weight FROM talkgroups
 WHERE tags @> ARRAY[$1]
 `
 
@@ -248,6 +256,8 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 			&i.Frequency,
 			&i.Metadata,
 			&i.Tags,
+			&i.Notify,
+			&i.Weight,
 		); err != nil {
 			return nil, err
 		}
