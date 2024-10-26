@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -168,18 +169,35 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	var creds struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	var err error
+
+	switch r.Header.Get("Content-Type") {
+	case "application/json":
+		err = json.NewDecoder(r.Body).Decode(&creds)
+	default:
+		err = r.ParseForm()
+		if err != nil {
+			break
+		}
+		creds.Username, creds.Password = r.PostFormValue("username"), r.PostFormValue("password")
+	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	username, password := r.PostFormValue("username"), r.PostFormValue("password")
-	if username == "" || password == "" {
+
+	if creds.Username == "" || creds.Password == "" {
 		http.Error(w, "blank credentials", http.StatusBadRequest)
 		return
 	}
 
-	tok, err := a.Login(r.Context(), username, password)
+	tok, err := a.Login(r.Context(), creds.Username, creds.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
