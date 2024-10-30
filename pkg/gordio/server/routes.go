@@ -28,6 +28,8 @@ func (s *Server) setupRoutes() {
 	r := s.r
 	r.Use(middleware.WithValue(database.DBCTXKeyValue, s.db))
 
+	s.installPprof()
+
 	r.Group(func(r chi.Router) {
 		// authenticated routes
 		r.Use(s.auth.VerifyMiddleware(), s.auth.AuthMiddleware())

@@ -39,9 +39,8 @@ type alerter struct {
 	scorer    trending.Scorer[cl.Talkgroup]
 	scores    trending.Scores[cl.Talkgroup]
 	lastScore time.Time
+	sim       *Simulation
 }
-
-type noopAlerter struct{}
 
 type offsetClock time.Duration
 
@@ -53,18 +52,21 @@ func (c *offsetClock) Duration() time.Duration {
 	return time.Duration(*c)
 }
 
+// OffsetClock returns a clock whose Now() method returns the specified offset from the current time.
 func OffsetClock(d time.Duration) offsetClock {
 	return offsetClock(d)
 }
 
 type AlertOption func(*alerter)
 
+// WithClock makes the alerter use a simulated clock.
 func WithClock(clock timeseries.Clock) AlertOption {
 	return func(as *alerter) {
 		as.clock = clock
 	}
 }
 
+// New creates a new Alerter using the provided configuration.
 func New(cfg config.Alerting, opts ...AlertOption) Alerter {
 	if !cfg.Enable {
 		return &noopAlerter{}
@@ -82,8 +84,8 @@ func New(cfg config.Alerting, opts ...AlertOption) Alerter {
 	as.scorer = trending.NewScorer[cl.Talkgroup](
 		trending.WithTimeSeries(as.newTimeSeries),
 		trending.WithStorageDuration[cl.Talkgroup](time.Hour*24*time.Duration(cfg.LookbackDays)),
-		trending.WithRecentDuration[cl.Talkgroup](cfg.Recent),
-		trending.WithHalfLife[cl.Talkgroup](cfg.HalfLife),
+		trending.WithRecentDuration[cl.Talkgroup](time.Duration(cfg.Recent)),
+		trending.WithHalfLife[cl.Talkgroup](time.Duration(cfg.HalfLife)),
 		trending.WithScoreThreshold[cl.Talkgroup](ScoreThreshold),
 		trending.WithCountThreshold[cl.Talkgroup](CountThreshold),
 		trending.WithClock[cl.Talkgroup](as.clock),
@@ -92,6 +94,7 @@ func New(cfg config.Alerting, opts ...AlertOption) Alerter {
 	return as
 }
 
+// Go is the alerting loop. It does not start a goroutine.
 func (as *alerter) Go(ctx context.Context) {
 	as.startBackfill(ctx)
 
@@ -126,12 +129,12 @@ func (as *alerter) startBackfill(ctx context.Context) {
 	now := time.Now()
 	since := now.Add(-24 * time.Hour * time.Duration(as.cfg.LookbackDays))
 	log.Debug().Time("since", since).Msg("starting stats backfill")
-	count, err := as.backfill(ctx, since)
+	count, err := as.backfill(ctx, since, now)
 	if err != nil {
 		log.Error().Err(err).Msg("backfill failed")
 		return
 	}
-	log.Debug().Int("count", count).Str("in", time.Now().Sub(now).String()).Int("len", as.scorer.Score().Len()).Msg("backfill finished")
+	log.Debug().Int("callsCount", count).Str("in", time.Now().Sub(now).String()).Int("tgCount", as.scorer.Score().Len()).Msg("backfill finished")
 }
 
 func (as *alerter) score(ctx context.Context, now time.Time) {
@@ -143,11 +146,11 @@ func (as *alerter) score(ctx context.Context, now time.Time) {
 	sort.Sort(as.scores)
 }
 
-func (as *alerter) backfill(ctx context.Context, since time.Time) (count int, err error) {
+func (as *alerter) backfill(ctx context.Context, since time.Time, until time.Time) (count int, err error) {
 	db := database.FromCtx(ctx)
-	const backfillStatsQuery = `SELECT system, talkgroup, call_date FROM calls WHERE call_date > $1 AND call_date < $2`
+	const backfillStatsQuery = `SELECT system, talkgroup, call_date FROM calls WHERE call_date > $1 AND call_date < $2 ORDER BY call_date ASC`
 
-	rows, err := db.Query(ctx, backfillStatsQuery, since, timeseries.DefaultClock.Now())
+	rows, err := db.Query(ctx, backfillStatsQuery, since, until)
 	if err != nil {
 		return count, err
 	}
@@ -163,6 +166,9 @@ func (as *alerter) backfill(ctx context.Context, since time.Time) (count int, er
 			return count, err
 		}
 		as.scorer.AddEvent(tg, callDate)
+		if as.sim != nil { // step the simulator if it is active
+			as.sim.stepClock(callDate)
+		}
 		count++
 	}
 
@@ -186,6 +192,9 @@ func (as *alerter) Call(ctx context.Context, call *cl.Call) error {
 }
 
 func (*alerter) Enabled() bool { return true }
+
+// noopAlerter is used when alerting is disabled.
+type noopAlerter struct{}
 
 func (*noopAlerter) SinkType() string                         { return "noopAlerter" }
 func (*noopAlerter) Call(_ context.Context, _ *cl.Call) error { return nil }

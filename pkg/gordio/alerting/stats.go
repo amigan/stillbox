@@ -2,14 +2,18 @@ package alerting
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 
+	"dynatron.me/x/stillbox/internal/jsontime"
 	"dynatron.me/x/stillbox/internal/trending"
 
 	"github.com/go-chi/chi/v5"
@@ -25,20 +29,48 @@ type stats interface {
 
 var (
 	funcMap = template.FuncMap{
-		"f": func(v float64) string {
+		"f": func(v float64, places ...int) string {
+			if len(places) > 0 {
+				return fmt.Sprintf("%."+strconv.Itoa(places[0])+"f", v)
+			}
 			return fmt.Sprintf("%.4f", v)
+		},
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, errors.New("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+		"formTime": func(t jsontime.Time) string {
+			return time.Time(t).Format("2006-01-02T15:04")
+		},
+		"ago": func(s string) (string, error) {
+			d, err := time.ParseDuration(s)
+			if err != nil {
+				return "", err
+			}
+			return time.Now().Add(-d).Format("2006-01-02T15:04"), nil
 		},
 	}
 	statTmpl = template.Must(template.New("stats").Funcs(funcMap).Parse(statsTemplateFile))
 )
 
 func (as *alerter) PrivateRoutes(r chi.Router) {
-	r.Get("/tgstats", as.tgStats)
+	r.Get("/tgstats", as.tgStatsHandler)
+	r.Post("/tgstats", as.simulateHandler)
 }
 
 func (as *noopAlerter) PrivateRoutes(r chi.Router) {}
 
-func (as *alerter) tgStats(w http.ResponseWriter, r *http.Request) {
+func (as *alerter) tgStatsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	db := database.FromCtx(ctx)
 
@@ -60,13 +92,17 @@ func (as *alerter) tgStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderData := struct {
-		TGs       map[calls.Talkgroup]database.GetTalkgroupsByPackedIDsRow
-		Scores    trending.Scores[calls.Talkgroup]
-		LastScore time.Time
+		TGs        map[calls.Talkgroup]database.GetTalkgroupsByPackedIDsRow
+		Scores     trending.Scores[calls.Talkgroup]
+		LastScore  time.Time
+		Simulation *Simulation
+		Config     config.Alerting
 	}{
-		TGs:       tgMap,
-		Scores:    as.scores,
-		LastScore: as.lastScore,
+		TGs:        tgMap,
+		Scores:     as.scores,
+		LastScore:  as.lastScore,
+		Config:     as.cfg,
+		Simulation: as.sim,
 	}
 
 	w.WriteHeader(http.StatusOK)

@@ -12,7 +12,7 @@
         background: #105469;
         font-family: sans-serif;
       }
-      table {
+      table, #simform {
         background: #012B39;
         border-radius: 0.25em;
         border-collapse: collapse;
@@ -29,7 +29,7 @@
         padding: 0.5em 1em;
         text-align: left;
       }
-      td {
+      td, #simform {
         color: #fff;
         font-weight: 400;
         padding: 0.65em 1em;
@@ -46,7 +46,30 @@
     </style>
   </head>
   <body>
+    <div id="simform">
+      <form action="/tgstats" method="POST">
+        {{ define "simform" }}
+	<label for="lookbackDays">Lookback Days</label> <input id="lookbackDays" name="lookbackDays" type="number" min="1" max="14" value="{{ .Lookback }}" />
+	<label for="halfLife">Half life</label> <input id="halfLife" name="halfLife" type="text" value="{{ .HalfLife }}" />
+	<label for="recent">Recent</label> <input id="recent" name="recent" type="text" value="{{ .Recent }}" />
+	<label for="simInterval">Sim Interval</label> <input id="simInterval" name="simInterval" type="text" value="{{ .SimInterval }}" />
+	<label for="scoreStart">Score Start</label> <input id="scoreStart" name="scoreStart" type="datetime-local" value="{{ .ScoreStart }}" />
+	<label for="scoreEnd">Score End</label> <input id="scoreEnd" name="scoreEnd" type="datetime-local" value="{{ .ScoreEnd }}" />
+	<input type="submit" value="Simulate" />
+	{{end}}
+        {{ if .Simulation }}
+	{{ template "simform" dict "Lookback" .Simulation.LookbackDays "HalfLife" .Simulation.HalfLife "Recent" .Simulation.Recent "ScoreStart" (formTime .Simulation.ScoreStart) "ScoreEnd" (formTime .Simulation.ScoreEnd) "SimInterval" .Simulation.SimInterval }}
+	{{ else }}
+	{{ template "simform" dict "Lookback" .Config.LookbackDays "HalfLife" .Config.HalfLife "Recent" .Config.Recent "ScoreStart" (ago "72h") "ScoreEnd" "" "SimInterval" "5m" }}
+        {{ end }}
+      </form>
+    </div>
     <table>
+      {{ if .Simulation }}
+      <tr>
+	      <td colspan="10">Simulating from {{ formTime .Simulation.ScoreStart }} until {{ formTime .Simulation.ScoreEnd }}</td>
+      </tr>
+      {{ end }}
       <tr>
         <th>System</th>
         <th>TG</th>
@@ -64,9 +87,9 @@
       <tr>
 	<td>{{ $tg.Name_2}}</td>
 	<td>{{ $tg.Name}}</td>
-	<td>{{ .ID.Talkgroup }}</td>
-	<td>{{ .Count }}</td>
-	<td>{{ f .RecentCount }}</td>
+	<td>{{  .ID.Talkgroup }}</td>
+	<td>{{ f .Count 0 }}</td>
+	<td>{{ f .RecentCount 0 }}</td>
 	<td>{{ f .Score }}</td>
 	<td>{{ f .Probability }}</td>
 	<td>{{ f .Expectation }}</td>

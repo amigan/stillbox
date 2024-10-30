@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/jsontime"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -51,10 +53,10 @@ type RateLimit struct {
 }
 
 type Alerting struct {
-	Enable       bool          `yaml:"enable"`
-	LookbackDays uint          `yaml:"lookbackDays"`
-	HalfLife     time.Duration `yaml:"halfLife"`
-	Recent       time.Duration `yaml:"recent"`
+	Enable       bool              `yaml:"enable"`
+	LookbackDays uint              `yaml:"lookbackDays"`
+	HalfLife     jsontime.Duration `yaml:"halfLife"`
+	Recent       jsontime.Duration `yaml:"recent"`
 }
 
 func (rl *RateLimit) Verify() bool {

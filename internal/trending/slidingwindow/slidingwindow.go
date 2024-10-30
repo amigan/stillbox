@@ -9,13 +9,6 @@ type Clock interface {
 	Now() time.Time
 }
 
-// defaultClock is used in case no clock is provided to the constructor.
-type defaultClock struct{}
-
-func (c *defaultClock) Now() time.Time {
-	return time.Now()
-}
-
 type slidingWindow struct {
 	buffer []float64
 	length int
@@ -68,7 +61,7 @@ func NewSlidingWindow(os ...option) *slidingWindow {
 		o(&opts)
 	}
 	if opts.clock == nil {
-		opts.clock = &defaultClock{}
+		panic("clock not set")
 	}
 	if opts.step.Nanoseconds() == 0 {
 		opts.step = defaultStep

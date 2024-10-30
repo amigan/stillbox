@@ -1,8 +1,9 @@
 package timeseries
 
 import (
-	"log"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 type level struct {
@@ -53,7 +54,7 @@ func (l *level) increaseAtTime(amount int, time time.Time) {
 	if difference < 0 {
 		// this cannot be negative because we advance before
 		// can at least be 0
-		log.Println("level.increaseTime was called with a time in the future")
+		log.Error().Time("time", time).Msg("level.increaseTime was called with a time in the future")
 	}
 	// l.length-1 because the newest element is always l.length-1 away from oldest
 	steps := (l.length - 1) - int(difference/l.granularity)
