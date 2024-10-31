@@ -1,0 +1,54 @@
+POST /api/call-upload HTTP/1.1
+Connection: Upgrade, HTTP2-Settings
+Content-Length: 5372
+Host: xenon:3050
+HTTP2-Settings: AAEAAEAAAAIAAAAAAAMAAAAAAAQBAAAAAAUAAEAAAAYABgAA
+Upgrade: h2c
+Content-Type: multipart/form-data; boundary=--sdrtrunk-sdrtrunk-sdrtrunk
+User-Agent: sdrtrunk
+
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="key"
+
+2b7c871b-abcd-defa-0123-456789abcdef
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="system"
+
+197
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="dateTime"
+
+1730377177
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="talkgroup"
+
+2
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="source"
+
+3237
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="frequency"
+
+852637500
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="talkgroupLabel"
+
+Wide Area 1 FD/EMS Intercity
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="talkgroupGroup"
+
+Wide Area
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="systemLabel"
+
+RISCON
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="patches"
+
+[]
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; filename="20241031_081939.285.mp3"; name="audio"
+
+ID3dotdotdotLAME3.98.4a
+----sdrtrunk-sdrtrunk-sdrtrunk--

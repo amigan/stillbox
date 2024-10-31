@@ -29,7 +29,7 @@ alerting:
   lookbackDays: 7
   halfLife: 30m
   recent: 2h
-  alertThreshold: 0.5
+  alertThreshold: 0.3
   renotify: 30m
 notify:
   - provider: slackwebhook

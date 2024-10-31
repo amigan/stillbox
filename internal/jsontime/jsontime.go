@@ -101,7 +101,7 @@ func ParseAny(s string, opt ...dateparse.ParserOption) (Time, error) {
 	return Time(t), err
 }
 
-func ParseInLocal(s string, opt ...dateparse.ParserOption) (Time, error) {
-	t, err := dateparse.ParseIn(s, time.Now().Location(), opt...)
+func ParseLocal(s string, opt ...dateparse.ParserOption) (Time, error) {
+	t, err := dateparse.ParseLocal(s, opt...)
 	return Time(t), err
 }

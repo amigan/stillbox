@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
-	"strconv"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/internal/jsontime"
 	"dynatron.me/x/stillbox/internal/trending"
 	cl "dynatron.me/x/stillbox/pkg/calls"
@@ -24,12 +24,12 @@ type Simulation struct {
 	config.Alerting
 
 	// ScoreStart is the time when scoring begins
-	ScoreStart jsontime.Time `json:"scoreStart"`
+	ScoreStart jsontime.Time `json:"scoreStart" yaml:"scoreStart" form:"scoreStart"`
 	// ScoreEnd is the time when the score simulator ends. Left blank, it defaults to time.Now()
-	ScoreEnd jsontime.Time `json:"scoreEnd"`
+	ScoreEnd jsontime.Time `json:"scoreEnd" yaml:"scoreEnd" form:"scoreEnd"`
 
 	// SimInterval is the interval at which the scorer will be called
-	SimInterval jsontime.Duration `json:"simInterval"`
+	SimInterval jsontime.Duration `json:"simInterval" yaml:"simInterval" form:"simInterval"`
 
 	clock    offsetClock `json:"-"`
 	*alerter `json:"-"`
@@ -115,48 +115,12 @@ func (as *alerter) simulateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		err := r.ParseForm()
+		err := forms.Unmarshal(r, s, forms.WithAcceptBlank(), forms.WithParseLocalTime())
 		if err != nil {
-			err = fmt.Errorf("simulate form parse: %w", err)
+			err = fmt.Errorf("simulate unmarshal: %w", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		lbd, err := strconv.Atoi(r.Form["lookbackDays"][0])
-		if err != nil {
-			err = fmt.Errorf("lookbackDays parse: %w", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		s.LookbackDays = uint(lbd)
-		s.HalfLife, err = jsontime.ParseDuration(r.Form["halfLife"][0])
-		if err != nil {
-			err = fmt.Errorf("halfLife parse: %w", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		s.Recent, err = jsontime.ParseDuration(r.Form["recent"][0])
-		if err != nil {
-			err = fmt.Errorf("recent parse: %w", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		s.SimInterval, err = jsontime.ParseDuration(r.Form["simInterval"][0])
-		if err != nil {
-			err = fmt.Errorf("simInterval parse: %w", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		s.ScoreStart, err = jsontime.ParseInLocal(r.Form["scoreStart"][0])
-		if err != nil {
-			err = fmt.Errorf("scoreStart parse: %w", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		s.ScoreEnd, err = jsontime.ParseInLocal(r.Form["scoreEnd"][0])
-		if err != nil {
-			s.ScoreEnd = jsontime.Time{}
-		}
-
 	}
 
 	err := s.verify()
