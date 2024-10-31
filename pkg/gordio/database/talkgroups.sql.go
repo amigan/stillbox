@@ -19,6 +19,17 @@ func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []str
 	return err
 }
 
+const getSystemName = `-- name: GetSystemName :one
+SELECT name FROM systems WHERE id = $1
+`
+
+func (q *Queries) GetSystemName(ctx context.Context, systemID int) (string, error) {
+	row := q.db.QueryRow(ctx, getSystemName, systemID)
+	var name string
+	err := row.Scan(&name)
+	return name, err
+}
+
 const getTalkgroup = `-- name: GetTalkgroup :one
 SELECT id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, notify, weight FROM talkgroups
 WHERE id = systg2id($1, $2)

@@ -21,6 +21,7 @@ type Config struct {
 	Listen    string    `yaml:"listen"`
 	Public    bool      `yaml:"public"`
 	RateLimit RateLimit `yaml:"rateLimit"`
+	Notify    Notify    `yaml:"notify"`
 
 	configPath string
 }
@@ -53,10 +54,27 @@ type RateLimit struct {
 }
 
 type Alerting struct {
-	Enable       bool              `yaml:"enable"`
-	LookbackDays uint              `yaml:"lookbackDays"`
-	HalfLife     jsontime.Duration `yaml:"halfLife"`
-	Recent       jsontime.Duration `yaml:"recent"`
+	Enable         bool               `yaml:"enable"`
+	LookbackDays   uint               `yaml:"lookbackDays"`
+	HalfLife       jsontime.Duration  `yaml:"halfLife"`
+	Recent         jsontime.Duration  `yaml:"recent"`
+	AlertThreshold float64            `yaml:"alertThreshold"`
+	Renotify       *jsontime.Duration `yaml:"renotify,omitempty"`
+}
+
+type Notify []NotifyService
+
+type NotifyService struct {
+	Provider string                 `json:"provider"`
+	Config   map[string]interface{} `json:"config"`
+}
+
+func (n *NotifyService) GetS(k, defaultVal string) string {
+	if v, has := n.Config[k].(string); has {
+		return v
+	}
+
+	return defaultVal
 }
 
 func (rl *RateLimit) Verify() bool {

@@ -50,3 +50,6 @@ TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
 WHERE tgl.system_id = sqlc.arg(system_id) AND tgl.tgid = sqlc.arg(tgid) AND ignored IS NOT TRUE;
+
+-- name: GetSystemName :one
+SELECT name FROM systems WHERE id = sqlc.arg(system_id);

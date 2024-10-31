@@ -18,8 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// A Simulation simulates what happens to the alerter during a specified time
-// period using past data from the database.
+// A Simulation simulates what happens to the alerter during a specified time period using past data from the database.
 type Simulation struct {
 	// normal Alerting config
 	config.Alerting

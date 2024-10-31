@@ -11,6 +11,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 	"dynatron.me/x/stillbox/pkg/gordio/nexus"
+	"dynatron.me/x/stillbox/pkg/gordio/notify"
 	"dynatron.me/x/stillbox/pkg/gordio/sinks"
 	"dynatron.me/x/stillbox/pkg/gordio/sources"
 	"github.com/go-chi/chi/v5"
@@ -22,16 +23,17 @@ import (
 const shutdownTimeout = 5 * time.Second
 
 type Server struct {
-	auth    *auth.Auth
-	conf    *config.Config
-	db      *database.DB
-	r       *chi.Mux
-	sources sources.Sources
-	sinks   sinks.Sinks
-	nex     *nexus.Nexus
-	logger  *Logger
-	alerter alerting.Alerter
-	hup     chan os.Signal
+	auth     *auth.Auth
+	conf     *config.Config
+	db       *database.DB
+	r        *chi.Mux
+	sources  sources.Sources
+	sinks    sinks.Sinks
+	nex      *nexus.Nexus
+	logger   *Logger
+	alerter  alerting.Alerter
+	notifier notify.Notifier
+	hup      chan os.Signal
 }
 
 func New(ctx context.Context, cfg *config.Config) (*Server, error) {
@@ -48,15 +50,23 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 	ctx = database.CtxWithDB(ctx, db)
 
 	r := chi.NewRouter()
+
 	authenticator := auth.NewAuthenticator(cfg.Auth)
+
+	notifier, err := notify.New(cfg.Notify)
+	if err != nil {
+		return nil, err
+	}
+
 	srv := &Server{
-		auth:    authenticator,
-		conf:    cfg,
-		db:      db,
-		r:       r,
-		nex:     nexus.New(),
-		logger:  logger,
-		alerter: alerting.New(cfg.Alerting),
+		auth:     authenticator,
+		conf:     cfg,
+		db:       db,
+		r:        r,
+		nex:      nexus.New(),
+		logger:   logger,
+		alerter:  alerting.New(cfg.Alerting, alerting.WithNotifier(notifier)),
+		notifier: notifier,
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)

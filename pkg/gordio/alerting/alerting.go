@@ -1,25 +1,34 @@
 package alerting
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"net/http"
 	"sort"
+	"strconv"
 	"sync"
+	"text/template"
 	"time"
 
 	cl "dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
+	"dynatron.me/x/stillbox/pkg/gordio/notify"
 	"dynatron.me/x/stillbox/pkg/gordio/sinks"
 
 	"dynatron.me/x/stillbox/internal/timeseries"
 	"dynatron.me/x/stillbox/internal/trending"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 )
 
 const (
 	ScoreThreshold      = -1
 	CountThreshold      = 1.0
+	NotificationSubject = "Stillbox Alert"
+	DefaultRenotify     = 30 * time.Minute
 	alerterTickInterval = time.Minute
 )
 
@@ -34,12 +43,15 @@ type Alerter interface {
 
 type alerter struct {
 	sync.RWMutex
-	clock     timeseries.Clock
-	cfg       config.Alerting
-	scorer    trending.Scorer[cl.Talkgroup]
-	scores    trending.Scores[cl.Talkgroup]
-	lastScore time.Time
-	sim       *Simulation
+	clock       timeseries.Clock
+	cfg         config.Alerting
+	scorer      trending.Scorer[cl.Talkgroup]
+	scores      trending.Scores[cl.Talkgroup]
+	lastScore   time.Time
+	sim         *Simulation
+	notifyCache map[cl.Talkgroup]time.Time
+	renotify    time.Duration
+	notifier    notify.Notifier
 }
 
 type offsetClock time.Duration
@@ -66,6 +78,13 @@ func WithClock(clock timeseries.Clock) AlertOption {
 	}
 }
 
+// WithNotifier sets the notifier
+func WithNotifier(n notify.Notifier) AlertOption {
+	return func(as *alerter) {
+		as.notifier = n
+	}
+}
+
 // New creates a new Alerter using the provided configuration.
 func New(cfg config.Alerting, opts ...AlertOption) Alerter {
 	if !cfg.Enable {
@@ -73,8 +92,14 @@ func New(cfg config.Alerting, opts ...AlertOption) Alerter {
 	}
 
 	as := &alerter{
-		cfg:   cfg,
-		clock: timeseries.DefaultClock,
+		cfg:         cfg,
+		notifyCache: make(map[cl.Talkgroup]time.Time),
+		clock:       timeseries.DefaultClock,
+		renotify:    DefaultRenotify,
+	}
+
+	if cfg.Renotify != nil {
+		as.renotify = cfg.Renotify.Duration()
 	}
 
 	for _, opt := range opts {
@@ -105,12 +130,156 @@ func (as *alerter) Go(ctx context.Context) {
 		select {
 		case now := <-ticker.C:
 			as.score(ctx, now)
+			err := as.notify(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("notify")
+			}
+			as.cleanCache()
 		case <-ctx.Done():
 			ticker.Stop()
 			return
 		}
 	}
 
+}
+
+const notificationTemplStr = `{{ range . -}}
+{{ .TGName }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }} recent calls out of {{ .Score.Count }})
+{{ end }}`
+
+var notificationTemplate = template.Must(template.New("notification").Funcs(funcMap).Parse(notificationTemplStr))
+
+func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
+	as.RLock()
+	defer as.RUnlock()
+	ns := make([]notification, 0, len(as.scores))
+	ctx := r.Context()
+
+	for _, s := range as.scores {
+		n, err := makeNotification(ctx, s)
+		if err != nil {
+			log.Error().Err(err).Msg("test notificaiton")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		ns = append(ns, n)
+	}
+
+	err := as.sendNotification(ctx, ns)
+	if err != nil {
+		log.Error().Err(err).Msg("test notification send")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte("Sent"))
+}
+
+// notify iterates the scores and sends out any necessary notifications
+func (as *alerter) notify(ctx context.Context) error {
+	if as.notifier == nil {
+		return nil
+	}
+
+	now := time.Now()
+
+	as.Lock()
+	defer as.Unlock()
+
+	var notifications []notification
+	for _, s := range as.scores {
+		if s.Score > as.cfg.AlertThreshold {
+			if t, inCache := as.notifyCache[s.ID]; !inCache || now.Sub(t) > as.renotify {
+				as.notifyCache[s.ID] = time.Now()
+				n, err := makeNotification(ctx, s)
+				if err != nil {
+					return err
+				}
+
+				notifications = append(notifications, n)
+			}
+		}
+	}
+
+	if len(notifications) > 0 {
+		return as.sendNotification(ctx, notifications)
+	}
+
+	return nil
+}
+
+type notification struct {
+	TGName string
+	Score  trending.Score[cl.Talkgroup]
+}
+
+// sendNotification renders and sends the notification.
+func (as *alerter) sendNotification(ctx context.Context, n []notification) error {
+	msgBuffer := new(bytes.Buffer)
+
+	err := notificationTemplate.Execute(msgBuffer, n)
+	if err != nil {
+		return fmt.Errorf("notification template render: %w", err)
+	}
+
+	log.Debug().Str("msg", msgBuffer.String()).Msg("notifying")
+
+	return as.notifier.Send(ctx, NotificationSubject, msgBuffer.String())
+}
+
+// makeNotification creates a notification for later rendering by the template.
+// It takes a talkgroup Score as input.
+func makeNotification(ctx context.Context, tg trending.Score[cl.Talkgroup]) (notification, error) {
+	d := notification{
+		Score: tg,
+	}
+
+	db := database.FromCtx(ctx)
+	tgRecord, err := db.GetTalkgroupWithLearned(ctx, int(tg.ID.System), int(tg.ID.Talkgroup))
+	switch err {
+	case nil:
+		if tgRecord.SystemName == "" {
+			tgRecord.SystemName = strconv.Itoa(int(tg.ID.System))
+		}
+
+		if tgRecord.Name != nil {
+			d.TGName = fmt.Sprintf("%s %s", tgRecord.SystemName, *tgRecord.Name)
+		} else {
+			d.TGName = fmt.Sprintf("%s:%d", tgRecord.SystemName, int(tg.ID.Talkgroup))
+		}
+	case pgx.ErrNoRows:
+		system, err := db.GetSystemName(ctx, int(tg.ID.System))
+		switch err {
+		case nil:
+			d.TGName = fmt.Sprintf("%s:%d", system, int(tg.ID.Talkgroup))
+		case pgx.ErrNoRows:
+			d.TGName = fmt.Sprintf("%d:%d", int(tg.ID.System), int(tg.ID.Talkgroup))
+		default:
+			return d, fmt.Errorf("sendNotification get system: %w", err)
+		}
+	default:
+		return d, fmt.Errorf("sendNotification get talkgroup: %w", err)
+	}
+
+	return d, nil
+}
+
+// cleanCache clears the cache of aged-out entries
+func (as *alerter) cleanCache() {
+	if as.notifier == nil {
+		return
+	}
+
+	now := time.Now()
+
+	as.Lock()
+	defer as.Unlock()
+
+	for k, t := range as.notifyCache {
+		if now.Sub(t) > as.renotify {
+			delete(as.notifyCache, k)
+		}
+	}
 }
 
 func (as *alerter) newTimeSeries(id cl.Talkgroup) trending.TimeSeries {
@@ -125,16 +294,17 @@ func (as *alerter) newTimeSeries(id cl.Talkgroup) trending.TimeSeries {
 	return ts
 }
 
-func (as *alerter) startBackfill(ctx context.Context) {
+func (as *alerter) startBackfill(ctx context.Context) error {
 	now := time.Now()
 	since := now.Add(-24 * time.Hour * time.Duration(as.cfg.LookbackDays))
 	log.Debug().Time("since", since).Msg("starting stats backfill")
 	count, err := as.backfill(ctx, since, now)
 	if err != nil {
-		log.Error().Err(err).Msg("backfill failed")
-		return
+		return fmt.Errorf("backfill failed: %w", err)
 	}
 	log.Debug().Int("callsCount", count).Str("in", time.Now().Sub(now).String()).Int("tgCount", as.scorer.Score().Len()).Msg("backfill finished")
+
+	return nil
 }
 
 func (as *alerter) score(ctx context.Context, now time.Time) {

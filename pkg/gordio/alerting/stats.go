@@ -3,16 +3,15 @@ package alerting
 import (
 	_ "embed"
 	"errors"
-	"fmt"
 	"html/template"
 	"net/http"
-	"strconv"
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
 	"dynatron.me/x/stillbox/pkg/gordio/database"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontime"
 	"dynatron.me/x/stillbox/internal/trending"
 
@@ -29,12 +28,7 @@ type stats interface {
 
 var (
 	funcMap = template.FuncMap{
-		"f": func(v float64, places ...int) string {
-			if len(places) > 0 {
-				return fmt.Sprintf("%."+strconv.Itoa(places[0])+"f", v)
-			}
-			return fmt.Sprintf("%.4f", v)
-		},
+		"f": common.FmtFloat,
 		"dict": func(values ...interface{}) (map[string]interface{}, error) {
 			if len(values)%2 != 0 {
 				return nil, errors.New("invalid dict call")
@@ -66,6 +60,7 @@ var (
 func (as *alerter) PrivateRoutes(r chi.Router) {
 	r.Get("/tgstats", as.tgStatsHandler)
 	r.Post("/tgstats", as.simulateHandler)
+	r.Get("/testnotify", as.testNotifyHandler)
 }
 
 func (as *noopAlerter) PrivateRoutes(r chi.Router) {}

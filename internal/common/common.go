@@ -1,6 +1,9 @@
 package common
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/spf13/cobra"
 )
 
@@ -41,4 +44,11 @@ func PtrOrNull[T comparable](val T) *T {
 	}
 
 	return &val
+}
+
+func FmtFloat(v float64, places ...int) string {
+	if len(places) > 0 {
+		return fmt.Sprintf("%."+strconv.Itoa(places[0])+"f", v)
+	}
+	return fmt.Sprintf("%.4f", v)
 }

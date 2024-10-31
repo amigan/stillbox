@@ -29,3 +29,9 @@ alerting:
   lookbackDays: 7
   halfLife: 30m
   recent: 2h
+  alertThreshold: 0.5
+  renotify: 30m
+notify:
+  - provider: slackwebhook
+    config:
+      webhookURL: "http://somewhere"
