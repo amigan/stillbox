@@ -8,3 +8,4 @@ client/calls/
 Session.vim
 *.log
 *.dlv
+cover.out

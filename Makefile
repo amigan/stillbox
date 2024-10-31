@@ -27,3 +27,12 @@ generate:
 
 lint:
 	golangci-lint run
+
+coverage-html:
+	go tool cover -html=cover.out
+
+coverage:
+	go test -coverprofile cover.out
+
+test:
+	go test -v ./...
