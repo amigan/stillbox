@@ -17,7 +17,6 @@ type Notifier interface {
 
 type notifier struct {
 	*notify.Notify
-	cfg []config.NotifyService
 }
 
 func (n *notifier) buildSlackWebhookPayload(cfg config.NotifyService) func(string, string) any {

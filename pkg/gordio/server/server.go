@@ -47,8 +47,6 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	ctx = database.CtxWithDB(ctx, db)
-
 	r := chi.NewRouter()
 
 	authenticator := auth.NewAuthenticator(cfg.Auth)

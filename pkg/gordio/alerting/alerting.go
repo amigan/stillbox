@@ -120,7 +120,10 @@ func New(cfg config.Alerting, opts ...AlertOption) Alerter {
 
 // Go is the alerting loop. It does not start a goroutine.
 func (as *alerter) Go(ctx context.Context) {
-	as.startBackfill(ctx)
+	err := as.startBackfill(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("backfill")
+	}
 
 	as.score(time.Now())
 	ticker := time.NewTicker(alerterTickInterval)
@@ -179,7 +182,7 @@ func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("Sent"))
+	_, _ = w.Write([]byte("Sent"))
 }
 
 // packedScoredTGs gets a packed list of TG IDs for DB use.
@@ -323,9 +326,9 @@ func (as *alerter) startBackfill(ctx context.Context) error {
 	log.Debug().Time("since", since).Msg("starting stats backfill")
 	count, err := as.backfill(ctx, since, now)
 	if err != nil {
-		return fmt.Errorf("backfill failed: %w", err)
+		return err
 	}
-	log.Debug().Int("callsCount", count).Str("in", time.Now().Sub(now).String()).Int("tgCount", as.scorer.Score().Len()).Msg("backfill finished")
+	log.Debug().Int("callsCount", count).Str("in", time.Since(now).String()).Int("tgCount", as.scorer.Score().Len()).Msg("backfill finished")
 
 	return nil
 }

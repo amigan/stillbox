@@ -77,7 +77,10 @@ func (s *Simulation) Simulate(ctx context.Context) trending.Scores[cl.Talkgroup]
 	sinceLookback := time.Time(scoreEnd).Add(-24 * time.Hour * time.Duration(s.LookbackDays))
 
 	// backfill from lookback start until score start
-	s.backfill(ctx, sinceLookback, time.Time(s.ScoreStart))
+	_, err := s.backfill(ctx, sinceLookback, time.Time(s.ScoreStart))
+	if err != nil {
+		log.Error().Err(err).Msg("simulate backfill")
+	}
 
 	// initial score
 	s.scores = s.scorer.Score()
@@ -94,7 +97,10 @@ func (s *Simulation) Simulate(ctx context.Context) trending.Scores[cl.Talkgroup]
 
 	// compute time since score start until now
 	// backfill from scorestart until now. sim is enabled, so scoring will be done by stepClock()
-	s.backfill(ctx, time.Time(s.ScoreStart), scoreEnd)
+	_, err = s.backfill(ctx, time.Time(s.ScoreStart), scoreEnd)
+	if err != nil {
+		log.Error().Err(err).Msg("simulate backfill final")
+	}
 
 	s.lastScore = scoreEnd
 	sort.Sort(s.scores)

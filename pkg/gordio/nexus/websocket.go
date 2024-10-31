@@ -86,7 +86,7 @@ func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (conn *wsConn) Shutdown() {
-	conn.Conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseGoingAway, ""), time.Now().Add(writeWait))
+	_ = conn.Conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseGoingAway, ""), time.Now().Add(writeWait))
 }
 
 func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {

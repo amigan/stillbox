@@ -156,6 +156,7 @@ func RequestLogger() func(next http.Handler) http.Handler {
 	}
 }
 
+//nolint:unused
 const (
 	colorBlack = iota + 30
 	colorRed

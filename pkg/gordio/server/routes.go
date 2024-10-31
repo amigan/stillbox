@@ -77,7 +77,7 @@ func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
 func ServerHeaderAdd(next http.Handler) http.Handler {
 	serverString := version.HttpString("gordio")
 	hfn := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Server", serverString)
+		w.Header().Set(serverHeader, serverString)
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(hfn)

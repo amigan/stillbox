@@ -92,7 +92,7 @@ func pbServerInfo(ctx context.Context) *pb.ServerInfo {
 }
 
 func (c *client) Hello(ctx context.Context) {
-	c.Send(&pb.Message{
+	_ = c.Send(&pb.Message{
 		ToClientMessage: &pb.Message_Hello{
 			Hello: &pb.Hello{
 				ServerInfo: pbServerInfo(ctx),
