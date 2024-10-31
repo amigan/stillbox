@@ -294,7 +294,6 @@ func Unmarshal(r *http.Request, dest any, opt ...Option) error {
 		return ErrNotStruct
 	}
 
-
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded") {
 		err := r.ParseForm()
 		if err != nil {

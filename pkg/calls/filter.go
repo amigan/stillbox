@@ -7,20 +7,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/pb"
 )
 
-type Talkgroup struct {
-	System    uint32
-	Talkgroup uint32
-}
-
-func (c *Call) TalkgroupTuple() Talkgroup {
-	return Talkgroup{System: uint32(c.System), Talkgroup: uint32(c.Talkgroup)}
-}
-
-func (t Talkgroup) Pack() int64 {
-	// P25 system IDs are 12 bits, so we can fit them in a signed 8 byte int (int64, pg INT8)
-	return int64((int64(t.System) << 32) | int64(t.Talkgroup))
-}
-
 type TalkgroupFilter struct {
 	Talkgroups       []Talkgroup `json:"talkgroups,omitempty"`
 	TalkgroupsNot    []Talkgroup `json:"talkgroupsNot,omitempty"`
@@ -59,16 +45,6 @@ func TalkgroupFilterFromPB(ctx context.Context, p *pb.Filter) (*TalkgroupFilter,
 	}
 
 	return tgf, tgf.compile(ctx)
-}
-
-func PackedTGs(tg []Talkgroup) []int64 {
-	s := make([]int64, len(tg))
-
-	for i, v := range tg {
-		s[i] = v.Pack()
-	}
-
-	return s
 }
 
 func (f *TalkgroupFilter) hasTags() bool {

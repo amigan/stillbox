@@ -69,12 +69,7 @@ func (as *alerter) tgStatsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	db := database.FromCtx(ctx)
 
-	packed := make([]int64, 0, len(as.scores))
-	for _, s := range as.scores {
-		packed = append(packed, s.ID.Pack())
-	}
-
-	tgs, err := db.GetTalkgroupsByPackedIDs(ctx, packed)
+	tgs, err := db.GetTalkgroupsByPackedIDs(ctx, as.packedScoredTGs())
 	if err != nil {
 		log.Error().Err(err).Msg("stats TG get failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
