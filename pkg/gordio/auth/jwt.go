@@ -151,7 +151,6 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	if a.allowInsecureCookie(r) {
 		cookie.Secure = false
 		cookie.SameSite = http.SameSiteLaxMode
-		log.Debug().Msg("same site none")
 	}
 
 	if cookie.Secure {
