@@ -54,7 +54,8 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	frequency INTEGER,
 	metadata JSONB,
 	tags TEXT[] NOT NULL DEFAULT '{}',
-	notify BOOLEAN NOT NULL DEFAULT 'true',
+	alert BOOLEAN NOT NULL DEFAULT 'true',
+	alert_config JSONB,
 	weight REAL NOT NULL DEFAULT 1.0
 );
 
@@ -71,7 +72,7 @@ CREATE TABLE IF NOT EXISTS talkgroups_learned(
 );
 
 CREATE TABLE IF NOT EXISTS alerts(
-	id SERIAL PRIMARY KEY,
+	id UUID PRIMARY KEY,
 	time TIMESTAMPTZ NOT NULL, 
 	talkgroup INT8 REFERENCES talkgroups(id) NOT NULL,
 	system_id INT4 REFERENCES systems(id) NOT NULL GENERATED ALWAYS AS (talkgroup >> 32) STORED,

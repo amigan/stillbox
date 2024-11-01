@@ -20,6 +20,8 @@ import (
 	"dynatron.me/x/stillbox/internal/timeseries"
 	"dynatron.me/x/stillbox/internal/trending"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog/log"
 )
 
@@ -42,15 +44,15 @@ type Alerter interface {
 
 type alerter struct {
 	sync.RWMutex
-	clock       timeseries.Clock
-	cfg         config.Alerting
-	scorer      trending.Scorer[cl.Talkgroup]
-	scores      trending.Scores[cl.Talkgroup]
-	lastScore   time.Time
-	sim         *Simulation
-	notifyCache map[cl.Talkgroup]time.Time
-	renotify    time.Duration
-	notifier    notify.Notifier
+	clock      timeseries.Clock
+	cfg        config.Alerting
+	scorer     trending.Scorer[cl.Talkgroup]
+	scores     trending.Scores[cl.Talkgroup]
+	lastScore  time.Time
+	sim        *Simulation
+	alertCache map[cl.Talkgroup]Alert
+	renotify   time.Duration
+	notifier   notify.Notifier
 }
 
 type offsetClock time.Duration
@@ -91,10 +93,10 @@ func New(cfg config.Alerting, opts ...AlertOption) Alerter {
 	}
 
 	as := &alerter{
-		cfg:         cfg,
-		notifyCache: make(map[cl.Talkgroup]time.Time),
-		clock:       timeseries.DefaultClock,
-		renotify:    DefaultRenotify,
+		cfg:        cfg,
+		alertCache: make(map[cl.Talkgroup]Alert),
+		clock:      timeseries.DefaultClock,
+		renotify:   DefaultRenotify,
 	}
 
 	if cfg.Renotify != nil {
@@ -155,7 +157,7 @@ var notificationTemplate = template.Must(template.New("notification").Funcs(func
 func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 	as.RLock()
 	defer as.RUnlock()
-	ns := make([]notification, 0, len(as.scores))
+	alerts := make([]Alert, 0, len(as.scores))
 	ctx := r.Context()
 
 	tgc, err := cl.NewTalkgroupCache(ctx, as.packedScoredTGs())
@@ -166,16 +168,16 @@ func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, s := range as.scores {
-		n, err := makeNotification(tgc, s)
+		a, err := makeAlert(tgc, s)
 		if err != nil {
 			log.Error().Err(err).Msg("test notificaiton")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		ns = append(ns, n)
+		alerts = append(alerts, a)
 	}
 
-	err = as.sendNotification(ctx, ns)
+	err = as.sendNotification(ctx, alerts)
 	if err != nil {
 		log.Error().Err(err).Msg("test notification send")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -211,24 +213,32 @@ func (as *alerter) notify(ctx context.Context) error {
 		return err
 	}
 
-	var notifications []notification
+	db := database.FromCtx(ctx)
+
+	var notifications []Alert
 	for _, s := range as.scores {
 		tgr, has := tgc.TG(s.ID)
 		if has {
-			if !tgr.Notify {
+			if !tgr.Alert {
 				continue
 			}
 			s.Score *= float64(tgr.Weight)
 		}
 		if s.Score > as.cfg.AlertThreshold {
-			if t, inCache := as.notifyCache[s.ID]; !inCache || now.Sub(t) > as.renotify {
-				as.notifyCache[s.ID] = time.Now()
-				n, err := makeNotification(tgc, s)
+			if old, inCache := as.alertCache[s.ID]; !inCache || now.Sub(old.Timestamp) > as.renotify {
+				a, err := makeAlert(tgc, s)
 				if err != nil {
 					return err
 				}
 
-				notifications = append(notifications, n)
+				as.alertCache[s.ID] = a
+
+				err = db.AddAlert(ctx, a.ToAddAlertParams())
+				if err != nil {
+					return err
+				}
+
+				notifications = append(notifications, a)
 			}
 		}
 	}
@@ -240,13 +250,27 @@ func (as *alerter) notify(ctx context.Context) error {
 	return nil
 }
 
-type notification struct {
-	TGName string
-	Score  trending.Score[cl.Talkgroup]
+type Alert struct {
+	ID        uuid.UUID
+	Timestamp time.Time
+	TGName    string
+	Score     trending.Score[cl.Talkgroup]
+	Weight    float32
+}
+
+func (a *Alert) ToAddAlertParams() database.AddAlertParams {
+	f32score := float32(a.Score.Score)
+	return database.AddAlertParams{
+		ID:       a.ID,
+		Time:     pgtype.Timestamptz{Time: a.Timestamp, Valid: true},
+		PackedTg: a.Score.ID.Pack(),
+		Weight:   &a.Weight,
+		Score:    &f32score,
+	}
 }
 
 // sendNotification renders and sends the notification.
-func (as *alerter) sendNotification(ctx context.Context, n []notification) error {
+func (as *alerter) sendNotification(ctx context.Context, n []Alert) error {
 	msgBuffer := new(bytes.Buffer)
 
 	err := notificationTemplate.Execute(msgBuffer, n)
@@ -259,16 +283,20 @@ func (as *alerter) sendNotification(ctx context.Context, n []notification) error
 	return as.notifier.Send(ctx, NotificationSubject, msgBuffer.String())
 }
 
-// makeNotification creates a notification for later rendering by the template.
+// makeAlert creates a notification for later rendering by the template.
 // It takes a talkgroup Score as input.
-func makeNotification(tgs *cl.TalkgroupCache, score trending.Score[cl.Talkgroup]) (notification, error) {
-	d := notification{
-		Score: score,
+func makeAlert(tgs *cl.TalkgroupCache, score trending.Score[cl.Talkgroup]) (Alert, error) {
+	d := Alert{
+		ID:        uuid.New(),
+		Score:     score,
+		Timestamp: time.Now(),
+		Weight:    1.0,
 	}
 
 	tgRecord, has := tgs.TG(score.ID)
 	switch has {
 	case true:
+		d.Weight = tgRecord.Weight
 		if tgRecord.SystemName == "" {
 			tgRecord.SystemName = strconv.Itoa(int(score.ID.System))
 		}
@@ -301,9 +329,9 @@ func (as *alerter) cleanCache() {
 	as.Lock()
 	defer as.Unlock()
 
-	for k, t := range as.notifyCache {
-		if now.Sub(t) > as.renotify {
-			delete(as.notifyCache, k)
+	for k, a := range as.alertCache {
+		if now.Sub(a.Timestamp) > as.renotify {
+			delete(as.alertCache, k)
 		}
 	}
 }

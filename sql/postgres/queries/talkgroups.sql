@@ -37,7 +37,7 @@ WHERE tg.id = ANY($1::INT8[]);
 SELECT
 tg.id, tg.system_id, sys.name system_name, tg.tgid, tg.name,
 tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alpha_tag,
-tg.notify, tg.weight,
+tg.alert, tg.weight, tg.alert_config,
 FALSE learned
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
@@ -46,7 +46,8 @@ UNION
 SELECT
 tgl.id::INT8, tgl.system_id::INT4, sys.name system_name, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END, tgl.alpha_tag, TRUE, 1.0,
+CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END, tgl.alpha_tag,
+TRUE, 1.0, NULL::JSONB,
 TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
@@ -56,7 +57,7 @@ WHERE tgl.system_id = sqlc.arg(system_id) AND tgl.tgid = sqlc.arg(tgid) AND igno
 SELECT
 tg.id, tg.system_id, sys.name system_name, tg.tgid, tg.name,
 tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alpha_tag,
-tg.notify, tg.weight,
+tg.alert, tg.weight, tg.alert_config,
 FALSE learned
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
@@ -65,7 +66,8 @@ UNION
 SELECT
 tgl.id::INT8, tgl.system_id::INT4, sys.name system_name, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END, tgl.alpha_tag, TRUE, 1.0,
+CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END, tgl.alpha_tag,
+TRUE, 1.0, NULL::JSONB,
 TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id

@@ -12,7 +12,7 @@ import (
 )
 
 type Alert struct {
-	ID        int32              `json:"id"`
+	ID        uuid.UUID          `json:"id"`
 	Time      pgtype.Timestamptz `json:"time"`
 	Talkgroup int64              `json:"talkgroup"`
 	SystemID  int32              `json:"system_id"`
@@ -80,17 +80,18 @@ type System struct {
 }
 
 type Talkgroup struct {
-	ID        int64    `json:"id"`
-	SystemID  int32    `json:"system_id"`
-	Tgid      int32    `json:"tgid"`
-	Name      *string  `json:"name"`
-	AlphaTag  *string  `json:"alpha_tag"`
-	TgGroup   *string  `json:"tg_group"`
-	Frequency *int32   `json:"frequency"`
-	Metadata  []byte   `json:"metadata"`
-	Tags      []string `json:"tags"`
-	Notify    bool     `json:"notify"`
-	Weight    float32  `json:"weight"`
+	ID          int64    `json:"id"`
+	SystemID    int32    `json:"system_id"`
+	Tgid        int32    `json:"tgid"`
+	Name        *string  `json:"name"`
+	AlphaTag    *string  `json:"alpha_tag"`
+	TgGroup     *string  `json:"tg_group"`
+	Frequency   *int32   `json:"frequency"`
+	Metadata    []byte   `json:"metadata"`
+	Tags        []string `json:"tags"`
+	Alert       bool     `json:"alert"`
+	AlertConfig []byte   `json:"alert_config"`
+	Weight      float32  `json:"weight"`
 }
 
 type TalkgroupsLearned struct {
