@@ -58,10 +58,12 @@ func (s *Simulation) stepClock(t time.Time) {
 }
 
 // Simulate begins the simulation using the DB handle from ctx. It returns final scores.
-func (s *Simulation) Simulate(ctx context.Context) trending.Scores[cl.Talkgroup] {
+func (s *Simulation) Simulate(ctx context.Context) (trending.Scores[cl.Talkgroup], error) {
 	now := time.Now()
+	tgc := cl.NewTalkgroupCache()
+
 	s.Enable = true
-	s.alerter = New(s.Alerting, WithClock(&s.clock)).(*alerter)
+	s.alerter = New(s.Alerting, tgc, WithClock(&s.clock)).(*alerter)
 	if time.Time(s.ScoreEnd).IsZero() {
 		s.ScoreEnd = jsontime.Time(now)
 	}
@@ -79,7 +81,7 @@ func (s *Simulation) Simulate(ctx context.Context) trending.Scores[cl.Talkgroup]
 	// backfill from lookback start until score start
 	_, err := s.backfill(ctx, sinceLookback, time.Time(s.ScoreStart))
 	if err != nil {
-		log.Error().Err(err).Msg("simulate backfill")
+		return nil, fmt.Errorf("simulate backfill: %w", err)
 	}
 
 	// initial score
@@ -99,13 +101,13 @@ func (s *Simulation) Simulate(ctx context.Context) trending.Scores[cl.Talkgroup]
 	// backfill from scorestart until now. sim is enabled, so scoring will be done by stepClock()
 	_, err = s.backfill(ctx, time.Time(s.ScoreStart), scoreEnd)
 	if err != nil {
-		log.Error().Err(err).Msg("simulate backfill final")
+		return nil, fmt.Errorf("simulate backfill final: %w", err)
 	}
 
 	s.lastScore = scoreEnd
 	sort.Sort(s.scores)
 
-	return s.scores
+	return s.scores, nil
 }
 
 // simulateHandler is the POST endpoint handler.
@@ -136,6 +138,11 @@ func (as *alerter) simulateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.Simulate(ctx)
+	_, err = s.Simulate(ctx)
+	if err != nil {
+		err = fmt.Errorf("simulate: %w", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	s.tgStatsHandler(w, r)
 }

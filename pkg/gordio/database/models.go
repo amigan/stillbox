@@ -19,6 +19,8 @@ type Alert struct {
 	Tgid      int32              `json:"tgid"`
 	Weight    *float32           `json:"weight"`
 	Score     *float32           `json:"score"`
+	OrigScore *float32           `json:"orig_score"`
+	Notified  bool               `json:"notified"`
 	Metadata  []byte             `json:"metadata"`
 }
 

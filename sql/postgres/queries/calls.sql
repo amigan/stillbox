@@ -24,7 +24,7 @@ RETURNING id;
 UPDATE calls SET transcript = $2 WHERE id = $1;
 
 -- name: AddAlert :exec
-INSERT INTO alerts (id, time, talkgroup, weight, score, metadata)
+INSERT INTO alerts (id, time, talkgroup, weight, score, orig_score, notified, metadata)
 VALUES
 (
 	sqlc.arg(id),
@@ -32,6 +32,8 @@ VALUES
 	sqlc.arg(packed_tg),
 	sqlc.arg(weight),
 	sqlc.arg(score),
+	sqlc.arg(orig_score),
+	sqlc.arg(notified),
 	sqlc.arg(metadata)
 );
 
