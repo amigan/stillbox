@@ -277,13 +277,19 @@ type Alert struct {
 func (a *Alert) ToAddAlertParams() database.AddAlertParams {
 	f32score := float32(a.Score.Score)
 	f32origscore := float32(a.OrigScore)
+
+	var origScore *float32
+	if a.Score.Score != a.OrigScore {
+		origScore = &f32origscore
+	}
+
 	return database.AddAlertParams{
 		ID:        a.ID,
 		Time:      pgtype.Timestamptz{Time: a.Timestamp, Valid: true},
 		PackedTg:  a.Score.ID.Pack(),
 		Weight:    &a.Weight,
 		Score:     &f32score,
-		OrigScore: &f32origscore,
+		OrigScore: origScore,
 	}
 }
 
