@@ -63,6 +63,9 @@ func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
 }
 
 func (a *Auth) initJWT() {
+	if string(a.cfg.JWTSecret) == "super secret string" {
+		log.Fatal().Msg("JWT secret is the default!")
+	}
 	a.jwt = jwtauth.New("HS256", []byte(a.cfg.JWTSecret), nil)
 }
 
