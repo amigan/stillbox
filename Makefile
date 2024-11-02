@@ -1,6 +1,6 @@
 VPKG=dynatron.me/x/stillbox/internal/version
 VER!=git describe --tags --always --dirty
-BUILDDATE!=date '+%Y-%m-%e'
+BUILDDATE!=date '+%Y%m%d'
 LDFLAGS=-ldflags="-X '${VPKG}.Version=${VER}' -X '${VPKG}.Built=${BUILDDATE}'"
 
 all: checkcalls

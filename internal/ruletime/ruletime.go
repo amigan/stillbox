@@ -23,6 +23,15 @@ type coversOptions struct {
 
 type CoversOption func(*coversOptions)
 
+// Must is for testing.
+func Must(rt RuleTime, err error) RuleTime {
+	if err != nil {
+		panic(err)
+	}
+
+	return rt
+}
+
 // WithLocation makes Covers use the provided *time.Location
 func WithLocation(loc *time.Location) CoversOption {
 	return func(o *coversOptions) {
@@ -53,11 +62,7 @@ func (rt *RuleTime) Covers(t time.Time, opts ...CoversOption) bool {
 		}
 	}
 
-	if t.After(start) && t.Before(end) {
-		return true
-	}
-
-	return false
+	return t.After(start) && t.Before(end)
 }
 
 // CoversNow returns whether the RuleTime covers this instant.

@@ -2,8 +2,11 @@ package calls
 
 import (
 	"context"
+	"fmt"
 
 	"dynatron.me/x/stillbox/pkg/gordio/database"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Talkgroup struct {
@@ -27,6 +30,10 @@ func (t Talkgroup) Pack() int64 {
 	return int64((int64(t.System) << 32) | int64(t.Talkgroup))
 }
 
+func (t Talkgroup) String() string {
+	return fmt.Sprintf("%d:%d", t.System, t.Talkgroup)
+}
+
 func PackedTGs(tg []Talkgroup) []int64 {
 	s := make([]int64, len(tg))
 
@@ -39,14 +46,16 @@ func PackedTGs(tg []Talkgroup) []int64 {
 
 type tgMap map[Talkgroup]database.GetTalkgroupWithLearnedByPackedIDsRow
 type TalkgroupCache struct {
+	AlertConfig
 	tgs     tgMap
 	systems map[int32]string
 }
 
 func NewTalkgroupCache(ctx context.Context, packedTgs []int64) (*TalkgroupCache, error) {
 	tgc := &TalkgroupCache{
-		tgs:     make(tgMap),
-		systems: make(map[int32]string),
+		tgs:         make(tgMap),
+		systems:     make(map[int32]string),
+		AlertConfig: make(AlertConfig),
 	}
 
 	return tgc, tgc.LoadTGs(ctx, packedTgs)
@@ -59,8 +68,14 @@ func (t *TalkgroupCache) LoadTGs(ctx context.Context, packedTgs []int64) error {
 	}
 
 	for _, rec := range tgRecords {
-		t.tgs[TG(rec.SystemID, rec.Tgid)] = rec
+		tg := TG(rec.SystemID, rec.Tgid)
+		t.tgs[tg] = rec
 		t.systems[rec.SystemID] = rec.SystemName
+
+		err := t.AlertConfig.AddAlertConfig(tg, rec.AlertConfig)
+		if err != nil {
+			log.Error().Err(err).Msg("add alert config fail")
+		}
 	}
 
 	return nil

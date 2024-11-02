@@ -186,6 +186,18 @@ func TestCovers(t *testing.T) {
 			opts:     []ruletime.CoversOption{ruletime.WithLocation(tz("America/Chicago"))},
 		},
 		{
+			name:     "normal",
+			timespec: "1:00+5h",
+			t:        tM("17:07:00"),
+			covers:   false,
+		},
+		{
+			name:     "normal",
+			timespec: "1:00+5h",
+			t:        tM("3:07:00"),
+			covers:   true,
+		},
+		{
 			name:     "24h duration",
 			timespec: "15:00+24h",
 			t:        tM("3:07:00"),

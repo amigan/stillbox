@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS alerts(
 	tgid INT4 NOT NULL GENERATED ALWAYS AS (talkgroup & x'ffffffff'::BIGINT) STORED,
 	weight REAL,
 	score REAL,
+	orig_score REAL,
 	metadata JSONB
 );
 
