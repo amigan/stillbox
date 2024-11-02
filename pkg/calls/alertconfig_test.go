@@ -126,7 +126,7 @@ func TestAlertConfig(t *testing.T) {
 				ID:    tc.tg,
 				Score: tc.origScore,
 			}
-			assert.Equal(t, tc.expectScore, toFixed(ac.ScaleScore(cs, tc.t), 5))
+			assert.Equal(t, tc.expectScore, toFixed(ac.ApplyAlertRules(cs, tc.t), 5))
 		})
 	}
 }

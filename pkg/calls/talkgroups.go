@@ -55,7 +55,7 @@ type tgMap map[Talkgroup]database.GetTalkgroupWithLearnedByPackedIDsRow
 type TalkgroupCache interface {
 	TG(ctx context.Context, tg Talkgroup) (database.GetTalkgroupWithLearnedByPackedIDsRow, bool)
 	SystemName(ctx context.Context, id int) (string, bool)
-	ScaleScore(score trending.Score[Talkgroup], t time.Time, coversOpts ...ruletime.CoversOption) float64
+	ApplyAlertRules(score trending.Score[Talkgroup], t time.Time, coversOpts ...ruletime.CoversOption) float64
 	Hint(ctx context.Context, tgs []Talkgroup) error
 	Load(ctx context.Context, tgs []int64) error
 	Invalidate()

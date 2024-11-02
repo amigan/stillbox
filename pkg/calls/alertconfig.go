@@ -30,7 +30,7 @@ func (ac AlertConfig) AddAlertConfig(tg Talkgroup, confBytes []byte) error {
 	return nil
 }
 
-func (ac AlertConfig) ScaleScore(score trending.Score[Talkgroup], t time.Time, coversOpts ...ruletime.CoversOption) float64 {
+func (ac AlertConfig) ApplyAlertRules(score trending.Score[Talkgroup], t time.Time, coversOpts ...ruletime.CoversOption) float64 {
 	s, has := ac[score.ID]
 	if !has {
 		return score.Score

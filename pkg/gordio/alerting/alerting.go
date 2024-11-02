@@ -177,7 +177,7 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Al
 
 		if s.Score > as.cfg.AlertThreshold || testMode {
 			if old, inCache := as.alertCache[s.ID]; !inCache || now.Sub(old.Timestamp) > as.renotify {
-				s.Score = as.tgCache.ScaleScore(s, now)
+				s.Score = as.tgCache.ApplyAlertRules(s, now)
 				a, err := as.makeAlert(ctx, s, origScore)
 				if err != nil {
 					return nil, fmt.Errorf("makeAlert: %w", err)
