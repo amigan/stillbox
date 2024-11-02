@@ -173,14 +173,18 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Al
 				continue
 			}
 			s.Score *= float64(tgr.Weight)
-			s.Score = as.tgCache.ScaleScore(s, now)
 		}
 
 		if s.Score > as.cfg.AlertThreshold || testMode {
 			if old, inCache := as.alertCache[s.ID]; !inCache || now.Sub(old.Timestamp) > as.renotify {
+				s.Score = as.tgCache.ScaleScore(s, now)
 				a, err := as.makeAlert(ctx, s, origScore)
 				if err != nil {
 					return nil, fmt.Errorf("makeAlert: %w", err)
+				}
+
+				if s.Score < as.cfg.AlertThreshold {
+					a.Suppressed = true
 				}
 
 				as.alertCache[s.ID] = a
@@ -192,7 +196,9 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Al
 					}
 				}
 
-				notifications = append(notifications, a)
+				if !a.Suppressed {
+					notifications = append(notifications, a)
+				}
 			}
 		}
 	}
@@ -266,12 +272,13 @@ func (as *alerter) notify(ctx context.Context) error {
 }
 
 type Alert struct {
-	ID        uuid.UUID
-	Timestamp time.Time
-	TGName    string
-	Score     trending.Score[cl.Talkgroup]
-	OrigScore float64
-	Weight    float32
+	ID         uuid.UUID
+	Timestamp  time.Time
+	TGName     string
+	Score      trending.Score[cl.Talkgroup]
+	OrigScore  float64
+	Weight     float32
+	Suppressed bool
 }
 
 func (a *Alert) ToAddAlertParams() database.AddAlertParams {
@@ -290,6 +297,7 @@ func (a *Alert) ToAddAlertParams() database.AddAlertParams {
 		Weight:    &a.Weight,
 		Score:     &f32score,
 		OrigScore: origScore,
+		Notified:  !a.Suppressed,
 	}
 }
 

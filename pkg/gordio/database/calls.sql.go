@@ -13,7 +13,7 @@ import (
 )
 
 const addAlert = `-- name: AddAlert :exec
-INSERT INTO alerts (id, time, talkgroup, weight, score, orig_score, metadata)
+INSERT INTO alerts (id, time, talkgroup, weight, score, orig_score, notified, metadata)
 VALUES
 (
 	$1,
@@ -22,7 +22,8 @@ VALUES
 	$4,
 	$5,
 	$6,
-	$7
+	$7,
+	$8
 )
 `
 
@@ -33,6 +34,7 @@ type AddAlertParams struct {
 	Weight    *float32           `json:"weight"`
 	Score     *float32           `json:"score"`
 	OrigScore *float32           `json:"orig_score"`
+	Notified  bool               `json:"notified"`
 	Metadata  []byte             `json:"metadata"`
 }
 
@@ -44,6 +46,7 @@ func (q *Queries) AddAlert(ctx context.Context, arg AddAlertParams) error {
 		arg.Weight,
 		arg.Score,
 		arg.OrigScore,
+		arg.Notified,
 		arg.Metadata,
 	)
 	return err

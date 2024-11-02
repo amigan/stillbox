@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS alerts(
 	weight REAL,
 	score REAL,
 	orig_score REAL,
+	notified BOOLEAN NOT NULL DEFAULT 'false',
 	metadata JSONB
 );
 
