@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/gordio/alerting"
 	"dynatron.me/x/stillbox/pkg/gordio/auth"
 	"dynatron.me/x/stillbox/pkg/gordio/config"
@@ -34,6 +35,7 @@ type Server struct {
 	alerter  alerting.Alerter
 	notifier notify.Notifier
 	hup      chan os.Signal
+	tgCache  calls.TalkgroupCache
 }
 
 func New(ctx context.Context, cfg *config.Config) (*Server, error) {
@@ -56,6 +58,8 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
+	tgCache := calls.NewTalkgroupCache()
+
 	srv := &Server{
 		auth:     authenticator,
 		conf:     cfg,
@@ -63,8 +67,9 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		r:        r,
 		nex:      nexus.New(),
 		logger:   logger,
-		alerter:  alerting.New(cfg.Alerting, alerting.WithNotifier(notifier)),
+		alerter:  alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
 		notifier: notifier,
+		tgCache:  tgCache,
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)
