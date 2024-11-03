@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/audio"
-	"dynatron.me/x/stillbox/pkg/gordio/auth"
+	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	"google.golang.org/protobuf/types/known/timestamppb"

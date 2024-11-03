@@ -1,0 +1,29 @@
+package sinks
+
+import (
+	"context"
+
+	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/nexus"
+)
+
+type NexusSink struct {
+	nexus *nexus.Nexus
+}
+
+func NewNexusSink(nexus *nexus.Nexus) *NexusSink {
+	ns := &NexusSink{
+		nexus: nexus,
+	}
+
+	return ns
+}
+
+func (ns *NexusSink) SinkType() string {
+	return "nexus"
+}
+
+func (ns *NexusSink) Call(ctx context.Context, call *calls.Call) error {
+	ns.nexus.BroadcastCall(call)
+	return nil
+}

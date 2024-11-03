@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/gordio/database"
+	"dynatron.me/x/stillbox/pkg/database"
 
 	"dynatron.me/x/stillbox/internal/ruletime"
 	"dynatron.me/x/stillbox/internal/trending"

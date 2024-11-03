@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const AppName = "stillbox"
+
 const (
 	TimeFormat = "Jan 2 15:04:05"
 )

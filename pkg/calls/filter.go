@@ -3,7 +3,7 @@ package calls
 import (
 	"context"
 
-	"dynatron.me/x/stillbox/pkg/gordio/database"
+	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/pb"
 )
 

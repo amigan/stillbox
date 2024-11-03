@@ -4,6 +4,7 @@ mydb.sql
 client/calls/
 !client/calls/.gitkeep
 /gordio
+/stillbox
 /calls
 Session.vim
 *.log
