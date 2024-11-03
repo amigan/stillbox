@@ -143,7 +143,7 @@ func (t *cache) Load(ctx context.Context, tgs []int64) error {
 	return nil
 }
 
-var ErrNoTG = errors.New("talkgroup not found")
+var ErrNotFound = errors.New("talkgroup not found")
 
 func (t *cache) TG(ctx context.Context, tg ID) (Talkgroup, error) {
 	t.RLock()
@@ -158,20 +158,20 @@ func (t *cache) TG(ctx context.Context, tg ID) (Talkgroup, error) {
 	switch err {
 	case nil:
 	case pgx.ErrNoRows:
-		return Talkgroup{}, ErrNoTG
+		return Talkgroup{}, ErrNotFound
 	default:
 		log.Error().Err(err).Msg("TG() cache add db get")
-		return Talkgroup{}, errors.Join(ErrNoTG, err)
+		return Talkgroup{}, errors.Join(ErrNotFound, err)
 	}
 
 	if len(recs) < 1 {
-		return Talkgroup{}, ErrNoTG
+		return Talkgroup{}, ErrNotFound
 	}
 
 	err = t.add(rowToTalkgroup(recs[0]))
 	if err != nil {
 		log.Error().Err(err).Msg("TG() cache add")
-		return rowToTalkgroup(recs[0]), errors.Join(ErrNoTG, err)
+		return rowToTalkgroup(recs[0]), errors.Join(ErrNotFound, err)
 	}
 
 	return rowToTalkgroup(recs[0]), nil
