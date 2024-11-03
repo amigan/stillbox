@@ -209,8 +209,6 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Al
 }
 
 func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
-	as.RLock()
-	defer as.RUnlock()
 	alerts := make([]Alert, 0, len(as.scores))
 	ctx := r.Context()
 
@@ -256,9 +254,6 @@ func (as *alerter) notify(ctx context.Context) error {
 	if as.notifier == nil {
 		return nil
 	}
-
-	as.Lock()
-	defer as.Unlock()
 
 	notifications, err := as.eval(ctx, time.Now(), false)
 	if err != nil {

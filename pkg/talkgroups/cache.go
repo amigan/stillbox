@@ -59,7 +59,7 @@ func (t *cache) Invalidate() {
 	defer t.Unlock()
 	clear(t.tgs)
 	clear(t.systems)
-	clear(t.AlertConfig)
+	t.AlertConfig.Invalidate()
 }
 
 type cache struct {
@@ -74,7 +74,7 @@ func NewCache() Store {
 	tgc := &cache{
 		tgs:         make(tgMap),
 		systems:     make(map[int32]string),
-		AlertConfig: make(AlertConfig),
+		AlertConfig: NewAlertConfig(),
 	}
 
 	return tgc
@@ -108,11 +108,14 @@ func (t *cache) Hint(ctx context.Context, tgs []ID) error {
 }
 
 func (t *cache) add(rec Talkgroup) error {
+	t.Lock()
+	defer t.Unlock()
+
 	tg := TG(rec.System.ID, int(rec.Talkgroup.Tgid))
 	t.tgs[tg] = rec
 	t.systems[int32(rec.System.ID)] = rec.System.Name
 
-	return t.AlertConfig.AddAlertConfig(tg, rec.Talkgroup.AlertConfig)
+	return t.AlertConfig.UnmarshalTGRules(tg, rec.Talkgroup.AlertConfig)
 }
 
 func rowToTalkgroup(r database.GetTalkgroupWithLearnedByPackedIDsRow) Talkgroup {
@@ -128,9 +131,6 @@ func (t *cache) Load(ctx context.Context, tgs []int64) error {
 	if err != nil {
 		return err
 	}
-
-	t.Lock()
-	defer t.Unlock()
 
 	for _, rec := range tgRecords {
 		err := t.add(rowToTalkgroup(rec))
@@ -168,8 +168,6 @@ func (t *cache) TG(ctx context.Context, tg ID) (Talkgroup, error) {
 		return Talkgroup{}, ErrNoTG
 	}
 
-	t.Lock()
-	defer t.Unlock()
 	err = t.add(rowToTalkgroup(recs[0]))
 	if err != nil {
 		log.Error().Err(err).Msg("TG() cache add")
@@ -180,13 +178,19 @@ func (t *cache) TG(ctx context.Context, tg ID) (Talkgroup, error) {
 }
 
 func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) {
+	t.RLock()
 	n, has := t.systems[int32(id)]
+	t.RUnlock()
 
 	if !has {
 		sys, err := database.FromCtx(ctx).GetSystemName(ctx, id)
 		if err != nil {
 			return "", false
 		}
+
+		t.Lock()
+		t.systems[int32(id)] = sys
+		t.Unlock()
 
 		return sys, true
 	}

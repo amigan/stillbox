@@ -15,7 +15,7 @@ import (
 )
 
 func TestAlertConfig(t *testing.T) {
-	ac := make(talkgroups.AlertConfig)
+	ac := talkgroups.NewAlertConfig()
 	parseTests := []struct {
 		name      string
 		tg        talkgroups.ID
@@ -57,12 +57,12 @@ func TestAlertConfig(t *testing.T) {
 
 	for _, tc := range parseTests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ac.AddAlertConfig(tc.tg, []byte(tc.conf))
+			err := ac.UnmarshalTGRules(tc.tg, []byte(tc.conf))
 			if tc.expectErr != nil {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.expectErr.Error())
 			} else {
-				assert.Equal(t, tc.compare, ac[tc.tg])
+				assert.Equal(t, tc.compare, ac.GetRules(tc.tg))
 			}
 		})
 	}
