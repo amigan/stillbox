@@ -11,8 +11,8 @@ import (
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/internal/jsontime"
 
-	"dynatron.me/x/stillbox/pkg/gordio/alerting"
-	"dynatron.me/x/stillbox/pkg/gordio/config"
+	"dynatron.me/x/stillbox/pkg/alerting"
+	"dynatron.me/x/stillbox/pkg/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
