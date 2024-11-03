@@ -11,11 +11,12 @@ import (
 	"text/template"
 	"time"
 
-	cl "dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/sinks"
+	talkgroups "dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"dynatron.me/x/stillbox/internal/timeseries"
 	"dynatron.me/x/stillbox/internal/trending"
@@ -46,14 +47,14 @@ type alerter struct {
 	sync.RWMutex
 	clock      timeseries.Clock
 	cfg        config.Alerting
-	scorer     trending.Scorer[cl.Talkgroup]
-	scores     trending.Scores[cl.Talkgroup]
+	scorer     trending.Scorer[talkgroups.ID]
+	scores     trending.Scores[talkgroups.ID]
 	lastScore  time.Time
 	sim        *Simulation
-	alertCache map[cl.Talkgroup]Alert
+	alertCache map[talkgroups.ID]Alert
 	renotify   time.Duration
 	notifier   notify.Notifier
-	tgCache    cl.TalkgroupCache
+	tgCache    talkgroups.Store
 }
 
 type offsetClock time.Duration
@@ -88,14 +89,14 @@ func WithNotifier(n notify.Notifier) AlertOption {
 }
 
 // New creates a new Alerter using the provided configuration.
-func New(cfg config.Alerting, tgCache cl.TalkgroupCache, opts ...AlertOption) Alerter {
+func New(cfg config.Alerting, tgCache talkgroups.Store, opts ...AlertOption) Alerter {
 	if !cfg.Enable {
 		return &noopAlerter{}
 	}
 
 	as := &alerter{
 		cfg:        cfg,
-		alertCache: make(map[cl.Talkgroup]Alert),
+		alertCache: make(map[talkgroups.ID]Alert),
 		clock:      timeseries.DefaultClock,
 		renotify:   DefaultRenotify,
 		tgCache:    tgCache,
@@ -111,12 +112,12 @@ func New(cfg config.Alerting, tgCache cl.TalkgroupCache, opts ...AlertOption) Al
 
 	as.scorer = trending.NewScorer(
 		trending.WithTimeSeries(as.newTimeSeries),
-		trending.WithStorageDuration[cl.Talkgroup](time.Hour*24*time.Duration(cfg.LookbackDays)),
-		trending.WithRecentDuration[cl.Talkgroup](time.Duration(cfg.Recent)),
-		trending.WithHalfLife[cl.Talkgroup](time.Duration(cfg.HalfLife)),
-		trending.WithScoreThreshold[cl.Talkgroup](ScoreThreshold),
-		trending.WithCountThreshold[cl.Talkgroup](CountThreshold),
-		trending.WithClock[cl.Talkgroup](as.clock),
+		trending.WithStorageDuration[talkgroups.ID](time.Hour*24*time.Duration(cfg.LookbackDays)),
+		trending.WithRecentDuration[talkgroups.ID](time.Duration(cfg.Recent)),
+		trending.WithHalfLife[talkgroups.ID](time.Duration(cfg.HalfLife)),
+		trending.WithScoreThreshold[talkgroups.ID](ScoreThreshold),
+		trending.WithCountThreshold[talkgroups.ID](CountThreshold),
+		trending.WithClock[talkgroups.ID](as.clock),
 	)
 
 	return as
@@ -231,8 +232,8 @@ func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // scoredTGs gets a list of TGs.
-func (as *alerter) scoredTGs() []cl.Talkgroup {
-	tgs := make([]cl.Talkgroup, 0, len(as.scores))
+func (as *alerter) scoredTGs() []talkgroups.ID {
+	tgs := make([]talkgroups.ID, 0, len(as.scores))
 	for _, s := range as.scores {
 		tgs = append(tgs, s.ID)
 	}
@@ -275,7 +276,7 @@ type Alert struct {
 	ID         uuid.UUID
 	Timestamp  time.Time
 	TGName     string
-	Score      trending.Score[cl.Talkgroup]
+	Score      trending.Score[talkgroups.ID]
 	OrigScore  float64
 	Weight     float32
 	Suppressed bool
@@ -317,7 +318,7 @@ func (as *alerter) sendNotification(ctx context.Context, n []Alert) error {
 
 // makeAlert creates a notification for later rendering by the template.
 // It takes a talkgroup Score as input.
-func (as *alerter) makeAlert(ctx context.Context, score trending.Score[cl.Talkgroup], origScore float64) (Alert, error) {
+func (as *alerter) makeAlert(ctx context.Context, score trending.Score[talkgroups.ID], origScore float64) (Alert, error) {
 	d := Alert{
 		ID:        uuid.New(),
 		Score:     score,
@@ -369,7 +370,7 @@ func (as *alerter) cleanCache() {
 	}
 }
 
-func (as *alerter) newTimeSeries(id cl.Talkgroup) trending.TimeSeries {
+func (as *alerter) newTimeSeries(id talkgroups.ID) trending.TimeSeries {
 	ts, _ := timeseries.NewTimeSeries(timeseries.WithGranularities(
 		[]timeseries.Granularity{
 			{Granularity: time.Second, Count: 60},
@@ -417,7 +418,7 @@ func (as *alerter) backfill(ctx context.Context, since time.Time, until time.Tim
 	defer as.Unlock()
 
 	for rows.Next() {
-		var tg cl.Talkgroup
+		var tg talkgroups.ID
 		var callDate time.Time
 		if err := rows.Scan(&tg.System, &tg.Talkgroup, &callDate); err != nil {
 			return count, err
@@ -440,7 +441,7 @@ func (as *alerter) SinkType() string {
 	return "alerting"
 }
 
-func (as *alerter) Call(ctx context.Context, call *cl.Call) error {
+func (as *alerter) Call(ctx context.Context, call *calls.Call) error {
 	as.Lock()
 	defer as.Unlock()
 	as.scorer.AddEvent(call.TalkgroupTuple(), call.DateTime)
@@ -453,7 +454,7 @@ func (*alerter) Enabled() bool { return true }
 // noopAlerter is used when alerting is disabled.
 type noopAlerter struct{}
 
-func (*noopAlerter) SinkType() string                         { return "noopAlerter" }
-func (*noopAlerter) Call(_ context.Context, _ *cl.Call) error { return nil }
-func (*noopAlerter) Go(_ context.Context)                     {}
-func (*noopAlerter) Enabled() bool                            { return false }
+func (*noopAlerter) SinkType() string                            { return "noopAlerter" }
+func (*noopAlerter) Call(_ context.Context, _ *calls.Call) error { return nil }
+func (*noopAlerter) Go(_ context.Context)                        {}
+func (*noopAlerter) Enabled() bool                               { return false }

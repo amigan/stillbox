@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontime"
@@ -76,14 +76,14 @@ func (as *alerter) tgStatsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tgMap := make(map[calls.Talkgroup]database.GetTalkgroupsByPackedIDsRow, len(tgs))
+	tgMap := make(map[talkgroups.ID]database.GetTalkgroupsByPackedIDsRow, len(tgs))
 	for _, t := range tgs {
-		tgMap[calls.Talkgroup{System: uint32(t.SystemID), Talkgroup: uint32(t.ID)}] = t
+		tgMap[talkgroups.ID{System: uint32(t.SystemID), Talkgroup: uint32(t.ID)}] = t
 	}
 
 	renderData := struct {
-		TGs        map[calls.Talkgroup]database.GetTalkgroupsByPackedIDsRow
-		Scores     trending.Scores[calls.Talkgroup]
+		TGs        map[talkgroups.ID]database.GetTalkgroupsByPackedIDsRow
+		Scores     trending.Scores[talkgroups.ID]
 		LastScore  time.Time
 		Simulation *Simulation
 		Config     config.Alerting

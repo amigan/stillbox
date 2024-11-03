@@ -10,13 +10,13 @@ import (
 )
 
 type TalkgroupFilter struct {
-	Talkgroups       []tgs.Talkgroup `json:"talkgroups,omitempty"`
-	TalkgroupsNot    []tgs.Talkgroup `json:"talkgroupsNot,omitempty"`
-	TalkgroupTagsAll []string    `json:"talkgroupTagsAll,omitempty"`
-	TalkgroupTagsAny []string    `json:"talkgroupTagsAny,omitempty"`
-	TalkgroupTagsNot []string    `json:"talkgroupTagsNot,omitempty"`
+	Talkgroups       []tgs.ID `json:"talkgroups,omitempty"`
+	TalkgroupsNot    []tgs.ID `json:"talkgroupsNot,omitempty"`
+	TalkgroupTagsAll []string `json:"talkgroupTagsAll,omitempty"`
+	TalkgroupTagsAny []string `json:"talkgroupTagsAny,omitempty"`
+	TalkgroupTagsNot []string `json:"talkgroupTagsNot,omitempty"`
 
-	talkgroups map[tgs.Talkgroup]bool
+	talkgroups map[tgs.ID]bool
 }
 
 func TalkgroupFilterFromPB(ctx context.Context, p *pb.Filter) (*TalkgroupFilter, error) {
@@ -27,9 +27,9 @@ func TalkgroupFilterFromPB(ctx context.Context, p *pb.Filter) (*TalkgroupFilter,
 	}
 
 	if l := len(p.Talkgroups); l > 0 {
-		tgf.Talkgroups = make([]tgs.Talkgroup, l)
+		tgf.Talkgroups = make([]tgs.ID, l)
 		for i, t := range p.Talkgroups {
-			tgf.Talkgroups[i] = tgs.Talkgroup{
+			tgf.Talkgroups[i] = tgs.ID{
 				System:    uint32(t.System),
 				Talkgroup: uint32(t.Talkgroup),
 			}
@@ -37,9 +37,9 @@ func TalkgroupFilterFromPB(ctx context.Context, p *pb.Filter) (*TalkgroupFilter,
 	}
 
 	if l := len(p.TalkgroupsNot); l > 0 {
-		tgf.TalkgroupsNot = make([]tgs.Talkgroup, l)
+		tgf.TalkgroupsNot = make([]tgs.ID, l)
 		for i, t := range p.TalkgroupsNot {
-			tgf.TalkgroupsNot[i] = tgs.Talkgroup{
+			tgf.TalkgroupsNot[i] = tgs.ID{
 				System:    uint32(t.System),
 				Talkgroup: uint32(t.Talkgroup),
 			}
@@ -53,12 +53,12 @@ func (f *TalkgroupFilter) hasTags() bool {
 	return len(f.TalkgroupTagsAny) > 0 || len(f.TalkgroupTagsAll) > 0 || len(f.TalkgroupTagsNot) > 0
 }
 
-func (f *TalkgroupFilter) GetFinalTalkgroups() map[tgs.Talkgroup]bool {
+func (f *TalkgroupFilter) GetFinalTalkgroups() map[tgs.ID]bool {
 	return f.talkgroups
 }
 
 func (f *TalkgroupFilter) compile(ctx context.Context) error {
-	f.talkgroups = make(map[tgs.Talkgroup]bool)
+	f.talkgroups = make(map[tgs.ID]bool)
 	for _, tg := range f.Talkgroups {
 		f.talkgroups[tg] = true
 	}
@@ -71,7 +71,7 @@ func (f *TalkgroupFilter) compile(ctx context.Context) error {
 		}
 
 		for _, tg := range tagTGs {
-			f.talkgroups[tgs.Talkgroup{System: uint32(tg.SystemID), Talkgroup: uint32(tg.Tgid)}] = true
+			f.talkgroups[tgs.ID{System: uint32(tg.SystemID), Talkgroup: uint32(tg.Tgid)}] = true
 		}
 	}
 

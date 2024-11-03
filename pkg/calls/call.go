@@ -130,7 +130,6 @@ func (c *Call) computeLength() (err error) {
 	return nil
 }
 
-func (c *Call) TalkgroupTuple() talkgroups.Talkgroup {
+func (c *Call) TalkgroupTuple() talkgroups.ID {
 	return talkgroups.TG(c.System, c.Talkgroup)
 }
-

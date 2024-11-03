@@ -18,7 +18,7 @@ func TestAlertConfig(t *testing.T) {
 	ac := make(talkgroups.AlertConfig)
 	parseTests := []struct {
 		name      string
-		tg        talkgroups.Talkgroup
+		tg        talkgroups.ID
 		conf      string
 		compare   []talkgroups.AlertRule
 		expectErr error
@@ -78,7 +78,7 @@ func TestAlertConfig(t *testing.T) {
 
 	evalTests := []struct {
 		name        string
-		tg          talkgroups.Talkgroup
+		tg          talkgroups.ID
 		t           time.Time
 		origScore   float64
 		expectScore float64
@@ -122,7 +122,7 @@ func TestAlertConfig(t *testing.T) {
 
 	for _, tc := range evalTests {
 		t.Run(tc.name, func(t *testing.T) {
-			cs := trending.Score[talkgroups.Talkgroup]{
+			cs := trending.Score[talkgroups.ID]{
 				ID:    tc.tg,
 				Score: tc.origScore,
 			}

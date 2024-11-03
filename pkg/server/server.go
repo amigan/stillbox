@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/alerting"
 	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/config"
@@ -15,6 +14,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/sources"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -35,7 +35,7 @@ type Server struct {
 	alerter  alerting.Alerter
 	notifier notify.Notifier
 	hup      chan os.Signal
-	tgCache  calls.TalkgroupCache
+	tgs      talkgroups.Store
 }
 
 func New(ctx context.Context, cfg *config.Config) (*Server, error) {
@@ -58,7 +58,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	tgCache := calls.NewTalkgroupCache()
+	tgCache := talkgroups.NewCache()
 
 	srv := &Server{
 		auth:     authenticator,
@@ -69,7 +69,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		logger:   logger,
 		alerter:  alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
 		notifier: notifier,
-		tgCache:  tgCache,
+		tgs:      tgCache,
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)

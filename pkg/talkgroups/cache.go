@@ -2,7 +2,6 @@ package talkgroups
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -15,49 +14,29 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Talkgroup struct {
-	System    uint32
-	Talkgroup uint32
-}
+type tgMap map[ID]database.GetTalkgroupWithLearnedByPackedIDsRow
 
-func TG[T int | uint | int64 | uint64 | int32 | uint32](sys, tgid T) Talkgroup {
-	return Talkgroup{
-		System:    uint32(sys),
-		Talkgroup: uint32(tgid),
-	}
-}
+type Store interface {
+	// TG retrieves a Talkgroup from the Store. It returns the record and whether one was found.
+	TG(ctx context.Context, tg ID) (database.GetTalkgroupWithLearnedByPackedIDsRow, bool)
 
-func (t Talkgroup) Pack() int64 {
-	// P25 system IDs are 12 bits, so we can fit them in a signed 8 byte int (int64, pg INT8)
-	return int64((int64(t.System) << 32) | int64(t.Talkgroup))
-}
-
-func (t Talkgroup) String() string {
-	return fmt.Sprintf("%d:%d", t.System, t.Talkgroup)
-}
-
-func PackedTGs(tg []Talkgroup) []int64 {
-	s := make([]int64, len(tg))
-
-	for i, v := range tg {
-		s[i] = v.Pack()
-	}
-
-	return s
-}
-
-type tgMap map[Talkgroup]database.GetTalkgroupWithLearnedByPackedIDsRow
-
-type TalkgroupCache interface {
-	TG(ctx context.Context, tg Talkgroup) (database.GetTalkgroupWithLearnedByPackedIDsRow, bool)
+	// SystemName retrieves a system name from the store. It returns the record and whether one was found.
 	SystemName(ctx context.Context, id int) (string, bool)
-	ApplyAlertRules(score trending.Score[Talkgroup], t time.Time, coversOpts ...ruletime.CoversOption) float64
-	Hint(ctx context.Context, tgs []Talkgroup) error
+
+	// ApplyAlertRules applies the score's talkgroup alert rules to the call occurring at t and returns the weighted score.
+	ApplyAlertRules(score trending.Score[ID], t time.Time, coversOpts ...ruletime.CoversOption) float64
+
+	// Hint hints the Store that the provided talkgroups will be asked for.
+	Hint(ctx context.Context, tgs []ID) error
+
+	// Load loads the provided packed talkgroup IDs into the Store.
 	Load(ctx context.Context, tgs []int64) error
+
+	// Invalidate invalidates any caching in the Store.
 	Invalidate()
 }
 
-func (t *talkgroupCache) Invalidate() {
+func (t *cache) Invalidate() {
 	t.Lock()
 	defer t.Unlock()
 	clear(t.tgs)
@@ -65,15 +44,16 @@ func (t *talkgroupCache) Invalidate() {
 	clear(t.AlertConfig)
 }
 
-type talkgroupCache struct {
+type cache struct {
 	sync.RWMutex
 	AlertConfig
 	tgs     tgMap
 	systems map[int32]string
 }
 
-func NewTalkgroupCache() TalkgroupCache {
-	tgc := &talkgroupCache{
+// NewCache returns a new cache Store.
+func NewCache() Store {
+	tgc := &cache{
 		tgs:         make(tgMap),
 		systems:     make(map[int32]string),
 		AlertConfig: make(AlertConfig),
@@ -82,7 +62,7 @@ func NewTalkgroupCache() TalkgroupCache {
 	return tgc
 }
 
-func (t *talkgroupCache) Hint(ctx context.Context, tgs []Talkgroup) error {
+func (t *cache) Hint(ctx context.Context, tgs []ID) error {
 	t.RLock()
 	var toLoad []int64
 	if len(t.tgs) > len(tgs)/2 { // TODO: instrument this
@@ -109,7 +89,7 @@ func (t *talkgroupCache) Hint(ctx context.Context, tgs []Talkgroup) error {
 	return nil
 }
 
-func (t *talkgroupCache) add(rec database.GetTalkgroupWithLearnedByPackedIDsRow) error {
+func (t *cache) add(rec database.GetTalkgroupWithLearnedByPackedIDsRow) error {
 	tg := TG(rec.SystemID, rec.Tgid)
 	t.tgs[tg] = rec
 	t.systems[rec.SystemID] = rec.SystemName
@@ -117,7 +97,7 @@ func (t *talkgroupCache) add(rec database.GetTalkgroupWithLearnedByPackedIDsRow)
 	return t.AlertConfig.AddAlertConfig(tg, rec.AlertConfig)
 }
 
-func (t *talkgroupCache) Load(ctx context.Context, tgs []int64) error {
+func (t *cache) Load(ctx context.Context, tgs []int64) error {
 	tgRecords, err := database.FromCtx(ctx).GetTalkgroupWithLearnedByPackedIDs(ctx, tgs)
 	if err != nil {
 		return err
@@ -137,7 +117,7 @@ func (t *talkgroupCache) Load(ctx context.Context, tgs []int64) error {
 	return nil
 }
 
-func (t *talkgroupCache) TG(ctx context.Context, tg Talkgroup) (database.GetTalkgroupWithLearnedByPackedIDsRow, bool) {
+func (t *cache) TG(ctx context.Context, tg ID) (database.GetTalkgroupWithLearnedByPackedIDsRow, bool) {
 	t.RLock()
 	rec, has := t.tgs[tg]
 	t.RUnlock()
@@ -171,7 +151,7 @@ func (t *talkgroupCache) TG(ctx context.Context, tg Talkgroup) (database.GetTalk
 	return recs[0], true
 }
 
-func (t *talkgroupCache) SystemName(ctx context.Context, id int) (name string, has bool) {
+func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) {
 	n, has := t.systems[int32(id)]
 
 	if !has {
