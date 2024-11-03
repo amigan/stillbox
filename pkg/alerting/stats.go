@@ -78,7 +78,7 @@ func (as *alerter) tgStatsHandler(w http.ResponseWriter, r *http.Request) {
 
 	tgMap := make(map[talkgroups.ID]database.GetTalkgroupsByPackedIDsRow, len(tgs))
 	for _, t := range tgs {
-		tgMap[talkgroups.ID{System: uint32(t.SystemID), Talkgroup: uint32(t.ID)}] = t
+		tgMap[talkgroups.ID{System: uint32(t.System.ID), Talkgroup: uint32(t.Talkgroup.ID)}] = t
 	}
 
 	renderData := struct {

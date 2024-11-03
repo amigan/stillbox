@@ -71,9 +71,9 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 	}
 
 	var md *structpb.Struct
-	if len(tgi.Metadata) > 0 {
+	if len(tgi.Talkgroup.Metadata) > 0 {
 		m := make(map[string]interface{})
-		err := json.Unmarshal(tgi.Metadata, &m)
+		err := json.Unmarshal(tgi.Talkgroup.Metadata, &m)
 		if err != nil {
 			log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("unmarshal tg metadata")
 		}
@@ -85,14 +85,14 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 
 	resp := &pb.TalkgroupInfo{
 		Tg:         tg,
-		Name:       tgi.Name,
-		Group:      tgi.TgGroup,
-		Frequency:  tgi.Frequency,
+		Name:       tgi.Talkgroup.Name,
+		Group:      tgi.Talkgroup.TgGroup,
+		Frequency:  tgi.Talkgroup.Frequency,
 		Metadata:   md,
-		Tags:       tgi.Tags,
+		Tags:       tgi.Talkgroup.Tags,
 		Learned:    tgi.Learned,
-		AlphaTag:   tgi.AlphaTag,
-		SystemName: tgi.SystemName,
+		AlphaTag:   tgi.Talkgroup.AlphaTag,
+		SystemName: tgi.System.Name,
 	}
 
 	_ = c.Send(&pb.Message{

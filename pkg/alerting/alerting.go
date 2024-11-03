@@ -170,10 +170,10 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Al
 		origScore := s.Score
 		tgr, has := as.tgCache.TG(ctx, s.ID)
 		if has {
-			if !tgr.Alert {
+			if !tgr.Talkgroup.Alert {
 				continue
 			}
-			s.Score *= float64(tgr.Weight)
+			s.Score *= float64(tgr.Talkgroup.Weight)
 		}
 
 		if s.Score > as.cfg.AlertThreshold || testMode {
@@ -330,15 +330,15 @@ func (as *alerter) makeAlert(ctx context.Context, score trending.Score[talkgroup
 	tgRecord, has := as.tgCache.TG(ctx, score.ID)
 	switch has {
 	case true:
-		d.Weight = tgRecord.Weight
-		if tgRecord.SystemName == "" {
-			tgRecord.SystemName = strconv.Itoa(int(score.ID.System))
+		d.Weight = tgRecord.Talkgroup.Weight
+		if tgRecord.System.Name == "" {
+			tgRecord.System.Name = strconv.Itoa(int(score.ID.System))
 		}
 
-		if tgRecord.Name != nil {
-			d.TGName = fmt.Sprintf("%s %s (%d)", tgRecord.SystemName, *tgRecord.Name, score.ID.Talkgroup)
+		if tgRecord.Talkgroup.Name != nil {
+			d.TGName = fmt.Sprintf("%s %s (%d)", tgRecord.System.Name, *tgRecord.Talkgroup.Name, score.ID.Talkgroup)
 		} else {
-			d.TGName = fmt.Sprintf("%s:%d", tgRecord.SystemName, int(score.ID.Talkgroup))
+			d.TGName = fmt.Sprintf("%s:%d", tgRecord.System.Name, int(score.ID.Talkgroup))
 		}
 	case false:
 		system, has := as.tgCache.SystemName(ctx, int(score.ID.System))

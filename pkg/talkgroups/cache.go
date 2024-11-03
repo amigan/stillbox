@@ -90,11 +90,11 @@ func (t *cache) Hint(ctx context.Context, tgs []ID) error {
 }
 
 func (t *cache) add(rec database.GetTalkgroupWithLearnedByPackedIDsRow) error {
-	tg := TG(rec.SystemID, rec.Tgid)
+	tg := TG(rec.System.ID, int(rec.Talkgroup.Tgid))
 	t.tgs[tg] = rec
-	t.systems[rec.SystemID] = rec.SystemName
+	t.systems[int32(rec.System.ID)] = rec.System.Name
 
-	return t.AlertConfig.AddAlertConfig(tg, rec.AlertConfig)
+	return t.AlertConfig.AddAlertConfig(tg, rec.Talkgroup.AlertConfig)
 }
 
 func (t *cache) Load(ctx context.Context, tgs []int64) error {
