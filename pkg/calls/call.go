@@ -7,6 +7,7 @@ import (
 	"dynatron.me/x/stillbox/internal/audio"
 	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/pb"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -128,3 +129,8 @@ func (c *Call) computeLength() (err error) {
 
 	return nil
 }
+
+func (c *Call) TalkgroupTuple() talkgroups.Talkgroup {
+	return talkgroups.TG(c.System, c.Talkgroup)
+}
+

@@ -1,4 +1,4 @@
-package calls
+package talkgroups
 
 import (
 	"encoding/json"

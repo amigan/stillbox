@@ -1,4 +1,4 @@
-package calls
+package talkgroups
 
 import (
 	"context"
@@ -18,10 +18,6 @@ import (
 type Talkgroup struct {
 	System    uint32
 	Talkgroup uint32
-}
-
-func (c *Call) TalkgroupTuple() Talkgroup {
-	return Talkgroup{System: uint32(c.System), Talkgroup: uint32(c.Talkgroup)}
 }
 
 func TG[T int | uint | int64 | uint64 | int32 | uint32](sys, tgid T) Talkgroup {
