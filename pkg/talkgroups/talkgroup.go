@@ -2,7 +2,15 @@ package talkgroups
 
 import (
 	"fmt"
+
+	"dynatron.me/x/stillbox/pkg/database"
 )
+
+type Talkgroup struct {
+	database.Talkgroup
+	System  database.System `json:"system"`
+	Learned bool            `json:"learned"`
+}
 
 type ID struct {
 	System    uint32

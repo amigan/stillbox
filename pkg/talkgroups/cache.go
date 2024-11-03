@@ -2,6 +2,7 @@ package talkgroups
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -14,11 +15,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type tgMap map[ID]database.GetTalkgroupWithLearnedByPackedIDsRow
+type tgMap map[ID]Talkgroup
 
 type Store interface {
-	// TG retrieves a Talkgroup from the Store. It returns the record and whether one was found.
-	TG(ctx context.Context, tg ID) (database.GetTalkgroupWithLearnedByPackedIDsRow, bool)
+	// TG retrieves a Talkgroup from the Store.
+	TG(ctx context.Context, tg ID) (Talkgroup, error)
 
 	// SystemName retrieves a system name from the store. It returns the record and whether one was found.
 	SystemName(ctx context.Context, id int) (string, bool)
@@ -34,6 +35,23 @@ type Store interface {
 
 	// Invalidate invalidates any caching in the Store.
 	Invalidate()
+}
+
+type CtxStoreKeyT string
+
+const CtxStoreKey CtxStoreKeyT = "store"
+
+func CtxWithStore(ctx context.Context, s Store) context.Context {
+	return context.WithValue(ctx, CtxStoreKey, s)
+}
+
+func StoreFrom(ctx context.Context) Store {
+	s, ok := ctx.Value(CtxStoreKey).(Store)
+	if !ok {
+		return NewCache()
+	}
+
+	return s
 }
 
 func (t *cache) Invalidate() {
@@ -89,12 +107,20 @@ func (t *cache) Hint(ctx context.Context, tgs []ID) error {
 	return nil
 }
 
-func (t *cache) add(rec database.GetTalkgroupWithLearnedByPackedIDsRow) error {
+func (t *cache) add(rec Talkgroup) error {
 	tg := TG(rec.System.ID, int(rec.Talkgroup.Tgid))
 	t.tgs[tg] = rec
 	t.systems[int32(rec.System.ID)] = rec.System.Name
 
 	return t.AlertConfig.AddAlertConfig(tg, rec.Talkgroup.AlertConfig)
+}
+
+func rowToTalkgroup(r database.GetTalkgroupWithLearnedByPackedIDsRow) Talkgroup {
+	return Talkgroup{
+		Talkgroup: r.Talkgroup,
+		System:    r.System,
+		Learned:   r.Learned,
+	}
 }
 
 func (t *cache) Load(ctx context.Context, tgs []int64) error {
@@ -107,7 +133,7 @@ func (t *cache) Load(ctx context.Context, tgs []int64) error {
 	defer t.Unlock()
 
 	for _, rec := range tgRecords {
-		err := t.add(rec)
+		err := t.add(rowToTalkgroup(rec))
 
 		if err != nil {
 			log.Error().Err(err).Msg("add alert config fail")
@@ -117,38 +143,40 @@ func (t *cache) Load(ctx context.Context, tgs []int64) error {
 	return nil
 }
 
-func (t *cache) TG(ctx context.Context, tg ID) (database.GetTalkgroupWithLearnedByPackedIDsRow, bool) {
+var ErrNoTG = errors.New("talkgroup not found")
+
+func (t *cache) TG(ctx context.Context, tg ID) (Talkgroup, error) {
 	t.RLock()
 	rec, has := t.tgs[tg]
 	t.RUnlock()
 
 	if has {
-		return rec, has
+		return rec, nil
 	}
 
 	recs, err := database.FromCtx(ctx).GetTalkgroupWithLearnedByPackedIDs(ctx, []int64{tg.Pack()})
 	switch err {
 	case nil:
 	case pgx.ErrNoRows:
-		return database.GetTalkgroupWithLearnedByPackedIDsRow{}, false
+		return Talkgroup{}, ErrNoTG
 	default:
 		log.Error().Err(err).Msg("TG() cache add db get")
-		return database.GetTalkgroupWithLearnedByPackedIDsRow{}, false
+		return Talkgroup{}, errors.Join(ErrNoTG, err)
 	}
 
 	if len(recs) < 1 {
-		return database.GetTalkgroupWithLearnedByPackedIDsRow{}, false
+		return Talkgroup{}, ErrNoTG
 	}
 
 	t.Lock()
 	defer t.Unlock()
-	err = t.add(recs[0])
+	err = t.add(rowToTalkgroup(recs[0]))
 	if err != nil {
 		log.Error().Err(err).Msg("TG() cache add")
-		return recs[0], false
+		return rowToTalkgroup(recs[0]), errors.Join(ErrNoTG, err)
 	}
 
-	return recs[0], true
+	return rowToTalkgroup(recs[0]), nil
 }
 
 func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) {

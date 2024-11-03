@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 
 	"dynatron.me/x/stillbox/pkg/calls"
-	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/pb"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -61,10 +60,9 @@ func (c *client) SendError(cmd *pb.Command, err error) {
 }
 
 func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
-	db := database.FromCtx(ctx)
-	tgi, err := db.GetTalkgroupWithLearned(ctx, int(tg.System), int(tg.Talkgroup))
+	tgi, err := talkgroups.StoreFrom(ctx).TG(ctx, talkgroups.TG(tg.System, tg.Talkgroup))
 	if err != nil {
-		if err != pgx.ErrNoRows {
+		if err != talkgroups.ErrNoTG {
 			log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("get talkgroup fail")
 		}
 		return err

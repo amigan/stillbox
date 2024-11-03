@@ -104,6 +104,7 @@ func (s *Server) Go(ctx context.Context) error {
 	s.installHupHandler()
 
 	ctx = database.CtxWithDB(ctx, s.db)
+	ctx = talkgroups.CtxWithStore(ctx, s.tgs)
 
 	httpSrv := &http.Server{
 		Addr:    s.conf.Listen,

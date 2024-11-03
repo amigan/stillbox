@@ -168,8 +168,8 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Al
 	var notifications []Alert
 	for _, s := range as.scores {
 		origScore := s.Score
-		tgr, has := as.tgCache.TG(ctx, s.ID)
-		if has {
+		tgr, err := as.tgCache.TG(ctx, s.ID)
+		if err == nil {
 			if !tgr.Talkgroup.Alert {
 				continue
 			}
@@ -327,9 +327,9 @@ func (as *alerter) makeAlert(ctx context.Context, score trending.Score[talkgroup
 		OrigScore: origScore,
 	}
 
-	tgRecord, has := as.tgCache.TG(ctx, score.ID)
-	switch has {
-	case true:
+	tgRecord, err := as.tgCache.TG(ctx, score.ID)
+	switch err {
+	case nil:
 		d.Weight = tgRecord.Talkgroup.Weight
 		if tgRecord.System.Name == "" {
 			tgRecord.System.Name = strconv.Itoa(int(score.ID.System))
@@ -340,7 +340,7 @@ func (as *alerter) makeAlert(ctx context.Context, score trending.Score[talkgroup
 		} else {
 			d.TGName = fmt.Sprintf("%s:%d", tgRecord.System.Name, int(score.ID.Talkgroup))
 		}
-	case false:
+	default:
 		system, has := as.tgCache.SystemName(ctx, int(score.ID.System))
 		if has {
 			d.TGName = fmt.Sprintf("%s:%d", system, int(score.ID.Talkgroup))

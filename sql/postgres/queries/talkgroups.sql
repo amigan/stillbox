@@ -42,10 +42,10 @@ JOIN systems sys ON tg.system_id = sys.id
 WHERE tg.id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid))
 UNION
 SELECT
-tgl.id::INT8, tgl.system_id::INT4, sys.name system_name, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END, tgl.alpha_tag,
-TRUE, 1.0, NULL::JSONB,
+tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
+CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
+TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
 TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
@@ -60,10 +60,10 @@ JOIN systems sys ON tg.system_id = sys.id
 WHERE tg.id = ANY($1::INT8[])
 UNION
 SELECT
-tgl.id::INT8, tgl.system_id::INT4, sys.name system_name, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END, tgl.alpha_tag,
-TRUE, 1.0, NULL::JSONB,
+tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
+CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
+TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
 TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
