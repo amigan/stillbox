@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 
 	"dynatron.me/x/stillbox/pkg/calls"
-	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/pb"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -61,19 +60,18 @@ func (c *client) SendError(cmd *pb.Command, err error) {
 }
 
 func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
-	db := database.FromCtx(ctx)
-	tgi, err := db.GetTalkgroupWithLearned(ctx, int(tg.System), int(tg.Talkgroup))
+	tgi, err := talkgroups.StoreFrom(ctx).TG(ctx, talkgroups.TG(tg.System, tg.Talkgroup))
 	if err != nil {
-		if err != pgx.ErrNoRows {
+		if err != talkgroups.ErrNoTG {
 			log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("get talkgroup fail")
 		}
 		return err
 	}
 
 	var md *structpb.Struct
-	if len(tgi.Metadata) > 0 {
+	if len(tgi.Talkgroup.Metadata) > 0 {
 		m := make(map[string]interface{})
-		err := json.Unmarshal(tgi.Metadata, &m)
+		err := json.Unmarshal(tgi.Talkgroup.Metadata, &m)
 		if err != nil {
 			log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("unmarshal tg metadata")
 		}
@@ -85,14 +83,14 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 
 	resp := &pb.TalkgroupInfo{
 		Tg:         tg,
-		Name:       tgi.Name,
-		Group:      tgi.TgGroup,
-		Frequency:  tgi.Frequency,
+		Name:       tgi.Talkgroup.Name,
+		Group:      tgi.Talkgroup.TgGroup,
+		Frequency:  tgi.Talkgroup.Frequency,
 		Metadata:   md,
-		Tags:       tgi.Tags,
+		Tags:       tgi.Talkgroup.Tags,
 		Learned:    tgi.Learned,
-		AlphaTag:   tgi.AlphaTag,
-		SystemName: tgi.SystemName,
+		AlphaTag:   tgi.Talkgroup.AlphaTag,
+		SystemName: tgi.System.Name,
 	}
 
 	_ = c.Send(&pb.Message{

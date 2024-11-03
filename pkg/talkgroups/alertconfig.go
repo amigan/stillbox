@@ -1,4 +1,4 @@
-package calls
+package talkgroups
 
 import (
 	"encoding/json"
@@ -8,14 +8,14 @@ import (
 	"dynatron.me/x/stillbox/internal/trending"
 )
 
-type AlertConfig map[Talkgroup][]AlertRule
+type AlertConfig map[ID][]AlertRule
 
 type AlertRule struct {
 	Times           []ruletime.RuleTime `json:"times"`
 	ScoreMultiplier float32             `json:"mult"`
 }
 
-func (ac AlertConfig) AddAlertConfig(tg Talkgroup, confBytes []byte) error {
+func (ac AlertConfig) AddAlertConfig(tg ID, confBytes []byte) error {
 	if len(confBytes) == 0 {
 		return nil
 	}
@@ -30,7 +30,7 @@ func (ac AlertConfig) AddAlertConfig(tg Talkgroup, confBytes []byte) error {
 	return nil
 }
 
-func (ac AlertConfig) ApplyAlertRules(score trending.Score[Talkgroup], t time.Time, coversOpts ...ruletime.CoversOption) float64 {
+func (ac AlertConfig) ApplyAlertRules(score trending.Score[ID], t time.Time, coversOpts ...ruletime.CoversOption) float64 {
 	s, has := ac[score.ID]
 	if !has {
 		return score.Score

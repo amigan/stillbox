@@ -1,4 +1,4 @@
-package calls_test
+package talkgroups_test
 
 import (
 	"errors"
@@ -8,26 +8,26 @@ import (
 
 	"dynatron.me/x/stillbox/internal/ruletime"
 	"dynatron.me/x/stillbox/internal/trending"
-	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAlertConfig(t *testing.T) {
-	ac := make(calls.AlertConfig)
+	ac := make(talkgroups.AlertConfig)
 	parseTests := []struct {
 		name      string
-		tg        calls.Talkgroup
+		tg        talkgroups.ID
 		conf      string
-		compare   []calls.AlertRule
+		compare   []talkgroups.AlertRule
 		expectErr error
 	}{
 		{
 			name: "base case",
-			tg:   calls.TG(197, 3),
+			tg:   talkgroups.TG(197, 3),
 			conf: `[{"times":["7:00+2h","01:00+1h","16:00+1h","19:00+4h"],"mult":0.2},{"times":["11:00+1h","15:00+30m","16:03+20m"],"mult":2.0}]`,
-			compare: []calls.AlertRule{
+			compare: []talkgroups.AlertRule{
 				{
 					Times: []ruletime.RuleTime{
 						ruletime.Must(ruletime.New("7:00+2h")),
@@ -49,7 +49,7 @@ func TestAlertConfig(t *testing.T) {
 		},
 		{
 			name:      "bad spec",
-			tg:        calls.TG(197, 3),
+			tg:        talkgroups.TG(197, 3),
 			conf:      `[{"times":["26:00+2h","01:00+1h","19:00+4h"],"mult":0.2},{"times":["11:00+1h","15:00+30m"],"mult":2.0}]`,
 			expectErr: errors.New("'26:00+2h': invalid hours"),
 		},
@@ -78,42 +78,42 @@ func TestAlertConfig(t *testing.T) {
 
 	evalTests := []struct {
 		name        string
-		tg          calls.Talkgroup
+		tg          talkgroups.ID
 		t           time.Time
 		origScore   float64
 		expectScore float64
 	}{
 		{
 			name:        "base eval",
-			tg:          calls.TG(197, 3),
+			tg:          talkgroups.TG(197, 3),
 			t:           tMust("1:20"),
 			origScore:   3,
 			expectScore: 0.6,
 		},
 		{
 			name:        "base eval",
-			tg:          calls.TG(197, 3),
+			tg:          talkgroups.TG(197, 3),
 			t:           tMust("23:03"),
 			origScore:   3,
 			expectScore: 3,
 		},
 		{
 			name:        "base eval",
-			tg:          calls.TG(197, 3),
+			tg:          talkgroups.TG(197, 3),
 			t:           tMust("8:03"),
 			origScore:   1.0,
 			expectScore: 0.2,
 		},
 		{
 			name:        "base eval",
-			tg:          calls.TG(197, 3),
+			tg:          talkgroups.TG(197, 3),
 			t:           tMust("15:15"),
 			origScore:   3.0,
 			expectScore: 6.0,
 		},
 		{
 			name:        "overlapping eval",
-			tg:          calls.TG(197, 3),
+			tg:          talkgroups.TG(197, 3),
 			t:           tMust("16:10"),
 			origScore:   1.0,
 			expectScore: 0.4,
@@ -122,7 +122,7 @@ func TestAlertConfig(t *testing.T) {
 
 	for _, tc := range evalTests {
 		t.Run(tc.name, func(t *testing.T) {
-			cs := trending.Score[calls.Talkgroup]{
+			cs := trending.Score[talkgroups.ID]{
 				ID:    tc.tg,
 				Score: tc.origScore,
 			}
