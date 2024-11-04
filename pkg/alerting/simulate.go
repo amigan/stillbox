@@ -46,12 +46,12 @@ func (s *Simulation) verify() error {
 }
 
 // stepClock is called by backfill during simulation operations.
-func (s *Simulation) stepClock(t time.Time) {
+func (s *Simulation) stepClock(ctx context.Context, t time.Time) {
 	now := s.clock.Now()
 	step := t.Sub(s.lastScore)
 	if step > time.Duration(s.SimInterval) {
 		s.clock += offsetClock(s.SimInterval)
-		s.scores = s.scorer.Score()
+		s.scores = s.scorer.Score(ctx)
 		s.lastScore = now
 	}
 
@@ -85,7 +85,7 @@ func (s *Simulation) Simulate(ctx context.Context) (trending.Scores[talkgroups.I
 	}
 
 	// initial score
-	s.scores = s.scorer.Score()
+	s.scores = s.scorer.Score(ctx)
 	s.lastScore = time.Time(s.ScoreStart)
 
 	ssT := time.Time(s.ScoreStart)

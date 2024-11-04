@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/ruletime"
-	"dynatron.me/x/stillbox/internal/trending"
 )
 
 type AlertConfig struct {
@@ -50,15 +49,15 @@ func (ac *AlertConfig) UnmarshalTGRules(tg ID, confBytes []byte) error {
 	return nil
 }
 
-func (ac *AlertConfig) ApplyAlertRules(score trending.Score[ID], t time.Time, coversOpts ...ruletime.CoversOption) float64 {
+func (ac *AlertConfig) ApplyAlertRules(id ID, t time.Time, coversOpts ...ruletime.CoversOption) float64 {
 	ac.RLock()
-	s, has := ac.m[score.ID]
+	s, has := ac.m[id]
 	ac.RUnlock()
 	if !has {
-		return score.Score
+		return 1.0
 	}
 
-	final := score.Score
+	final := 1.0
 
 	for _, ar := range s {
 		if ar.MatchTime(t, coversOpts...) {

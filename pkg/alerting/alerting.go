@@ -118,6 +118,7 @@ func New(cfg config.Alerting, tgCache talkgroups.Store, opts ...AlertOption) Ale
 		trending.WithScoreThreshold[talkgroups.ID](ScoreThreshold),
 		trending.WithCountThreshold[talkgroups.ID](CountThreshold),
 		trending.WithClock[talkgroups.ID](as.clock),
+		trending.WithWeigher[talkgroups.ID](as.tgCache),
 	)
 
 	return as
@@ -130,13 +131,13 @@ func (as *alerter) Go(ctx context.Context) {
 		log.Error().Err(err).Msg("backfill")
 	}
 
-	as.score(time.Now())
+	as.score(ctx, time.Now())
 	ticker := time.NewTicker(alerterTickInterval)
 
 	for {
 		select {
 		case now := <-ticker.C:
-			as.score(now)
+			as.score(ctx, now)
 			err := as.notify(ctx)
 			if err != nil {
 				log.Error().Err(err).Msg("notify")
@@ -178,7 +179,7 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Al
 
 		if s.Score > as.cfg.AlertThreshold || testMode {
 			if old, inCache := as.alertCache[s.ID]; !inCache || now.Sub(old.Timestamp) > as.renotify {
-				s.Score = as.tgCache.ApplyAlertRules(s, now)
+				s.Score *= as.tgCache.ApplyAlertRules(s.ID, now)
 				a, err := as.makeAlert(ctx, s, origScore)
 				if err != nil {
 					return nil, fmt.Errorf("makeAlert: %w", err)
@@ -385,16 +386,16 @@ func (as *alerter) startBackfill(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Debug().Int("callsCount", count).Str("in", time.Since(now).String()).Int("tgCount", as.scorer.Score().Len()).Msg("backfill finished")
+	log.Debug().Int("callsCount", count).Str("in", time.Since(now).String()).Int("tgCount", as.scorer.Score(ctx).Len()).Msg("backfill finished")
 
 	return nil
 }
 
-func (as *alerter) score(now time.Time) {
+func (as *alerter) score(ctx context.Context, now time.Time) {
 	as.Lock()
 	defer as.Unlock()
 
-	as.scores = as.scorer.Score()
+	as.scores = as.scorer.Score(ctx)
 	as.lastScore = now
 	sort.Sort(as.scores)
 }
@@ -420,7 +421,7 @@ func (as *alerter) backfill(ctx context.Context, since time.Time, until time.Tim
 		}
 		as.scorer.AddEvent(tg, callDate)
 		if as.sim != nil { // step the simulator if it is active
-			as.sim.stepClock(callDate)
+			as.sim.stepClock(ctx, callDate)
 		}
 		count++
 	}

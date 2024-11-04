@@ -1,6 +1,7 @@
 package trending
 
 import (
+	"context"
 	"math"
 	"time"
 )
@@ -31,7 +32,7 @@ func newItem[K comparable](id K, options *options[K]) *item[K] {
 	}
 }
 
-func (i *item[K]) score() Score[K] {
+func (i *item[K]) score(ctx context.Context, id K) Score[K] {
 	recentCount, count := i.computeCounts()
 	if recentCount < i.options.countThreshold {
 		return Score[K]{}
@@ -58,7 +59,7 @@ func (i *item[K]) score() Score[K] {
 	}
 	i.decayMax()
 
-	mixedScore := 5 * (klScore + i.max)
+	mixedScore := 5 * (klScore + i.max) * i.options.weigher.Weight(ctx, id, i.options.clock.Now())
 
 	return Score[K]{
 		Score:       mixedScore,

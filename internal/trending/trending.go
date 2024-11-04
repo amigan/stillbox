@@ -1,6 +1,7 @@
 package trending
 
 import (
+	"context"
 	"sort"
 	"time"
 
@@ -33,6 +34,7 @@ type options[K comparable] struct {
 	creator              TimeSeriesCreator[K]
 	slidingWindowCreator SlidingWindowCreator[K]
 	clock                timeseries.Clock
+	weigher              Weigher[K]
 
 	halfLife time.Duration
 
@@ -45,7 +47,23 @@ type options[K comparable] struct {
 	countThreshold float64
 }
 
+type Weigher[K comparable] interface {
+	Weight(context.Context, K, time.Time) float64
+}
+
 type Option[K comparable] func(*options[K])
+
+type unityWeigher[K comparable] float64
+
+func (u unityWeigher[K]) Weight(_ context.Context, _ K, _ time.Time) float64 {
+	return float64(u)
+}
+
+func WithWeigher[K comparable](w Weigher[K]) Option[K] {
+	return func(o *options[K]) {
+		o.weigher = w
+	}
+}
 
 func WithTimeSeries[K comparable](creator TimeSeriesCreator[K]) Option[K] {
 	return func(o *options[K]) {
@@ -164,6 +182,9 @@ func NewScorer[K comparable](options ...Option[K]) Scorer[K] {
 	if scorer.options.clock == nil {
 		scorer.options.clock = timeseries.DefaultClock
 	}
+	if scorer.options.weigher == nil {
+		scorer.options.weigher = unityWeigher[K](1.0)
+	}
 	if scorer.options.slidingWindowCreator == nil {
 		scorer.options.slidingWindowCreator = func(id K) SlidingWindow {
 			return slidingwindow.NewSlidingWindow(
@@ -189,10 +210,10 @@ func (s *Scorer[K]) addToItem(item *item[K], tm time.Time) {
 	item.eventSeries.IncreaseAtTime(1, tm)
 }
 
-func (s *Scorer[K]) Score() Scores[K] {
+func (s *Scorer[K]) Score(ctx context.Context) Scores[K] {
 	var scores Scores[K]
 	for id, item := range s.items {
-		score := item.score()
+		score := item.score(ctx, id)
 		score.ID = id
 		scores = append(scores, score)
 	}

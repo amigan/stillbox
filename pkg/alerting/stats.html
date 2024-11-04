@@ -85,8 +85,8 @@
       {{ range .Scores }}
       {{ $tg := (index $.TGs .ID) }}
       <tr>
-	<td>{{ $tg.Name_2}}</td>
-	<td>{{ $tg.Name}}</td>
+	<td>{{ $tg.System.Name}}</td>
+	<td>{{ $tg.Talkgroup.Name}}</td>
 	<td>{{  .ID.Talkgroup }}</td>
 	<td>{{ f .Count 0 }}</td>
 	<td>{{ f .RecentCount 0 }}</td>
