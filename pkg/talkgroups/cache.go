@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 
 	"dynatron.me/x/stillbox/internal/ruletime"
@@ -25,7 +26,7 @@ type Store interface {
 	SystemName(ctx context.Context, id int) (string, bool)
 
 	// ApplyAlertRules applies the score's talkgroup alert rules to the call occurring at t and returns the weighted score.
-	ApplyAlertRules(score trending.Score[ID], t time.Time, coversOpts ...ruletime.CoversOption) float64
+	ApplyAlertRules(id ID, t time.Time, coversOpts ...ruletime.CoversOption) float64
 
 	// Hint hints the Store that the provided talkgroups will be asked for.
 	Hint(ctx context.Context, tgs []ID) error
@@ -35,6 +36,12 @@ type Store interface {
 
 	// Invalidate invalidates any caching in the Store.
 	Invalidate()
+
+	// Include the trending Weigher interface
+	trending.Weigher[ID]
+
+	// Hupper
+	HUP(*config.Config)
 }
 
 type CtxStoreKeyT string
@@ -52,6 +59,10 @@ func StoreFrom(ctx context.Context) Store {
 	}
 
 	return s
+}
+
+func (t *cache) HUP(_ *config.Config) {
+	t.Invalidate()
 }
 
 func (t *cache) Invalidate() {
@@ -144,6 +155,19 @@ func (t *cache) Load(ctx context.Context, tgs []int64) error {
 }
 
 var ErrNotFound = errors.New("talkgroup not found")
+
+func (t *cache) Weight(ctx context.Context, id ID, tm time.Time) float64 {
+	tg, err := t.TG(ctx, id)
+	if err != nil {
+		return 1.0
+	}
+
+	m := float64(tg.Weight)
+
+	m *= t.AlertConfig.ApplyAlertRules(id, tm)
+
+	return float64(tg.Weight)
+}
 
 func (t *cache) TG(ctx context.Context, tg ID) (Talkgroup, error) {
 	t.RLock()
