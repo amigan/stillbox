@@ -6,11 +6,10 @@ import (
 	"sync"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/ruletime"
+
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-
-	"dynatron.me/x/stillbox/internal/ruletime"
-	"dynatron.me/x/stillbox/internal/trending"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
@@ -37,8 +36,8 @@ type Store interface {
 	// Invalidate invalidates any caching in the Store.
 	Invalidate()
 
-	// Include the trending Weigher interface
-	trending.Weigher[ID]
+	// Weight returns the final weight of this talkgroup, including its static and rules-derived weight.
+	Weight(ctx context.Context, id ID, t time.Time) float64
 
 	// Hupper
 	HUP(*config.Config)
