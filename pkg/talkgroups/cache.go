@@ -166,7 +166,7 @@ func (t *cache) Weight(ctx context.Context, id ID, tm time.Time) float64 {
 
 	m *= t.AlertConfig.ApplyAlertRules(id, tm)
 
-	return float64(tg.Weight)
+	return float64(m)
 }
 
 func (t *cache) TG(ctx context.Context, tg ID) (Talkgroup, error) {
