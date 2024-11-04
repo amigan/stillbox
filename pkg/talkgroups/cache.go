@@ -15,11 +15,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type tgMap map[ID]Talkgroup
+type tgMap map[ID]*Talkgroup
 
 type Store interface {
 	// TG retrieves a Talkgroup from the Store.
-	TG(ctx context.Context, tg ID) (Talkgroup, error)
+	TG(ctx context.Context, tg ID) (*Talkgroup, error)
+
+	// TGs retrieves many talkgroups from the Store.
+	TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error)
 
 	// SystemName retrieves a system name from the store. It returns the record and whether one was found.
 	SystemName(ctx context.Context, id int) (string, bool)
@@ -117,7 +120,7 @@ func (t *cache) Hint(ctx context.Context, tgs []ID) error {
 	return nil
 }
 
-func (t *cache) add(rec Talkgroup) error {
+func (t *cache) add(rec *Talkgroup) error {
 	t.Lock()
 	defer t.Unlock()
 
@@ -128,12 +131,44 @@ func (t *cache) add(rec Talkgroup) error {
 	return t.AlertConfig.UnmarshalTGRules(tg, rec.Talkgroup.AlertConfig)
 }
 
-func rowToTalkgroup(r database.GetTalkgroupWithLearnedByPackedIDsRow) Talkgroup {
-	return Talkgroup{
+func rowToTalkgroup(r database.GetTalkgroupWithLearnedByPackedIDsRow) *Talkgroup {
+	return &Talkgroup{
 		Talkgroup: r.Talkgroup,
 		System:    r.System,
 		Learned:   r.Learned,
 	}
+}
+
+func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
+	r := make([]*Talkgroup, 0, len(tgs))
+	toGet := make(IDs, 0, len(tgs))
+	t.RLock()
+	for _, id := range tgs {
+		rec, has := t.tgs[id]
+		if has {
+			r = append(r, rec)
+		} else {
+			toGet = append(toGet, id)
+		}
+	}
+	t.RUnlock()
+
+	tgRecords, err := database.FromCtx(ctx).GetTalkgroupWithLearnedByPackedIDs(ctx, toGet.Packed())
+	if err != nil {
+		return nil, err
+	}
+
+	for _, rec := range tgRecords {
+		tg := rowToTalkgroup(rec)
+		err := t.add(tg)
+		if err != nil {
+			return nil, err
+		}
+
+		r = append(r, tg)
+	}
+
+	return r, nil
 }
 
 func (t *cache) Load(ctx context.Context, tgs []int64) error {
@@ -168,7 +203,7 @@ func (t *cache) Weight(ctx context.Context, id ID, tm time.Time) float64 {
 	return float64(m)
 }
 
-func (t *cache) TG(ctx context.Context, tg ID) (Talkgroup, error) {
+func (t *cache) TG(ctx context.Context, tg ID) (*Talkgroup, error) {
 	t.RLock()
 	rec, has := t.tgs[tg]
 	t.RUnlock()
@@ -181,14 +216,14 @@ func (t *cache) TG(ctx context.Context, tg ID) (Talkgroup, error) {
 	switch err {
 	case nil:
 	case pgx.ErrNoRows:
-		return Talkgroup{}, ErrNotFound
+		return nil, ErrNotFound
 	default:
 		log.Error().Err(err).Msg("TG() cache add db get")
-		return Talkgroup{}, errors.Join(ErrNotFound, err)
+		return nil, errors.Join(ErrNotFound, err)
 	}
 
 	if len(recs) < 1 {
-		return Talkgroup{}, ErrNotFound
+		return nil, ErrNotFound
 	}
 
 	err = t.add(rowToTalkgroup(recs[0]))

@@ -17,6 +17,17 @@ type ID struct {
 	Talkgroup uint32
 }
 
+type IDs []ID
+
+func (ids *IDs) Packed() []int64 {
+	r := make([]int64, len(*ids))
+	for i := range *ids {
+		r[i] = (*ids)[i].Pack()
+	}
+
+	return r
+}
+
 func TG[T int | uint | int64 | uint64 | int32 | uint32](sys, tgid T) ID {
 	return ID{
 		System:    uint32(sys),

@@ -36,6 +36,7 @@ func (s *Server) setupRoutes() {
 		s.nex.PrivateRoutes(r)
 		s.auth.PrivateRoutes(r)
 		s.alerter.PrivateRoutes(r)
+		r.Mount("/api", s.api.Subrouter())
 	})
 
 	r.Group(func(r chi.Router) {
