@@ -7,6 +7,7 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/config"
 
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/nikoksr/notify"
 	"github.com/nikoksr/notify/service/http"
 )
@@ -19,9 +20,7 @@ type notifier struct {
 	*notify.Notify
 }
 
-func (n *notifier) buildSlackWebhookPayload(cfg config.NotifyService) func(string, string) any {
-	icon := cfg.GetS("icon", "🚨")
-	url := cfg.GetS("messageURL", "")
+func (n *notifier) buildSlackWebhookPayload(cfg *slackWebhookConfig) func(string, string) any {
 
 	type Attachment struct {
 		Title     string `json:"title"`
@@ -42,27 +41,40 @@ func (n *notifier) buildSlackWebhookPayload(cfg config.NotifyService) func(strin
 				{
 					Title:     subject,
 					Text:      message,
-					TitleLink: url,
+					TitleLink: cfg.MessageURL,
 					Timestamp: time.Now().Unix(),
 				},
 			},
-			IconEmoji: icon,
+			IconEmoji: cfg.Icon,
 		}
 
 		return m
 	}
 }
 
+type slackWebhookConfig struct {
+	WebhookURL string `mapstructure:"webhookURL"`
+	Icon       string `mapstructure:"icon"`
+	MessageURL string `mapstructure:"messageURL"`
+}
+
 func (n *notifier) addService(cfg config.NotifyService) error {
 	switch cfg.Provider {
 	case "slackwebhook":
+		swc := &slackWebhookConfig{
+			Icon: "🚨",
+		}
+		err := mapstructure.Decode(cfg.Config, &swc)
+		if err != nil {
+			return err
+		}
 		hs := http.New()
 		hs.AddReceivers(&http.Webhook{
 			ContentType:  "application/json",
 			Header:       make(stdhttp.Header),
 			Method:       stdhttp.MethodPost,
-			URL:          cfg.GetS("webhookURL", ""),
-			BuildPayload: n.buildSlackWebhookPayload(cfg),
+			URL:          swc.WebhookURL,
+			BuildPayload: n.buildSlackWebhookPayload(swc),
 		})
 		n.UseServices(hs)
 	default:

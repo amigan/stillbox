@@ -70,8 +70,11 @@ type NotifyService struct {
 }
 
 func (n *NotifyService) GetS(k, defaultVal string) string {
-	if v, has := n.Config[k].(string); has {
-		return v
+	if v, has := n.Config[k]; has {
+		if v, isString := v.(string); isString {
+			return v
+		}
+		log.Error().Str("configKey", k).Str("provider", n.Provider).Str("default", defaultVal).Msg("notify config value is not a string! using default")
 	}
 
 	return defaultVal
