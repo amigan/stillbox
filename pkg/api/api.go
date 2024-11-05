@@ -58,13 +58,14 @@ func httpCode(err error) int {
 	return http.StatusInternalServerError
 }
 
-func (a *api) writeJSON(w http.ResponseWriter, r *http.Request, data interface{}, err error) {
+func (a *api) writeResponse(w http.ResponseWriter, r *http.Request, data interface{}, err error) {
 	if err != nil {
 		log.Error().Str("path", r.URL.Path).Err(err).Msg("request failed")
 		http.Error(w, err.Error(), httpCode(err))
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	err = enc.Encode(data)
 	if err != nil {
@@ -83,9 +84,9 @@ func decodeParams(d interface{}, r *http.Request) error {
 	}
 
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Metadata: nil,
-		Result:   d,
-		TagName:  "param",
+		Metadata:         nil,
+		Result:           d,
+		TagName:          "param",
 		WeaklyTypedInput: true,
 	})
 	if err != nil {
@@ -100,6 +101,7 @@ func (a *api) badReq(w http.ResponseWriter, err error) {
 }
 
 func (a *api) talkgroup(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	p := struct {
 		System *int `param:"system"`
 		ID     *int `param:"id"`
@@ -114,9 +116,12 @@ func (a *api) talkgroup(w http.ResponseWriter, r *http.Request) {
 	var res interface{}
 	switch {
 	case p.System != nil && p.ID != nil:
-		res, err = a.tgs.TG(r.Context(), talkgroups.TG(*p.System, *p.ID))
+		res, err = a.tgs.TG(ctx, talkgroups.TG(*p.System, *p.ID))
 	case p.System != nil:
+		res, err = a.tgs.SystemTGs(ctx, int32(*p.System))
 	default:
+		res, err = a.tgs.TGs(ctx, nil)
 	}
-	a.writeJSON(w, r, res, err)
+
+	a.writeResponse(w, r, res, err)
 }
