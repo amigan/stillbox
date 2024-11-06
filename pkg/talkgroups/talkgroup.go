@@ -13,8 +13,8 @@ type Talkgroup struct {
 }
 
 type ID struct {
-	System    uint32
-	Talkgroup uint32
+	System    uint32 `json:"sys"`
+	Talkgroup uint32 `json:"tg"`
 }
 
 type IDs []ID

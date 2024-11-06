@@ -169,11 +169,8 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Al
 	for _, s := range as.scores {
 		origScore := s.Score
 		tgr, err := as.tgCache.TG(ctx, s.ID)
-		if err == nil {
-			if !tgr.Talkgroup.Alert {
-				continue
-			}
-			s.Score *= float64(tgr.Talkgroup.Weight)
+		if err == nil && !tgr.Talkgroup.Alert {
+			continue
 		}
 
 		if s.Score > as.cfg.AlertThreshold || testMode {
