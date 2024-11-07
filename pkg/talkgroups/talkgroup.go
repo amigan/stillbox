@@ -13,8 +13,19 @@ type Talkgroup struct {
 }
 
 type ID struct {
-	System    uint32
-	Talkgroup uint32
+	System    uint32 `json:"sys"`
+	Talkgroup uint32 `json:"tg"`
+}
+
+type IDs []ID
+
+func (ids *IDs) Packed() []int64 {
+	r := make([]int64, len(*ids))
+	for i := range *ids {
+		r[i] = (*ids)[i].Pack()
+	}
+
+	return r
 }
 
 func TG[T int | uint | int64 | uint64 | int32 | uint32](sys, tgid T) ID {

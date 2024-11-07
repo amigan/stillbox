@@ -31,7 +31,7 @@ func newItem[K comparable](id K, options *options[K]) *item[K] {
 	}
 }
 
-func (i *item[K]) score(id K) Score[K] {
+func (i *item[K]) score() Score[K] {
 	recentCount, count := i.computeCounts()
 	if recentCount < i.options.countThreshold {
 		return Score[K]{}

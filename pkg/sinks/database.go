@@ -26,12 +26,12 @@ func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
 		return nil
 	}
 
-	dbCall, err := s.db.AddCall(ctx, s.toAddCallParams(call))
+	err := s.db.AddCall(ctx, s.toAddCallParams(call))
 	if err != nil {
 		return fmt.Errorf("add call: %w", err)
 	}
 
-	log.Debug().Str("id", dbCall.String()).Int("system", call.System).Int("tgid", call.Talkgroup).Msg("stored")
+	log.Debug().Str("id", call.ID.String()).Int("system", call.System).Int("tgid", call.Talkgroup).Msg("stored")
 
 	return nil
 }
@@ -42,6 +42,7 @@ func (s *DatabaseSink) SinkType() string {
 
 func (s *DatabaseSink) toAddCallParams(call *calls.Call) database.AddCallParams {
 	return database.AddCallParams{
+		ID:          call.ID,
 		Submitter:   call.Submitter.Int32Ptr(),
 		System:      call.System,
 		Talkgroup:   call.Talkgroup,

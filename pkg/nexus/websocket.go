@@ -183,5 +183,5 @@ func (conn *wsConn) writeToClient(w io.WriteCloser, msg ToClient) {
 }
 
 func (n *wsManager) PrivateRoutes(r chi.Router) {
-	r.HandleFunc("/ws", n.serveWS)
+	r.HandleFunc("/api/ws", n.serveWS)
 }

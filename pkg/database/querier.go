@@ -13,7 +13,7 @@ import (
 
 type Querier interface {
 	AddAlert(ctx context.Context, arg AddAlertParams) error
-	AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, error)
+	AddCall(ctx context.Context, arg AddCallParams) error
 	BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []string) error
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
@@ -26,10 +26,12 @@ type Querier interface {
 	GetTalkgroupIDsByTags(ctx context.Context, anytags []string, alltags []string, nottags []string) ([]GetTalkgroupIDsByTagsRow, error)
 	GetTalkgroupTags(ctx context.Context, sys int, tg int) ([]string, error)
 	GetTalkgroupWithLearned(ctx context.Context, systemID int, tgid int) (GetTalkgroupWithLearnedRow, error)
-	GetTalkgroupWithLearnedByPackedIDs(ctx context.Context, dollar_1 []int64) ([]GetTalkgroupWithLearnedByPackedIDsRow, error)
 	GetTalkgroupsByPackedIDs(ctx context.Context, dollar_1 []int64) ([]GetTalkgroupsByPackedIDsRow, error)
 	GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAllTagsRow, error)
 	GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAnyTagsRow, error)
+	GetTalkgroupsWithLearned(ctx context.Context) ([]GetTalkgroupsWithLearnedRow, error)
+	GetTalkgroupsWithLearnedByPackedIDs(ctx context.Context, dollar_1 []int64) ([]GetTalkgroupsWithLearnedByPackedIDsRow, error)
+	GetTalkgroupsWithLearnedBySystem(ctx context.Context, system int32) ([]GetTalkgroupsWithLearnedBySystemRow, error)
 	GetUserByID(ctx context.Context, id int32) (User, error)
 	GetUserByUID(ctx context.Context, id int32) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)

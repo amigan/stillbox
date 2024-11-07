@@ -51,7 +51,7 @@ FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
 WHERE tgl.system_id = sqlc.arg(system_id) AND tgl.tgid = sqlc.arg(tgid) AND ignored IS NOT TRUE;
 
--- name: GetTalkgroupWithLearnedByPackedIDs :many
+-- name: GetTalkgroupsWithLearnedByPackedIDs :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys),
 FALSE learned
@@ -68,6 +68,42 @@ TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
 WHERE systg2id(tgl.system_id, tgl.tgid) = ANY($1::INT8[]) AND ignored IS NOT TRUE;
+
+-- name: GetTalkgroupsWithLearnedBySystem :many
+SELECT
+sqlc.embed(tg), sqlc.embed(sys),
+FALSE learned
+FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+WHERE tg.system_id = @system
+UNION
+SELECT
+tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
+CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
+TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
+TRUE learned
+FROM talkgroups_learned tgl
+JOIN systems sys ON tgl.system_id = sys.id
+WHERE tgl.system_id = @system AND ignored IS NOT TRUE;
+
+-- name: GetTalkgroupsWithLearned :many
+SELECT
+sqlc.embed(tg), sqlc.embed(sys),
+FALSE learned
+FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+UNION
+SELECT
+tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
+CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
+TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
+TRUE learned
+FROM talkgroups_learned tgl
+JOIN systems sys ON tgl.system_id = sys.id
+WHERE ignored IS NOT TRUE;
+
 
 -- name: GetSystemName :one
 SELECT name FROM systems WHERE id = sqlc.arg(system_id);

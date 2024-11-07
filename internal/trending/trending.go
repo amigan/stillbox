@@ -192,7 +192,7 @@ func (s *Scorer[K]) addToItem(item *item[K], tm time.Time) {
 func (s *Scorer[K]) Score() Scores[K] {
 	var scores Scores[K]
 	for id, item := range s.items {
-		score := item.score(id)
+		score := item.score()
 		score.ID = id
 		scores = append(scores, score)
 	}

@@ -69,20 +69,20 @@ func (as *alerter) tgStatsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	db := database.FromCtx(ctx)
 
-	tgs, err := db.GetTalkgroupsByPackedIDs(ctx, as.packedScoredTGs())
+	tgs, err := db.GetTalkgroupsWithLearnedByPackedIDs(ctx, as.packedScoredTGs())
 	if err != nil {
 		log.Error().Err(err).Msg("stats TG get failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	tgMap := make(map[talkgroups.ID]database.GetTalkgroupsByPackedIDsRow, len(tgs))
+	tgMap := make(map[talkgroups.ID]database.GetTalkgroupsWithLearnedByPackedIDsRow, len(tgs))
 	for _, t := range tgs {
-		tgMap[talkgroups.ID{System: uint32(t.System.ID), Talkgroup: uint32(t.Talkgroup.ID)}] = t
+		tgMap[talkgroups.ID{System: uint32(t.System.ID), Talkgroup: uint32(t.Talkgroup.Tgid)}] = t
 	}
 
 	renderData := struct {
-		TGs        map[talkgroups.ID]database.GetTalkgroupsByPackedIDsRow
+		TGs        map[talkgroups.ID]database.GetTalkgroupsWithLearnedByPackedIDsRow
 		Scores     trending.Scores[talkgroups.ID]
 		LastScore  time.Time
 		Simulation *Simulation

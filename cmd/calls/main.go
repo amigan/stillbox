@@ -57,7 +57,7 @@ func main() {
 	loginForm.Add("username", *username)
 	loginForm.Add("password", *password)
 
-	loginReq, err := http.NewRequest("POST", "http"+secureSuffix()+"://"+*addr+"/login", strings.NewReader(loginForm.Encode()))
+	loginReq, err := http.NewRequest("POST", "http"+secureSuffix()+"://"+*addr+"/api/login", strings.NewReader(loginForm.Encode()))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	u := url.URL{Scheme: "ws" + secureSuffix(), Host: *addr, Path: "/ws"}
+	u := url.URL{Scheme: "ws" + secureSuffix(), Host: *addr, Path: "/api/ws"}
 	log.Printf("connecting to %s", u.String())
 
 	dialer := websocket.Dialer{

@@ -52,30 +52,48 @@ func (q *Queries) AddAlert(ctx context.Context, arg AddAlertParams) error {
 	return err
 }
 
-const addCall = `-- name: AddCall :one
+const addCall = `-- name: AddCall :exec
 INSERT INTO calls (
-	id,
-	submitter,
-	system,
-	talkgroup,
-	call_date,
-	audio_name,
-	audio_blob,
-	audio_type,
-	audio_url,
-	duration,
-	frequency,
-	frequencies,
-	patches,
-	tg_label,
-	tg_alpha_tag,
-	tg_group,
-	source
-	) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
-RETURNING id
+id,
+submitter,
+system,
+talkgroup,
+call_date,
+audio_name,
+audio_blob,
+audio_type,
+audio_url,
+duration,
+frequency,
+frequencies,
+patches,
+tg_label,
+tg_alpha_tag,
+tg_group,
+source
+) VALUES (
+$1,
+$2,
+$3,
+$4,
+$5,
+$6,
+$7,
+$8,
+$9,
+$10,
+$11,
+$12,
+$13,
+$14,
+$15,
+$16,
+$17
+)
 `
 
 type AddCallParams struct {
+	ID          uuid.UUID          `json:"id"`
 	Submitter   *int32             `json:"submitter"`
 	System      int                `json:"system"`
 	Talkgroup   int                `json:"talkgroup"`
@@ -94,8 +112,9 @@ type AddCallParams struct {
 	Source      int                `json:"source"`
 }
 
-func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, addCall,
+func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) error {
+	_, err := q.db.Exec(ctx, addCall,
+		arg.ID,
 		arg.Submitter,
 		arg.System,
 		arg.Talkgroup,
@@ -113,9 +132,7 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, er
 		arg.TgGroup,
 		arg.Source,
 	)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+	return err
 }
 
 const getDatabaseSize = `-- name: GetDatabaseSize :one
