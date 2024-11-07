@@ -9,6 +9,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -32,6 +33,7 @@ func (d CallDuration) Seconds() int32 {
 }
 
 type Call struct {
+	ID             uuid.UUID
 	Audio          []byte
 	AudioName      string
 	AudioType      string
@@ -68,6 +70,7 @@ func Make(call *Call, dontStore bool) (*Call, error) {
 	}
 
 	call.shouldStore = dontStore
+	call.ID = uuid.New()
 
 	return call, nil
 }
@@ -92,6 +95,7 @@ func toInt32Slice(s []int) []int32 {
 
 func (c *Call) ToPB() *pb.Call {
 	return &pb.Call{
+		Id:          c.ID.String(),
 		AudioName:   c.AudioName,
 		AudioType:   c.AudioType,
 		DateTime:    timestamppb.New(c.DateTime),

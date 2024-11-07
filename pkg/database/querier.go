@@ -13,7 +13,7 @@ import (
 
 type Querier interface {
 	AddAlert(ctx context.Context, arg AddAlertParams) error
-	AddCall(ctx context.Context, arg AddCallParams) (uuid.UUID, error)
+	AddCall(ctx context.Context, arg AddCallParams) error
 	BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []string) error
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
