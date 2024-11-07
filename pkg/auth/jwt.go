@@ -110,14 +110,6 @@ func (a *Auth) newToken(uid int32) string {
 	return tokenString
 }
 
-func (a *Auth) PublicRoutes(r chi.Router) {
-	r.Post("/login", a.routeAuth)
-}
-
-func (a *Auth) PrivateRoutes(r chi.Router) {
-	r.Get("/refresh", a.routeRefresh)
-}
-
 func (a *Auth) allowInsecureCookie(r *http.Request) bool {
 	host := strings.Split(r.Host, ":")
 	v, has := a.cfg.AllowInsecure[host[0]]

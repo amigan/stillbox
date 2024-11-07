@@ -4,7 +4,10 @@ import (
 	"errors"
 	"net/http"
 
+	_ "embed"
+
 	"dynatron.me/x/stillbox/pkg/config"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 )
 
@@ -65,4 +68,21 @@ func ErrorResponse(w http.ResponseWriter, err error) {
 	default:
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func (a *Auth) PublicRoutes(r chi.Router) {
+	r.Post("/api/login", a.routeAuth)
+	r.Get("/api/login", a.routeLogin)
+}
+
+func (a *Auth) PrivateRoutes(r chi.Router) {
+	r.Get("/refresh", a.routeRefresh)
+}
+
+//go:embed login.html
+var loginPage []byte
+
+func (a *Auth) routeLogin(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "text/html")
+	_, _ = w.Write(loginPage)
 }
