@@ -19,7 +19,7 @@ func (d CallDuration) Duration() time.Duration {
 	return time.Duration(d)
 }
 
-func (d CallDuration) Int32Ptr() *int32 {
+func (d CallDuration) MsInt32Ptr() *int32 {
 	if time.Duration(d) == 0 {
 		return nil
 	}
@@ -106,7 +106,7 @@ func (c *Call) ToPB() *pb.Call {
 		Frequencies: toInt64Slice(c.Frequencies),
 		Patches:     toInt32Slice(c.Patches),
 		Sources:     toInt32Slice(c.Sources),
-		Duration:    c.Duration.Int32Ptr(),
+		Duration:    c.Duration.MsInt32Ptr(),
 		Audio:       c.Audio,
 	}
 }
