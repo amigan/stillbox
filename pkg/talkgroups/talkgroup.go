@@ -28,7 +28,11 @@ func (ids *IDs) Packed() []int64 {
 	return r
 }
 
-func TG[T int | uint | int64 | uint64 | int32 | uint32](sys, tgid T) ID {
+type intId interface {
+	int | uint | int64 | uint64 | int32 | uint32
+}
+
+func TG[T intId, U intId](sys T, tgid U) ID {
 	return ID{
 		System:    uint32(sys),
 		Talkgroup: uint32(tgid),
@@ -42,14 +46,5 @@ func (t ID) Pack() int64 {
 
 func (t ID) String() string {
 	return fmt.Sprintf("%d:%d", t.System, t.Talkgroup)
-}
 
-func PackedTGs(tg []ID) []int64 {
-	s := make([]int64, len(tg))
-
-	for i, v := range tg {
-		s[i] = v.Pack()
-	}
-
-	return s
 }

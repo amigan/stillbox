@@ -127,7 +127,7 @@ func (t *cache) add(rec *Talkgroup) error {
 	t.Lock()
 	defer t.Unlock()
 
-	tg := TG(rec.System.ID, int(rec.Talkgroup.Tgid))
+	tg := TG(rec.System.ID, rec.Talkgroup.Tgid)
 	t.tgs[tg] = rec
 	t.systems[int32(rec.System.ID)] = rec.System.Name
 
