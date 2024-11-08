@@ -64,7 +64,7 @@ func Make(ctx context.Context, store talkgroups.Store, score trending.Score[talk
 		}
 
 		if tgRecord.Talkgroup.Name != nil {
-			d.TGName = fmt.Sprintf("%s %s (%d)", tgRecord.System.Name, *tgRecord.Talkgroup.Name, score.ID.Talkgroup)
+			d.TGName = fmt.Sprintf("%s %s [%d]", tgRecord.System.Name, *tgRecord.Talkgroup.Name, score.ID.Talkgroup)
 		} else {
 			d.TGName = fmt.Sprintf("%s:%d", tgRecord.System.Name, int(score.ID.Talkgroup))
 		}
