@@ -1,10 +1,15 @@
 package notify
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	stdhttp "net/http"
+	"text/template"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/pkg/alerting/alert"
 	"dynatron.me/x/stillbox/pkg/config"
 
 	"github.com/go-viper/mapstructure/v2"
@@ -13,15 +18,70 @@ import (
 )
 
 type Notifier interface {
-	notify.Notifier
+	Send(ctx context.Context, alerts []alert.Alert) error
+}
+
+type backend struct {
+	*notify.Notify
+	subject *template.Template
+	body    *template.Template
 }
 
 type notifier struct {
-	*notify.Notify
+	backends []backend
 }
 
-func (n *notifier) buildSlackWebhookPayload(cfg *slackWebhookConfig) func(string, string) any {
+func highest(a []alert.Alert) string {
+	if len(a) < 1 {
+		return "none"
+	}
 
+	top := a[0]
+	for _, a := range a {
+		if a.Score.Score > top.Score.Score {
+			top = a
+		}
+	}
+
+	return top.TGName
+}
+
+var alertFm = template.FuncMap{
+	"highest": highest,
+}
+
+const defaultBodyTemplStr = `{{ range . -}}
+{{ .TGName }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
+
+{{ end -}}`
+
+var defaultBodyTemplate = template.Must(template.New("body").Funcs(common.FuncMap).Funcs(alertFm).Parse(defaultBodyTemplStr))
+
+var defaultSubjectTemplStr = `Stillbox Alert ({{ highest . }}`
+var defaultSubjectTemplate = template.Must(template.New("subject").Funcs(common.FuncMap).Funcs(alertFm).Parse(defaultSubjectTemplStr))
+
+// Send renders and sends the Alerts.
+func (b *backend) Send(ctx context.Context, alerts []alert.Alert) (err error) {
+	var subject, body bytes.Buffer
+	err = b.subject.ExecuteTemplate(&subject, "subject", alerts)
+	if err != nil {
+		return err
+	}
+
+	err = b.body.ExecuteTemplate(&body, "body", alerts)
+	if err != nil {
+		return err
+	}
+
+	err = b.Notify.Send(ctx, subject.String(), body.String())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func buildSlackWebhookPayload(cfg *slackWebhookConfig) func(string, string) any {
 	type Attachment struct {
 		Title     string `json:"title"`
 		Text      string `json:"text"`
@@ -53,12 +113,38 @@ func (n *notifier) buildSlackWebhookPayload(cfg *slackWebhookConfig) func(string
 }
 
 type slackWebhookConfig struct {
-	WebhookURL string `mapstructure:"webhookURL"`
-	Icon       string `mapstructure:"icon"`
-	MessageURL string `mapstructure:"messageURL"`
+	WebhookURL      string `mapstructure:"webhookURL"`
+	Icon            string `mapstructure:"icon"`
+	MessageURL      string `mapstructure:"messageURL"`
+	SubjectTemplate string `mapstructure:"subjectTemplate"`
+	BodyTemplate    string `mapstructure:"bodyTemplate"`
 }
 
-func (n *notifier) addService(cfg config.NotifyService) error {
+func (n *notifier) addService(cfg config.NotifyService) (err error) {
+	be := backend{}
+
+	switch cfg.SubjectTemplate {
+	case nil:
+		be.subject = defaultSubjectTemplate
+	default:
+		be.subject, err = template.New("subject").Funcs(common.FuncMap).Funcs(alertFm).Parse(*cfg.SubjectTemplate)
+		if err != nil {
+			return err
+		}
+	}
+
+	switch cfg.BodyTemplate {
+	case nil:
+		be.body = defaultBodyTemplate
+	default:
+		be.body, err = template.New("body").Funcs(common.FuncMap).Funcs(alertFm).Parse(*cfg.BodyTemplate)
+		if err != nil {
+			return err
+		}
+	}
+
+	be.Notify = notify.New()
+
 	switch cfg.Provider {
 	case "slackwebhook":
 		swc := &slackWebhookConfig{
@@ -74,20 +160,31 @@ func (n *notifier) addService(cfg config.NotifyService) error {
 			Header:       make(stdhttp.Header),
 			Method:       stdhttp.MethodPost,
 			URL:          swc.WebhookURL,
-			BuildPayload: n.buildSlackWebhookPayload(swc),
+			BuildPayload: buildSlackWebhookPayload(swc),
 		})
-		n.UseServices(hs)
+		be.UseServices(hs)
 	default:
 		return fmt.Errorf("unknown provider '%s'", cfg.Provider)
+	}
+
+	n.backends = append(n.backends, be)
+
+	return nil
+}
+
+func (n *notifier) Send(ctx context.Context, alerts []alert.Alert) error {
+	for _, be := range n.backends {
+		err := be.Send(ctx, alerts)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 func New(cfg config.Notify) (Notifier, error) {
-	n := &notifier{
-		Notify: notify.NewWithServices(),
-	}
+	n := new(notifier)
 
 	for _, s := range cfg {
 		err := n.addService(s)

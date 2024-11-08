@@ -33,5 +33,11 @@ alerting:
   renotify: 30m
 notify:
   - provider: slackwebhook
+#   subjectTemplate: "Stillbox Alert ({{ highest . }})"
+#   bodyTemplate: |
+#     {{ range . -}}
+#     {{ .TGName }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
+#
+#     {{ end -}}
     config:
       webhookURL: "http://somewhere"
