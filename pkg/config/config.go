@@ -65,8 +65,10 @@ type Alerting struct {
 type Notify []NotifyService
 
 type NotifyService struct {
-	Provider string                 `json:"provider"`
-	Config   map[string]interface{} `json:"config"`
+	Provider        string                 `yaml:"provider" json:"provider"`
+	SubjectTemplate *string                `yaml:"subjectTemplate" json:"subjectTemplate"`
+	BodyTemplate    *string                `yaml:"bodyTemplate" json:"bodyTemplate"`
+	Config          map[string]interface{} `yaml:"config" json:"config"`
 }
 
 func (n *NotifyService) GetS(k, defaultVal string) string {

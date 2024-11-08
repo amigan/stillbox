@@ -1,16 +1,14 @@
 package alerting
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"net/http"
 	"sort"
-	"strconv"
 	"sync"
-	"text/template"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/alerting/alert"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
@@ -21,8 +19,6 @@ import (
 	"dynatron.me/x/stillbox/internal/timeseries"
 	"dynatron.me/x/stillbox/internal/trending"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog/log"
 )
 
@@ -51,7 +47,7 @@ type alerter struct {
 	scores     trending.Scores[talkgroups.ID]
 	lastScore  time.Time
 	sim        *Simulation
-	alertCache map[talkgroups.ID]Alert
+	alertCache map[talkgroups.ID]alert.Alert
 	renotify   time.Duration
 	notifier   notify.Notifier
 	tgCache    talkgroups.Store
@@ -96,7 +92,7 @@ func New(cfg config.Alerting, tgCache talkgroups.Store, opts ...AlertOption) Ale
 
 	as := &alerter{
 		cfg:        cfg,
-		alertCache: make(map[talkgroups.ID]Alert),
+		alertCache: make(map[talkgroups.ID]alert.Alert),
 		clock:      timeseries.DefaultClock,
 		renotify:   DefaultRenotify,
 		tgCache:    tgCache,
@@ -150,22 +146,18 @@ func (as *alerter) Go(ctx context.Context) {
 
 }
 
-const notificationTemplStr = `{{ range . -}}
-{{ .TGName }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
-
-{{ end -}}`
-
-var notificationTemplate = template.Must(template.New("notification").Funcs(funcMap).Parse(notificationTemplStr))
-
-func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Alert, error) {
+func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]alert.Alert, error) {
 	err := as.tgCache.Hint(ctx, as.scoredTGs())
 	if err != nil {
 		return nil, fmt.Errorf("prime TG cache: %w", err)
 	}
 
+	as.Lock()
+	defer as.Unlock()
+
 	db := database.FromCtx(ctx)
 
-	var notifications []Alert
+	var notifications []alert.Alert
 	for _, s := range as.scores {
 		origScore := s.Score
 		tgr, err := as.tgCache.TG(ctx, s.ID)
@@ -176,7 +168,7 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Al
 		if s.Score > as.cfg.AlertThreshold || testMode {
 			if old, inCache := as.alertCache[s.ID]; !inCache || now.Sub(old.Timestamp) > as.renotify {
 				s.Score *= as.tgCache.Weight(ctx, s.ID, now)
-				a, err := as.makeAlert(ctx, s, origScore)
+				a, err := alert.Make(ctx, as.tgCache, s, origScore)
 				if err != nil {
 					return nil, fmt.Errorf("makeAlert: %w", err)
 				}
@@ -206,7 +198,7 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]Al
 }
 
 func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
-	alerts := make([]Alert, 0, len(as.scores))
+	alerts := make([]alert.Alert, 0, len(as.scores))
 	ctx := r.Context()
 
 	alerts, err := as.eval(ctx, time.Now(), true)
@@ -216,7 +208,7 @@ func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = as.sendNotification(ctx, alerts)
+	err = as.notifier.Send(ctx, alerts)
 	if err != nil {
 		log.Error().Err(err).Msg("test notification send")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -258,90 +250,10 @@ func (as *alerter) notify(ctx context.Context) error {
 	}
 
 	if len(notifications) > 0 {
-		return as.sendNotification(ctx, notifications)
+		return as.notifier.Send(ctx, notifications)
 	}
 
 	return nil
-}
-
-type Alert struct {
-	ID         uuid.UUID
-	Timestamp  time.Time
-	TGName     string
-	Score      trending.Score[talkgroups.ID]
-	OrigScore  float64
-	Weight     float32
-	Suppressed bool
-}
-
-func (a *Alert) ToAddAlertParams() database.AddAlertParams {
-	f32score := float32(a.Score.Score)
-	f32origscore := float32(a.OrigScore)
-
-	var origScore *float32
-	if a.Score.Score != a.OrigScore {
-		origScore = &f32origscore
-	}
-
-	return database.AddAlertParams{
-		ID:        a.ID,
-		Time:      pgtype.Timestamptz{Time: a.Timestamp, Valid: true},
-		PackedTg:  a.Score.ID.Pack(),
-		Weight:    &a.Weight,
-		Score:     &f32score,
-		OrigScore: origScore,
-		Notified:  !a.Suppressed,
-	}
-}
-
-// sendNotification renders and sends the notification.
-func (as *alerter) sendNotification(ctx context.Context, n []Alert) error {
-	msgBuffer := new(bytes.Buffer)
-
-	err := notificationTemplate.Execute(msgBuffer, n)
-	if err != nil {
-		return fmt.Errorf("notification template render: %w", err)
-	}
-
-	log.Debug().Str("msg", msgBuffer.String()).Msg("notifying")
-
-	return as.notifier.Send(ctx, NotificationSubject, msgBuffer.String())
-}
-
-// makeAlert creates a notification for later rendering by the template.
-// It takes a talkgroup Score as input.
-func (as *alerter) makeAlert(ctx context.Context, score trending.Score[talkgroups.ID], origScore float64) (Alert, error) {
-	d := Alert{
-		ID:        uuid.New(),
-		Score:     score,
-		Timestamp: time.Now(),
-		Weight:    1.0,
-		OrigScore: origScore,
-	}
-
-	tgRecord, err := as.tgCache.TG(ctx, score.ID)
-	switch err {
-	case nil:
-		d.Weight = tgRecord.Talkgroup.Weight
-		if tgRecord.System.Name == "" {
-			tgRecord.System.Name = strconv.Itoa(int(score.ID.System))
-		}
-
-		if tgRecord.Talkgroup.Name != nil {
-			d.TGName = fmt.Sprintf("%s %s (%d)", tgRecord.System.Name, *tgRecord.Talkgroup.Name, score.ID.Talkgroup)
-		} else {
-			d.TGName = fmt.Sprintf("%s:%d", tgRecord.System.Name, int(score.ID.Talkgroup))
-		}
-	default:
-		system, has := as.tgCache.SystemName(ctx, int(score.ID.System))
-		if has {
-			d.TGName = fmt.Sprintf("%s:%d", system, int(score.ID.Talkgroup))
-		} else {
-			d.TGName = fmt.Sprintf("%d:%d", int(score.ID.System), int(score.ID.Talkgroup))
-		}
-	}
-
-	return d, nil
 }
 
 // cleanCache clears the cache of aged-out entries

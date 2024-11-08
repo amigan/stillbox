@@ -12,6 +12,11 @@ type Talkgroup struct {
 	Learned bool            `json:"learned"`
 }
 
+type Names struct {
+	System    string
+	Talkgroup string
+}
+
 type ID struct {
 	System    uint32 `json:"sys"`
 	Talkgroup uint32 `json:"tg"`
