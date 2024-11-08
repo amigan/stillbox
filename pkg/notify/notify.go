@@ -50,15 +50,31 @@ var alertFm = template.FuncMap{
 	"highest": highest,
 }
 
-const defaultBodyTemplStr = `{{ range . -}}
+const (
+	defaultBodyTemplStr = `{{ range . -}}
 {{ .TGName }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
 
 {{ end -}}`
+	defaultSubjectTemplStr = `Stillbox Alert ({{ highest . }}`
+)
 
-var defaultBodyTemplate = template.Must(template.New("body").Funcs(common.FuncMap).Funcs(alertFm).Parse(defaultBodyTemplStr))
+var (
+	defaultTemplate *template.Template
+)
 
-var defaultSubjectTemplStr = `Stillbox Alert ({{ highest . }}`
-var defaultSubjectTemplate = template.Must(template.New("subject").Funcs(common.FuncMap).Funcs(alertFm).Parse(defaultSubjectTemplStr))
+func init() {
+	defaultTemplate = template.New("notification")
+	defaultTemplate.Funcs(common.FuncMap).Funcs(alertFm)
+	_, err := defaultTemplate.New("body").Parse(defaultBodyTemplStr)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = defaultTemplate.New("subject").Parse(defaultSubjectTemplStr)
+	if err != nil {
+		panic(err)
+	}
+}
 
 // Send renders and sends the Alerts.
 func (b *backend) Send(ctx context.Context, alerts []alert.Alert) (err error) {
@@ -125,7 +141,10 @@ func (n *notifier) addService(cfg config.NotifyService) (err error) {
 
 	switch cfg.SubjectTemplate {
 	case nil:
-		be.subject = defaultSubjectTemplate
+		be.subject = defaultTemplate.Lookup("subject")
+		if be.subject == nil {
+			panic("subject template nil")
+		}
 	default:
 		be.subject, err = template.New("subject").Funcs(common.FuncMap).Funcs(alertFm).Parse(*cfg.SubjectTemplate)
 		if err != nil {
@@ -135,7 +154,10 @@ func (n *notifier) addService(cfg config.NotifyService) (err error) {
 
 	switch cfg.BodyTemplate {
 	case nil:
-		be.body = defaultBodyTemplate
+		be.body = defaultTemplate.Lookup("body")
+		if be.body == nil {
+			panic("body template nil")
+		}
 	default:
 		be.body, err = template.New("body").Funcs(common.FuncMap).Funcs(alertFm).Parse(*cfg.BodyTemplate)
 		if err != nil {
