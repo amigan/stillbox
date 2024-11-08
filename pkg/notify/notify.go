@@ -55,7 +55,7 @@ const (
 {{ .TGName }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
 
 {{ end -}}`
-	defaultSubjectTemplStr = `Stillbox Alert ({{ highest . }}`
+	defaultSubjectTemplStr = `Stillbox Alert ({{ highest . }})`
 )
 
 var (
