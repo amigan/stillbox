@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/internal/jsontime"
 
@@ -54,6 +55,14 @@ type urlEncTestJT struct {
 	ScoreEnd     jsontime.Time     `json:"scoreEnd"`
 }
 
+type ptrTestJT struct {
+	LookbackDays uint               `form:"lookbackDays"`
+	HalfLife     *jsontime.Duration `form:"halfLife"`
+	Recent       *string            `form:"recent"`
+	ScoreStart   *jsontime.Time     `form:"scoreStart"`
+	ScoreEnd     jsontime.Time      `form:"scoreEnd"`
+}
+
 var (
 	UrlEncTest = urlEncTest{
 		LookbackDays: 7,
@@ -67,6 +76,13 @@ var (
 		HalfLife:     jsontime.Duration(30 * time.Minute),
 		Recent:       "2h0m0s",
 		ScoreStart:   jsontime.Time(time.Date(2024, time.October, 28, 9, 25, 0, 0, time.UTC)),
+	}
+
+	PtrTestJT = ptrTestJT{
+		LookbackDays: 7,
+		HalfLife:     common.PtrTo(jsontime.Duration(30 * time.Minute)),
+		Recent:       common.PtrTo("2h0m0s"),
+		ScoreStart:   common.PtrTo(jsontime.Time(time.Date(2024, time.October, 28, 9, 25, 0, 0, time.UTC))),
 	}
 
 	UrlEncTestJTLocal = urlEncTestJT{
@@ -122,29 +138,29 @@ func TestUnmarshal(t *testing.T) {
 		name      string
 		r         *http.Request
 		dest      any
-		compare   any
+		expect    any
 		expectErr error
 		opts      []forms.Option
 	}{
 		{
-			name:    "base case",
-			r:       makeRequest("call1.http"),
-			dest:    &callUploadRequest{},
-			compare: &Call1,
-			opts:    []forms.Option{forms.WithAcceptBlank()},
+			name:   "base case",
+			r:      makeRequest("call1.http"),
+			dest:   &callUploadRequest{},
+			expect: &Call1,
+			opts:   []forms.Option{forms.WithAcceptBlank()},
 		},
 		{
 			name:      "base case no accept blank",
 			r:         makeRequest("call1.http"),
 			dest:      &callUploadRequest{},
-			compare:   &Call1,
+			expect:    &Call1,
 			expectErr: errors.New(`parsebool(''): strconv.ParseBool: parsing "": invalid syntax`),
 		},
 		{
 			name:      "not a pointer",
 			r:         makeRequest("call1.http"),
 			dest:      callUploadRequest{},
-			compare:   callUploadRequest{},
+			expect:    callUploadRequest{},
 			expectErr: forms.ErrNotPointer,
 			opts:      []forms.Option{forms.WithAcceptBlank()},
 		},
@@ -152,7 +168,7 @@ func TestUnmarshal(t *testing.T) {
 			name:      "not a struct",
 			r:         makeRequest("call1.http"),
 			dest:      &str,
-			compare:   callUploadRequest{},
+			expect:    callUploadRequest{},
 			expectErr: forms.ErrNotStruct,
 			opts:      []forms.Option{forms.WithAcceptBlank()},
 		},
@@ -160,44 +176,51 @@ func TestUnmarshal(t *testing.T) {
 			name:      "url encoded",
 			r:         makeRequest("urlenc.http"),
 			dest:      &urlEncTest{},
-			compare:   &UrlEncTest,
+			expect:    &UrlEncTest,
 			expectErr: errors.New(`Could not find format for ""`),
 		},
 		{
-			name:    "url encoded accept blank",
-			r:       makeRequest("urlenc.http"),
-			dest:    &urlEncTest{},
-			compare: &UrlEncTest,
-			opts:    []forms.Option{forms.WithAcceptBlank()},
+			name:   "url encoded accept blank",
+			r:      makeRequest("urlenc.http"),
+			dest:   &urlEncTest{},
+			expect: &UrlEncTest,
+			opts:   []forms.Option{forms.WithAcceptBlank()},
+		},
+		{
+			name:   "url encoded accept blank pointer",
+			r:      makeRequest("urlenc.http"),
+			dest:   &ptrTestJT{},
+			expect: &PtrTestJT,
+			opts:   []forms.Option{forms.WithAcceptBlank()},
 		},
 		{
 			name:      "url encoded jsontime",
 			r:         makeRequest("urlenc.http"),
 			dest:      &urlEncTestJT{},
-			compare:   &UrlEncTestJT,
+			expect:    &UrlEncTestJT,
 			expectErr: errors.New(`Could not find format for ""`),
 			opts:      []forms.Option{forms.WithTag("json")},
 		},
 		{
-			name:    "url encoded jsontime with tz",
-			r:       makeRequest("urlenc.http"),
-			dest:    &urlEncTestJT{},
-			compare: &UrlEncTestJT,
-			opts:    []forms.Option{forms.WithAcceptBlank(), forms.WithParseTimeInTZ(time.UTC), forms.WithTag("json")},
+			name:   "url encoded jsontime with tz",
+			r:      makeRequest("urlenc.http"),
+			dest:   &urlEncTestJT{},
+			expect: &UrlEncTestJT,
+			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithParseTimeInTZ(time.UTC), forms.WithTag("json")},
 		},
 		{
-			name:    "url encoded jsontime with local",
-			r:       makeRequest("urlenc.http"),
-			dest:    &urlEncTestJT{},
-			compare: &UrlEncTestJTLocal,
-			opts:    []forms.Option{forms.WithAcceptBlank(), forms.WithParseLocalTime(), forms.WithTag("json")},
+			name:   "url encoded jsontime with local",
+			r:      makeRequest("urlenc.http"),
+			dest:   &urlEncTestJT{},
+			expect: &UrlEncTestJTLocal,
+			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithParseLocalTime(), forms.WithTag("json")},
 		},
 		{
-			name:    "sim real data",
-			r:       makeRequest("urlenc2.http"),
-			dest:    &alerting.Simulation{},
-			compare: realSim,
-			opts:    []forms.Option{forms.WithAcceptBlank(), forms.WithParseLocalTime()},
+			name:   "sim real data",
+			r:      makeRequest("urlenc2.http"),
+			dest:   &alerting.Simulation{},
+			expect: realSim,
+			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithParseLocalTime()},
 		},
 	}
 
@@ -209,7 +232,7 @@ func TestUnmarshal(t *testing.T) {
 				assert.Contains(t, tc.expectErr.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tc.compare, tc.dest)
+				assert.Equal(t, tc.expect, tc.dest)
 			}
 		})
 	}

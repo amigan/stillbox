@@ -58,11 +58,11 @@ func NewClient(ctx context.Context, conf config.DB) (*DB, error) {
 
 type DBCtxKey string
 
-const DBCTXKeyValue DBCtxKey = "dbctx"
+const DBCtxKeyValue DBCtxKey = "dbctx"
 
 // FromCtx returns the database handle from the provided Context.
 func FromCtx(ctx context.Context) *DB {
-	c, ok := ctx.Value(DBCTXKeyValue).(*DB)
+	c, ok := ctx.Value(DBCtxKeyValue).(*DB)
 	if !ok {
 		panic("no DB in context")
 	}
@@ -72,7 +72,7 @@ func FromCtx(ctx context.Context) *DB {
 
 // CtxWithDB returns a Context with the provided database handle.
 func CtxWithDB(ctx context.Context, conn *DB) context.Context {
-	return context.WithValue(ctx, DBCTXKeyValue, conn)
+	return context.WithValue(ctx, DBCtxKeyValue, conn)
 }
 
 // IsNoRows is a convenience function that returns whether a returned error is a database

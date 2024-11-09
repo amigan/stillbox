@@ -44,8 +44,7 @@ func (a *Alert) ToAddAlertParams() database.AddAlertParams {
 	}
 }
 
-// makeAlert creates a notification for later rendering by the template.
-// It takes a talkgroup Score as input.
+// Make creates an alert for later rendering or storage.
 func Make(ctx context.Context, store talkgroups.Store, score trending.Score[talkgroups.ID], origScore float64) (Alert, error) {
 	d := Alert{
 		ID:        uuid.New(),

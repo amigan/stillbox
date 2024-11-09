@@ -2,7 +2,6 @@ package alerting
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -114,24 +113,15 @@ func (s *Simulation) Simulate(ctx context.Context) (trending.Scores[talkgroups.I
 func (as *alerter) simulateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s := new(Simulation)
-	switch r.Header.Get("Content-Type") {
-	case "application/json":
-		err := json.NewDecoder(r.Body).Decode(s)
-		if err != nil {
-			err = fmt.Errorf("simulate decode: %w", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-	default:
-		err := forms.Unmarshal(r, s, forms.WithAcceptBlank(), forms.WithParseLocalTime())
-		if err != nil {
-			err = fmt.Errorf("simulate unmarshal: %w", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+
+	err := forms.Unmarshal(r, s, forms.WithAcceptBlank(), forms.WithParseLocalTime())
+	if err != nil {
+		err = fmt.Errorf("simulate unmarshal: %w", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	err := s.verify()
+	err = s.verify()
 	if err != nil {
 		err = fmt.Errorf("simulation profile verify: %w", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
