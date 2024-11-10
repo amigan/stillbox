@@ -57,16 +57,16 @@ type Store interface {
 	HUP(*config.Config)
 }
 
-type CtxStoreKey string
+type storeCtxKey string
 
-const StoreCtxKeyValue CtxStoreKey = "store"
+const StoreCtxKey storeCtxKey = "store"
 
 func CtxWithStore(ctx context.Context, s Store) context.Context {
-	return context.WithValue(ctx, StoreCtxKeyValue, s)
+	return context.WithValue(ctx, StoreCtxKey, s)
 }
 
 func StoreFrom(ctx context.Context) Store {
-	s, ok := ctx.Value(StoreCtxKeyValue).(Store)
+	s, ok := ctx.Value(StoreCtxKey).(Store)
 	if !ok {
 		return NewCache()
 	}

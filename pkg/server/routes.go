@@ -27,8 +27,8 @@ func (s *Server) setupRoutes() {
 	}
 
 	r := s.r
-	r.Use(middleware.WithValue(database.DBCtxKeyValue, s.db))
-	r.Use(middleware.WithValue(talkgroups.StoreCtxKeyValue, s.tgs))
+	r.Use(middleware.WithValue(database.DBCtxKey, s.db))
+	r.Use(middleware.WithValue(talkgroups.StoreCtxKey, s.tgs))
 
 	s.installPprof()
 
