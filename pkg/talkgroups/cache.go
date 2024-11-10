@@ -17,7 +17,15 @@ import (
 
 type tgMap map[ID]*Talkgroup
 
+var (
+	ErrNotFound     = errors.New("talkgroup not found")
+	ErrNoSuchSystem = errors.New("no such system")
+)
+
 type Store interface {
+	// UpdateTG updates a talkgroup record.
+	UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*Talkgroup, error)
+
 	// TG retrieves a Talkgroup from the Store.
 	TG(ctx context.Context, tg ID) (*Talkgroup, error)
 
@@ -49,16 +57,16 @@ type Store interface {
 	HUP(*config.Config)
 }
 
-type CtxStoreKeyT string
+type storeCtxKey string
 
-const CtxStoreKey CtxStoreKeyT = "store"
+const StoreCtxKey storeCtxKey = "store"
 
 func CtxWithStore(ctx context.Context, s Store) context.Context {
-	return context.WithValue(ctx, CtxStoreKey, s)
+	return context.WithValue(ctx, StoreCtxKey, s)
 }
 
 func StoreFrom(ctx context.Context) Store {
-	s, ok := ctx.Value(CtxStoreKey).(Store)
+	s, ok := ctx.Value(StoreCtxKey).(Store)
 	if !ok {
 		return NewCache()
 	}
@@ -213,8 +221,6 @@ func (t *cache) Load(ctx context.Context, tgs []int64) error {
 	return nil
 }
 
-var ErrNotFound = errors.New("talkgroup not found")
-
 func (t *cache) Weight(ctx context.Context, id ID, tm time.Time) float64 {
 	tg, err := t.TG(ctx, id)
 	if err != nil {
@@ -289,4 +295,24 @@ func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) 
 	}
 
 	return n, has
+}
+
+func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*Talkgroup, error) {
+	sysName, has := t.SystemName(ctx, int(Unpack(input.ID).System))
+	if !has {
+		return nil, ErrNoSuchSystem
+	}
+
+	tg, err := database.FromCtx(ctx).UpdateTalkgroup(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	record := &Talkgroup{
+		Talkgroup: tg,
+		System:    database.System{ID: int(tg.SystemID), Name: sysName},
+	}
+	t.add(record)
+
+	return record, nil
 }

@@ -9,3 +9,6 @@ func (g GetTalkgroupsWithLearnedRow) GetLearned() bool                   { retur
 func (g GetTalkgroupsWithLearnedBySystemRow) GetTalkgroup() Talkgroup    { return g.Talkgroup }
 func (g GetTalkgroupsWithLearnedBySystemRow) GetSystem() System          { return g.System }
 func (g GetTalkgroupsWithLearnedBySystemRow) GetLearned() bool           { return g.Learned }
+func (g Talkgroup) GetTalkgroup() Talkgroup                              { return g }
+func (g Talkgroup) GetSystem() System                                    { return System{ID: int(g.SystemID)} }
+func (g Talkgroup) GetLearned() bool                                     { return false }

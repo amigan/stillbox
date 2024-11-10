@@ -104,6 +104,20 @@ FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
 WHERE ignored IS NOT TRUE;
 
-
 -- name: GetSystemName :one
 SELECT name FROM systems WHERE id = sqlc.arg(system_id);
+
+-- name: UpdateTalkgroup :one
+UPDATE talkgroups
+SET
+	name = COALESCE(sqlc.narg('name'), name),
+	alpha_tag = COALESCE(sqlc.narg('alpha_tag'), alpha_tag),
+	tg_group = COALESCE(sqlc.narg('tg_group'), tg_group),
+	frequency = COALESCE(sqlc.narg('frequency'), frequency),
+	metadata = COALESCE(sqlc.narg('metadata'), metadata),
+	tags = COALESCE(sqlc.narg('tags'), tags),
+	alert = COALESCE(sqlc.narg('alert'), alert),
+	alert_config = COALESCE(sqlc.narg('alert_config'), alert_config),
+	weight = COALESCE(sqlc.narg('weight'), weight)
+WHERE id = @id
+RETURNING *;

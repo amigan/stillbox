@@ -49,6 +49,13 @@ func (t ID) Pack() int64 {
 	return int64((int64(t.System) << 32) | int64(t.Talkgroup))
 }
 
+func Unpack(id int64) ID {
+	return ID{
+		System:    uint32(id >> 32),
+		Talkgroup: uint32(id & 0xffffffff),
+	}
+}
+
 func (t ID) String() string {
 	return fmt.Sprintf("%d:%d", t.System, t.Talkgroup)
 

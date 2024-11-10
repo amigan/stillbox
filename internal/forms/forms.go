@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,15 +17,22 @@ import (
 )
 
 var (
-	ErrNotStruct  = errors.New("destination is not a struct")
-	ErrNotPointer = errors.New("destination is not a pointer")
+	ErrNotStruct   = errors.New("destination is not a struct")
+	ErrNotPointer  = errors.New("destination is not a pointer")
+	ErrContentType = errors.New("bad content type")
+)
+
+const (
+	MaxMultipartMemory int64 = 1024 * 1024 // 1MB
 )
 
 type options struct {
-	tagOverride *string
-	parseTimeIn *time.Location
-	parseLocal  bool
-	acceptBlank bool
+	tagOverride        *string
+	parseTimeIn        *time.Location
+	parseLocal         bool
+	acceptBlank        bool
+	maxMultipartMemory int64
+	defaultOmitEmpty   bool
 }
 
 type Option func(*options)
@@ -50,6 +58,18 @@ func WithAcceptBlank() Option {
 func WithTag(t string) Option {
 	return func(o *options) {
 		o.tagOverride = &t
+	}
+}
+
+func WithMaxMultipartSize(s int64) Option {
+	return func(o *options) {
+		o.maxMultipartMemory = s
+	}
+}
+
+func WithOmitEmpty() Option {
+	return func(o *options) {
+		o.defaultOmitEmpty = true
 	}
 }
 
@@ -147,17 +167,19 @@ func (o *options) parseDuration(s string) (v time.Duration, set bool, err error)
 	return
 }
 
-func (o *options) iterFields(r *http.Request, rv reflect.Value) error {
-	rt := rv.Type()
-	for i := 0; i < rv.NumField(); i++ {
-		f := rv.Field(i)
-		tf := rt.Field(i)
-		if !tf.IsExported() && !tf.Anonymous {
+var typeOfByteSlice = reflect.TypeOf([]byte(nil))
+
+func (o *options) iterFields(r *http.Request, destStruct reflect.Value) error {
+	structType := destStruct.Type()
+	for i := 0; i < destStruct.NumField(); i++ {
+		destFieldVal := destStruct.Field(i)
+		fieldType := structType.Field(i)
+		if !fieldType.IsExported() && !fieldType.Anonymous {
 			continue
 		}
 
-		if f.Kind() == reflect.Struct && tf.Anonymous {
-			err := o.iterFields(r, f)
+		if destFieldVal.Kind() == reflect.Struct && fieldType.Anonymous {
+			err := o.iterFields(r, destFieldVal)
 			if err != nil {
 				return err
 			}
@@ -165,51 +187,38 @@ func (o *options) iterFields(r *http.Request, rv reflect.Value) error {
 
 		var tAr []string
 		var formField string
-		formTag, has := rt.Field(i).Tag.Lookup(o.Tag())
+		var omitEmpty bool
+		if o.defaultOmitEmpty {
+			omitEmpty = true
+		}
+
+		formTag, has := structType.Field(i).Tag.Lookup(o.Tag())
 		if has {
 			tAr = strings.Split(formTag, ",")
 			formField = tAr[0]
+			for _, v := range tAr[1:] {
+				if v == "omitempty" {
+					omitEmpty = true
+					break
+				}
+			}
 		}
+
 		if !has || formField == "-" {
 			continue
 		}
 
-		fi := f.Interface()
+		destFieldIntf := destFieldVal.Interface()
 
-		switch v := fi.(type) {
-		case string, *string:
-			s := r.Form.Get(formField)
-			setVal(f, s != "" || o.acceptBlank, v, s)
-		case int, uint, *int, *uint:
-			ff := r.Form.Get(formField)
-			val, set, err := o.parseInt(ff)
-			if err != nil {
-				return err
-			}
-			setVal(f, set, v, val)
-		case float64:
-			ff := r.Form.Get(formField)
-			val, set, err := o.parseFloat64(ff)
-			if err != nil {
-				return err
-			}
-			setVal(f, set, v, val)
-		case bool, *bool:
-			ff := r.Form.Get(formField)
-			val, set, err := o.parseBool(ff)
-			if err != nil {
-				return err
-			}
-			setVal(f, set, v, val)
-		case []byte:
+		if destFieldVal.Kind() == reflect.Slice && destFieldVal.Type() == typeOfByteSlice {
 			file, hdr, err := r.FormFile(formField)
 			if err != nil {
 				return fmt.Errorf("get form file: %w", err)
 			}
 
-			nameField, hasFilename := rt.Field(i).Tag.Lookup("filenameField")
+			nameField, hasFilename := structType.Field(i).Tag.Lookup("filenameField")
 			if hasFilename {
-				fnf := rv.FieldByName(nameField)
+				fnf := destStruct.FieldByName(nameField)
 				if fnf == (reflect.Value{}) {
 					panic(fmt.Errorf("filenameField '%s' does not exist", nameField))
 				}
@@ -221,23 +230,52 @@ func (o *options) iterFields(r *http.Request, rv reflect.Value) error {
 				return fmt.Errorf("file read: %w", err)
 			}
 
-			f.SetBytes(audioBytes)
+			destFieldVal.SetBytes(audioBytes)
+
+			continue
+		}
+
+		if !r.Form.Has(formField) && omitEmpty {
+			continue
+		}
+
+		ff := r.Form.Get(formField)
+
+		switch v := destFieldIntf.(type) {
+		case string, *string:
+			setVal(destFieldVal, ff != "" || o.acceptBlank, ff)
+		case int, uint, *int, *uint:
+			val, set, err := o.parseInt(ff)
+			if err != nil {
+				return err
+			}
+			setVal(destFieldVal, set, val)
+		case float64:
+			val, set, err := o.parseFloat64(ff)
+			if err != nil {
+				return err
+			}
+			setVal(destFieldVal, set, val)
+		case bool, *bool:
+			val, set, err := o.parseBool(ff)
+			if err != nil {
+				return err
+			}
+			setVal(destFieldVal, set, val)
 		case time.Time, *time.Time, jsontime.Time, *jsontime.Time:
-			tval := r.Form.Get(formField)
-			t, set, err := o.parseTime(tval)
+			t, set, err := o.parseTime(ff)
 			if err != nil {
 				return err
 			}
-			setVal(f, set, v, t)
+			setVal(destFieldVal, set, t)
 		case time.Duration, *time.Duration, jsontime.Duration, *jsontime.Duration:
-			dval := r.Form.Get(formField)
-			d, set, err := o.parseDuration(dval)
+			d, set, err := o.parseDuration(ff)
 			if err != nil {
 				return err
 			}
-			setVal(f, set, v, d)
+			setVal(destFieldVal, set, d)
 		case []int:
-			val := strings.Trim(r.Form.Get(formField), "[]")
+			val := strings.Trim(ff, "[]")
 			if val == "" && o.acceptBlank {
 				continue
 			}
@@ -249,7 +287,7 @@ func (o *options) iterFields(r *http.Request, rv reflect.Value) error {
 					ar = append(ar, i)
 				}
 			}
-			f.Set(reflect.ValueOf(ar))
+			destFieldVal.Set(reflect.ValueOf(ar))
 		default:
 			panic(fmt.Errorf("unsupported type %T", v))
 		}
@@ -258,48 +296,77 @@ func (o *options) iterFields(r *http.Request, rv reflect.Value) error {
 	return nil
 }
 
-func setVal(setField reflect.Value, set bool, fv any, sv any) {
+func setVal(destFieldVal reflect.Value, set bool, src any) {
 	if !set {
 		return
 	}
 
-	rv := reflect.TypeOf(fv)
-	svo := reflect.ValueOf(sv)
+	destType := destFieldVal.Type()
+	srcVal := reflect.ValueOf(src)
 
-	if svo.CanConvert(rv) {
-		svo = svo.Convert(rv)
+	if srcVal.Kind() == reflect.Ptr {
+		srcVal = srcVal.Elem()
 	}
 
-	if rv.Kind() == reflect.Ptr {
-		svo = svo.Addr()
+	if destType.Kind() == reflect.Ptr {
+		if !srcVal.CanAddr() {
+			if srcVal.CanConvert(destType.Elem()) {
+				srcVal = srcVal.Convert(destType.Elem())
+			}
+			copy := reflect.New(srcVal.Type())
+			copy.Elem().Set(srcVal)
+			srcVal = copy
+		}
+	} else if srcVal.CanConvert(destFieldVal.Type()) {
+		srcVal = srcVal.Convert(destFieldVal.Type())
 	}
 
-	setField.Set(svo)
+	destFieldVal.Set(srcVal)
 }
 
 func Unmarshal(r *http.Request, dest any, opt ...Option) error {
-	o := options{}
+	o := options{
+		maxMultipartMemory: MaxMultipartMemory,
+	}
+
 	for _, opt := range opt {
 		opt(&o)
 	}
 
-	rv := reflect.ValueOf(dest)
-	if k := rv.Kind(); k == reflect.Ptr {
-		rv = rv.Elem()
-	} else {
-		return ErrNotPointer
-	}
+	contentType := strings.Split(r.Header.Get("Content-Type"), ";")[0]
 
-	if rv.Kind() != reflect.Struct {
-		return ErrNotStruct
-	}
+	switch contentType {
+	case "multipart/form-data":
+		err := r.ParseMultipartForm(o.maxMultipartMemory)
+		if err != nil {
+			return fmt.Errorf("ParseForm: %w", err)
+		}
 
-	if strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded") {
+		return o.unmarshalForm(r, dest)
+	case "application/x-www-form-urlencoded":
 		err := r.ParseForm()
 		if err != nil {
 			return fmt.Errorf("ParseForm: %w", err)
 		}
+		return o.unmarshalForm(r, dest)
+	case "application/json":
+		return json.NewDecoder(r.Body).Decode(dest)
 	}
 
-	return o.iterFields(r, rv)
+	return ErrContentType
+}
+
+func (o *options) unmarshalForm(r *http.Request, dest any) error {
+	destVal := reflect.ValueOf(dest)
+	if k := destVal.Kind(); k == reflect.Ptr {
+		destVal = destVal.Elem()
+	} else {
+		return ErrNotPointer
+	}
+
+	if destVal.Kind() != reflect.Struct {
+		return ErrNotStruct
+	}
+
+	return o.iterFields(r, destVal)
 }

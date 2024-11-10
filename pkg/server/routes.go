@@ -9,6 +9,7 @@ import (
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
@@ -26,7 +27,8 @@ func (s *Server) setupRoutes() {
 	}
 
 	r := s.r
-	r.Use(middleware.WithValue(database.DBCTXKeyValue, s.db))
+	r.Use(middleware.WithValue(database.DBCtxKey, s.db))
+	r.Use(middleware.WithValue(talkgroups.StoreCtxKey, s.tgs))
 
 	s.installPprof()
 
@@ -36,7 +38,7 @@ func (s *Server) setupRoutes() {
 		s.nex.PrivateRoutes(r)
 		s.auth.PrivateRoutes(r)
 		s.alerter.PrivateRoutes(r)
-		r.Mount("/api", s.api.Subrouter())
+		r.Mount("/api", s.rest.Subrouter())
 	})
 
 	r.Group(func(r chi.Router) {

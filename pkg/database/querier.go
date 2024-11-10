@@ -39,6 +39,7 @@ type Querier interface {
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error
 	SetTalkgroupTags(ctx context.Context, sys int, tg int, tags []string) error
 	UpdatePassword(ctx context.Context, username string, password string) error
+	UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error)
 }
 
 var _ Querier = (*Queries)(nil)

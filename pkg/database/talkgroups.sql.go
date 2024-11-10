@@ -472,3 +472,63 @@ func (q *Queries) SetTalkgroupTags(ctx context.Context, sys int, tg int, tags []
 	_, err := q.db.Exec(ctx, setTalkgroupTags, sys, tg, tags)
 	return err
 }
+
+const updateTalkgroup = `-- name: UpdateTalkgroup :one
+UPDATE talkgroups
+SET
+	name = COALESCE($1, name),
+	alpha_tag = COALESCE($2, alpha_tag),
+	tg_group = COALESCE($3, tg_group),
+	frequency = COALESCE($4, frequency),
+	metadata = COALESCE($5, metadata),
+	tags = COALESCE($6, tags),
+	alert = COALESCE($7, alert),
+	alert_config = COALESCE($8, alert_config),
+	weight = COALESCE($9, weight)
+WHERE id = $10
+RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight
+`
+
+type UpdateTalkgroupParams struct {
+	Name        *string  `json:"name"`
+	AlphaTag    *string  `json:"alpha_tag"`
+	TgGroup     *string  `json:"tg_group"`
+	Frequency   *int32   `json:"frequency"`
+	Metadata    []byte   `json:"metadata"`
+	Tags        []string `json:"tags"`
+	Alert       *bool    `json:"alert"`
+	AlertConfig []byte   `json:"alert_config"`
+	Weight      *float32 `json:"weight"`
+	ID          int64    `json:"id"`
+}
+
+func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error) {
+	row := q.db.QueryRow(ctx, updateTalkgroup,
+		arg.Name,
+		arg.AlphaTag,
+		arg.TgGroup,
+		arg.Frequency,
+		arg.Metadata,
+		arg.Tags,
+		arg.Alert,
+		arg.AlertConfig,
+		arg.Weight,
+		arg.ID,
+	)
+	var i Talkgroup
+	err := row.Scan(
+		&i.ID,
+		&i.SystemID,
+		&i.Tgid,
+		&i.Name,
+		&i.AlphaTag,
+		&i.TgGroup,
+		&i.Frequency,
+		&i.Metadata,
+		&i.Tags,
+		&i.Alert,
+		&i.AlertConfig,
+		&i.Weight,
+	)
+	return i, err
+}
