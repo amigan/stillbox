@@ -61,7 +61,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	tgCache := talkgroups.NewCache()
-	api := api.New(tgCache)
+	api := api.New()
 
 	srv := &Server{
 		auth:     authenticator,

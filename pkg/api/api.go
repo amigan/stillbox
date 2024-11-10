@@ -71,6 +71,10 @@ func writeResponse(w http.ResponseWriter, r *http.Request, data interface{}, err
 	}
 }
 
+func reqErr(w http.ResponseWriter, err error, code int) {
+	http.Error(w, err.Error(), code)
+}
+
 func decodeParams(d interface{}, r *http.Request) error {
 	params := chi.RouteContext(r.Context()).URLParams
 	m := make(map[string]string, len(params.Keys))
@@ -93,5 +97,5 @@ func decodeParams(d interface{}, r *http.Request) error {
 }
 
 func badReq(w http.ResponseWriter, err error) {
-	http.Error(w, err.Error(), http.StatusBadRequest)
+	reqErr(w, err, http.StatusBadRequest)
 }
