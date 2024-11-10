@@ -1,10 +1,11 @@
 package api
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 
 	"dynatron.me/x/stillbox/internal/forms"
+	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"github.com/go-chi/chi/v5"
@@ -80,37 +81,27 @@ func (tga *talkgroupAPI) putTalkgroup(w http.ResponseWriter, r *http.Request) {
 		badReq(w, err)
 		return
 	}
-	/*
-		ctx := r.Context()
-		tgs := talkgroups.StoreFrom(ctx)
 
-		tg, err := tgs.TG(ctx, id.ToID())
-		switch err {
-		case nil:
-		case talkgroups.ErrNotFound:
-			reqErr(w, err, http.StatusNotFound)
-			return
-		default:
-			reqErr(w, err, http.StatusInternalServerError)
-		}
-	*/
+	ctx := r.Context()
+	tgs := talkgroups.StoreFrom(ctx)
 
-	input := struct {
-		Name        *string  `form:"name"`
-		AlphaTag    *string  `form:"alpha_tag"`
-		TgGroup     *string  `form:"tg_group"`
-		Frequency   *int32   `form:"frequency"`
-		Metadata    []byte   `form:"metadata"`
-		Tags        []string `form:"tags"`
-		Alert       *bool    `form:"alert"`
-		AlertConfig []byte   `form:"alert_config"`
-		Weight      *float32 `form:"weight"`
-	}{}
+	input := database.UpdateTalkgroupParams{}
 
-	err = forms.Unmarshal(r, &input, forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	err = forms.Unmarshal(r, &input, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
 	if err != nil {
-		reqErr(w, err, http.StatusBadRequest)
+		writeResponse(w, r, nil, err)
 		return
 	}
-	fmt.Fprintf(w, "%+v\n", input)
+	input.ID = id.ToID().Pack()
+
+	record, err := tgs.UpdateTG(ctx, input)
+	if err != nil {
+		writeResponse(w, r, nil, err)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(record)
+	if err != nil {
+		writeResponse(w, r, nil, err)
+	}
 }

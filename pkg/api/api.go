@@ -34,30 +34,36 @@ func (a *api) Subrouter() http.Handler {
 	return r
 }
 
-var statusMapping = map[error]int{
-	talkgroups.ErrNotFound: http.StatusNotFound,
-	pgx.ErrNoRows:          http.StatusNotFound,
+type errResponse struct {
+	text string
+	code int
 }
 
-func httpCode(err error) int {
+var statusMapping = map[error]errResponse{
+	talkgroups.ErrNotFound: {talkgroups.ErrNotFound.Error(), http.StatusNotFound},
+	pgx.ErrNoRows:          {"no such record", http.StatusNotFound},
+}
+
+func httpCode(err error) (string, int) {
 	c, ok := statusMapping[err]
 	if ok {
-		return c
+		return c.text, c.code
 	}
 
 	for e, c := range statusMapping { // check if err wraps an error we know about
 		if errors.Is(err, e) {
-			return c
+			return c.text, c.code
 		}
 	}
 
-	return http.StatusInternalServerError
+	return err.Error(), http.StatusInternalServerError
 }
 
 func writeResponse(w http.ResponseWriter, r *http.Request, data interface{}, err error) {
 	if err != nil {
 		log.Error().Str("path", r.URL.Path).Err(err).Msg("request failed")
-		http.Error(w, err.Error(), httpCode(err))
+		text, code := httpCode(err)
+		http.Error(w, text, code)
 		return
 	}
 
@@ -66,7 +72,8 @@ func writeResponse(w http.ResponseWriter, r *http.Request, data interface{}, err
 	err = enc.Encode(data)
 	if err != nil {
 		log.Error().Str("path", r.URL.Path).Err(err).Msg("response marshal failed")
-		http.Error(w, err.Error(), httpCode(err))
+		text, code := httpCode(err)
+		http.Error(w, text, code)
 		return
 	}
 }
