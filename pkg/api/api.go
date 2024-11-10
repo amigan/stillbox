@@ -1,13 +1,13 @@
 package api
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
@@ -29,57 +29,81 @@ func New() API {
 func (a *api) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	r.Mount("/talkgroup", new(talkgroupAPI).routes())
+	r.Mount("/talkgroup", new(talkgroupAPI).Subrouter())
 
 	return r
 }
 
 type errResponse struct {
-	text string
-	code int
+	Err   error  `json:"-"`
+	Code  int    `json:"-"`
+	Error string `json:"error"`
 }
 
-var statusMapping = map[error]errResponse{
-	talkgroups.ErrNotFound: {talkgroups.ErrNotFound.Error(), http.StatusNotFound},
-	pgx.ErrNoRows:          {"no such record", http.StatusNotFound},
+func (e *errResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	switch e.Code {
+	case http.StatusNotFound:
+	case http.StatusBadRequest:
+	default:
+		log.Error().Str("path", r.URL.Path).Err(e.Err).Int("code", e.Code).Str("msg", e.Error).Msg("request failed")
+	}
+
+	render.Status(r, e.Code)
+
+	return nil
 }
 
-func httpCode(err error) (string, int) {
+func badRequest(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusBadRequest,
+		Error: "Bad request",
+	}
+}
+
+func recordNotFound(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusNotFound,
+		Error: "Record not found",
+	}
+}
+
+func internalError(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusNotFound,
+		Error: "Internal server error",
+	}
+}
+
+type errResponder func(error) render.Renderer
+
+var statusMapping = map[error]errResponder{
+	talkgroups.ErrNotFound: recordNotFound,
+	pgx.ErrNoRows:          recordNotFound,
+}
+
+func autoError(err error) render.Renderer {
 	c, ok := statusMapping[err]
 	if ok {
-		return c.text, c.code
+		c(err)
 	}
 
 	for e, c := range statusMapping { // check if err wraps an error we know about
 		if errors.Is(err, e) {
-			return c.text, c.code
+			return c(err)
 		}
 	}
 
-	return err.Error(), http.StatusInternalServerError
+	return internalError(err)
 }
 
-func writeResponse(w http.ResponseWriter, r *http.Request, data interface{}, err error) {
+func wErr(w http.ResponseWriter, r *http.Request, v render.Renderer) {
+	err := render.Render(w, r, v)
 	if err != nil {
-		log.Error().Str("path", r.URL.Path).Err(err).Msg("request failed")
-		text, code := httpCode(err)
-		http.Error(w, text, code)
-		return
+		log.Error().Err(err).Msg("wErr render error")
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	enc := json.NewEncoder(w)
-	err = enc.Encode(data)
-	if err != nil {
-		log.Error().Str("path", r.URL.Path).Err(err).Msg("response marshal failed")
-		text, code := httpCode(err)
-		http.Error(w, text, code)
-		return
-	}
-}
-
-func reqErr(w http.ResponseWriter, err error, code int) {
-	http.Error(w, err.Error(), code)
 }
 
 func decodeParams(d interface{}, r *http.Request) error {
@@ -103,6 +127,6 @@ func decodeParams(d interface{}, r *http.Request) error {
 	return dec.Decode(m)
 }
 
-func badReq(w http.ResponseWriter, err error) {
-	reqErr(w, err, http.StatusBadRequest)
+func respond(w http.ResponseWriter, r *http.Request, v interface{}) {
+	render.DefaultResponder(w, r, v)
 }

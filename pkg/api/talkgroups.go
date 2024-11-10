@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"dynatron.me/x/stillbox/internal/forms"
@@ -14,7 +13,7 @@ import (
 type talkgroupAPI struct {
 }
 
-func (tga *talkgroupAPI) routes() http.Handler {
+func (tga *talkgroupAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
 	r.Get("/{system:\\d+}/{id:\\d+}", tga.talkgroup)
@@ -57,7 +56,7 @@ func (tga *talkgroupAPI) talkgroup(w http.ResponseWriter, r *http.Request) {
 
 	err := decodeParams(&p, r)
 	if err != nil {
-		badReq(w, err)
+		wErr(w, r, badRequest(err))
 		return
 	}
 
@@ -71,14 +70,19 @@ func (tga *talkgroupAPI) talkgroup(w http.ResponseWriter, r *http.Request) {
 		res, err = tgs.TGs(ctx, nil)
 	}
 
-	writeResponse(w, r, res, err)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, res)
 }
 
 func (tga *talkgroupAPI) putTalkgroup(w http.ResponseWriter, r *http.Request) {
 	var id tgParams
 	err := decodeParams(&id, r)
 	if err != nil {
-		badReq(w, err)
+		wErr(w, r, badRequest(err))
 		return
 	}
 
@@ -89,19 +93,16 @@ func (tga *talkgroupAPI) putTalkgroup(w http.ResponseWriter, r *http.Request) {
 
 	err = forms.Unmarshal(r, &input, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
 	if err != nil {
-		writeResponse(w, r, nil, err)
+		wErr(w, r, badRequest(err))
 		return
 	}
 	input.ID = id.ToID().Pack()
 
 	record, err := tgs.UpdateTG(ctx, input)
 	if err != nil {
-		writeResponse(w, r, nil, err)
+		wErr(w, r, autoError(err))
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(record)
-	if err != nil {
-		writeResponse(w, r, nil, err)
-	}
+	respond(w, r, record)
 }
