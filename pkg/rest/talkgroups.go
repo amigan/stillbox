@@ -1,4 +1,4 @@
-package api
+package rest
 
 import (
 	"net/http"
@@ -16,10 +16,10 @@ type talkgroupAPI struct {
 func (tga *talkgroupAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	r.Get("/{system:\\d+}/{id:\\d+}", tga.talkgroup)
-	r.Put("/{system:\\d+}/{id:\\d+}", tga.putTalkgroup)
-	r.Get("/{system:\\d+}/", tga.talkgroup)
-	r.Get("/", tga.talkgroup)
+	r.Get("/{system:\\d+}/{id:\\d+}", tga.get)
+	r.Put("/{system:\\d+}/{id:\\d+}", tga.put)
+	r.Get("/{system:\\d+}/", tga.get)
+	r.Get("/", tga.get)
 
 	return r
 }
@@ -48,7 +48,7 @@ func (t tgParams) ToID() talkgroups.ID {
 	}
 }
 
-func (tga *talkgroupAPI) talkgroup(w http.ResponseWriter, r *http.Request) {
+func (tga *talkgroupAPI) get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tgs := talkgroups.StoreFrom(ctx)
 
@@ -78,7 +78,7 @@ func (tga *talkgroupAPI) talkgroup(w http.ResponseWriter, r *http.Request) {
 	respond(w, r, res)
 }
 
-func (tga *talkgroupAPI) putTalkgroup(w http.ResponseWriter, r *http.Request) {
+func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 	var id tgParams
 	err := decodeParams(&id, r)
 	if err != nil {

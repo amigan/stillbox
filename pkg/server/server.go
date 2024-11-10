@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/alerting"
-	"dynatron.me/x/stillbox/pkg/api"
 	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
+	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/sources"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
@@ -37,7 +37,7 @@ type Server struct {
 	notifier notify.Notifier
 	hup      chan os.Signal
 	tgs      talkgroups.Store
-	api      api.API
+	rest      rest.API
 }
 
 func New(ctx context.Context, cfg *config.Config) (*Server, error) {
@@ -61,7 +61,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	tgCache := talkgroups.NewCache()
-	api := api.New()
+	api := rest.New()
 
 	srv := &Server{
 		auth:     authenticator,
@@ -73,7 +73,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		alerter:  alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
 		notifier: notifier,
 		tgs:      tgCache,
-		api:      api,
+		rest:      api,
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)
