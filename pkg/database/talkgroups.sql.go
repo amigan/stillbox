@@ -7,6 +7,8 @@ package database
 
 import (
 	"context"
+
+	"dynatron.me/x/stillbox/pkg/alerting/rules"
 )
 
 const bulkSetTalkgroupTags = `-- name: BulkSetTalkgroupTags :exec
@@ -490,16 +492,16 @@ RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, t
 `
 
 type UpdateTalkgroupParams struct {
-	Name        *string  `json:"name"`
-	AlphaTag    *string  `json:"alpha_tag"`
-	TgGroup     *string  `json:"tg_group"`
-	Frequency   *int32   `json:"frequency"`
-	Metadata    []byte   `json:"metadata"`
-	Tags        []string `json:"tags"`
-	Alert       *bool    `json:"alert"`
-	AlertConfig []byte   `json:"alert_config"`
-	Weight      *float32 `json:"weight"`
-	ID          int64    `json:"id"`
+	Name        *string          `json:"name"`
+	AlphaTag    *string          `json:"alpha_tag"`
+	TgGroup     *string          `json:"tg_group"`
+	Frequency   *int32           `json:"frequency"`
+	Metadata    []byte           `json:"metadata"`
+	Tags        []string         `json:"tags"`
+	Alert       *bool            `json:"alert"`
+	AlertConfig rules.AlertRules `json:"alert_config"`
+	Weight      *float32         `json:"weight"`
+	ID          int64            `json:"id"`
 }
 
 func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error) {

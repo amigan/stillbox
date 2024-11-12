@@ -37,7 +37,7 @@ type Server struct {
 	notifier notify.Notifier
 	hup      chan os.Signal
 	tgs      talkgroups.Store
-	rest      rest.API
+	rest     rest.API
 }
 
 func New(ctx context.Context, cfg *config.Config) (*Server, error) {
@@ -73,7 +73,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		alerter:  alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
 		notifier: notifier,
 		tgs:      tgCache,
-		rest:      api,
+		rest:     api,
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)
