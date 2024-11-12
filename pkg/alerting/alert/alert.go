@@ -36,7 +36,8 @@ func (a *Alert) ToAddAlertParams() database.AddAlertParams {
 	return database.AddAlertParams{
 		ID:        a.ID,
 		Time:      pgtype.Timestamptz{Time: a.Timestamp, Valid: true},
-		PackedTg:  a.Score.ID.Pack(),
+		SystemID:  int(a.Score.ID.System),
+		Tgid:      int(a.Score.ID.Talkgroup),
 		Weight:    &a.Weight,
 		Score:     &f32score,
 		OrigScore: origScore,

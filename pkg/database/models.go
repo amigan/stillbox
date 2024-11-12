@@ -15,9 +15,8 @@ import (
 type Alert struct {
 	ID        uuid.UUID          `json:"id"`
 	Time      pgtype.Timestamptz `json:"time"`
-	Talkgroup int64              `json:"talkgroup"`
-	SystemID  int32              `json:"system_id"`
-	Tgid      int32              `json:"tgid"`
+	Tgid      int                `json:"tgid"`
+	SystemID  int                `json:"system_id"`
 	Weight    *float32           `json:"weight"`
 	Score     *float32           `json:"score"`
 	OrigScore *float32           `json:"orig_score"`
