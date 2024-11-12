@@ -17,7 +17,6 @@ import (
 )
 
 func TestAlertConfig(t *testing.T) {
-	ac := talkgroups.NewAlertConfig()
 	parseTests := []struct {
 		name      string
 		tg        talkgroups.ID
@@ -57,6 +56,8 @@ func TestAlertConfig(t *testing.T) {
 		},
 	}
 
+	tgc := make(map[talkgroups.ID]rules.AlertRules)
+
 	for _, tc := range parseTests {
 		t.Run(tc.name, func(t *testing.T) {
 			var ar rules.AlertRules
@@ -65,8 +66,8 @@ func TestAlertConfig(t *testing.T) {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.expectErr.Error())
 			} else {
-				ac.Add(tc.tg, ar)
-				assert.Equal(t, tc.compare, ac.GetRules(tc.tg))
+				tgc[tc.tg] = ar
+				assert.Equal(t, tc.compare, ar)
 			}
 		})
 	}
@@ -130,7 +131,7 @@ func TestAlertConfig(t *testing.T) {
 				ID:    tc.tg,
 				Score: tc.origScore,
 			}
-			assert.Equal(t, tc.expectScore, toFixed(cs.Score*ac.ApplyAlertRules(cs.ID, tc.t), 5))
+			assert.Equal(t, tc.expectScore, toFixed(cs.Score*tgc[cs.ID].Apply(tc.t), 5))
 		})
 	}
 }
