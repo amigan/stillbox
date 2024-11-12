@@ -1,6 +1,7 @@
-package talkgroups_test
+package rules_test
 
 import (
+	"encoding/json"
 	"errors"
 	"math"
 	"testing"
@@ -8,6 +9,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/ruletime"
 	"dynatron.me/x/stillbox/internal/trending"
+	"dynatron.me/x/stillbox/pkg/alerting/rules"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"github.com/stretchr/testify/assert"
@@ -20,14 +22,14 @@ func TestAlertConfig(t *testing.T) {
 		name      string
 		tg        talkgroups.ID
 		conf      string
-		compare   []talkgroups.AlertRule
+		compare   rules.AlertRules
 		expectErr error
 	}{
 		{
 			name: "base case",
 			tg:   talkgroups.TG(197, 3),
 			conf: `[{"times":["7:00+2h","01:00+1h","16:00+1h","19:00+4h"],"mult":0.2},{"times":["11:00+1h","15:00+30m","16:03+20m"],"mult":2.0}]`,
-			compare: []talkgroups.AlertRule{
+			compare: rules.AlertRules{
 				{
 					Times: []ruletime.RuleTime{
 						ruletime.Must(ruletime.New("7:00+2h")),
@@ -57,11 +59,13 @@ func TestAlertConfig(t *testing.T) {
 
 	for _, tc := range parseTests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ac.UnmarshalTGRules(tc.tg, []byte(tc.conf))
+			var ar rules.AlertRules
+			err := json.Unmarshal([]byte(tc.conf), &ar)
 			if tc.expectErr != nil {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.expectErr.Error())
 			} else {
+				ac.Add(tc.tg, ar)
 				assert.Equal(t, tc.compare, ac.GetRules(tc.tg))
 			}
 		})

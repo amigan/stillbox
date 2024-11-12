@@ -1,52 +1,37 @@
 package talkgroups
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/ruletime"
+	"dynatron.me/x/stillbox/pkg/alerting/rules"
 )
 
 type AlertConfig struct {
 	sync.RWMutex
-	m map[ID][]AlertRule
-}
-
-type AlertRule struct {
-	Times           []ruletime.RuleTime `json:"times"`
-	ScoreMultiplier float32             `json:"mult"`
+	m map[ID]rules.AlertRules
 }
 
 func NewAlertConfig() AlertConfig {
 	return AlertConfig{
-		m: make(map[ID][]AlertRule),
+		m: make(map[ID]rules.AlertRules),
 	}
 }
 
-func (ac *AlertConfig) GetRules(tg ID) []AlertRule {
+func (ac *AlertConfig) Add(tg ID, r rules.AlertRules) error {
+	ac.Lock()
+	defer ac.Unlock()
+
+	ac.m[tg] = r
+	return nil
+}
+
+func (ac *AlertConfig) GetRules(tg ID) rules.AlertRules {
 	ac.RLock()
 	defer ac.RUnlock()
 
 	return ac.m[tg]
-}
-
-func (ac *AlertConfig) UnmarshalTGRules(tg ID, confBytes []byte) error {
-	ac.Lock()
-	defer ac.Unlock()
-
-	if len(confBytes) == 0 {
-		return nil
-	}
-
-	var rules []AlertRule
-	err := json.Unmarshal(confBytes, &rules)
-	if err != nil {
-		return err
-	}
-
-	ac.m[tg] = rules
-	return nil
 }
 
 func (ac *AlertConfig) ApplyAlertRules(id ID, t time.Time, coversOpts ...ruletime.CoversOption) float64 {
@@ -57,15 +42,7 @@ func (ac *AlertConfig) ApplyAlertRules(id ID, t time.Time, coversOpts ...ruletim
 		return 1.0
 	}
 
-	final := 1.0
-
-	for _, ar := range s {
-		if ar.MatchTime(t, coversOpts...) {
-			final *= float64(ar.ScoreMultiplier)
-		}
-	}
-
-	return final
+	return s.Apply(t, coversOpts...)
 }
 
 func (ac *AlertConfig) Invalidate() {
@@ -73,14 +50,4 @@ func (ac *AlertConfig) Invalidate() {
 	defer ac.Unlock()
 
 	clear(ac.m)
-}
-
-func (ar *AlertRule) MatchTime(t time.Time, coversOpts ...ruletime.CoversOption) bool {
-	for _, at := range ar.Times {
-		if at.Covers(t, coversOpts...) {
-			return true
-		}
-	}
-
-	return false
 }

@@ -139,7 +139,9 @@ func (t *cache) add(rec *Talkgroup) error {
 	t.tgs[tg] = rec
 	t.systems[int32(rec.System.ID)] = rec.System.Name
 
-	return t.AlertConfig.UnmarshalTGRules(tg, rec.Talkgroup.AlertConfig)
+	t.AlertConfig.Add(tg, rec.AlertConfig)
+
+	return nil
 }
 
 type row interface {
