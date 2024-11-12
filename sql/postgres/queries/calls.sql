@@ -41,12 +41,13 @@ source
 UPDATE calls SET transcript = $2 WHERE id = $1;
 
 -- name: AddAlert :exec
-INSERT INTO alerts (id, time, talkgroup, weight, score, orig_score, notified, metadata)
+INSERT INTO alerts (id, time, tgid, system_id, weight, score, orig_score, notified, metadata)
 VALUES
 (
 	sqlc.arg(id),
 	sqlc.arg(time),
-	sqlc.arg(packed_tg),
+	sqlc.arg(tgid),
+	sqlc.arg(system_id),
 	sqlc.arg(weight),
 	sqlc.arg(score),
 	sqlc.arg(orig_score),

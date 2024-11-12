@@ -74,9 +74,8 @@ CREATE TABLE IF NOT EXISTS talkgroups_learned(
 CREATE TABLE IF NOT EXISTS alerts(
 	id UUID PRIMARY KEY,
 	time TIMESTAMPTZ NOT NULL, 
-	talkgroup INT8 REFERENCES talkgroups(id) NOT NULL,
-	system_id INT4 REFERENCES systems(id) NOT NULL GENERATED ALWAYS AS (talkgroup >> 32) STORED,
-	tgid INT4 NOT NULL GENERATED ALWAYS AS (talkgroup & x'ffffffff'::BIGINT) STORED,
+	tgid INTEGER NOT NULL,
+	system_id INTEGER REFERENCES systems(id) NOT NULL,
 	weight REAL,
 	score REAL,
 	orig_score REAL,

@@ -13,7 +13,7 @@ import (
 )
 
 const addAlert = `-- name: AddAlert :exec
-INSERT INTO alerts (id, time, talkgroup, weight, score, orig_score, notified, metadata)
+INSERT INTO alerts (id, time, tgid, system_id, weight, score, orig_score, notified, metadata)
 VALUES
 (
 	$1,
@@ -23,14 +23,16 @@ VALUES
 	$5,
 	$6,
 	$7,
-	$8
+	$8,
+	$9
 )
 `
 
 type AddAlertParams struct {
 	ID        uuid.UUID          `json:"id"`
 	Time      pgtype.Timestamptz `json:"time"`
-	PackedTg  int64              `json:"packed_tg"`
+	Tgid      int                `json:"tgid"`
+	SystemID  int                `json:"system_id"`
 	Weight    *float32           `json:"weight"`
 	Score     *float32           `json:"score"`
 	OrigScore *float32           `json:"orig_score"`
@@ -42,7 +44,8 @@ func (q *Queries) AddAlert(ctx context.Context, arg AddAlertParams) error {
 	_, err := q.db.Exec(ctx, addAlert,
 		arg.ID,
 		arg.Time,
-		arg.PackedTg,
+		arg.Tgid,
+		arg.SystemID,
 		arg.Weight,
 		arg.Score,
 		arg.OrigScore,
