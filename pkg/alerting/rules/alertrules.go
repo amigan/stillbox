@@ -8,10 +8,14 @@ import (
 
 type AlertRules []AlertRule
 
-func (ars *AlertRules) Apply(t time.Time, coversOpts ...ruletime.CoversOption) float64 {
+func (ars AlertRules) Apply(t time.Time, coversOpts ...ruletime.CoversOption) float64 {
+	if ars == nil || len(ars) < 1 {
+		return 1.0
+	}
+
 	final := 1.0
 
-	for _, ar := range *ars {
+	for _, ar := range ars {
 		if ar.MatchTime(t, coversOpts...) {
 			final *= float64(ar.ScoreMultiplier)
 		}

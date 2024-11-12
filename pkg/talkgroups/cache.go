@@ -6,8 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"dynatron.me/x/stillbox/internal/ruletime"
-
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 
@@ -37,9 +35,6 @@ type Store interface {
 
 	// SystemName retrieves a system name from the store. It returns the record and whether one was found.
 	SystemName(ctx context.Context, id int) (string, bool)
-
-	// ApplyAlertRules applies the score's talkgroup alert rules to the call occurring at t and returns the weighted score.
-	ApplyAlertRules(id ID, t time.Time, coversOpts ...ruletime.CoversOption) float64
 
 	// Hint hints the Store that the provided talkgroups will be asked for.
 	Hint(ctx context.Context, tgs []ID) error
@@ -83,12 +78,10 @@ func (t *cache) Invalidate() {
 	defer t.Unlock()
 	clear(t.tgs)
 	clear(t.systems)
-	t.AlertConfig.Invalidate()
 }
 
 type cache struct {
 	sync.RWMutex
-	AlertConfig
 	tgs     tgMap
 	systems map[int32]string
 }
@@ -96,9 +89,8 @@ type cache struct {
 // NewCache returns a new cache Store.
 func NewCache() Store {
 	tgc := &cache{
-		tgs:         make(tgMap),
-		systems:     make(map[int32]string),
-		AlertConfig: NewAlertConfig(),
+		tgs:     make(tgMap),
+		systems: make(map[int32]string),
 	}
 
 	return tgc
@@ -138,8 +130,6 @@ func (t *cache) add(rec *Talkgroup) error {
 	tg := TG(rec.System.ID, rec.Talkgroup.Tgid)
 	t.tgs[tg] = rec
 	t.systems[int32(rec.System.ID)] = rec.System.Name
-
-	t.AlertConfig.Add(tg, rec.AlertConfig)
 
 	return nil
 }
@@ -231,7 +221,7 @@ func (t *cache) Weight(ctx context.Context, id ID, tm time.Time) float64 {
 
 	m := float64(tg.Weight)
 
-	m *= t.AlertConfig.ApplyAlertRules(id, tm)
+	m *= tg.AlertConfig.Apply(tm)
 
 	return float64(m)
 }
