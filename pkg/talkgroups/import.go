@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/database"
@@ -41,10 +42,11 @@ func (ij *ImportJob) Import(ctx context.Context) ([]Talkgroup, error) {
 
 	switch ij.Type {
 	case ImportSrcRadioReference:
-		ij.importer = &radioReferenceImporter{}
+		ij.importer = new(radioReferenceImporter)
 	default:
 		return nil, ErrBadImportType
 	}
+
 	return ij.importTalkgroups(ctx, ij.SystemID, r)
 }
 
@@ -69,6 +71,11 @@ func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int,
 		return nil, ErrNoSuchSystem
 	}
 
+	importedFrom := jsontypes.Metadata{
+		"from": "RadioReference",
+		"time": time.Now(),
+	}
+
 	var groupName string
 	state := rrsInitial
 	for sc.Scan() {
@@ -88,7 +95,7 @@ func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int,
 			}
 		case rrsTG:
 			fields := strings.Split(ln, "\t")
-			if len(fields) < 6 {
+			if len(fields) != 6 {
 				state = rrsGroupDesc
 				groupName = ln
 				continue
@@ -97,13 +104,13 @@ func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int,
 			if err != nil {
 				continue
 			}
-			var metadata jsontypes.Metadata
+			metadata := jsontypes.Metadata{
+				"imported": importedFrom,
+			}
 			tgt := TG(sys, tgid)
 			mode := fields[2]
 			if strings.Contains(mode, "E") {
-				metadata = jsontypes.Metadata{
-					"encrypted": true,
-				}
+				metadata["encrypted"] = true
 			}
 			tags := []string{fields[5]}
 			gn := groupName // must take a copy
