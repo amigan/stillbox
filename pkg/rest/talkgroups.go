@@ -20,6 +20,7 @@ func (tga *talkgroupAPI) Subrouter() http.Handler {
 	r.Put("/{system:\\d+}/{id:\\d+}", tga.put)
 	r.Get("/{system:\\d+}/", tga.get)
 	r.Get("/", tga.get)
+	r.Put("/import", tga.tgImport)
 
 	return r
 }
@@ -105,4 +106,20 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond(w, r, record)
+}
+
+func (tga *talkgroupAPI) tgImport(w http.ResponseWriter, r *http.Request) {
+	var impJob talkgroups.ImportJob
+	err := forms.Unmarshal(r, &impJob, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+	recs, err := impJob.Import()
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, recs)
 }
