@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/forms"
-	"dynatron.me/x/stillbox/internal/jsontime"
+	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/internal/trending"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
@@ -23,12 +23,12 @@ type Simulation struct {
 	config.Alerting
 
 	// ScoreStart is the time when scoring begins
-	ScoreStart jsontime.Time `json:"scoreStart" yaml:"scoreStart" form:"scoreStart"`
+	ScoreStart jsontypes.Time `json:"scoreStart" yaml:"scoreStart" form:"scoreStart"`
 	// ScoreEnd is the time when the score simulator ends. Left blank, it defaults to time.Now()
-	ScoreEnd jsontime.Time `json:"scoreEnd" yaml:"scoreEnd" form:"scoreEnd"`
+	ScoreEnd jsontypes.Time `json:"scoreEnd" yaml:"scoreEnd" form:"scoreEnd"`
 
 	// SimInterval is the interval at which the scorer will be called
-	SimInterval jsontime.Duration `json:"simInterval" yaml:"simInterval" form:"simInterval"`
+	SimInterval jsontypes.Duration `json:"simInterval" yaml:"simInterval" form:"simInterval"`
 
 	clock    offsetClock `json:"-"`
 	*alerter `json:"-"`
@@ -64,7 +64,7 @@ func (s *Simulation) Simulate(ctx context.Context) (trending.Scores[talkgroups.I
 	s.Enable = true
 	s.alerter = New(s.Alerting, tgc, WithClock(&s.clock)).(*alerter)
 	if time.Time(s.ScoreEnd).IsZero() {
-		s.ScoreEnd = jsontime.Time(now)
+		s.ScoreEnd = jsontypes.Time(now)
 	}
 	log.Debug().Time("scoreStart", s.ScoreStart.Time()).
 		Time("scoreEnd", s.ScoreEnd.Time()).

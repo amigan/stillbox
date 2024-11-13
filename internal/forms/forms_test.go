@@ -10,7 +10,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
-	"dynatron.me/x/stillbox/internal/jsontime"
+	"dynatron.me/x/stillbox/internal/jsontypes"
 
 	"dynatron.me/x/stillbox/pkg/alerting"
 	"dynatron.me/x/stillbox/pkg/config"
@@ -48,19 +48,19 @@ type urlEncTest struct {
 }
 
 type urlEncTestJT struct {
-	LookbackDays uint              `json:"lookbackDays"`
-	HalfLife     jsontime.Duration `json:"halfLife"`
-	Recent       string            `json:"recent"`
-	ScoreStart   jsontime.Time     `json:"scoreStart"`
-	ScoreEnd     jsontime.Time     `json:"scoreEnd"`
+	LookbackDays uint               `json:"lookbackDays"`
+	HalfLife     jsontypes.Duration `json:"halfLife"`
+	Recent       string             `json:"recent"`
+	ScoreStart   jsontypes.Time     `json:"scoreStart"`
+	ScoreEnd     jsontypes.Time     `json:"scoreEnd"`
 }
 
 type ptrTestJT struct {
-	LookbackDays uint               `form:"lookbackDays"`
-	HalfLife     *jsontime.Duration `form:"halfLife"`
-	Recent       *string            `form:"recent"`
-	ScoreStart   *jsontime.Time     `form:"scoreStart"`
-	ScoreEnd     jsontime.Time      `form:"scoreEnd"`
+	LookbackDays uint                `form:"lookbackDays"`
+	HalfLife     *jsontypes.Duration `form:"halfLife"`
+	Recent       *string             `form:"recent"`
+	ScoreStart   *jsontypes.Time     `form:"scoreStart"`
+	ScoreEnd     jsontypes.Time      `form:"scoreEnd"`
 }
 
 var (
@@ -73,33 +73,33 @@ var (
 
 	UrlEncTestJT = urlEncTestJT{
 		LookbackDays: 7,
-		HalfLife:     jsontime.Duration(30 * time.Minute),
+		HalfLife:     jsontypes.Duration(30 * time.Minute),
 		Recent:       "2h0m0s",
-		ScoreStart:   jsontime.Time(time.Date(2024, time.October, 28, 9, 25, 0, 0, time.UTC)),
+		ScoreStart:   jsontypes.Time(time.Date(2024, time.October, 28, 9, 25, 0, 0, time.UTC)),
 	}
 
 	PtrTestJT = ptrTestJT{
 		LookbackDays: 7,
-		HalfLife:     common.PtrTo(jsontime.Duration(30 * time.Minute)),
+		HalfLife:     common.PtrTo(jsontypes.Duration(30 * time.Minute)),
 		Recent:       common.PtrTo("2h0m0s"),
-		ScoreStart:   common.PtrTo(jsontime.Time(time.Date(2024, time.October, 28, 9, 25, 0, 0, time.UTC))),
+		ScoreStart:   common.PtrTo(jsontypes.Time(time.Date(2024, time.October, 28, 9, 25, 0, 0, time.UTC))),
 	}
 
 	UrlEncTestJTLocal = urlEncTestJT{
 		LookbackDays: 7,
-		HalfLife:     jsontime.Duration(30 * time.Minute),
+		HalfLife:     jsontypes.Duration(30 * time.Minute),
 		Recent:       "2h0m0s",
-		ScoreStart:   jsontime.Time(time.Date(2024, time.October, 28, 9, 25, 0, 0, time.Local)),
+		ScoreStart:   jsontypes.Time(time.Date(2024, time.October, 28, 9, 25, 0, 0, time.Local)),
 	}
 
 	realSim = &alerting.Simulation{
 		Alerting: config.Alerting{
 			LookbackDays: 7,
-			HalfLife:     jsontime.Duration(30 * time.Minute),
-			Recent:       jsontime.Duration(2 * time.Hour),
+			HalfLife:     jsontypes.Duration(30 * time.Minute),
+			Recent:       jsontypes.Duration(2 * time.Hour),
 		},
-		SimInterval: jsontime.Duration(5 * time.Minute),
-		ScoreStart:  jsontime.Time(time.Date(2024, time.October, 22, 17, 49, 0, 0, time.Local)),
+		SimInterval: jsontypes.Duration(5 * time.Minute),
+		ScoreStart:  jsontypes.Time(time.Date(2024, time.October, 22, 17, 49, 0, 0, time.Local)),
 	}
 
 	Call1 = callUploadRequest{
@@ -194,7 +194,7 @@ func TestUnmarshal(t *testing.T) {
 			opts:   []forms.Option{forms.WithAcceptBlank()},
 		},
 		{
-			name:      "url encoded jsontime",
+			name:      "url encoded jsontypes",
 			r:         makeRequest("urlenc.http"),
 			dest:      &urlEncTestJT{},
 			expect:    &UrlEncTestJT,
@@ -202,14 +202,14 @@ func TestUnmarshal(t *testing.T) {
 			opts:      []forms.Option{forms.WithTag("json")},
 		},
 		{
-			name:   "url encoded jsontime with tz",
+			name:   "url encoded jsontypes with tz",
 			r:      makeRequest("urlenc.http"),
 			dest:   &urlEncTestJT{},
 			expect: &UrlEncTestJT,
 			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithParseTimeInTZ(time.UTC), forms.WithTag("json")},
 		},
 		{
-			name:   "url encoded jsontime with local",
+			name:   "url encoded jsontypes with local",
 			r:      makeRequest("urlenc.http"),
 			dest:   &urlEncTestJT{},
 			expect: &UrlEncTestJTLocal,

@@ -32,3 +32,8 @@ sql:
               import: "dynatron.me/x/stillbox/pkg/alerting/rules"
               type: "AlertRules"
             nullable: true
+          - column: "talkgroups.metadata"
+            go_type:
+              import: "dynatron.me/x/stillbox/internal/jsontypes"
+              type: "Metadata"
+            nullable: true

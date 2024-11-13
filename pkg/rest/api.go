@@ -42,7 +42,6 @@ type errResponse struct {
 
 func (e *errResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	switch e.Code {
-	case http.StatusNotFound:
 	default:
 		log.Error().Str("path", r.URL.Path).Err(e.Err).Int("code", e.Code).Str("msg", e.Error).Msg("request failed")
 	}
@@ -79,8 +78,9 @@ func internalError(err error) render.Renderer {
 type errResponder func(error) render.Renderer
 
 var statusMapping = map[error]errResponder{
-	talkgroups.ErrNotFound: recordNotFound,
-	pgx.ErrNoRows:          recordNotFound,
+	talkgroups.ErrNoSuchSystem: recordNotFound,
+	talkgroups.ErrNotFound:     recordNotFound,
+	pgx.ErrNoRows:              recordNotFound,
 }
 
 func autoError(err error) render.Renderer {

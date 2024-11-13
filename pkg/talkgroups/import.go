@@ -3,13 +3,14 @@ package talkgroups
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"io"
-	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/database"
 )
 
@@ -24,18 +25,18 @@ var (
 )
 
 type importer interface {
-	importTalkgroups(sys int, r io.Reader) ([]Talkgroup, error)
+	importTalkgroups(ctx context.Context, sys int, r io.Reader) ([]Talkgroup, error)
 }
 
 type ImportJob struct {
-	Type ImportSource `json:"type"`
-	SystemID int `json:"systemID"`
-	Body string `json:"body"`
+	Type     ImportSource `json:"type"`
+	SystemID int          `json:"systemID"`
+	Body     string       `json:"body"`
 
 	importer `json:"-"`
 }
 
-func (ij *ImportJob) Import() ([]Talkgroup, error) {
+func (ij *ImportJob) Import(ctx context.Context) ([]Talkgroup, error) {
 	r := bytes.NewReader([]byte(ij.Body))
 
 	switch ij.Type {
@@ -44,13 +45,14 @@ func (ij *ImportJob) Import() ([]Talkgroup, error) {
 	default:
 		return nil, ErrBadImportType
 	}
-	return ij.importTalkgroups(ij.SystemID, r)
+	return ij.importTalkgroups(ctx, ij.SystemID, r)
 }
 
 type radioReferenceImporter struct {
 }
 
 type rrState int
+
 const (
 	rrsInitial rrState = iota
 	rrsGroupDesc
@@ -59,13 +61,21 @@ const (
 
 var rrRE = regexp.MustCompile(`DEC\s+HEX\s+Mode\s+Alpha Tag\s+Description\s+Tag`)
 
-func (rr *radioReferenceImporter) importTalkgroups(sys int, r io.Reader) ([]Talkgroup, error) {
+func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int, r io.Reader) ([]Talkgroup, error) {
 	sc := bufio.NewScanner(r)
 	tgs := make([]Talkgroup, 0, 8)
+	sysn, has := StoreFrom(ctx).SystemName(ctx, sys)
+	if !has {
+		return nil, ErrNoSuchSystem
+	}
 
 	var groupName string
 	state := rrsInitial
 	for sc.Scan() {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
 		ln := strings.Trim(sc.Text(), " \t\r\n")
 
 		switch state {
@@ -87,30 +97,31 @@ func (rr *radioReferenceImporter) importTalkgroups(sys int, r io.Reader) ([]Talk
 			if err != nil {
 				continue
 			}
-			var metadata []byte
+			var metadata jsontypes.Metadata
 			tgt := TG(sys, tgid)
 			mode := fields[2]
 			if strings.Contains(mode, "E") {
-				metadata, _ = json.Marshal(&struct{
-					Encrypted bool `json:"encrypted"`
-				}{true})
+				metadata = jsontypes.Metadata{
+					"encrypted": true,
+				}
 			}
 			tags := []string{fields[5]}
+			gn := groupName // must take a copy
 			tgs = append(tgs, Talkgroup{
 				Talkgroup: database.Talkgroup{
-					ID: tgt.Pack(),
-					Tgid: int32(tgt.Talkgroup),
+					ID:       tgt.Pack(),
+					Tgid:     int32(tgt.Talkgroup),
 					SystemID: int32(tgt.System),
-					Name: &fields[4],
+					Name:     &fields[4],
 					AlphaTag: &fields[3],
-					TgGroup: &groupName,
+					TgGroup:  &gn,
 					Metadata: metadata,
-					Tags: tags,
-					Weight: 1.0,
+					Tags:     tags,
+					Weight:   1.0,
 				},
 				System: database.System{
-					ID: sys,
-					Name: "<imported>",
+					ID:   sys,
+					Name: sysn,
 				},
 			})
 

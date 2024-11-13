@@ -7,6 +7,7 @@ package database
 import (
 	"time"
 
+	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/alerting/rules"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -82,18 +83,18 @@ type System struct {
 }
 
 type Talkgroup struct {
-	ID          int64            `json:"id"`
-	SystemID    int32            `json:"system_id"`
-	Tgid        int32            `json:"tgid"`
-	Name        *string          `json:"name"`
-	AlphaTag    *string          `json:"alpha_tag"`
-	TgGroup     *string          `json:"tg_group"`
-	Frequency   *int32           `json:"frequency"`
-	Metadata    []byte           `json:"metadata"`
-	Tags        []string         `json:"tags"`
-	Alert       bool             `json:"alert"`
-	AlertConfig rules.AlertRules `json:"alert_config"`
-	Weight      float32          `json:"weight"`
+	ID          int64              `json:"id"`
+	SystemID    int32              `json:"system_id"`
+	Tgid        int32              `json:"tgid"`
+	Name        *string            `json:"name"`
+	AlphaTag    *string            `json:"alpha_tag"`
+	TgGroup     *string            `json:"tg_group"`
+	Frequency   *int32             `json:"frequency"`
+	Metadata    jsontypes.Metadata `json:"metadata"`
+	Tags        []string           `json:"tags"`
+	Alert       bool               `json:"alert"`
+	AlertConfig rules.AlertRules   `json:"alert_config"`
+	Weight      float32            `json:"weight"`
 }
 
 type TalkgroupsLearned struct {

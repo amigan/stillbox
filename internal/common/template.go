@@ -7,7 +7,7 @@ import (
 	"text/template"
 	"time"
 
-	"dynatron.me/x/stillbox/internal/jsontime"
+	"dynatron.me/x/stillbox/internal/jsontypes"
 )
 
 var (
@@ -27,7 +27,7 @@ var (
 			}
 			return dict, nil
 		},
-		"formTime": func(t jsontime.Time) string {
+		"formTime": func(t jsontypes.Time) string {
 			return time.Time(t).Format("2006-01-02T15:04")
 		},
 		"ago": func(s string) (string, error) {

@@ -20,7 +20,7 @@ func (tga *talkgroupAPI) Subrouter() http.Handler {
 	r.Put("/{system:\\d+}/{id:\\d+}", tga.put)
 	r.Get("/{system:\\d+}/", tga.get)
 	r.Get("/", tga.get)
-	r.Put("/import", tga.tgImport)
+	r.Post("/import", tga.tgImport)
 
 	return r
 }
@@ -115,7 +115,7 @@ func (tga *talkgroupAPI) tgImport(w http.ResponseWriter, r *http.Request) {
 		wErr(w, r, badRequest(err))
 		return
 	}
-	recs, err := impJob.Import()
+	recs, err := impJob.Import(r.Context())
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return

@@ -12,6 +12,8 @@ type Talkgroup struct {
 	Learned bool            `json:"learned"`
 }
 
+type Metadata map[string]interface{}
+
 type Names struct {
 	System    string
 	Talkgroup string
