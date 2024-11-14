@@ -26,10 +26,10 @@ type ID struct {
 
 type IDs []ID
 
-func (ids *IDs) Packed() []int64 {
-	r := make([]int64, len(*ids))
+func (ids *IDs) Tuples() []database.TalkgroupT {
+	r := make([]database.TalkgroupT, len(*ids))
 	for i := range *ids {
-		r[i] = (*ids)[i].Pack()
+		r[i] = (*ids)[i].Tuple()
 	}
 
 	return r
@@ -46,15 +46,10 @@ func TG[T intId, U intId](sys T, tgid U) ID {
 	}
 }
 
-func (t ID) Pack() int64 {
-	// P25 system IDs are 12 bits, so we can fit them in a signed 8 byte int (int64, pg INT8)
-	return int64((int64(t.System) << 32) | int64(t.Talkgroup))
-}
-
-func Unpack(id int64) ID {
-	return ID{
-		System:    uint32(id >> 32),
-		Talkgroup: uint32(id & 0xffffffff),
+func (t ID) Tuple() database.TalkgroupT {
+	return database.TalkgroupT{
+		System: t.System,
+		Talkgroup: t.Talkgroup,
 	}
 }
 

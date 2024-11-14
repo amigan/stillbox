@@ -10,6 +10,8 @@ import (
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/alerting/rules"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const bulkSetTalkgroupTags = `-- name: BulkSetTalkgroupTags :exec
@@ -17,7 +19,7 @@ UPDATE talkgroups SET tags = $2
 WHERE id = ANY($1)
 `
 
-func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []string) error {
+func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, iD uuid.UUID, tags []string) error {
 	_, err := q.db.Exec(ctx, bulkSetTalkgroupTags, iD, tags)
 	return err
 }
@@ -35,14 +37,14 @@ func (q *Queries) GetSystemName(ctx context.Context, systemID int) (string, erro
 
 const getTalkgroup = `-- name: GetTalkgroup :one
 SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_config, talkgroups.weight FROM talkgroups
-WHERE id = systg2id($1, $2)
+WHERE (system_id, tgid) = ($1, $2)
 `
 
 type GetTalkgroupRow struct {
 	Talkgroup Talkgroup `json:"talkgroup"`
 }
 
-func (q *Queries) GetTalkgroup(ctx context.Context, systemID int, tgid int) (GetTalkgroupRow, error) {
+func (q *Queries) GetTalkgroup(ctx context.Context, systemID int32, tgid int32) (GetTalkgroupRow, error) {
 	row := q.db.QueryRow(ctx, getTalkgroup, systemID, tgid)
 	var i GetTalkgroupRow
 	err := row.Scan(
@@ -112,7 +114,7 @@ tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, 
 FALSE learned
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.id = systg2id($1, $2)
+WHERE (tg.system_id, tg.tgid) = ($1, $2)
 UNION
 SELECT
 tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
@@ -131,7 +133,7 @@ type GetTalkgroupWithLearnedRow struct {
 	Learned   bool      `json:"learned"`
 }
 
-func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int, tgid int) (GetTalkgroupWithLearnedRow, error) {
+func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int32, tgid int32) (GetTalkgroupWithLearnedRow, error) {
 	row := q.db.QueryRow(ctx, getTalkgroupWithLearned, systemID, tgid)
 	var i GetTalkgroupWithLearnedRow
 	err := row.Scan(
@@ -152,52 +154,6 @@ func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int, tgi
 		&i.Learned,
 	)
 	return i, err
-}
-
-const getTalkgroupsByPackedIDs = `-- name: GetTalkgroupsByPackedIDs :many
-SELECT tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name FROM talkgroups tg
-JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.id = ANY($1::INT8[])
-`
-
-type GetTalkgroupsByPackedIDsRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
-	System    System    `json:"system"`
-}
-
-func (q *Queries) GetTalkgroupsByPackedIDs(ctx context.Context, dollar_1 []int64) ([]GetTalkgroupsByPackedIDsRow, error) {
-	rows, err := q.db.Query(ctx, getTalkgroupsByPackedIDs, dollar_1)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetTalkgroupsByPackedIDsRow
-	for rows.Next() {
-		var i GetTalkgroupsByPackedIDsRow
-		if err := rows.Scan(
-			&i.Talkgroup.ID,
-			&i.Talkgroup.SystemID,
-			&i.Talkgroup.Tgid,
-			&i.Talkgroup.Name,
-			&i.Talkgroup.AlphaTag,
-			&i.Talkgroup.TgGroup,
-			&i.Talkgroup.Frequency,
-			&i.Talkgroup.Metadata,
-			&i.Talkgroup.Tags,
-			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertConfig,
-			&i.Talkgroup.Weight,
-			&i.System.ID,
-			&i.System.Name,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
@@ -292,7 +248,7 @@ FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 UNION
 SELECT
-tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+NULL::UUID, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
 TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
@@ -344,67 +300,6 @@ func (q *Queries) GetTalkgroupsWithLearned(ctx context.Context) ([]GetTalkgroups
 	return items, nil
 }
 
-const getTalkgroupsWithLearnedByPackedIDs = `-- name: GetTalkgroupsWithLearnedByPackedIDs :many
-SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name,
-FALSE learned
-FROM talkgroups tg
-JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.id = ANY($1::INT8[])
-UNION
-SELECT
-tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
-TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
-TRUE learned
-FROM talkgroups_learned tgl
-JOIN systems sys ON tgl.system_id = sys.id
-WHERE systg2id(tgl.system_id, tgl.tgid) = ANY($1::INT8[]) AND ignored IS NOT TRUE
-`
-
-type GetTalkgroupsWithLearnedByPackedIDsRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
-	System    System    `json:"system"`
-	Learned   bool      `json:"learned"`
-}
-
-func (q *Queries) GetTalkgroupsWithLearnedByPackedIDs(ctx context.Context, dollar_1 []int64) ([]GetTalkgroupsWithLearnedByPackedIDsRow, error) {
-	rows, err := q.db.Query(ctx, getTalkgroupsWithLearnedByPackedIDs, dollar_1)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetTalkgroupsWithLearnedByPackedIDsRow
-	for rows.Next() {
-		var i GetTalkgroupsWithLearnedByPackedIDsRow
-		if err := rows.Scan(
-			&i.Talkgroup.ID,
-			&i.Talkgroup.SystemID,
-			&i.Talkgroup.Tgid,
-			&i.Talkgroup.Name,
-			&i.Talkgroup.AlphaTag,
-			&i.Talkgroup.TgGroup,
-			&i.Talkgroup.Frequency,
-			&i.Talkgroup.Metadata,
-			&i.Talkgroup.Tags,
-			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertConfig,
-			&i.Talkgroup.Weight,
-			&i.System.ID,
-			&i.System.Name,
-			&i.Learned,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getTalkgroupsWithLearnedBySystem = `-- name: GetTalkgroupsWithLearnedBySystem :many
 SELECT
 tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name,
@@ -414,7 +309,7 @@ JOIN systems sys ON tg.system_id = sys.id
 WHERE tg.system_id = $1
 UNION
 SELECT
-tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+NULL::UUID, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
 TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
@@ -488,7 +383,7 @@ SET
 	alert = COALESCE($7, alert),
 	alert_config = COALESCE($8, alert_config),
 	weight = COALESCE($9, weight)
-WHERE id = $10
+WHERE id = $10 OR (system_id = $11 AND tgid = $12)
 RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight
 `
 
@@ -502,7 +397,9 @@ type UpdateTalkgroupParams struct {
 	Alert       *bool              `json:"alert"`
 	AlertConfig rules.AlertRules   `json:"alert_config"`
 	Weight      *float32           `json:"weight"`
-	ID          int64              `json:"id"`
+	ID          pgtype.UUID        `json:"id"`
+	SystemID    *int32             `json:"system_id"`
+	Tgid        *int32             `json:"tgid"`
 }
 
 func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error) {
@@ -517,6 +414,8 @@ func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams
 		arg.AlertConfig,
 		arg.Weight,
 		arg.ID,
+		arg.SystemID,
+		arg.Tgid,
 	)
 	var i Talkgroup
 	err := row.Scan(

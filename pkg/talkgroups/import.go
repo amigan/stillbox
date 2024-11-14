@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/database"
 )
@@ -116,7 +118,7 @@ func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int,
 			gn := groupName // must take a copy
 			tgs = append(tgs, Talkgroup{
 				Talkgroup: database.Talkgroup{
-					ID:       tgt.Pack(),
+					ID:       uuid.New(),
 					Tgid:     int32(tgt.Talkgroup),
 					SystemID: int32(tgt.System),
 					Name:     &fields[4],

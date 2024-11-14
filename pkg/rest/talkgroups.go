@@ -97,7 +97,6 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 		wErr(w, r, badRequest(err))
 		return
 	}
-	input.ID = id.ToID().Pack()
 
 	record, err := tgs.UpdateTG(ctx, input)
 	if err != nil {

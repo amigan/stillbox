@@ -26,12 +26,7 @@ WHERE id = ANY($1);
 
 -- name: GetTalkgroup :one
 SELECT sqlc.embed(talkgroups) FROM talkgroups
-WHERE id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid));
-
--- name: GetTalkgroupsByPackedIDs :many
-SELECT sqlc.embed(tg), sqlc.embed(sys) FROM talkgroups tg
-JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.id = ANY($1::INT8[]);
+WHERE (system_id, tgid) = (@system_id, @tgid);
 
 -- name: GetTalkgroupWithLearned :one
 SELECT
@@ -39,7 +34,7 @@ sqlc.embed(tg), sqlc.embed(sys),
 FALSE learned
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.id = systg2id(sqlc.arg(system_id), sqlc.arg(tgid))
+WHERE (tg.system_id, tg.tgid) = (sqlc.arg(system_id), sqlc.arg(tgid))
 UNION
 SELECT
 tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
@@ -51,24 +46,6 @@ FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
 WHERE tgl.system_id = sqlc.arg(system_id) AND tgl.tgid = sqlc.arg(tgid) AND ignored IS NOT TRUE;
 
--- name: GetTalkgroupsWithLearnedByPackedIDs :many
-SELECT
-sqlc.embed(tg), sqlc.embed(sys),
-FALSE learned
-FROM talkgroups tg
-JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.id = ANY($1::INT8[])
-UNION
-SELECT
-tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
-TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
-TRUE learned
-FROM talkgroups_learned tgl
-JOIN systems sys ON tgl.system_id = sys.id
-WHERE systg2id(tgl.system_id, tgl.tgid) = ANY($1::INT8[]) AND ignored IS NOT TRUE;
-
 -- name: GetTalkgroupsWithLearnedBySystem :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys),
@@ -78,7 +55,7 @@ JOIN systems sys ON tg.system_id = sys.id
 WHERE tg.system_id = @system
 UNION
 SELECT
-tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+NULL::UUID, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
 TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
@@ -95,7 +72,7 @@ FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 UNION
 SELECT
-tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+NULL::UUID, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
 TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
@@ -119,5 +96,5 @@ SET
 	alert = COALESCE(sqlc.narg('alert'), alert),
 	alert_config = COALESCE(sqlc.narg('alert_config'), alert_config),
 	weight = COALESCE(sqlc.narg('weight'), weight)
-WHERE id = @id
+WHERE id = sqlc.narg('id') OR (system_id = sqlc.narg('system_id') AND tgid = sqlc.narg('tgid'))
 RETURNING *;

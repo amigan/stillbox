@@ -14,7 +14,7 @@ import (
 type Querier interface {
 	AddAlert(ctx context.Context, arg AddAlertParams) error
 	AddCall(ctx context.Context, arg AddCallParams) error
-	BulkSetTalkgroupTags(ctx context.Context, iD int64, tags []string) error
+	BulkSetTalkgroupTags(ctx context.Context, iD uuid.UUID, tags []string) error
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteAPIKey(ctx context.Context, apiKey string) error
@@ -22,15 +22,13 @@ type Querier interface {
 	GetAPIKey(ctx context.Context, apiKey string) (ApiKey, error)
 	GetDatabaseSize(ctx context.Context) (string, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
-	GetTalkgroup(ctx context.Context, systemID int, tgid int) (GetTalkgroupRow, error)
+	GetTalkgroup(ctx context.Context, systemID int32, tgid int32) (GetTalkgroupRow, error)
 	GetTalkgroupIDsByTags(ctx context.Context, anytags []string, alltags []string, nottags []string) ([]GetTalkgroupIDsByTagsRow, error)
 	GetTalkgroupTags(ctx context.Context, sys int, tg int) ([]string, error)
-	GetTalkgroupWithLearned(ctx context.Context, systemID int, tgid int) (GetTalkgroupWithLearnedRow, error)
-	GetTalkgroupsByPackedIDs(ctx context.Context, dollar_1 []int64) ([]GetTalkgroupsByPackedIDsRow, error)
+	GetTalkgroupWithLearned(ctx context.Context, systemID int32, tgid int32) (GetTalkgroupWithLearnedRow, error)
 	GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAllTagsRow, error)
 	GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAnyTagsRow, error)
 	GetTalkgroupsWithLearned(ctx context.Context) ([]GetTalkgroupsWithLearnedRow, error)
-	GetTalkgroupsWithLearnedByPackedIDs(ctx context.Context, dollar_1 []int64) ([]GetTalkgroupsWithLearnedByPackedIDsRow, error)
 	GetTalkgroupsWithLearnedBySystem(ctx context.Context, system int32) ([]GetTalkgroupsWithLearnedBySystemRow, error)
 	GetUserByID(ctx context.Context, id int32) (User, error)
 	GetUserByUID(ctx context.Context, id int32) (User, error)

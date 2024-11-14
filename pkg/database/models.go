@@ -83,7 +83,7 @@ type System struct {
 }
 
 type Talkgroup struct {
-	ID          int64              `json:"id"`
+	ID          uuid.UUID          `json:"id"`
 	SystemID    int32              `json:"system_id"`
 	Tgid        int32              `json:"tgid"`
 	Name        *string            `json:"name"`

@@ -40,7 +40,7 @@ type Store interface {
 	Hint(ctx context.Context, tgs []ID) error
 
 	// Load loads the provided packed talkgroup IDs into the Store.
-	Load(ctx context.Context, tgs []int64) error
+	Load(ctx context.Context, tgs []database.TalkgroupT) error
 
 	// Invalidate invalidates any caching in the Store.
 	Invalidate()
@@ -98,19 +98,19 @@ func NewCache() Store {
 
 func (t *cache) Hint(ctx context.Context, tgs []ID) error {
 	t.RLock()
-	var toLoad []int64
+	var toLoad []database.TalkgroupT
 	if len(t.tgs) > len(tgs)/2 { // TODO: instrument this
 		for _, tg := range tgs {
 			_, ok := t.tgs[tg]
 			if !ok {
-				toLoad = append(toLoad, tg.Pack())
+				toLoad = append(toLoad, tg.Tuple())
 			}
 		}
 
 	} else {
-		toLoad = make([]int64, 0, len(tgs))
+		toLoad = make([]database.TalkgroupT, 0, len(tgs))
 		for _, g := range tgs {
-			toLoad = append(toLoad, g.Pack())
+			toLoad = append(toLoad, g.Tuple())
 		}
 	}
 
@@ -180,7 +180,7 @@ func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
 		}
 		t.RUnlock()
 
-		tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedByPackedIDs(ctx, toGet.Packed())
+		tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedByPackedIDs(ctx, toGet.Tuples())
 		if err != nil {
 			return nil, err
 		}
@@ -196,7 +196,7 @@ func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
 	return addToRowList(t, r, tgRecords)
 }
 
-func (t *cache) Load(ctx context.Context, tgs []int64) error {
+func (t *cache) Load(ctx context.Context, tgs []database.TalkgroupT) error {
 	tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedByPackedIDs(ctx, tgs)
 	if err != nil {
 		return err
@@ -245,7 +245,7 @@ func (t *cache) TG(ctx context.Context, tg ID) (*Talkgroup, error) {
 		return rec, nil
 	}
 
-	recs, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedByPackedIDs(ctx, []int64{tg.Pack()})
+	recs, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedByPackedIDs(ctx, []database.TalkgroupT{tg.Tuple()})
 	switch err {
 	case nil:
 	case pgx.ErrNoRows:
@@ -290,7 +290,7 @@ func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) 
 }
 
 func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*Talkgroup, error) {
-	sysName, has := t.SystemName(ctx, int(Unpack(input.ID).System))
+	sysName, has := t.SystemName(ctx, int(*input.SystemID))
 	if !has {
 		return nil, ErrNoSuchSystem
 	}

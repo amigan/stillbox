@@ -1,0 +1,9 @@
+DROP INDEX IF EXISTS talkgroups_system_tgid_idx;
+
+ALTER TABLE talkgroups ALTER COLUMN id SET DATA TYPE INT8 USING (systg2id(system_id, tgid));
+
+ALTER TABLE talkgroups DROP COLUMN IF EXISTS tgid;
+ALTER TABLE talkgroups ADD COLUMN IF NOT EXISTS tgid INT4 NOT NULL GENERATED ALWAYS AS (id & x'ffffffff'::BIGINT) STORED,
+
+ALTER TABLE talkgroups DROP COLUMN IF EXISTS system_id;
+ALTER TABLE talkgroups ADD COLUMN IF NOT EXISTS system_id INT4 REFERENCES systems(id) NOT NULL GENERATED ALWAYS AS (id >> 32) STORED;
