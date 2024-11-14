@@ -35,5 +35,12 @@ coverage-html:
 coverage:
 	go test -coverprofile cover.out
 
+# backup backs up the database without calls
+backup:
+	sh .bin/dumpdb.sh
+
+backupplain:
+	sh .bin/dumpdb.sh -p
+
 test:
 	go test -v ./...

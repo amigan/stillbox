@@ -10,3 +10,4 @@ Session.vim
 *.log
 *.dlv
 cover.out
+backups/
