@@ -44,3 +44,6 @@ backupplain:
 
 test:
 	go test -v ./...
+
+run:
+	go run -v ./cmd/stillbox/ serve
