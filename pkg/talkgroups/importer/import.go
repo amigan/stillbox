@@ -1,4 +1,4 @@
-package talkgroups
+package importer
 
 import (
 	"bufio"
@@ -15,6 +15,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
 )
 
 type ImportSource string
@@ -28,7 +29,7 @@ var (
 )
 
 type importer interface {
-	importTalkgroups(ctx context.Context, sys int, r io.Reader) ([]Talkgroup, error)
+	importTalkgroups(ctx context.Context, sys int, r io.Reader) ([]talkgroups.Talkgroup, error)
 }
 
 type ImportJob struct {
@@ -39,7 +40,7 @@ type ImportJob struct {
 	importer `json:"-"`
 }
 
-func (ij *ImportJob) Import(ctx context.Context) ([]Talkgroup, error) {
+func (ij *ImportJob) Import(ctx context.Context) ([]talkgroups.Talkgroup, error) {
 	r := bytes.NewReader([]byte(ij.Body))
 
 	switch ij.Type {
@@ -65,12 +66,12 @@ const (
 
 var rrRE = regexp.MustCompile(`DEC\s+HEX\s+Mode\s+Alpha Tag\s+Description\s+Tag`)
 
-func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int, r io.Reader) ([]Talkgroup, error) {
+func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int, r io.Reader) ([]talkgroups.Talkgroup, error) {
 	sc := bufio.NewScanner(r)
-	tgs := make([]Talkgroup, 0, 8)
-	sysn, has := StoreFrom(ctx).SystemName(ctx, sys)
+	tgs := make([]talkgroups.Talkgroup, 0, 8)
+	sysn, has := talkgroups.StoreFrom(ctx).SystemName(ctx, sys)
 	if !has {
-		return nil, ErrNoSuchSystem
+		return nil, talkgroups.ErrNoSuchSystem
 	}
 
 	importedFrom := jsontypes.Metadata{
@@ -109,14 +110,14 @@ func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int,
 			metadata := jsontypes.Metadata{
 				"imported": importedFrom,
 			}
-			tgt := TG(sys, tgid)
+			tgt := talkgroups.TG(sys, tgid)
 			mode := fields[2]
 			if strings.Contains(mode, "E") {
 				metadata["encrypted"] = true
 			}
 			tags := []string{fields[5]}
 			gn := groupName // must take a copy
-			tgs = append(tgs, Talkgroup{
+			tgs = append(tgs, talkgroups.Talkgroup{
 				Talkgroup: database.Talkgroup{
 					ID:       uuid.New(),
 					Tgid:     int32(tgt.Talkgroup),
