@@ -8,9 +8,9 @@ WHERE tags && ARRAY[$1];
 
 -- name: GetTalkgroupIDsByTags :many
 SELECT system_id, tgid FROM talkgroups
-WHERE (tags @> ARRAY[@anyTags])
-AND (tags && ARRAY[@allTags])
-AND NOT (tags @> ARRAY[@notTags]);
+WHERE (tags @> ARRAY[@any_tags])
+AND (tags && ARRAY[@all_tags])
+AND NOT (tags @> ARRAY[@not_tags]);
 
 -- name: GetTalkgroupTags :one
 SELECT tags FROM talkgroups

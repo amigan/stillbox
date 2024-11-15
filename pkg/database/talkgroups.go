@@ -55,7 +55,7 @@ func (q *Queries) GetTalkgroupsWithLearnedBySysTGID(ctx context.Context, ids TGT
 		if err := rows.Scan(
 			&i.Talkgroup.ID,
 			&i.Talkgroup.SystemID,
-			&i.Talkgroup.Tgid,
+			&i.Talkgroup.TGID,
 			&i.Talkgroup.Name,
 			&i.Talkgroup.AlphaTag,
 			&i.Talkgroup.TgGroup,
@@ -95,7 +95,7 @@ func (q *Queries) GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuples) ([]G
 		if err := rows.Scan(
 			&i.Talkgroup.ID,
 			&i.Talkgroup.SystemID,
-			&i.Talkgroup.Tgid,
+			&i.Talkgroup.TGID,
 			&i.Talkgroup.Name,
 			&i.Talkgroup.AlphaTag,
 			&i.Talkgroup.TgGroup,

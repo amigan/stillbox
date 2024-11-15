@@ -120,7 +120,7 @@ func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int,
 			tgs = append(tgs, talkgroups.Talkgroup{
 				Talkgroup: database.Talkgroup{
 					ID:       uuid.New(),
-					Tgid:     int32(tgt.Talkgroup),
+					TGID:     int32(tgt.Talkgroup),
 					SystemID: int32(tgt.System),
 					Name:     &fields[4],
 					AlphaTag: &fields[3],
