@@ -194,7 +194,7 @@ func TestUnmarshal(t *testing.T) {
 			opts:   []forms.Option{forms.WithAcceptBlank()},
 		},
 		{
-			name:      "url encoded jsontypes",
+			name:      "url encoded jsontime",
 			r:         makeRequest("urlenc.http"),
 			dest:      &urlEncTestJT{},
 			expect:    &UrlEncTestJT,
@@ -202,14 +202,14 @@ func TestUnmarshal(t *testing.T) {
 			opts:      []forms.Option{forms.WithTag("json")},
 		},
 		{
-			name:   "url encoded jsontypes with tz",
+			name:   "url encoded jsontime with tz",
 			r:      makeRequest("urlenc.http"),
 			dest:   &urlEncTestJT{},
 			expect: &UrlEncTestJT,
 			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithParseTimeInTZ(time.UTC), forms.WithTag("json")},
 		},
 		{
-			name:   "url encoded jsontypes with local",
+			name:   "url encoded jsontime with local",
 			r:      makeRequest("urlenc.http"),
 			dest:   &urlEncTestJT{},
 			expect: &UrlEncTestJTLocal,
