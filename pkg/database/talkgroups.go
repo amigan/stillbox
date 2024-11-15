@@ -4,6 +4,12 @@ import (
 	"context"
 )
 
+type talkgroupQuerier interface {
+	GetTalkgroupsWithLearnedBySysTGID(ctx context.Context, ids TGTuples) ([]GetTalkgroupsRow, error)
+	GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuples) ([]GetTalkgroupsRow, error)
+	BulkSetTalkgroupTags(ctx context.Context, tgs TGTuples, tags []string) error
+}
+
 type TGTuples [2][]uint32
 
 func MakeTGTuples(cap int) TGTuples {

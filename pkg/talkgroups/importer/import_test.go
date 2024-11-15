@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"dynatron.me/x/stillbox/pkg/talkgroups/importer"
+	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/database/mocks"
 )
 
 func getFixture(fixture string) []byte {
@@ -23,7 +25,6 @@ func getFixture(fixture string) []byte {
 }
 
 func TestRadioReferenceImport(t *testing.T) {
-	ctx := context.Background()
 	tests := []struct{
 		name string
 		input []byte
@@ -41,6 +42,8 @@ func TestRadioReferenceImport(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			ctx = database.CtxWithDB(ctx, mocks.NewDB())
 			ij := &importer.ImportJob{
 				Type: "radioreference",
 				SystemID: tc.sysID,

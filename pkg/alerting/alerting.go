@@ -312,7 +312,7 @@ func (as *alerter) backfill(ctx context.Context, since time.Time, until time.Tim
 	db := database.FromCtx(ctx)
 	const backfillStatsQuery = `SELECT system, talkgroup, call_date FROM calls WHERE call_date > $1 AND call_date < $2 ORDER BY call_date ASC`
 
-	rows, err := db.Query(ctx, backfillStatsQuery, since, until)
+	rows, err := db.DB().Query(ctx, backfillStatsQuery, since, until)
 	if err != nil {
 		return count, err
 	}

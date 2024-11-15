@@ -27,7 +27,7 @@ const shutdownTimeout = 5 * time.Second
 type Server struct {
 	auth     *auth.Auth
 	conf     *config.Config
-	db       *database.DB
+	db       database.DB
 	r        *chi.Mux
 	sources  sources.Sources
 	sinks    sinks.Sinks
@@ -103,7 +103,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 }
 
 func (s *Server) Go(ctx context.Context) error {
-	defer s.db.Close()
+	defer s.db.DB().Close()
 
 	s.installHupHandler()
 
