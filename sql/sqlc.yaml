@@ -37,7 +37,3 @@ sql:
               import: "dynatron.me/x/stillbox/internal/jsontypes"
               type: "Metadata"
             nullable: true
-          - column: "(talkgroups.system_id, talkgroups.tgid)"
-            go_type:
-              import: "dynatron.me/x/stillbox/pkg/talkgroups"
-              type: "ID"
