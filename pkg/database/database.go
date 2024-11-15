@@ -10,6 +10,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
 	"github.com/rs/zerolog/log"
@@ -106,5 +107,5 @@ func CtxWithDB(ctx context.Context, conn DB) context.Context {
 // IsNoRows is a convenience function that returns whether a returned error is a database
 // no rows error.
 func IsNoRows(err error) bool {
-	return strings.Contains(err.Error(), "no rows in result set")
+	return errors.Is(err, pgx.ErrNoRows)
 }
