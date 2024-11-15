@@ -2,7 +2,6 @@ package nexus
 
 import (
 	"context"
-	"encoding/json"
 
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/pb"
@@ -70,12 +69,7 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 
 	var md *structpb.Struct
 	if len(tgi.Talkgroup.Metadata) > 0 {
-		m := make(map[string]interface{})
-		err := json.Unmarshal(tgi.Talkgroup.Metadata, &m)
-		if err != nil {
-			log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("unmarshal tg metadata")
-		}
-		md, err = structpb.NewStruct(m)
+		md, err = structpb.NewStruct(tgi.Talkgroup.Metadata)
 		if err != nil {
 			log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("new pb struct for tg metadata")
 		}

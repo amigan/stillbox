@@ -6,6 +6,7 @@ import (
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/talkgroups/importer"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -20,6 +21,7 @@ func (tga *talkgroupAPI) Subrouter() http.Handler {
 	r.Put("/{system:\\d+}/{id:\\d+}", tga.put)
 	r.Get("/{system:\\d+}/", tga.get)
 	r.Get("/", tga.get)
+	r.Post("/import", tga.tgImport)
 
 	return r
 }
@@ -96,7 +98,6 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 		wErr(w, r, badRequest(err))
 		return
 	}
-	input.ID = id.ToID().Pack()
 
 	record, err := tgs.UpdateTG(ctx, input)
 	if err != nil {
@@ -105,4 +106,20 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond(w, r, record)
+}
+
+func (tga *talkgroupAPI) tgImport(w http.ResponseWriter, r *http.Request) {
+	var impJob importer.ImportJob
+	err := forms.Unmarshal(r, &impJob, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+	recs, err := impJob.Import(r.Context())
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, recs)
 }

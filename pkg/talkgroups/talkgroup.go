@@ -12,6 +12,8 @@ type Talkgroup struct {
 	Learned bool            `json:"learned"`
 }
 
+type Metadata map[string]interface{}
+
 type Names struct {
 	System    string
 	Talkgroup string
@@ -24,13 +26,16 @@ type ID struct {
 
 type IDs []ID
 
-func (ids *IDs) Packed() []int64 {
-	r := make([]int64, len(*ids))
-	for i := range *ids {
-		r[i] = (*ids)[i].Pack()
+func (t IDs) Tuples() database.TGTuples {
+	sys := make([]uint32, len(t))
+	tg := make([]uint32, len(t))
+
+	for i := range t {
+		sys[i] = t[i].System
+		tg[i] = t[i].Talkgroup
 	}
 
-	return r
+	return database.TGTuples{sys, tg}
 }
 
 type intId interface {
@@ -41,18 +46,6 @@ func TG[T intId, U intId](sys T, tgid U) ID {
 	return ID{
 		System:    uint32(sys),
 		Talkgroup: uint32(tgid),
-	}
-}
-
-func (t ID) Pack() int64 {
-	// P25 system IDs are 12 bits, so we can fit them in a signed 8 byte int (int64, pg INT8)
-	return int64((int64(t.System) << 32) | int64(t.Talkgroup))
-}
-
-func Unpack(id int64) ID {
-	return ID{
-		System:    uint32(id >> 32),
-		Talkgroup: uint32(id & 0xffffffff),
 	}
 }
 

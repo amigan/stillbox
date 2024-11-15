@@ -228,11 +228,11 @@ func (as *alerter) scoredTGs() []talkgroups.ID {
 	return tgs
 }
 
-// packedScoredTGs gets a list of packed TGIDs.
-func (as *alerter) packedScoredTGs() []int64 {
-	tgs := make([]int64, 0, len(as.scores))
+// packedScoredTGs gets a list of TGID tuples.
+func (as *alerter) scoredTGsTuple() (tgs database.TGTuples) {
+	tgs = database.MakeTGTuples(len(as.scores))
 	for _, s := range as.scores {
-		tgs = append(tgs, s.ID.Pack())
+		tgs.Append(s.ID.System, s.ID.Talkgroup)
 	}
 
 	return tgs
@@ -312,7 +312,7 @@ func (as *alerter) backfill(ctx context.Context, since time.Time, until time.Tim
 	db := database.FromCtx(ctx)
 	const backfillStatsQuery = `SELECT system, talkgroup, call_date FROM calls WHERE call_date > $1 AND call_date < $2 ORDER BY call_date ASC`
 
-	rows, err := db.Query(ctx, backfillStatsQuery, since, until)
+	rows, err := db.DB().Query(ctx, backfillStatsQuery, since, until)
 	if err != nil {
 		return count, err
 	}

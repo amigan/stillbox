@@ -70,7 +70,7 @@ func (a *Auth) initJWT() {
 }
 
 func (a *Auth) Login(ctx context.Context, username, password string) (token string, err error) {
-	q := database.New(database.FromCtx(ctx))
+	q := database.FromCtx(ctx)
 	users, err := q.GetUsers(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("getUsers failed")

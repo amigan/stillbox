@@ -1,6 +1,6 @@
 config.yaml
 config.test.yaml
-mydb.sql
+/*.sql
 client/calls/
 !client/calls/.gitkeep
 /gordio
@@ -10,3 +10,4 @@ Session.vim
 *.log
 *.dlv
 cover.out
+backups/

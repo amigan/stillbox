@@ -79,8 +79,9 @@ func internalError(err error) render.Renderer {
 type errResponder func(error) render.Renderer
 
 var statusMapping = map[error]errResponder{
-	talkgroups.ErrNotFound: recordNotFound,
-	pgx.ErrNoRows:          recordNotFound,
+	talkgroups.ErrNoSuchSystem: recordNotFound,
+	talkgroups.ErrNotFound:     recordNotFound,
+	pgx.ErrNoRows:              recordNotFound,
 }
 
 func autoError(err error) render.Renderer {

@@ -2,6 +2,7 @@ VPKG=dynatron.me/x/stillbox/internal/version
 VER!=git describe --tags --always --dirty
 BUILDDATE!=date '+%Y%m%d'
 LDFLAGS=-ldflags="-X '${VPKG}.Version=${VER}' -X '${VPKG}.Built=${BUILDDATE}'"
+GOFLAGS=-v
 
 all: checkcalls
 	go build -o stillbox ${GOFLAGS} ${LDFLAGS} ./cmd/stillbox/
@@ -24,6 +25,7 @@ getcalls:
 generate:
 	sqlc generate -f sql/sqlc.yaml
 	protoc -I=pkg/pb/ --go_out=pkg/ pkg/pb/stillbox.proto
+	go generate ./...
 
 lint:
 	golangci-lint run
@@ -34,5 +36,15 @@ coverage-html:
 coverage:
 	go test -coverprofile cover.out
 
+# backup backs up the database without calls
+backup:
+	sh util/dumpdb.sh
+
+backupplain:
+	sh util/dumpdb.sh -p
+
 test:
 	go test -v ./...
+
+run:
+	go run -v ./cmd/stillbox/ serve

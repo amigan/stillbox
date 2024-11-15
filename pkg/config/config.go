@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"dynatron.me/x/stillbox/internal/jsontime"
+	"dynatron.me/x/stillbox/internal/jsontypes"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -37,7 +37,8 @@ type CORS struct {
 }
 
 type DB struct {
-	Connect string `yaml:"connect"`
+	Connect    string `yaml:"connect"`
+	LogQueries bool   `yaml:"logQueries"`
 }
 
 type Logger struct {
@@ -54,12 +55,12 @@ type RateLimit struct {
 }
 
 type Alerting struct {
-	Enable         bool               `yaml:"enable" form:"enable"`
-	LookbackDays   uint               `yaml:"lookbackDays" form:"lookbackDays"`
-	HalfLife       jsontime.Duration  `yaml:"halfLife" form:"halfLife"`
-	Recent         jsontime.Duration  `yaml:"recent" form:"recent"`
-	AlertThreshold float64            `yaml:"alertThreshold" form:"alertThreshold"`
-	Renotify       *jsontime.Duration `yaml:"renotify,omitempty" form:"renotify,omitempty"`
+	Enable         bool                `yaml:"enable" form:"enable"`
+	LookbackDays   uint                `yaml:"lookbackDays" form:"lookbackDays"`
+	HalfLife       jsontypes.Duration  `yaml:"halfLife" form:"halfLife"`
+	Recent         jsontypes.Duration  `yaml:"recent" form:"recent"`
+	AlertThreshold float64             `yaml:"alertThreshold" form:"alertThreshold"`
+	Renotify       *jsontypes.Duration `yaml:"renotify,omitempty" form:"renotify,omitempty"`
 }
 
 type Notify []NotifyService

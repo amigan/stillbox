@@ -1,0 +1,10 @@
+dir: '{{ replaceAll .InterfaceDirRelative "internal" "internal_" }}/mocks'
+mockname: "{{.InterfaceName}}"
+outpkg: "mocks"
+filename: "{{.InterfaceName}}.go"
+with-expecter: true
+packages:
+  dynatron.me/x/stillbox/pkg/database:
+    config:
+    interfaces:
+      DB:

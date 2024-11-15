@@ -13,10 +13,10 @@ import (
 )
 
 type DatabaseSink struct {
-	db *database.DB
+	db database.DB
 }
 
-func NewDatabaseSink(db *database.DB) *DatabaseSink {
+func NewDatabaseSink(db database.DB) *DatabaseSink {
 	return &DatabaseSink{db: db}
 }
 

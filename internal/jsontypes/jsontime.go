@@ -1,4 +1,4 @@
-package jsontime
+package jsontypes
 
 import (
 	"encoding/json"

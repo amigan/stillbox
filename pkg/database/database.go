@@ -11,16 +11,37 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/tracelog"
+	"github.com/rs/zerolog/log"
 )
 
 // DB is a database handle.
-type DB struct {
+
+//go:generate mockery
+type DB interface {
+	Querier
+	talkgroupQuerier
+
+	DB() *Database
+}
+
+type Database struct {
 	*pgxpool.Pool
 	*Queries
 }
 
+func (db *Database) DB() *Database {
+	return db
+}
+
+type dbLogger struct{}
+
+func (m dbLogger) Log(ctx context.Context, level tracelog.LogLevel, msg string, data map[string]any) {
+	log.Debug().Fields(data).Msg(msg)
+}
+
 // NewClient creates a new DB using the provided config.
-func NewClient(ctx context.Context, conf config.DB) (*DB, error) {
+func NewClient(ctx context.Context, conf config.DB) (DB, error) {
 	dir, err := iofs.New(sqlembed.Migrations, "postgres/migrations")
 	if err != nil {
 		return nil, err
@@ -43,12 +64,19 @@ func NewClient(ctx context.Context, conf config.DB) (*DB, error) {
 		return nil, err
 	}
 
+	if conf.LogQueries {
+		pgConf.ConnConfig.Tracer = &tracelog.TraceLog{
+			Logger:   dbLogger{},
+			LogLevel: tracelog.LogLevelTrace,
+		}
+	}
+
 	pool, err := pgxpool.NewWithConfig(ctx, pgConf)
 	if err != nil {
 		return nil, err
 	}
 
-	db := &DB{
+	db := &Database{
 		Pool:    pool,
 		Queries: New(pool),
 	}
@@ -61,8 +89,8 @@ type dBCtxKey string
 const DBCtxKey dBCtxKey = "dbctx"
 
 // FromCtx returns the database handle from the provided Context.
-func FromCtx(ctx context.Context) *DB {
-	c, ok := ctx.Value(DBCtxKey).(*DB)
+func FromCtx(ctx context.Context) DB {
+	c, ok := ctx.Value(DBCtxKey).(DB)
 	if !ok {
 		panic("no DB in context")
 	}
@@ -71,7 +99,7 @@ func FromCtx(ctx context.Context) *DB {
 }
 
 // CtxWithDB returns a Context with the provided database handle.
-func CtxWithDB(ctx context.Context, conn *DB) context.Context {
+func CtxWithDB(ctx context.Context, conn DB) context.Context {
 	return context.WithValue(ctx, DBCtxKey, conn)
 }
 

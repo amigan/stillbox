@@ -1,0 +1,408 @@
+Statewide Mutual Aid/Intersystem
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2	002	D	Intercity FD	Intercity Fire	Interop
+3	003	D	Intercity PD	Intercity Police	Interop
+State Police - District A (North)
+
+District A comprises barracks in Lincoln Woods and Scituate in the northern region of the state
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+21	015	D	RISP N Disp	North Dispatch 	Law Dispatch
+22	016	DE	RISP N Car	North Car-to-Car/Information	Law Talk
+24	018	DE	RISP N Tac 1	North Tactical Ops 1	Law Tac
+23	017	DE	RISP N Tac 2	North Tactical Ops 2	Law Tac
+State Police - District B (South)
+
+District B comprises barracks in Hope Valley, Wickford as well as detail assignments at TF Green Airport and Block Island in the southern region of the state
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+25	019	D	RISP S Disp	South Dispatch 	Law Dispatch
+27	01b	DE	RISP S Car	South Car-to-Car/Information	Law Talk
+Statewide Fire
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+16	010	D	State FMO	State Fire Marshall	Fire-Talk
+1038	40e	D	NRI Fire Chi	Northern Rhode Island Fire Chiefs	Fire-Talk
+1041	411	D	SRI Fire Chi	Southern Rhode Island Fire Chiefs	Fire-Talk
+1314	522	D	Tanker TF 1	Tanker Taskforce 1	Fire-Talk
+Statewide EMS and Hospitals
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+194	0c2	D	Lifepact Amb	Lifepact Ambulance (Statewide)	EMS Dispatch
+212	0d4	D	Fatima-St Joes	Fatima St Josephs	Business
+220	0dc	DE	Health 1	Health 1	EMS-Talk
+221	0dd	DE	Health 2	Health 2	EMS-Talk
+222	0de	D	Dept of HealthSW	Department of Health - Statewide	EMS-Talk
+228	0e4	DE	DMAT South	DMAT South	Emergency Ops
+232	0e8	D	Life Span 1	Life Span Net 1	EMS-Tac
+234	0ea	D	RI Hosp Ops	RI Hospital Operations	Business
+Department of Environmental Management
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+120	078	D	DEM PD Ops	Law Enforcement Operations	Law Dispatch
+122	07a	D	DEM Police	Law Enforcement Police	Law Talk
+Emergency Management Agency
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+10	00a	D	EMA-1	Emergency Management Agency 1	Emergency Ops
+20	014	D	EMA	Emergency Management Agency	Emergency Ops
+Statewide Area/Events
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+4	004	D	Wide Area 3	Wide Area 3	Interop
+5	005	D	Wide Area 4	Wide Area 4	Interop
+6	006	D	Wide Area 5	Wide Area 5	Interop
+7	007	D	Wide Area 6	Wide Area 6	Interop
+1018	3fa	D	SOUTHWIDE 1	Southwide CH-1	Interop
+1019	3fb	D	SOUTHWIDE 2	Southwide CH-2	Interop
+1022	3fe	D	WIDE AREA 7	Wide Area 7	Interop
+1023	3ff	DE	WIDE AREA 8	Wide Area 8	Interop
+1025	401	D	Inland Marine IO	Inland Marine Interop	Interop
+1037	40d	DE	SOUTHSIDE 5	Southside CH 5	Interop
+1173	495	D	NORTHWIDE1	North Wide 1	Interop
+1174	496	D	NORTHWIDE2	North Wide 2	Interop
+1177	499	DE	NORTHWIDE5	North Wide 5	Interop
+1185	4a1	D	METROWIDE1	Metro Wide 1	Interop
+1186	4a2	D	METROWIDE2	Metro Wide 2	Interop
+1187	4a3	DE	METROWIDE3	Metro Wide 3	Interop
+1335	537	D	EASTWIDE 1	East Wide 1	Interop
+1336	538	D	EASTWIDE 2	East Wide 2	Interop
+1337	539	DE	EASTWIDE 3	East Wide 3	Interop
+11186	2bb2	D	METROWIDE2	Metro Wide 2	Interop
+Statewide Emergency Response
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1033	409	D	TANK TF	Tanker Taskforce 	Fire-Tac
+1034	40a	D	HZT DC1	Hazmat 1	Fire-Tac
+1035	40b	D	HZT DC2	Hazmat 2	Fire-Tac
+Department of Transportation
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+176	0b0	D	RIDOT Primary	Department of Transportation - Primary	Public Works
+Tunnel and Bridge Authority
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+4421	1145	D	RITBA - Pell Bdg	Newport Pell Bridge Operations	Public Works
+Federal
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+274	112	D	VA Police	Providence VA Police	Law Dispatch
+RIPTA
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+186	0ba	DE	RIPTA	Rhode Island Public Transit Auth.	Transportation
+187	0bb	D	RIPTA	Rhode Island Public Transit Auth.	Transportation
+188	0bc	D	RIPTA	Rhode Island Public Transit Auth.	Transportation
+189	0bd	D	RIPTA	Rhode Island Public Transit Auth.	Transportation
+190	0be	D	RIPTA	Rhode Island Public Transit. Auth.	Transportation
+Quonset ANGB
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+304	130	D	Quonset ANGB FD	Fire Operations	Fire Dispatch
+Rhode Island Airport Commission
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+17	011	DE	TF Green PD	Airport Police Operations	Law Dispatch
+19	013	D	TF Green FD	Airport Fire Operations	Fire Dispatch
+College/Education Security
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1126	466	DE	URI PD	University of Rhode Island Police - Dispatch	Law Dispatch
+1131	46b	DE	URI EMS	University of Rhode Island - EMS	EMS Dispatch
+1348	544	D	St George Sec	St. George's School (Middletown) - Security	Security
+10228	27f4	DE	RISD Secuty	Rhode Island School of Design - Security	Security
+10229	27f5	DE	PROV COLL	Providence College Security - Dispatch	Security
+10230	27f6	D	RI COL SEC	Rhode Island College Security	Security
+11001	2af9	DE	BROWN UNIV	Brown University Police - Dispatch	Law Dispatch
+11002	2afa	DE	BROWN CAR	Brown University Police - Car-to-Car	Law Talk
+11003	2afb	DE	BROWN TAC	Brown University Police - Tactical	Law Tac
+Statewide Misc.
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+12	00c	DE	METROWIDE2	Metro Wide 2	Interop
+14	00e	DE	METROWIDE4	Metro Wide 4	Interop
+70	046	DE	TFC TRIBUNAL	RI Traffic Tribunal Security	Security
+168	0a8	D	Red Cross 1	Rhode Island Red Cross - Primary	Other
+169	0a9	D	Red Cross 2	Rhode Island Red Cross - Secondary	Other
+223	0df	D	NURSING HM	Statewide Nursing Homes Net	Other
+243	0f3	D	Slater Hosp Ops	Hospital Operations	Business
+244	0f4	D	Slater Hosp Sec	Slater Hospital Security	Security
+Washington County
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1042	412	D	WashCo FireG	County Fireground	Fire-Tac
+1479	5c7	D	WashCo FireS	County Fire Station/Station	Fire-Talk
+Barrington
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1712	6b0	D	BarringtnFD1	Fire 1 Dispatch	Fire Dispatch
+1713	6b1	D	BarringtnFD2	Fire 2	Fire-Tac
+1715	6b3	DE	BarringtonPD 1	Police Operations	Law Dispatch
+1716	6b4	D	BarringtonPD 2	Police Secondary	Law Tac
+Bristol
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1744	6d0	D	Bristol FD	Fire Operations (Patch from VHF)	Fire Dispatch
+1755	6db	D	Bristol Harbor	Harbormaster	Public Works
+Burrillville
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2003	7d3	D	Burrville PD	Police	Law Dispatch
+2004	7d4	D	Burrvl PD2	Police 2	Law Talk
+2005	7d5	DE	Burrvl PD3	Police 3 Detectives	Law Tac
+2006	7d6	D	Burrvl PD4	Police 4	Law Tac
+2000	7d0	D	Burrvl FD	Fire Misc (Ops are VHF)	Fire-Tac
+2001	7d1	D	Burvl FDTAC1	Fire TAC-1	Fire-Tac
+2009	7d9	D	Burvl FDTAC2	Fire TAC-2	Fire-Tac
+2002	7d2	D	Burrvl EMS	EMS Misc (Ops are VHF)	EMS-Tac
+2007	7d7	D	Burrvl Town	Town-Wide	Multi-Tac
+2008	7d8	D	Burrvl EMA	Emergency Management	Emergency Ops
+Central Falls
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1838	72e	D	CentFallsPD1	Police 1 Dispatch	Law Dispatch
+1839	72f	D	CentFallsPD2	Police 2	Law Dispatch
+1835	72b	D	CentFalls FD 1	Fire Dispatch (Simulcast of UHF)	Fire Dispatch
+1836	72c	D	CentFalls FD 2	Fireground	Fire-Tac
+Charlestown
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1425	591	D	CharlestownPD	Police Operations - Simulcast of UHF	Law Dispatch
+1429	595	D	Chastown EMS	EMS - Linked to 151.3325	EMS Dispatch
+Coventry
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1483	5cb	D	Coventry PD	Police 1 - Dispatch	Law Dispatch
+1484	5cc	D	Coventry PD2	Police 2	Law Tac
+1480	5c8	D	Coventry FD	Fire	Fire Dispatch
+Cranston
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1500	5dc	D	Cranston FD Disp	Fire - Dispatch/Operations	Fire Dispatch
+1501	5dd	D	Cranston FD FG2	Fire - Fireground 2	Fire-Tac
+1502	5de	D	Cranston FD FG3	Fire - Fireground 3	Fire-Tac
+1503	5df	D	Cranston FD FG4	Fire - Fireground 4	Fire-Talk
+1504	5e0	D	Cranston FD Admi	Fire - Admin/Alt Fireground 5	Fire-Talk
+Cumberland
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1520	5f0	D	Cumberland FD	Fire	Fire Dispatch
+1523	5f3	D	Cumberland PD	Police Secondary	Law Dispatch
+East Greenwich
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1776	6f0	D	E Greenwich F-TA	Fire Talk Around	Fire-Talk
+1779	6f3	D	E Greenwich PD	Police Operations	Law Dispatch
+East Providence
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1869	74d	D	E Prov PD 1	Police 1 - Dispatch	Law Dispatch
+1872	750	DE	E Prov PD 2	Police 2	Law Talk
+1870	74e	DE	E Prov PD 3	Police 3	Law Talk
+1883	75b	DE	E Prov PD12	Detectives	Law Talk
+1866	74a	D	E Prov FD 1	Fire - Dispatch/Operations	Fire Dispatch
+1867	74b	D	E Prov FD 2	Fire "Channel 2"	Fire-Tac
+1878	756	D	E Prov FD 3	Fire "Channel 3"	Fire-Tac
+Exeter
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2064	810	D	Exeter FD-G	Fire - Fireground	Fire-Tac
+Foster
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1904	770	D	Foster Fire	Fire	Fire Dispatch
+Glocester
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1939	793	D	Glocester PD	Police	Law Dispatch
+1940	794	D	Glocester PD 2	Police Secondary	Law Tac
+Hopkinton
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1410	582	DE	Hopkinton PD	Police	Law Dispatch
+Jamestown
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1100	44c	DE	Jamestown PD 1	Police 1 - Dispatch	Law Dispatch
+1101	44d	DE	Jamestown PD 2	Police 2	Law Dispatch
+1108	454	D	Jamestown FD	Fire	Fire Dispatch
+1120	460	D	Jamestown FG 1	Fireground 1	Fire-Tac
+1121	461	D	Jamestown FG 2	Fireground 2	Fire-Tac
+1114	45a	D	Jamestown DPW	Public Works	Public Works
+1107	453	D	Jamestown School	Town Schools	Schools
+Johnston
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1619	653	DE	Johnston PD	Police Operations	Law Dispatch
+1616	650	D	Johnston FD	Fire Operations	Fire Dispatch
+1617	651	D	Johnston FG	Fireground	Fire-Tac
+Lincoln
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1683	693	D	Lincoln Police	Police F1	Law Dispatch
+1684	694	D	Lincoln Police 2	Police F2	Law Tac
+1680	690	D	Lincoln Fire 1	Fire Dispatch	Fire Dispatch
+1681	691	D	Lincoln Fire 2	Fireground 2	Fire-Tac
+1691	69b	D	Lincoln Fire 3	Fireground 3	Fire-Tac
+1682	692	D	Lincoln EMS	EMS	EMS Dispatch
+1688	698	D	Lincoln EMA	Emergency Management	Emergency Ops
+1687	697	D	Lincoln Townwide	Townwide	Interop
+1692	69c	D	Lincoln DPW	Public Works	Public Works
+Little Compton
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1264	4f0	D	LittleCompPD	Police	Law Dispatch
+1266	4f2	D	LittleCompFD	Fire	Fire Dispatch
+Middletown
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1338	53a	D	MiddletownPD	Police Operations	Law Dispatch
+1343	53f	D	Middletown FD	Fire Operations	Fire Dispatch
+1345	541	D	MiddletownTW	Townwide	Multi-Dispatch
+Narragansett
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1001	3e9	DE	Narrag PD 1	Police - Dispatch	Law Dispatch
+1002	3ea	DE	Narrag PD 2	Police - Car/Car	Law Talk
+1003	3eb	DE	Narrag PD 3	Police - Special Details 1/Town Beaches	Law Tac
+1004	3ec	DE	Narrag PD 4	Police - Special Details 2	Law Tac
+1005	3ed	DE	Narrag PD 5	Police - Harbormaster	Law Talk
+1007	3ef	DE	Narrag PD 7	Police - Detectives	Law Talk
+1008	3f0	DE	Narrag PD 8	Police - Detectives	Law Talk
+1006	3ee	D	Narrag FD	Fire - Dispatch	Fire Dispatch
+1012	3f4	D	Narrag FDFG1	Fire - Fireground 1	Fire-Tac
+1013	3f5	D	Narrag FDFG2	Fire - Fireground 2	Fire-Tac
+1016	3f8	D	Narrag FD AD	Fire - Administration	Fire-Talk
+1014	3f6	D	Narrag EMS	Fire - EMS Ops	EMS Dispatch
+1017	3f9	D	Narrag DPW	Public Works	Public Works
+1010	3f2	D	Narrag TownA	Town Administration	Other
+1011	3f3	D	Narrag IOP	Townwide Interop	Interop
+New Shoreham
+
+New Shoreham is on Block Island. New Shoreham operates primarily on their own Capacity Plus trunk.
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1376	560	D	New Shore PD	Police	Law Dispatch
+Newport
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1300	514	DE	Newport PD 1	Police 1 - Dispatch	Law Dispatch
+1302	516	DE	Newport PD 2	Police 2 - Records	Law Talk
+1304	518	DE	Newport PD 4	Police 4 - Tactical 1	Law Talk
+1307	51b	DE	Newport PD 7	Police 7 - Tactical 4	Law Talk
+1308	51c	DE	Newport PD 8	Police 8 - Tactical 5	Law Talk
+1303	517	D	Newport FD1	Fire Dispatch/Operations	Fire Dispatch
+1305	519	D	Newport FG1	Fireground Ops 1	Fire-Tac
+1306	51a	D	Newport FG2	Fireground Ops 2	Fire-Tac
+1301	515	D	Newport FDT	Fire - Training	Fire-Talk
+1291	50b	D	Newport Water	Water Department	Public Works
+1293	50d	D	Newport DPW	Public Works	Public Works
+1297	511	D	Newport Evnt	Citywide Events	Public Works
+1312	520	D	Newport CW	Newport Citywide	Interop
+North Kingstown
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1285	505	D	NKing PD 1	Police 1 - Dispatch	Law Dispatch
+1286	506	DE	NKing PD 2	Police 2 - Admin	Law Talk
+1287	507	De	NKing PD 3	Police 3 - Car/Car	Law Tac
+1280	500	D	NKing Fire D	Fire - Dispatch	Fire Dispatch
+1281	501	D	NKing Fire G	Fire - Fireground	Fire-Tac
+North Providence
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1536	600	DE	NorthPrv PD1	Police 1 - Dispatch	Law Dispatch
+1537	601	DE	NorthPrv PD2	Police 2 - Car/Car	Law Talk
+1538	602	DE	NorthPrv PD3	Police 3 - Tactical	Law Tac
+1547	60b	D	NorthPrv FDD	Fire Dispatch 	Fire Dispatch
+1548	60c	D	NorthPrv Fire 2	Fire 2	Fire-Tac
+1549	60d	D	NorthPrv Fire 3	Fire 3	Fire-Tac
+1550	60e	D	NorthPrv Fire 4	Fire 4	Fire-Tac
+1551	60f	D	NorthPrv Fire 5	Fire 5	Fire Dispatch
+1552	610	DE	NorthPrv Fire 6	Fire 6	Fire-Tac
+1544	608	D	NorthPrv TownW 1	Townwide 1	Interop
+1545	609	D	NorthPrv TownW 2	Townwide 2	Interop
+1554	612	D	NorthPrv DPW	Public Works	Public Works
+North Smithfield
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1971	7b3	DE	N Smithfd PD	Police	Law Dispatch
+1968	7b0	D	N Smithfield FD	Fire Dispatch/Operations	Fire Dispatch
+1969	7b1	D	N Smithfield FD2	Fire Secondary	Fire-Tac
+1981	7bd	D	N Smithfield FD3	Fireground	Fire-Tac
+Pawtucket
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1440	5a0	D	Pawtucket FD 1	Fire - Operations	Fire Dispatch
+1441	5a1	D	Pawtucket FG	Fireground	Fire-Tac
+1442	5a2	D	Pawtucket EMSTac	EMS Tac	EMS-Tac
+Portsmouth
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1248	4e0	DE	PortsmouthPD	Police	Law Dispatch
+1253	4e5	D	Portsmouth FD	Fire Dispatch (Patch to VHF Primary)	Fire Dispatch
+1255	4e7	D	Portsmouth FG	Fireground	Fire-Tac
+1262	4ee	D	Prudence Isl FD	Island Fire Dispatch	Fire Dispatch
+Providence (City)
+
+Providence fireground channels may be patched.
+As of this writing,
+FG 05 (10102) and 02 (10107) are patched
+FG 06 (10103) and 03 (10108) are patched 
+FG 07 (10104) and 04 (10109) are patched.
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+10000	2710	D	PPD ATG	Police - All Call - Emergency Broadcasts	Emergency Ops
+10001	2711	D	PPD CH 1	Police 1 - Dispatch	Law Dispatch
+10002	2712	DE	PPD CH 2	Police 2	Law Talk
+10003	2713	DE	PPD CH 3	Police 3	Law Talk
+10004	2714	DE	PPD CH-4	Police 4	Law Talk
+10005	2715	DE	PPD DETEC 1	Police 5 -Detectives 1	Law Talk
+10006	2716	DE	PPD T/A	Police 6 - Car-to-Car	Law Talk
+10007	2717	DE	PPD NARC 1	Police 7 - Narcotics 1	Law Talk
+10008	2718	DE	PPD NARC 2	Police 8 - Narcotics 2	Law Tac
+10009	2719	DE	PPD DETEC 2	Police 9 - Detectives 2	Law Talk
+10010	271a	DE	PPD DETAIL 1	Police 10 - Special Details 1	Law Tac
+10011	271b	DE	PPD DETAIL 2	Police 11 - Special Details 2	Law Tac
+10012	271c	DE	PPD CORR SEC	Police 12 - Corrections Security	Law Talk
+10013	271d	DE	PPD SRU	Police 13 - Special Response Unit	Law Tac
+10014	271e	DE	PPD ADMIN	Police 14 - Administration	Law Talk
+10100	2774	D	PROV FD ATG	Fire All Call - Emergency Broadcasts	Emergency Ops
+10101	2775	D	PFD DISPATCH	Fire Dispatch	Fire Dispatch
+10107	277b	D	PFD CH-2 FG	Fireground 2	Fire-Tac
+10108	277c	D	PFD CH-3 FG	Fireground 3	Fire-Tac
+10109	277d	D	PFD CH-4 FG	Fireground 4	Fire-Tac
+10102	2776	D	PFD CH-5	Fire 5	Fire-Tac
+10103	2777	D	PFD CH-6	Fire 6	Fire-Tac
+10104	2778	D	PFD CH-7	Fire 7	Fire-Tac
+10110	277e	D	PFD M/A 1	Fire - Mutual Aid 1	Fire-Tac
+10111	277f	D	PFD M/A 2	Fire - Mutual Aid 2	Fire-Tac
+10112	2780	D	PFD M/A 3	Fire - Mutual Aid 3	Fire-Tac
+10113	2781	D	PFD Fireground 8	Fireground 8	Fire-Talk
+10105	2779	D	PFD ADMIN	Fire - Administration	Fire-Talk
+10106	277a	D	PFD COMM	Fire - Communications	Fire-Talk
+10207	27df	D	PROV DPW	Public Works	Public Works
+Richmond
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2035	7f3	D	Richmond PD	Police	Law Dispatch
+2042	7fa	D	Chariho Reg HS	Chariho Regional High School	Schools
+Scituate
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1460	5b4	D	Scituate PD	Police	Law Dispatch
+1463	5b7	D	Scituate FD	Fire Operations	Fire Dispatch
+Smithfield
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1651	673	D	SmithfieldPD	Police Operations	Law Dispatch
+1652	674	D	Smfld PD 2	Police Secondary	Law Tac
+1653	675	DE	Smfld PD Det	Police Detectives	Law Tac
+1654	676	DE	Smfld PD Adm	Police Admin	Law Talk
+1661	67d	D	Smfld PD Dtl	Police Details	Law Talk
+1648	670	D	SmithfieldFD	Fire - Fireground	Fire-Tac
+1655	677	D	Smfld Town	Town-Wide	Multi-Tac
+1657	679	D	Smfld EMA	Emergency Management	Emergency Ops
+1660	67c	D	Smfld DPW	Public Works	Public Works
+South Kingstown
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1225	4c9	DE	SKing PD 1	Police 1 - Dispatch	Law Dispatch
+1226	4ca	DE	SKing PD 2	Police 2 - Car/Car	Law Talk
+1235	4d3	DE	SKing PD 3	Police 3 - Tactical	Law Tac
+1236	4d4	DE	SKing PD 5	Police 5 - Tactical	Law Tac
+1232	4d0	D	SKing FD Lnk	Fire - UHF Simulcast	Fire Dispatch
+1240	4d8	D	SKing Fire D	Fire - Detail	Fire-Talk
+1227	4cb	D	UnionFD FG 1	Union Fire District - Fireground 1	Fire-Tac
+1237	4d5	D	UnionFD FG 2	Union Fire District - Fireground 2	Fire-Tac
+1026	402	D	UnionFD Evnt	Union Fire District - Special Events	Fire-Talk
+1015	3f7	DE	SKing EMS	EMS	EMS Dispatch
+Tiverton
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1316	524	D	Tiverton PD	Police (Simulcast 482.9625)	Law Dispatch
+1315	523	D	Tiverton FD	Fire (Simulcast 471.7875)	Fire Dispatch
+Warwick
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1162	48a	D	Warwick FD	Fire	Fire Dispatch
+1170	492	D	Warwick FG	Fireground	Fire-Tac
+West Greenwich
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1805	70d	D	W Greenwh PD	Police	Law Dispatch
+1806	70e	D	W GreenwichPD2	Police Secondary	Law Tac
+West Warwick
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1208	4b8	D	W Warwick FD	Fire Operations	Fire Dispatch
+Westerly
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1050	41a	DE	Westerly PD1	Police 1 - Dispatch	Law Dispatch
+1051	41b	DE	Westerly PD2	Police 2	Law Talk
+1052	41c	DE	Westerly PD3	Police 3	Law Talk
+1053	41d	DE	Westerly PD4	Police 4	Law Talk
+1054	41e	D	Westerly PD5	Police 5 - Reserve Officers	Law Talk
+1064	428	D	Westerly PD6	Police 6 - Traffic Division	Law Talk
+1063	427	D	Westerly FD	Fire Operations	Fire Dispatch
+1072	430	D	Westerly PFE	Police/Fire/EMS Ops	Multi-Talk
+1082	43a	D	Westerly EMS 	EMS Operations	EMS Dispatch
+Woonsocket
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1363	553	D	Woonskt PD 1	Police 1 - Dispatch	Law Dispatch
+1364	554	DE	Woonskt PD 2	Police 2	Law Talk
+1360	550	D	Woonsocket FD D	Fire Dispatch - Operations	Fire-Talk
+1361	551	D	Woonsocket FD 2	Fire Secondary	Fire Dispatch
+1354	54a	D	Woonskt FD 3	Fire - Fireground 3	Fire-Tac
+1367	557	D	Woonskt City	Citywide	Multi-Talk
+1368	558	D	Woonsocket PW	Public Works - Streets	Public Works
+Radio Technicians
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1	001	D	Radio Techs	RISCON Radio Technicians	Public Works
+10125	278d	D	Radio Techs	RISCON Radio Technicians	Public Works

@@ -57,6 +57,7 @@ require (
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/exp/shiny v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/image v0.14.0 // indirect

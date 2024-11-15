@@ -24,7 +24,7 @@ func main() {
 	}
 	rootCmd.PersistentFlags().BoolP("version", "V", false, "show version")
 	cfg := config.New(rootCmd)
-	rootCmd.Run = func(cmd *cobra.Command, args []string) {
+	rootCmd.PreRun = func(cmd *cobra.Command, args []string) {
 		v, _ := rootCmd.PersistentFlags().GetBool("version")
 		if v {
 			fmt.Print(version.String())

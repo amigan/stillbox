@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"dynatron.me/x/stillbox/internal/jsontime"
+	"dynatron.me/x/stillbox/internal/jsontypes"
 
 	"github.com/araddon/dateparse"
 )
@@ -262,13 +262,13 @@ func (o *options) iterFields(r *http.Request, destStruct reflect.Value) error {
 				return err
 			}
 			setVal(destFieldVal, set, val)
-		case time.Time, *time.Time, jsontime.Time, *jsontime.Time:
+		case time.Time, *time.Time, jsontypes.Time, *jsontypes.Time:
 			t, set, err := o.parseTime(ff)
 			if err != nil {
 				return err
 			}
 			setVal(destFieldVal, set, t)
-		case time.Duration, *time.Duration, jsontime.Duration, *jsontime.Duration:
+		case time.Duration, *time.Duration, jsontypes.Duration, *jsontypes.Duration:
 			d, set, err := o.parseDuration(ff)
 			if err != nil {
 				return err

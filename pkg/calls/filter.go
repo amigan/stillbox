@@ -71,7 +71,7 @@ func (f *TalkgroupFilter) compile(ctx context.Context) error {
 		}
 
 		for _, tg := range tagTGs {
-			f.talkgroups[tgs.ID{System: uint32(tg.SystemID), Talkgroup: uint32(tg.Tgid)}] = true
+			f.talkgroups[tgs.ID{System: uint32(tg.SystemID), Talkgroup: uint32(tg.TGID)}] = true
 		}
 	}
 
