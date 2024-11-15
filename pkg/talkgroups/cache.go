@@ -135,7 +135,7 @@ func (t *cache) add(rec *Talkgroup) error {
 }
 
 type row interface {
-	database.GetTalkgroupsWithLearnedByPackedIDsRow | database.GetTalkgroupsWithLearnedRow |
+	database.GetTalkgroupsRow | database.GetTalkgroupsWithLearnedRow |
 		database.GetTalkgroupsWithLearnedBySystemRow
 	GetTalkgroup() database.Talkgroup
 	GetSystem() database.System

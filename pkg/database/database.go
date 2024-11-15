@@ -11,12 +11,20 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/tracelog"
+	"github.com/rs/zerolog/log"
 )
 
 // DB is a database handle.
 type DB struct {
 	*pgxpool.Pool
 	*Queries
+}
+
+type myLogger struct{}
+
+func (m myLogger) Log(ctx context.Context, level tracelog.LogLevel, msg string, data map[string]any) {
+	log.Debug().Fields(data).Msg(msg)
 }
 
 // NewClient creates a new DB using the provided config.
@@ -43,6 +51,12 @@ func NewClient(ctx context.Context, conf config.DB) (*DB, error) {
 		return nil, err
 	}
 
+	logger := myLogger{}
+	tracer := &tracelog.TraceLog{
+		Logger:   logger,
+		LogLevel: tracelog.LogLevelTrace,
+	}
+	pgConf.ConnConfig.Tracer = tracer
 	pool, err := pgxpool.NewWithConfig(ctx, pgConf)
 	if err != nil {
 		return nil, err

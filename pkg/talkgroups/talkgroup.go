@@ -48,7 +48,7 @@ func TG[T intId, U intId](sys T, tgid U) ID {
 
 func (t ID) Tuple() database.TalkgroupT {
 	return database.TalkgroupT{
-		System: t.System,
+		System:    t.System,
 		Talkgroup: t.Talkgroup,
 	}
 }
