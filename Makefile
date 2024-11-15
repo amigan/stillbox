@@ -37,10 +37,10 @@ coverage:
 
 # backup backs up the database without calls
 backup:
-	sh .bin/dumpdb.sh
+	sh util/dumpdb.sh
 
 backupplain:
-	sh .bin/dumpdb.sh -p
+	sh util/dumpdb.sh -p
 
 test:
 	go test -v ./...
