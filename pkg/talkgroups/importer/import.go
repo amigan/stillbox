@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -74,11 +73,6 @@ func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int,
 		return nil, talkgroups.ErrNoSuchSystem
 	}
 
-	importedFrom := jsontypes.Metadata{
-		"from": "RadioReference",
-		"time": time.Now(),
-	}
-
 	var groupName string
 	state := rrsInitial
 	for sc.Scan() {
@@ -107,12 +101,11 @@ func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int,
 			if err != nil {
 				continue
 			}
-			metadata := jsontypes.Metadata{
-				"imported": importedFrom,
-			}
+			var metadata jsontypes.Metadata
 			tgt := talkgroups.TG(sys, tgid)
 			mode := fields[2]
 			if strings.Contains(mode, "E") {
+				metadata = make(jsontypes.Metadata)
 				metadata["encrypted"] = true
 			}
 			tags := []string{fields[5]}

@@ -16,6 +16,7 @@ import (
 )
 
 // DB is a database handle.
+
 //go:generate mockery
 type DB interface {
 	Querier
