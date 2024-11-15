@@ -2,41 +2,25 @@ package database
 
 import (
 	"context"
-	"database/sql/driver"
-	"fmt"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type TalkgroupT struct {
-	System    uint32 `json:"system_id"`
-	Talkgroup uint32 `json:"tgid"`
-}
+type TGTuples [2][]uint32
 
-type TalkgroupTs []TalkgroupT
-
-func (t TalkgroupTs) Nest() (sys []uint32, tg []uint32) {
-	sys = make([]uint32, len(t))
-	tg = make([]uint32, len(t))
-
-	for i := range t {
-		sys[i] = t[i].System
-		tg[i] = t[i].Talkgroup
+func MakeTGTuples(cap int) TGTuples {
+	return [2][]uint32{
+		make([]uint32, 0, cap),
+		make([]uint32, 0, cap),
 	}
-
-	return
 }
 
-func (t TalkgroupT) Value() (driver.Value, error) {
-	return [2]uint32{t.System, t.Talkgroup}, nil
+func (t *TGTuples) Append(sys, tg uint32) {
+	t[0] = append(t[0], sys)
+	t[1] = append(t[1], tg)
 }
 
-func (t TalkgroupT) TextValue() (pgtype.Text, error) {
-	return pgtype.Text{String: fmt.Sprintf("%d:%d", t.System, t.Talkgroup)}, nil
-}
+// Below queries are here because sqlc refuses to parse unnest(x, y)
 
-const getTalkgroupsWithLearnedByPackedIDs = `-- name: GetTalkgroupsWithLearnedByPackedIDs :many
-SELECT
+const getTalkgroupsWithLearnedBySysTGID = `SELECT
 tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name,
 FALSE learned
 FROM talkgroups tg
@@ -59,9 +43,8 @@ type GetTalkgroupsRow struct {
 	Learned   bool      `json:"learned"`
 }
 
-func (q *Queries) GetTalkgroupsWithLearnedByPackedIDs(ctx context.Context, ids TalkgroupTs) ([]GetTalkgroupsRow, error) {
-	sysAr, tgAr := ids.Nest()
-	rows, err := q.db.Query(ctx, getTalkgroupsWithLearnedByPackedIDs, sysAr, tgAr)
+func (q *Queries) GetTalkgroupsWithLearnedBySysTGID(ctx context.Context, ids TGTuples) ([]GetTalkgroupsRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupsWithLearnedBySysTGID, ids[0], ids[1])
 	if err != nil {
 		return nil, err
 	}
@@ -96,15 +79,12 @@ func (q *Queries) GetTalkgroupsWithLearnedByPackedIDs(ctx context.Context, ids T
 	return items, nil
 }
 
-const getTalkgroupsByPackedIDs = `-- name: GetTalkgroupsByPackedIDs :many
-SELECT tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name FROM talkgroups tg
+const getTalkgroupsBySysTGID = `SELECT tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg)
-`
+JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg);`
 
-func (q *Queries) GetTalkgroupsByPackedIDs(ctx context.Context, ids TalkgroupTs) ([]GetTalkgroupsRow, error) {
-	sysAr, tgAr := ids.Nest()
-	rows, err := q.db.Query(ctx, getTalkgroupsByPackedIDs, sysAr, tgAr)
+func (q *Queries) GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuples) ([]GetTalkgroupsRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupsBySysTGID, ids[0], ids[1])
 	if err != nil {
 		return nil, err
 	}
@@ -136,4 +116,11 @@ func (q *Queries) GetTalkgroupsByPackedIDs(ctx context.Context, ids TalkgroupTs)
 		return nil, err
 	}
 	return items, nil
+}
+
+const bulkSetTalkgroupTags = `UPDATE talkgroups tg SET tags = $3 FROM UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) WHERE (tg.system_id = tgt.sys AND tg.tgid = tgt.tg);`
+
+func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, tgs TGTuples, tags []string) error {
+	_, err := q.db.Exec(ctx, bulkSetTalkgroupTags, tgs[0], tgs[1], tags)
+	return err
 }

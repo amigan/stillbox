@@ -26,13 +26,16 @@ type ID struct {
 
 type IDs []ID
 
-func (ids *IDs) Tuples() []database.TalkgroupT {
-	r := make([]database.TalkgroupT, len(*ids))
-	for i := range *ids {
-		r[i] = (*ids)[i].Tuple()
+func (t IDs) Tuples() database.TGTuples {
+	sys := make([]uint32, len(t))
+	tg := make([]uint32, len(t))
+
+	for i := range t {
+		sys[i] = t[i].System
+		tg[i] = t[i].Talkgroup
 	}
 
-	return r
+	return database.TGTuples{sys, tg}
 }
 
 type intId interface {
@@ -43,13 +46,6 @@ func TG[T intId, U intId](sys T, tgid U) ID {
 	return ID{
 		System:    uint32(sys),
 		Talkgroup: uint32(tgid),
-	}
-}
-
-func (t ID) Tuple() database.TalkgroupT {
-	return database.TalkgroupT{
-		System:    t.System,
-		Talkgroup: t.Talkgroup,
 	}
 }
 

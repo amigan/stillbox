@@ -23,31 +23,10 @@ CREATE TABLE IF NOT EXISTS systems(
 	name TEXT NOT NULL
 );
 
-CREATE OR REPLACE FUNCTION systg2id(_sys INTEGER, _tg INTEGER) RETURNS INT8 LANGUAGE plpgsql AS
-$$
-BEGIN
-	RETURN ((_sys::BIGINT << 32) | _tg);
-END
-$$;
-
-CREATE OR REPLACE FUNCTION tgfromid(_id INT8) RETURNS INTEGER LANGUAGE plpgsql AS
-$$
-BEGIN
-	RETURN (_id & x'ffffffff'::BIGINT);
-END
-$$;
-
-CREATE OR REPLACE FUNCTION sysfromid(_id INT8) RETURNS INTEGER LANGUAGE plpgsql AS
-$$
-BEGIN
-	RETURN (_id >> 32);
-END
-$$;
-
 CREATE TABLE IF NOT EXISTS talkgroups(
-	id INT8 PRIMARY KEY,
-	system_id INT4 REFERENCES systems(id) NOT NULL GENERATED ALWAYS AS (id >> 32) STORED,
-	tgid INT4 NOT NULL GENERATED ALWAYS AS (id & x'ffffffff'::BIGINT) STORED,
+	id UUID PRIMARY KEY,
+	system_id INT4 REFERENCES systems(id) NOT NULL,
+	tgid INT4 NOT NULL,
 	name TEXT,
 	alpha_tag TEXT,
 	tg_group TEXT,
@@ -56,8 +35,11 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	tags TEXT[] NOT NULL DEFAULT '{}',
 	alert BOOLEAN NOT NULL DEFAULT 'true',
 	alert_config JSONB,
-	weight REAL NOT NULL DEFAULT 1.0
+	weight REAL NOT NULL DEFAULT 1.0,
+	UNIQUE (system_id, tgid)
 );
+
+CREATE INDEX talkgroups_system_tgid_idx ON talkgroups (system_id, tgid);
 
 CREATE INDEX IF NOT EXISTS talkgroup_id_tags ON talkgroups USING GIN (tags);
 

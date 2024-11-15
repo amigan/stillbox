@@ -10,19 +10,8 @@ import (
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/alerting/rules"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
-
-const bulkSetTalkgroupTags = `-- name: BulkSetTalkgroupTags :exec
-UPDATE talkgroups SET tags = $2
-WHERE id = ANY($1)
-`
-
-func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, iD uuid.UUID, tags []string) error {
-	_, err := q.db.Exec(ctx, bulkSetTalkgroupTags, iD, tags)
-	return err
-}
 
 const getSystemName = `-- name: GetSystemName :one
 SELECT name FROM systems WHERE id = $1
@@ -44,8 +33,8 @@ type GetTalkgroupRow struct {
 	Talkgroup Talkgroup `json:"talkgroup"`
 }
 
-func (q *Queries) GetTalkgroup(ctx context.Context, systemID int32, tgid int32) (GetTalkgroupRow, error) {
-	row := q.db.QueryRow(ctx, getTalkgroup, systemID, tgid)
+func (q *Queries) GetTalkgroup(ctx context.Context, systemID int32, tgID int32) (GetTalkgroupRow, error) {
+	row := q.db.QueryRow(ctx, getTalkgroup, systemID, tgID)
 	var i GetTalkgroupRow
 	err := row.Scan(
 		&i.Talkgroup.ID,
@@ -98,11 +87,11 @@ func (q *Queries) GetTalkgroupIDsByTags(ctx context.Context, anytags []string, a
 
 const getTalkgroupTags = `-- name: GetTalkgroupTags :one
 SELECT tags FROM talkgroups
-WHERE id = systg2id($1, $2)
+WHERE system_id = $1 AND tgid = $2
 `
 
-func (q *Queries) GetTalkgroupTags(ctx context.Context, sys int, tg int) ([]string, error) {
-	row := q.db.QueryRow(ctx, getTalkgroupTags, sys, tg)
+func (q *Queries) GetTalkgroupTags(ctx context.Context, systemID int32, tgID int32) ([]string, error) {
+	row := q.db.QueryRow(ctx, getTalkgroupTags, systemID, tgID)
 	var tags []string
 	err := row.Scan(&tags)
 	return tags, err
@@ -117,7 +106,7 @@ JOIN systems sys ON tg.system_id = sys.id
 WHERE (tg.system_id, tg.tgid) = ($1, $2)
 UNION
 SELECT
-tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+NULL::UUID, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
 TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
@@ -362,12 +351,12 @@ func (q *Queries) GetTalkgroupsWithLearnedBySystem(ctx context.Context, system i
 }
 
 const setTalkgroupTags = `-- name: SetTalkgroupTags :exec
-UPDATE talkgroups SET tags = $3
-WHERE id = systg2id($1, $2)
+UPDATE talkgroups SET tags = $1
+WHERE system_id = $2 AND tgid = $3
 `
 
-func (q *Queries) SetTalkgroupTags(ctx context.Context, sys int, tg int, tags []string) error {
-	_, err := q.db.Exec(ctx, setTalkgroupTags, sys, tg, tags)
+func (q *Queries) SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tgID int32) error {
+	_, err := q.db.Exec(ctx, setTalkgroupTags, tags, systemID, tgID)
 	return err
 }
 

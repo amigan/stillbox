@@ -37,7 +37,8 @@ type CORS struct {
 }
 
 type DB struct {
-	Connect string `yaml:"connect"`
+	Connect    string `yaml:"connect"`
+	LogQueries bool   `yaml:"logQueries"`
 }
 
 type Logger struct {

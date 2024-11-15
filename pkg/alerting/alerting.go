@@ -228,11 +228,11 @@ func (as *alerter) scoredTGs() []talkgroups.ID {
 	return tgs
 }
 
-// packedScoredTGs gets a list of packed TGIDs.
-func (as *alerter) scoredTGsTuple() []database.TalkgroupT {
-	tgs := make([]database.TalkgroupT, 0, len(as.scores))
+// packedScoredTGs gets a list of TGID tuples.
+func (as *alerter) scoredTGsTuple() (tgs database.TGTuples) {
+	tgs = database.MakeTGTuples(len(as.scores))
 	for _, s := range as.scores {
-		tgs = append(tgs, s.ID.Tuple())
+		tgs.Append(s.ID.System, s.ID.Talkgroup)
 	}
 
 	return tgs

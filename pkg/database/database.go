@@ -21,9 +21,9 @@ type DB struct {
 	*Queries
 }
 
-type myLogger struct{}
+type dbLogger struct{}
 
-func (m myLogger) Log(ctx context.Context, level tracelog.LogLevel, msg string, data map[string]any) {
+func (m dbLogger) Log(ctx context.Context, level tracelog.LogLevel, msg string, data map[string]any) {
 	log.Debug().Fields(data).Msg(msg)
 }
 
@@ -51,12 +51,13 @@ func NewClient(ctx context.Context, conf config.DB) (*DB, error) {
 		return nil, err
 	}
 
-	logger := myLogger{}
-	tracer := &tracelog.TraceLog{
-		Logger:   logger,
-		LogLevel: tracelog.LogLevelTrace,
+	if conf.LogQueries {
+		pgConf.ConnConfig.Tracer = &tracelog.TraceLog{
+			Logger:   dbLogger{},
+			LogLevel: tracelog.LogLevelTrace,
+		}
 	}
-	pgConf.ConnConfig.Tracer = tracer
+
 	pool, err := pgxpool.NewWithConfig(ctx, pgConf)
 	if err != nil {
 		return nil, err

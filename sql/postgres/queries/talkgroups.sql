@@ -8,25 +8,21 @@ WHERE tags && ARRAY[$1];
 
 -- name: GetTalkgroupIDsByTags :many
 SELECT system_id, tgid FROM talkgroups
-WHERE (tags @> ARRAY[sqlc.arg(anyTags)])
-AND (tags && ARRAY[sqlc.arg(allTags)])
-AND NOT (tags @> ARRAY[sqlc.arg(notTags)]);
+WHERE (tags @> ARRAY[@anyTags])
+AND (tags && ARRAY[@allTags])
+AND NOT (tags @> ARRAY[@notTags]);
 
 -- name: GetTalkgroupTags :one
 SELECT tags FROM talkgroups
-WHERE id = systg2id($1, $2);
+WHERE system_id = @system_id AND tgid = @tg_id;
 
 -- name: SetTalkgroupTags :exec
-UPDATE talkgroups SET tags = $3
-WHERE id = systg2id($1, $2);
-
--- name: BulkSetTalkgroupTags :exec
-UPDATE talkgroups SET tags = $2
-WHERE id = ANY($1);
+UPDATE talkgroups SET tags = @tags
+WHERE system_id = @system_id AND tgid = @tg_id;
 
 -- name: GetTalkgroup :one
 SELECT sqlc.embed(talkgroups) FROM talkgroups
-WHERE (system_id, tgid) = (@system_id, @tgid);
+WHERE (system_id, tgid) = (@system_id, @tg_id);
 
 -- name: GetTalkgroupWithLearned :one
 SELECT
@@ -34,17 +30,17 @@ sqlc.embed(tg), sqlc.embed(sys),
 FALSE learned
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE (tg.system_id, tg.tgid) = (sqlc.arg(system_id), sqlc.arg(tgid))
+WHERE (tg.system_id, tg.tgid) = (@system_id, @tgid)
 UNION
 SELECT
-tgl.id::INT8, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+NULL::UUID, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
 TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
 TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
-WHERE tgl.system_id = sqlc.arg(system_id) AND tgl.tgid = sqlc.arg(tgid) AND ignored IS NOT TRUE;
+WHERE tgl.system_id = @system_id AND tgl.tgid = @tgid AND ignored IS NOT TRUE;
 
 -- name: GetTalkgroupsWithLearnedBySystem :many
 SELECT
@@ -82,7 +78,7 @@ JOIN systems sys ON tgl.system_id = sys.id
 WHERE ignored IS NOT TRUE;
 
 -- name: GetSystemName :one
-SELECT name FROM systems WHERE id = sqlc.arg(system_id);
+SELECT name FROM systems WHERE id = @system_id;
 
 -- name: UpdateTalkgroup :one
 UPDATE talkgroups

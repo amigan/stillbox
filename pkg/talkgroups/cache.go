@@ -39,8 +39,8 @@ type Store interface {
 	// Hint hints the Store that the provided talkgroups will be asked for.
 	Hint(ctx context.Context, tgs []ID) error
 
-	// Load loads the provided packed talkgroup IDs into the Store.
-	Load(ctx context.Context, tgs []database.TalkgroupT) error
+	// Load loads the provided talkgroup ID tuples into the Store.
+	Load(ctx context.Context, tgs database.TGTuples) error
 
 	// Invalidate invalidates any caching in the Store.
 	Invalidate()
@@ -98,19 +98,20 @@ func NewCache() Store {
 
 func (t *cache) Hint(ctx context.Context, tgs []ID) error {
 	t.RLock()
-	var toLoad []database.TalkgroupT
+	var toLoad database.TGTuples
 	if len(t.tgs) > len(tgs)/2 { // TODO: instrument this
 		for _, tg := range tgs {
 			_, ok := t.tgs[tg]
 			if !ok {
-				toLoad = append(toLoad, tg.Tuple())
+				toLoad.Append(tg.System, tg.Talkgroup)
 			}
 		}
 
 	} else {
-		toLoad = make([]database.TalkgroupT, 0, len(tgs))
+		toLoad[0] = make([]uint32, 0, len(tgs))
+		toLoad[1] = make([]uint32, 0, len(tgs))
 		for _, g := range tgs {
-			toLoad = append(toLoad, g.Tuple())
+			toLoad.Append(g.System, g.Talkgroup)
 		}
 	}
 
@@ -136,7 +137,7 @@ func (t *cache) add(rec *Talkgroup) error {
 
 type row interface {
 	database.GetTalkgroupsRow | database.GetTalkgroupsWithLearnedRow |
-		database.GetTalkgroupsWithLearnedBySystemRow
+		database.GetTalkgroupsWithLearnedBySystemRow | database.GetTalkgroupWithLearnedRow
 	GetTalkgroup() database.Talkgroup
 	GetSystem() database.System
 	GetLearned() bool
@@ -180,7 +181,7 @@ func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
 		}
 		t.RUnlock()
 
-		tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedByPackedIDs(ctx, toGet.Tuples())
+		tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedBySysTGID(ctx, toGet.Tuples())
 		if err != nil {
 			return nil, err
 		}
@@ -196,8 +197,8 @@ func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
 	return addToRowList(t, r, tgRecords)
 }
 
-func (t *cache) Load(ctx context.Context, tgs []database.TalkgroupT) error {
-	tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedByPackedIDs(ctx, tgs)
+func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
+	tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedBySysTGID(ctx, tgs)
 	if err != nil {
 		return err
 	}
@@ -245,7 +246,7 @@ func (t *cache) TG(ctx context.Context, tg ID) (*Talkgroup, error) {
 		return rec, nil
 	}
 
-	recs, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedByPackedIDs(ctx, []database.TalkgroupT{tg.Tuple()})
+	record, err := database.FromCtx(ctx).GetTalkgroupWithLearned(ctx, int32(tg.System), int32(tg.Talkgroup))
 	switch err {
 	case nil:
 	case pgx.ErrNoRows:
@@ -255,17 +256,13 @@ func (t *cache) TG(ctx context.Context, tg ID) (*Talkgroup, error) {
 		return nil, errors.Join(ErrNotFound, err)
 	}
 
-	if len(recs) < 1 {
-		return nil, ErrNotFound
-	}
-
-	err = t.add(rowToTalkgroup(recs[0]))
+	err = t.add(rowToTalkgroup(record))
 	if err != nil {
 		log.Error().Err(err).Msg("TG() cache add")
-		return rowToTalkgroup(recs[0]), errors.Join(ErrNotFound, err)
+		return rowToTalkgroup(record), errors.Join(ErrNotFound, err)
 	}
 
-	return rowToTalkgroup(recs[0]), nil
+	return rowToTalkgroup(record), nil
 }
 
 func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) {
