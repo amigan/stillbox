@@ -98,12 +98,12 @@ type Talkgroup struct {
 }
 
 type TalkgroupsLearned struct {
-	ID       int32   `json:"id"`
-	SystemID int     `json:"system_id"`
-	TGID     int     `json:"tgid"`
-	Name     string  `json:"name"`
-	AlphaTag *string `json:"alpha_tag"`
-	Ignored  *bool   `json:"ignored"`
+	ID       uuid.UUID `json:"id"`
+	SystemID int       `json:"system_id"`
+	TGID     int       `json:"tgid"`
+	Name     string    `json:"name"`
+	AlphaTag *string   `json:"alpha_tag"`
+	Ignored  *bool     `json:"ignored"`
 }
 
 type User struct {

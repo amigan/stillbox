@@ -44,7 +44,7 @@ CREATE INDEX talkgroups_system_tgid_idx ON talkgroups (system_id, tgid);
 CREATE INDEX IF NOT EXISTS talkgroup_id_tags ON talkgroups USING GIN (tags);
 
 CREATE TABLE IF NOT EXISTS talkgroups_learned(
-	id SERIAL PRIMARY KEY,
+	id UUID PRIMARY KEY,
 	system_id INTEGER REFERENCES systems(id) NOT NULL,
 	tgid INTEGER NOT NULL,
 	name TEXT NOT NULL,

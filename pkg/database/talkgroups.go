@@ -34,7 +34,7 @@ JOIN systems sys ON tg.system_id = sys.id
 JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg)
 UNION
 SELECT
-NULL::UUID, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
+tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
 TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
