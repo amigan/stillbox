@@ -41,3 +41,11 @@ notify:
 #     {{ end -}}
     config:
       webhookURL: "http://somewhere"
+# configure upstream relays here
+relay:
+    # `url` is the root of the instance
+# - url: 'http://some.host:3051/'
+#   apiKey: aaaabbbb-cccc-dddd-eeee-ffff11112222
+    # `required` specifies whether we should report failure (i.e. HTTP 500 for rdio-http) to the source
+    # if the relay call submission fails
+#   required: false

@@ -1,4 +1,4 @@
-package sinks_test
+package sinks
 
 import (
 	"context"
@@ -16,7 +16,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
-	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/sources"
 
 	"github.com/google/uuid"
@@ -88,13 +87,21 @@ func TestRelay(t *testing.T) {
 				URL:    svr.URL,
 				APIKey: tc.apiKey,
 			}
+			ns := &nullSinks{}
 
-			rs, err := sinks.NewRelaySink(cfg)
+			rm, err := NewRelayManager(ns, []config.Relay{cfg})
 			require.NoError(t, err)
-			err = rs.Call(context.Background(), &tc.call)
+			err = rm.relays[0].Call(context.Background(), &tc.call)
 			assert.True(t, called)
 			assert.NoError(t, err)
 			assert.NoError(t, serr)
 		})
 	}
 }
+
+type nullSinks struct{}
+
+func (*nullSinks) Register(name string, toAdd Sink, required bool)      {}
+func (*nullSinks) Unregister(name string)                               {}
+func (*nullSinks) Shutdown()                                            {}
+func (*nullSinks) EmitCall(ctx context.Context, call *calls.Call) error { return nil }

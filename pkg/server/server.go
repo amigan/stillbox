@@ -31,6 +31,7 @@ type Server struct {
 	r        *chi.Mux
 	sources  sources.Sources
 	sinks    sinks.Sinks
+	relayer  *sinks.RelayManager
 	nex      *nexus.Nexus
 	logger   *Logger
 	alerter  alerting.Alerter
@@ -73,6 +74,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		alerter:  alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
 		notifier: notifier,
 		tgs:      tgCache,
+		sinks:    sinks.NewSinkManager(),
 		rest:     api,
 	}
 
@@ -84,6 +86,13 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
+
+	relayer, err := sinks.NewRelayManager(srv.sinks, cfg.Relay)
+	if err != nil {
+		return nil, err
+	}
+
+	srv.relayer = relayer
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
