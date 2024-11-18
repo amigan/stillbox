@@ -24,36 +24,55 @@ type sinkInstance struct {
 	Required bool
 }
 
-type Sinks struct {
-	sync.RWMutex
-	sinks []sinkInstance
+type Sinks interface {
+	Register(name string, toAdd Sink, required bool)
+	Unregister(name string)
+	Shutdown()
+	EmitCall(ctx context.Context, call *calls.Call) error
 }
 
-func (s *Sinks) Register(name string, toAdd Sink, required bool) {
+type sinks struct {
+	sync.RWMutex
+	sinks map[string]sinkInstance
+}
+
+func NewSinkManager() Sinks {
+	return &sinks{
+		sinks: make(map[string]sinkInstance),
+	}
+}
+
+func (s *sinks) Register(name string, toAdd Sink, required bool) {
 	s.Lock()
 	defer s.Unlock()
 
-	s.sinks = append(s.sinks, sinkInstance{
+	s.sinks[name] = sinkInstance{
 		Name:     name,
 		Sink:     toAdd,
 		Required: required,
-	})
+	}
 }
 
-func (s *Sinks) Shutdown() {
+func (s *sinks) Unregister(name string) {
 	s.Lock()
 	defer s.Unlock()
 
-	s.sinks = nil
+	delete(s.sinks, name)
 }
 
-func (s *Sinks) EmitCall(ctx context.Context, call *calls.Call) error {
+func (s *sinks) Shutdown() {
+	s.Lock()
+	defer s.Unlock()
+
+	clear(s.sinks)
+}
+
+func (s *sinks) EmitCall(ctx context.Context, call *calls.Call) error {
 	s.Lock()
 	defer s.Unlock()
 
 	g, ctx := errgroup.WithContext(ctx)
-	for i := range s.sinks {
-		sink := s.sinks[i]
+	for _, sink := range s.sinks {
 		g.Go(sink.callEmitter(ctx, call))
 	}
 

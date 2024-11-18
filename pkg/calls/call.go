@@ -33,26 +33,26 @@ func (d CallDuration) Seconds() int32 {
 }
 
 type Call struct {
-	ID             uuid.UUID
-	Audio          []byte
-	AudioName      string
-	AudioType      string
-	Duration       CallDuration
-	DateTime       time.Time
-	Frequencies    []int
-	Frequency      int
-	Patches        []int
-	Source         int
-	Sources        []int
-	System         int
-	Submitter      *auth.UserID
-	SystemLabel    string
-	Talkgroup      int
-	TalkgroupGroup *string
-	TalkgroupLabel *string
-	TGAlphaTag     *string
+	ID             uuid.UUID    `form:"-"`
+	Audio          []byte       `form:"audio" filenameField:"AudioName"`
+	AudioName      string       `form:"audioName"`
+	AudioType      string       `form:"audioType"`
+	Duration       CallDuration `form:"-"`
+	DateTime       time.Time    `form:"dateTime"`
+	Frequencies    []int        `form:"frequencies"`
+	Frequency      int          `form:"frequency"`
+	Patches        []int        `form:"patches"`
+	Source         int          `form:"source"`
+	Sources        []int        `form:"sources"`
+	System         int          `form:"system"`
+	Submitter      *auth.UserID `form:"-"`
+	SystemLabel    string       `form:"systemLabel"`
+	Talkgroup      int          `form:"talkgroup"`
+	TalkgroupGroup *string      `form:"talkgroupGroup"`
+	TalkgroupLabel *string      `form:"talkgroupLabel"`
+	TGAlphaTag     *string      `form:"talkgroupTag"` // not 1:1
 
-	shouldStore bool
+	shouldStore bool `form:"-"`
 }
 
 func (c *Call) String() string {
