@@ -1,11 +1,13 @@
 package calls
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/audio"
 	"dynatron.me/x/stillbox/pkg/auth"
+	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 
@@ -109,6 +111,21 @@ func (c *Call) ToPB() *pb.Call {
 		Duration:    c.Duration.MsInt32Ptr(),
 		Audio:       c.Audio,
 	}
+}
+
+func (c *Call) LearnTG(ctx context.Context, db database.Store) (learnedId int, err error) {
+	err = db.AddTalkgroupWithLearnedFlag(ctx, int32(c.System), int32(c.Talkgroup))
+	if err != nil {
+		return 0, fmt.Errorf("addTalkgroupWithLearnedFlag: %w", err)
+	}
+
+	return db.AddLearnedTalkgroup(ctx, database.AddLearnedTalkgroupParams{
+		SystemID: c.System,
+		TGID:     c.Talkgroup,
+		Name:     c.TalkgroupLabel,
+		AlphaTag: c.TGAlphaTag,
+		TGGroup:  c.TalkgroupGroup,
+	})
 }
 
 func (c *Call) computeLength() (err error) {

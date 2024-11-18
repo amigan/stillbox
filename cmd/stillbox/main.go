@@ -35,8 +35,5 @@ func main() {
 	cmds := append([]*cobra.Command{serve.Command(cfg)}, admin.Command(cfg)...)
 	rootCmd.AddCommand(cmds...)
 
-	err := rootCmd.Execute()
-	if err != nil {
-		log.Fatal().Err(err).Msg("Dying")
-	}
+	rootCmd.Execute()
 }

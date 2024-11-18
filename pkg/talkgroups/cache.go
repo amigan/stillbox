@@ -252,7 +252,7 @@ func (t *cache) TG(ctx context.Context, tg ID) (*Talkgroup, error) {
 	case pgx.ErrNoRows:
 		return nil, ErrNotFound
 	default:
-		log.Error().Err(err).Msg("TG() cache add db get")
+		log.Error().Err(err).Uint32("sys", tg.System).Uint32("tg", tg.Talkgroup).Msg("TG() cache add db get")
 		return nil, errors.Join(ErrNotFound, err)
 	}
 

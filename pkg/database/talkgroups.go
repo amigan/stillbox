@@ -2,6 +2,9 @@ package database
 
 import (
 	"context"
+	"errors"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type talkgroupQuerier interface {
@@ -11,6 +14,17 @@ type talkgroupQuerier interface {
 }
 
 type TGTuples [2][]uint32
+
+const TGConstraintName = "calls_system_talkgroup_fkey"
+
+func IsTGConstraintViolation(e error) bool {
+	var err *pgconn.PgError
+	if errors.As(e, &err) && err.Code == "23503" && err.ConstraintName == TGConstraintName {
+		return true
+	}
+
+	return false
+}
 
 func MakeTGTuples(cap int) TGTuples {
 	return [2][]uint32{
@@ -27,18 +41,17 @@ func (t *TGTuples) Append(sys, tg uint32) {
 // Below queries are here because sqlc refuses to parse unnest(x, y)
 
 const getTalkgroupsWithLearnedBySysTGID = `SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name,
-FALSE learned
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name, tg.learned
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg)
+WHERE tg.learned IS NOT TRUE
 UNION
 SELECT
 tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, tgl.alpha_tag, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.alpha_tag IS NULL THEN NULL ELSE ARRAY[tgl.alpha_tag] END,
-TRUE, NULL::JSONB, 1.0, sys.id, sys.name,
-TRUE learned
+tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
+CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
+TRUE, NULL::JSONB, 1.0, sys.id, sys.name, TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
 JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tgl.system_id = tgt.sys AND tgl.tgid = tgt.tg);`
@@ -46,7 +59,6 @@ JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tgl.system_id = tgt.sys 
 type GetTalkgroupsRow struct {
 	Talkgroup Talkgroup `json:"talkgroup"`
 	System    System    `json:"system"`
-	Learned   bool      `json:"learned"`
 }
 
 func (q *Queries) GetTalkgroupsWithLearnedBySysTGID(ctx context.Context, ids TGTuples) ([]GetTalkgroupsRow, error) {
@@ -64,7 +76,7 @@ func (q *Queries) GetTalkgroupsWithLearnedBySysTGID(ctx context.Context, ids TGT
 			&i.Talkgroup.TGID,
 			&i.Talkgroup.Name,
 			&i.Talkgroup.AlphaTag,
-			&i.Talkgroup.TgGroup,
+			&i.Talkgroup.TGGroup,
 			&i.Talkgroup.Frequency,
 			&i.Talkgroup.Metadata,
 			&i.Talkgroup.Tags,
@@ -73,7 +85,7 @@ func (q *Queries) GetTalkgroupsWithLearnedBySysTGID(ctx context.Context, ids TGT
 			&i.Talkgroup.Weight,
 			&i.System.ID,
 			&i.System.Name,
-			&i.Learned,
+			&i.Talkgroup.Learned,
 		); err != nil {
 			return nil, err
 		}
@@ -87,7 +99,8 @@ func (q *Queries) GetTalkgroupsWithLearnedBySysTGID(ctx context.Context, ids TGT
 
 const getTalkgroupsBySysTGID = `SELECT tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg);`
+JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg)
+WHERE tg.learned IS NOT TRUE;`
 
 func (q *Queries) GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuples) ([]GetTalkgroupsRow, error) {
 	rows, err := q.db.Query(ctx, getTalkgroupsBySysTGID, ids[0], ids[1])
@@ -104,7 +117,7 @@ func (q *Queries) GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuples) ([]G
 			&i.Talkgroup.TGID,
 			&i.Talkgroup.Name,
 			&i.Talkgroup.AlphaTag,
-			&i.Talkgroup.TgGroup,
+			&i.Talkgroup.TGGroup,
 			&i.Talkgroup.Frequency,
 			&i.Talkgroup.Metadata,
 			&i.Talkgroup.Tags,

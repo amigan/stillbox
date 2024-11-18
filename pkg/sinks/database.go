@@ -8,16 +8,17 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog/log"
 )
 
 type DatabaseSink struct {
-	db database.DB
+	db database.Store
 }
 
-func NewDatabaseSink(db database.DB) *DatabaseSink {
-	return &DatabaseSink{db: db}
+func NewDatabaseSink(store database.Store) *DatabaseSink {
+	return &DatabaseSink{store}
 }
 
 func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
@@ -26,14 +27,37 @@ func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
 		return nil
 	}
 
-	err := s.db.AddCall(ctx, s.toAddCallParams(call))
-	if err != nil {
-		return fmt.Errorf("add call: %w", err)
+	params := s.toAddCallParams(call)
+
+	err := s.db.InTx(ctx, func(tx database.Store) error {
+		err := tx.AddCall(ctx, params)
+		if err != nil {
+
+			return fmt.Errorf("add call: %w", err)
+		}
+
+		log.Debug().Str("id", call.ID.String()).Int("system", call.System).Int("tgid", call.Talkgroup).Msg("stored")
+
+		return nil
+	}, pgx.TxOptions{})
+
+	if err != nil && database.IsTGConstraintViolation(err) {
+		return s.db.InTx(ctx, func(tx database.Store) error {
+			_, err := call.LearnTG(ctx, tx)
+			if err != nil {
+				return fmt.Errorf("add call: learn tg: %w", err)
+			}
+
+			err = tx.AddCall(ctx, params)
+			if err != nil {
+				return fmt.Errorf("add call: retry: %w", err)
+			}
+
+			return nil
+		}, pgx.TxOptions{})
 	}
 
-	log.Debug().Str("id", call.ID.String()).Int("system", call.System).Int("tgid", call.Talkgroup).Msg("stored")
-
-	return nil
+	return err
 }
 
 func (s *DatabaseSink) SinkType() string {
@@ -54,9 +78,9 @@ func (s *DatabaseSink) toAddCallParams(call *calls.Call) database.AddCallParams 
 		Frequency:   call.Frequency,
 		Frequencies: call.Frequencies,
 		Patches:     call.Patches,
-		TgLabel:     call.TalkgroupLabel,
-		TgAlphaTag:  call.TGAlphaTag,
-		TgGroup:     call.TalkgroupGroup,
+		TGLabel:     call.TalkgroupLabel,
+		TGAlphaTag:  call.TGAlphaTag,
+		TGGroup:     call.TalkgroupGroup,
 		Source:      call.Source,
 	}
 }

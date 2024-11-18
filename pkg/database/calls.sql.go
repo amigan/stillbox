@@ -13,7 +13,7 @@ import (
 )
 
 const addAlert = `-- name: AddAlert :exec
-INSERT INTO alerts (id, time, tgid, system_id, weight, score, orig_score, notified, metadata)
+INSERT INTO alerts (time, tgid, system_id, weight, score, orig_score, notified, metadata)
 VALUES
 (
 	$1,
@@ -23,13 +23,11 @@ VALUES
 	$5,
 	$6,
 	$7,
-	$8,
-	$9
+	$8
 )
 `
 
 type AddAlertParams struct {
-	ID        uuid.UUID          `json:"id"`
 	Time      pgtype.Timestamptz `json:"time"`
 	TGID      int                `json:"tgid"`
 	SystemID  int                `json:"system_id"`
@@ -42,7 +40,6 @@ type AddAlertParams struct {
 
 func (q *Queries) AddAlert(ctx context.Context, arg AddAlertParams) error {
 	_, err := q.db.Exec(ctx, addAlert,
-		arg.ID,
 		arg.Time,
 		arg.TGID,
 		arg.SystemID,
@@ -109,9 +106,9 @@ type AddCallParams struct {
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	Patches     []int              `json:"patches"`
-	TgLabel     *string            `json:"tg_label"`
-	TgAlphaTag  *string            `json:"tg_alpha_tag"`
-	TgGroup     *string            `json:"tg_group"`
+	TGLabel     *string            `json:"tg_label"`
+	TGAlphaTag  *string            `json:"tg_alpha_tag"`
+	TGGroup     *string            `json:"tg_group"`
 	Source      int                `json:"source"`
 }
 
@@ -130,9 +127,9 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) error {
 		arg.Frequency,
 		arg.Frequencies,
 		arg.Patches,
-		arg.TgLabel,
-		arg.TgAlphaTag,
-		arg.TgGroup,
+		arg.TGLabel,
+		arg.TGAlphaTag,
+		arg.TGGroup,
 		arg.Source,
 	)
 	return err

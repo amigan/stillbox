@@ -14,7 +14,7 @@ import (
 )
 
 type Alert struct {
-	ID        uuid.UUID          `json:"id"`
+	ID        int                `json:"id"`
 	Time      pgtype.Timestamptz `json:"time"`
 	TGID      int                `json:"tgid"`
 	SystemID  int                `json:"system_id"`
@@ -48,9 +48,9 @@ type Call struct {
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	Patches     []int              `json:"patches"`
-	TgLabel     *string            `json:"tg_label"`
-	TgAlphaTag  *string            `json:"tg_alpha_tag"`
-	TgGroup     *string            `json:"tg_group"`
+	TGLabel     *string            `json:"tg_label"`
+	TGAlphaTag  *string            `json:"tg_alpha_tag"`
+	TGGroup     *string            `json:"tg_group"`
 	Source      int                `json:"source"`
 	Transcript  *string            `json:"transcript"`
 }
@@ -83,27 +83,29 @@ type System struct {
 }
 
 type Talkgroup struct {
-	ID          uuid.UUID          `json:"id"`
+	ID          int                `json:"id"`
 	SystemID    int32              `json:"system_id"`
 	TGID        int32              `json:"tgid"`
 	Name        *string            `json:"name"`
 	AlphaTag    *string            `json:"alpha_tag"`
-	TgGroup     *string            `json:"tg_group"`
+	TGGroup     *string            `json:"tg_group"`
 	Frequency   *int32             `json:"frequency"`
 	Metadata    jsontypes.Metadata `json:"metadata"`
 	Tags        []string           `json:"tags"`
 	Alert       bool               `json:"alert"`
 	AlertConfig rules.AlertRules   `json:"alert_config"`
 	Weight      float32            `json:"weight"`
+	Learned     bool               `json:"learned"`
 }
 
 type TalkgroupsLearned struct {
-	ID       uuid.UUID `json:"id"`
-	SystemID int       `json:"system_id"`
-	TGID     int       `json:"tgid"`
-	Name     string    `json:"name"`
-	AlphaTag *string   `json:"alpha_tag"`
-	Ignored  *bool     `json:"ignored"`
+	ID       int     `json:"id"`
+	SystemID int     `json:"system_id"`
+	TGID     int     `json:"tgid"`
+	Name     string  `json:"name"`
+	AlphaTag *string `json:"alpha_tag"`
+	TGGroup  *string `json:"tg_group"`
+	Ignored  *bool   `json:"ignored"`
 }
 
 type User struct {
