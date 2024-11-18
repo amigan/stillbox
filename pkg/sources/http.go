@@ -36,7 +36,7 @@ func (h *RdioHTTP) InstallPublicRoutes(r chi.Router) {
 	r.Post("/api/call-upload", h.routeCallUpload)
 }
 
-type callUploadRequest struct {
+type CallUploadRequest struct {
 	Audio          []byte `form:"audio" filenameField:"AudioName"`
 	AudioName      string
 	AudioType      string    `form:"audioType"`
@@ -56,7 +56,7 @@ type callUploadRequest struct {
 	DontStore      bool      `form:"dontStore"`
 }
 
-func (car *callUploadRequest) mimeType() string {
+func (car *CallUploadRequest) mimeType() string {
 	// this is super naïve
 	fn := car.AudioName
 	switch {
@@ -71,7 +71,7 @@ func (car *callUploadRequest) mimeType() string {
 	return ""
 }
 
-func (car *callUploadRequest) toCall(submitter auth.UserID) (*calls.Call, error) {
+func (car *CallUploadRequest) ToCall(submitter auth.UserID) (*calls.Call, error) {
 	return calls.Make(&calls.Call{
 		Submitter:      &submitter,
 		System:         car.System,
@@ -111,14 +111,14 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cur := new(callUploadRequest)
+	cur := new(CallUploadRequest)
 	err = forms.Unmarshal(r, cur, forms.WithAcceptBlank())
 	if err != nil {
 		http.Error(w, "cannot bind upload "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
-	call, err := cur.toCall(*submitter)
+	call, err := cur.ToCall(*submitter)
 	if err != nil {
 		log.Error().Err(err).Msg("toCall failed")
 		http.Error(w, err.Error(), http.StatusBadRequest)

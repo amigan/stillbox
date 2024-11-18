@@ -22,6 +22,7 @@ type Config struct {
 	Public    bool      `yaml:"public"`
 	RateLimit RateLimit `yaml:"rateLimit"`
 	Notify    Notify    `yaml:"notify"`
+	Relay     []Relay   `yaml:"relay"`
 
 	configPath string
 }
@@ -63,6 +64,12 @@ type Alerting struct {
 	Renotify       *jsontypes.Duration `yaml:"renotify,omitempty" form:"renotify,omitempty"`
 }
 
+type Relay struct {
+	URL      string `yaml:"url"`
+	APIKey   string `yaml:"apiKey"`
+	Required bool   `yaml:"required"`
+}
+
 type Notify []NotifyService
 
 type NotifyService struct {
@@ -70,17 +77,6 @@ type NotifyService struct {
 	SubjectTemplate *string                `yaml:"subjectTemplate" json:"subjectTemplate"`
 	BodyTemplate    *string                `yaml:"bodyTemplate" json:"bodyTemplate"`
 	Config          map[string]interface{} `yaml:"config" json:"config"`
-}
-
-func (n *NotifyService) GetS(k, defaultVal string) string {
-	if v, has := n.Config[k]; has {
-		if v, isString := v.(string); isString {
-			return v
-		}
-		log.Error().Str("configKey", k).Str("provider", n.Provider).Str("default", defaultVal).Msg("notify config value is not a string! using default")
-	}
-
-	return defaultVal
 }
 
 func (rl *RateLimit) Verify() bool {
