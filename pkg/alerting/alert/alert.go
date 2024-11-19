@@ -10,12 +10,11 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Alert struct {
-	ID         uuid.UUID
+	ID         int
 	Timestamp  time.Time
 	TGName     string
 	Score      trending.Score[talkgroups.ID]
@@ -34,7 +33,6 @@ func (a *Alert) ToAddAlertParams() database.AddAlertParams {
 	}
 
 	return database.AddAlertParams{
-		ID:        a.ID,
 		Time:      pgtype.Timestamptz{Time: a.Timestamp, Valid: true},
 		SystemID:  int(a.Score.ID.System),
 		TGID:      int(a.Score.ID.Talkgroup),
@@ -48,7 +46,6 @@ func (a *Alert) ToAddAlertParams() database.AddAlertParams {
 // Make creates an alert for later rendering or storage.
 func Make(ctx context.Context, store talkgroups.Store, score trending.Score[talkgroups.ID], origScore float64) (Alert, error) {
 	d := Alert{
-		ID:        uuid.New(),
 		Score:     score,
 		Timestamp: time.Now(),
 		Weight:    1.0,

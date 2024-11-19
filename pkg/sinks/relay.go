@@ -44,21 +44,20 @@ func NewRelayManager(s Sinks, cfgs []config.Relay) (*RelayManager, error) {
 	}
 
 	for i, cfg := range cfgs {
-		rs, err := rm.newRelay(cfg)
+		rs, err := rm.newRelay(i, cfg)
 		if err != nil {
 			return nil, err
 		}
 
 		rm.relays = append(rm.relays, rs)
 
-		sinkName := fmt.Sprintf("relay%d:%s", i, rs.url.Host)
-		s.Register(sinkName, rs, cfg.Required)
+		s.Register(rs.Name, rs, cfg.Required)
 	}
 
 	return rm, nil
 }
 
-func (rs *RelayManager) newRelay(cfg config.Relay) (*Relay, error) {
+func (rs *RelayManager) newRelay(idx int, cfg config.Relay) (*Relay, error) {
 	u, err := url.Parse(cfg.URL)
 	if err != nil {
 		return nil, err
@@ -71,6 +70,7 @@ func (rs *RelayManager) newRelay(cfg config.Relay) (*Relay, error) {
 	u = u.JoinPath("/api/call-upload")
 
 	return &Relay{
+		Name:  fmt.Sprintf("relay%d:%s", idx, u.Host),
 		Relay: cfg,
 		url:   u,
 		mgr:   rs,

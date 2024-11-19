@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"dynatron.me/x/stillbox/pkg/config"
@@ -19,11 +20,12 @@ import (
 // DB is a database handle.
 
 //go:generate mockery
-type DB interface {
+type Store interface {
 	Querier
 	talkgroupQuerier
 
 	DB() *Database
+	InTx(context.Context, func(Store) error, pgx.TxOptions) error
 }
 
 type Database struct {
@@ -35,14 +37,41 @@ func (db *Database) DB() *Database {
 	return db
 }
 
+func (db *Database) InTx(ctx context.Context, f func(Store) error, opts pgx.TxOptions) error {
+	tx, err := db.DB().Pool.BeginTx(ctx, opts)
+	if err != nil {
+		return fmt.Errorf("Tx begin: %w", err)
+	}
+
+	defer tx.Rollback(ctx)
+
+	dbtx := &Database{Pool: db.Pool, Queries: db.Queries.WithTx(tx)}
+
+	err = f(dbtx)
+	if err != nil {
+		return fmt.Errorf("Tx: %w", err)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("Tx commit: %w", err)
+	}
+
+	return nil
+}
+
 type dbLogger struct{}
 
 func (m dbLogger) Log(ctx context.Context, level tracelog.LogLevel, msg string, data map[string]any) {
 	log.Debug().Fields(data).Msg(msg)
 }
 
+func Close(c Store) {
+	c.(*Database).Pool.Close()
+}
+
 // NewClient creates a new DB using the provided config.
-func NewClient(ctx context.Context, conf config.DB) (DB, error) {
+func NewClient(ctx context.Context, conf config.DB) (Store, error) {
 	dir, err := iofs.New(sqlembed.Migrations, "postgres/migrations")
 	if err != nil {
 		return nil, err
@@ -90,8 +119,8 @@ type dBCtxKey string
 const DBCtxKey dBCtxKey = "dbctx"
 
 // FromCtx returns the database handle from the provided Context.
-func FromCtx(ctx context.Context) DB {
-	c, ok := ctx.Value(DBCtxKey).(DB)
+func FromCtx(ctx context.Context) Store {
+	c, ok := ctx.Value(DBCtxKey).(Store)
 	if !ok {
 		panic("no DB in context")
 	}
@@ -100,7 +129,7 @@ func FromCtx(ctx context.Context) DB {
 }
 
 // CtxWithDB returns a Context with the provided database handle.
-func CtxWithDB(ctx context.Context, conn DB) context.Context {
+func CtxWithDB(ctx context.Context, conn Store) context.Context {
 	return context.WithValue(ctx, DBCtxKey, conn)
 }
 

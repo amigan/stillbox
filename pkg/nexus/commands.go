@@ -78,7 +78,7 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 	resp := &pb.TalkgroupInfo{
 		Tg:         tg,
 		Name:       tgi.Talkgroup.Name,
-		Group:      tgi.Talkgroup.TgGroup,
+		Group:      tgi.Talkgroup.TGGroup,
 		Frequency:  tgi.Talkgroup.Frequency,
 		Metadata:   md,
 		Tags:       tgi.Talkgroup.Tags,

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS users(
-	id SERIAL PRIMARY KEY,
+	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	username VARCHAR (255) UNIQUE NOT NULL,
 	password TEXT NOT NULL,
 	email TEXT NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users(
 CREATE INDEX IF NOT EXISTS users_username_idx ON users(username);
 
 CREATE TABLE IF NOT EXISTS api_keys(
-	id SERIAL PRIMARY KEY,
+	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	owner INTEGER REFERENCES users(id) NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	expires TIMESTAMP,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS systems(
 );
 
 CREATE TABLE IF NOT EXISTS talkgroups(
-	id UUID PRIMARY KEY,
+	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	system_id INT4 REFERENCES systems(id) NOT NULL,
 	tgid INT4 NOT NULL,
 	name TEXT,
@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	alert BOOLEAN NOT NULL DEFAULT 'true',
 	alert_config JSONB,
 	weight REAL NOT NULL DEFAULT 1.0,
+	learned BOOLEAN NOT NULL DEFAULT FALSE,
 	UNIQUE (system_id, tgid)
 );
 
@@ -44,17 +45,18 @@ CREATE INDEX talkgroups_system_tgid_idx ON talkgroups (system_id, tgid);
 CREATE INDEX IF NOT EXISTS talkgroup_id_tags ON talkgroups USING GIN (tags);
 
 CREATE TABLE IF NOT EXISTS talkgroups_learned(
-	id UUID PRIMARY KEY,
+	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	system_id INTEGER REFERENCES systems(id) NOT NULL,
 	tgid INTEGER NOT NULL,
 	name TEXT NOT NULL,
 	alpha_tag TEXT,
+	tg_group TEXT,
 	ignored BOOLEAN,
 	UNIQUE (system_id, tgid, name)
 );
 
 CREATE TABLE IF NOT EXISTS alerts(
-	id UUID PRIMARY KEY,
+	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	time TIMESTAMPTZ NOT NULL, 
 	tgid INTEGER NOT NULL,
 	system_id INTEGER REFERENCES systems(id) NOT NULL,
@@ -64,22 +66,6 @@ CREATE TABLE IF NOT EXISTS alerts(
 	notified BOOLEAN NOT NULL DEFAULT 'false',
 	metadata JSONB
 );
-
-CREATE OR REPLACE FUNCTION learn_talkgroup()
-RETURNS TRIGGER AS $$
-BEGIN
-	IF NOT EXISTS (
-		SELECT tg.system_id, tg.tgid, tg.name, tg.alpha_tag FROM talkgroups tg WHERE tg.system_id = NEW.system AND tg.tgid = NEW.talkgroup
-		UNION
-		SELECT tgl.system_id, tgl.tgid, tgl.name, tgl.alpha_tag FROM talkgroups_learned tgl WHERE tgl.system_id = NEW.system AND tgl.tgid = NEW.talkgroup
-	) THEN
-		INSERT INTO talkgroups_learned(system_id, tgid, name, alpha_tag) VALUES(
-			NEW.system, NEW.talkgroup, NEW.tg_label, NEW.tg_alpha_tag
-		) ON CONFLICT DO NOTHING;
-	END IF;
-	RETURN NEW;
-END
-$$ LANGUAGE plpgsql;
 
 CREATE TABLE IF NOT EXISTS calls(
 	id UUID PRIMARY KEY,
@@ -99,11 +85,9 @@ CREATE TABLE IF NOT EXISTS calls(
 	tg_alpha_tag TEXT,
 	tg_group TEXT,
 	source INTEGER NOT NULL,
-	transcript TEXT
+	transcript TEXT,
+	FOREIGN KEY (system, talkgroup) REFERENCES talkgroups(system_id, tgid)
 );
-
-CREATE OR REPLACE TRIGGER learn_tg AFTER INSERT ON calls
-FOR EACH ROW EXECUTE FUNCTION learn_talkgroup();
 
 CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector('english', transcript));
 CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(system, talkgroup, call_date);

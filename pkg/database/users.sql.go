@@ -113,7 +113,7 @@ SELECT id, username, password, email, is_admin, prefs FROM users
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
+func (q *Queries) GetUserByID(ctx context.Context, id int) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
@@ -132,7 +132,7 @@ SELECT id, username, password, email, is_admin, prefs FROM users
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserByUID(ctx context.Context, id int32) (User, error) {
+func (q *Queries) GetUserByUID(ctx context.Context, id int) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByUID, id)
 	var i User
 	err := row.Scan(

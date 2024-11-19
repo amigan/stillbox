@@ -14,6 +14,8 @@ import (
 type Querier interface {
 	AddAlert(ctx context.Context, arg AddAlertParams) error
 	AddCall(ctx context.Context, arg AddCallParams) error
+	AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (int, error)
+	AddTalkgroupWithLearnedFlag(ctx context.Context, systemID int32, tGID int32) error
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteAPIKey(ctx context.Context, apiKey string) error
@@ -21,20 +23,20 @@ type Querier interface {
 	GetAPIKey(ctx context.Context, apiKey string) (ApiKey, error)
 	GetDatabaseSize(ctx context.Context) (string, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
-	GetTalkgroup(ctx context.Context, systemID int32, tgID int32) (GetTalkgroupRow, error)
+	GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error)
 	GetTalkgroupIDsByTags(ctx context.Context, anyTags []string, allTags []string, notTags []string) ([]GetTalkgroupIDsByTagsRow, error)
-	GetTalkgroupTags(ctx context.Context, systemID int32, tgID int32) ([]string, error)
+	GetTalkgroupTags(ctx context.Context, systemID int32, tGID int32) ([]string, error)
 	GetTalkgroupWithLearned(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupWithLearnedRow, error)
 	GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAllTagsRow, error)
 	GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAnyTagsRow, error)
 	GetTalkgroupsWithLearned(ctx context.Context) ([]GetTalkgroupsWithLearnedRow, error)
 	GetTalkgroupsWithLearnedBySystem(ctx context.Context, system int32) ([]GetTalkgroupsWithLearnedBySystemRow, error)
-	GetUserByID(ctx context.Context, id int32) (User, error)
-	GetUserByUID(ctx context.Context, id int32) (User, error)
+	GetUserByID(ctx context.Context, id int) (User, error)
+	GetUserByUID(ctx context.Context, id int) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUsers(ctx context.Context) ([]User, error)
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error
-	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tgID int32) error
+	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error
 	UpdatePassword(ctx context.Context, username string, password string) error
 	UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error)
 }

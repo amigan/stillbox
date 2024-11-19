@@ -98,7 +98,7 @@ func (a *Auth) Login(ctx context.Context, username, password string) (token stri
 	return a.newToken(found.ID), nil
 }
 
-func (a *Auth) newToken(uid int32) string {
+func (a *Auth) newToken(uid int) string {
 	claims := claims{
 		"sub": strconv.Itoa(int(uid)),
 	}
@@ -134,7 +134,7 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tok := a.newToken(int32(uid))
+	tok := a.newToken(uid)
 
 	cookie := &http.Cookie{
 		Name:     "jwt",

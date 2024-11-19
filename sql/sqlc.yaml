@@ -14,6 +14,7 @@ sql:
         initialisms:
           - id
           - tgid
+          - tg
         emit_pointers_for_null_types: true
         overrides:
           - db_type: "uuid"
@@ -21,10 +22,6 @@ sql:
               import: "github.com/google/uuid"
               type: "UUID"
           - db_type: "pg_catalog.int4"
-            go_type: "int"
-          - db_type: "pg_catalog.serial4"
-            go_type: "int"
-          - db_type: "integer"
             go_type: "int"
           - db_type: "pg_catalog.timestamp"
             go_type: "time.Time"

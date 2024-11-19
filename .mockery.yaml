@@ -7,4 +7,4 @@ packages:
   dynatron.me/x/stillbox/pkg/database:
     config:
     interfaces:
-      DB:
+      Store:
