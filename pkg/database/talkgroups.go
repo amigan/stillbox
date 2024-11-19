@@ -51,7 +51,7 @@ SELECT
 tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
-TRUE, NULL::JSONB, 1.0, sys.id, sys.name, TRUE learned
+NOT tgl.ignored, NULL::JSONB, 1.0, sys.id, sys.name, TRUE learned
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
 JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tgl.system_id = tgt.sys AND tgl.tgid = tgt.tg);`

@@ -17,7 +17,7 @@ SELECT
 tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
-TRUE, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
+NOT tgl.ignored, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
 WHERE tgl.system_id = $1 AND tgl.tgid = $2 AND ignored IS NOT TRUE
@@ -34,7 +34,7 @@ SELECT
 tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
-TRUE, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
+NOT tgl.ignored, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
 WHERE tgl.system_id = $1 AND ignored IS NOT TRUE
@@ -51,7 +51,7 @@ SELECT
 tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
 tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
 CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
-TRUE, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
+NOT tgl.ignored, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
 FROM talkgroups_learned tgl
 JOIN systems sys ON tgl.system_id = sys.id
 WHERE ignored IS NOT TRUE
