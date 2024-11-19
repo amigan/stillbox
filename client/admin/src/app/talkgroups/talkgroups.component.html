@@ -1,0 +1,31 @@
+<a href="#" class="btn btn-primary" routerLink="/talkgroups/import">Import</a>
+<div class="w-100 justify-center overflow-x-auto">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Sys</th>
+        <th>Sys ID</th>
+        <th>Name</th>
+        <th>TG ID</th>
+          <th>Learned</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (tg of talkgroups$ | async; track tg.id) {
+        <tr>
+          <td>{{ tg.system.name }}</td>
+          <td>{{ tg.system.id }}</td>
+          <td>{{ tg.name }}</td>
+          <td>{{ tg.tgid }}</td>
+          <td>{{ tg?.learned ? 'Y' : '' }}</td>
+          <td>
+            <a routerLink="/talkgroups/{{ tg.system.id }}/{{ tg.tgid }}"
+              ><ng-icon name="ionCreateOutline"></ng-icon
+            ></a>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
