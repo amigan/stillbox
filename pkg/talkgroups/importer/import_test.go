@@ -57,7 +57,7 @@ func TestImport(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			dbMock := mocks.NewDB(t)
+			dbMock := mocks.NewStore(t)
 			if tc.expectErr == nil {
 				dbMock.EXPECT().GetSystemName(mock.AnythingOfType("*context.valueCtx"), tc.sysID).Return(tc.sysName, nil)
 			}

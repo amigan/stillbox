@@ -434,7 +434,7 @@ type UpdateTalkgroupParams struct {
 	Alert       *bool              `json:"alert"`
 	AlertConfig rules.AlertRules   `json:"alert_config"`
 	Weight      *float32           `json:"weight"`
-	ID          *int32             `json:"id"`
+	ID          int                `json:"id"`
 	SystemID    *int32             `json:"system_id"`
 	TGID        *int32             `json:"tgid"`
 }
