@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS users(
-	id SERIAL PRIMARY KEY,
+	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	username VARCHAR (255) UNIQUE NOT NULL,
 	password TEXT NOT NULL,
 	email TEXT NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users(
 CREATE INDEX IF NOT EXISTS users_username_idx ON users(username);
 
 CREATE TABLE IF NOT EXISTS api_keys(
-	id SERIAL PRIMARY KEY,
+	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	owner INTEGER REFERENCES users(id) NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	expires TIMESTAMP,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS systems(
 );
 
 CREATE TABLE IF NOT EXISTS talkgroups(
-	id UUID PRIMARY KEY,
+	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	system_id INT4 REFERENCES systems(id) NOT NULL,
 	tgid INT4 NOT NULL,
 	name TEXT,
@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	alert BOOLEAN NOT NULL DEFAULT 'true',
 	alert_config JSONB,
 	weight REAL NOT NULL DEFAULT 1.0,
+	learned BOOLEAN,
 	UNIQUE (system_id, tgid)
 );
 
@@ -84,7 +85,8 @@ CREATE TABLE IF NOT EXISTS calls(
 	tg_alpha_tag TEXT,
 	tg_group TEXT,
 	source INTEGER NOT NULL,
-	transcript TEXT
+	transcript TEXT,
+	FOREIGN KEY (system, talkgroup) REFERENCES talkgroups(system_id, tgid)
 );
 
 CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector('english', transcript));
