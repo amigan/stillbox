@@ -1293,7 +1293,7 @@ func (_c *Store_GetTalkgroupsWithLearnedBySystem_Call) RunAndReturn(run func(con
 }
 
 // GetUserByID provides a mock function with given fields: ctx, id
-func (_m *Store) GetUserByID(ctx context.Context, id int32) (database.User, error) {
+func (_m *Store) GetUserByID(ctx context.Context, id int) (database.User, error) {
 	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
@@ -1302,16 +1302,16 @@ func (_m *Store) GetUserByID(ctx context.Context, id int32) (database.User, erro
 
 	var r0 database.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int32) (database.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int) (database.User, error)); ok {
 		return rf(ctx, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int32) database.User); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int) database.User); ok {
 		r0 = rf(ctx, id)
 	} else {
 		r0 = ret.Get(0).(database.User)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int32) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
 		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
@@ -1327,14 +1327,14 @@ type Store_GetUserByID_Call struct {
 
 // GetUserByID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - id int32
+//   - id int
 func (_e *Store_Expecter) GetUserByID(ctx interface{}, id interface{}) *Store_GetUserByID_Call {
 	return &Store_GetUserByID_Call{Call: _e.mock.On("GetUserByID", ctx, id)}
 }
 
-func (_c *Store_GetUserByID_Call) Run(run func(ctx context.Context, id int32)) *Store_GetUserByID_Call {
+func (_c *Store_GetUserByID_Call) Run(run func(ctx context.Context, id int)) *Store_GetUserByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int32))
+		run(args[0].(context.Context), args[1].(int))
 	})
 	return _c
 }
@@ -1344,13 +1344,13 @@ func (_c *Store_GetUserByID_Call) Return(_a0 database.User, _a1 error) *Store_Ge
 	return _c
 }
 
-func (_c *Store_GetUserByID_Call) RunAndReturn(run func(context.Context, int32) (database.User, error)) *Store_GetUserByID_Call {
+func (_c *Store_GetUserByID_Call) RunAndReturn(run func(context.Context, int) (database.User, error)) *Store_GetUserByID_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetUserByUID provides a mock function with given fields: ctx, id
-func (_m *Store) GetUserByUID(ctx context.Context, id int32) (database.User, error) {
+func (_m *Store) GetUserByUID(ctx context.Context, id int) (database.User, error) {
 	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
@@ -1359,16 +1359,16 @@ func (_m *Store) GetUserByUID(ctx context.Context, id int32) (database.User, err
 
 	var r0 database.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int32) (database.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int) (database.User, error)); ok {
 		return rf(ctx, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int32) database.User); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int) database.User); ok {
 		r0 = rf(ctx, id)
 	} else {
 		r0 = ret.Get(0).(database.User)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int32) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
 		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
@@ -1384,14 +1384,14 @@ type Store_GetUserByUID_Call struct {
 
 // GetUserByUID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - id int32
+//   - id int
 func (_e *Store_Expecter) GetUserByUID(ctx interface{}, id interface{}) *Store_GetUserByUID_Call {
 	return &Store_GetUserByUID_Call{Call: _e.mock.On("GetUserByUID", ctx, id)}
 }
 
-func (_c *Store_GetUserByUID_Call) Run(run func(ctx context.Context, id int32)) *Store_GetUserByUID_Call {
+func (_c *Store_GetUserByUID_Call) Run(run func(ctx context.Context, id int)) *Store_GetUserByUID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int32))
+		run(args[0].(context.Context), args[1].(int))
 	})
 	return _c
 }
@@ -1401,7 +1401,7 @@ func (_c *Store_GetUserByUID_Call) Return(_a0 database.User, _a1 error) *Store_G
 	return _c
 }
 
-func (_c *Store_GetUserByUID_Call) RunAndReturn(run func(context.Context, int32) (database.User, error)) *Store_GetUserByUID_Call {
+func (_c *Store_GetUserByUID_Call) RunAndReturn(run func(context.Context, int) (database.User, error)) *Store_GetUserByUID_Call {
 	_c.Call.Return(run)
 	return _c
 }

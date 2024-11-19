@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	alert BOOLEAN NOT NULL DEFAULT 'true',
 	alert_config JSONB,
 	weight REAL NOT NULL DEFAULT 1.0,
-	learned BOOLEAN,
+	learned BOOLEAN NOT NULL DEFAULT FALSE,
 	UNIQUE (system_id, tgid)
 );
 

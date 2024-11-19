@@ -26,7 +26,7 @@ type Alert struct {
 }
 
 type ApiKey struct {
-	ID        int32            `json:"id"`
+	ID        int              `json:"id"`
 	Owner     int              `json:"owner"`
 	CreatedAt time.Time        `json:"created_at"`
 	Expires   pgtype.Timestamp `json:"expires"`
@@ -109,7 +109,7 @@ type TalkgroupsLearned struct {
 }
 
 type User struct {
-	ID       int32  `json:"id"`
+	ID       int    `json:"id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
