@@ -29,4 +29,11 @@ export class TalkgroupService {
       tu,
     );
   }
+
+  putTalkgroups(sysID: Number, tgs: TalkgroupUpdate[]): Observable<Talkgroup[]> {
+    return this.http.put<Talkgroup[]>(
+      `/api/talkgroup/${sysID}`,
+      tgs,
+    );
+  }
 }

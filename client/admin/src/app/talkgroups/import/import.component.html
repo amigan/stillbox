@@ -9,14 +9,14 @@
         ></textarea>
     <input type="number" class="input input-bordered" formControlName="systemID" id="systemID" />
     <input type="submit" class="btn btn-primary" value="Preview" />
-    <button class="btn btn-secondary" (click)="save()">Save</button>
   </form>
+    <button class="btn btn-secondary" (click)="save()">Save</button>
 </div>
 <div class="w-100 justify-center overflow-x-auto">
   <table class="table">
     <thead>
       <tr>
-        <th><input type="checkbox" class="checkbox" [(ngModel)]="selectAll" name="selectAll" /></th>
+        <th><input type="checkbox" class="checkbox" [checked]="isAllSelected()" (change)="selectAllTGs($event)" [(ngModel)]="selectAll" name="selectAll" /></th>
         <th>Sys</th>
         <th>Sys ID</th>
         <th>Group</th>
@@ -31,8 +31,8 @@
         <tr>
           <td><input type="checkbox" class="checkbox" [(ngModel)]="tg.selected" value="{{tg.name}}" (change)="isAllSelected()">
           </td>
-          <td>{{ tg.system.name }}</td>
-          <td>{{ tg.system.id }}</td>
+          <td>{{ tg.system?.name }}</td>
+          <td>{{ tg.system?.id }}</td>
           <td>{{ tg.tg_group }}</td>
           <td>{{ tg.alpha_tag }}</td>
           <td>{{ tg.name }}</td>

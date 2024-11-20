@@ -44,12 +44,15 @@ export interface Talkgroup {
   metadata: Metadata|null;
   tags: string[];
   alert: boolean;
+  system?: System;
   alert_config: AlertRule[];
-  system: System;
   weight: number;
   learned?: boolean;
-  selected?: boolean;
 }
+
+export interface TalkgroupUI extends Talkgroup {
+  selected?: boolean;
+};
 
 export interface TalkgroupUpdate {
   id: number;
