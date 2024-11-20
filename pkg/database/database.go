@@ -43,6 +43,7 @@ func (db *Database) InTx(ctx context.Context, f func(Store) error, opts pgx.TxOp
 		return fmt.Errorf("Tx begin: %w", err)
 	}
 
+	//nolint:errcheck
 	defer tx.Rollback(ctx)
 
 	dbtx := &Database{Pool: db.Pool, Queries: db.Queries.WithTx(tx)}

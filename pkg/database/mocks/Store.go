@@ -1771,6 +1771,55 @@ func (_c *Store_UpdateTalkgroup_Call) RunAndReturn(run func(context.Context, dat
 	return _c
 }
 
+// UpsertTalkgroup provides a mock function with given fields: ctx, arg
+func (_m *Store) UpsertTalkgroup(ctx context.Context, arg []database.UpsertTalkgroupParams) *database.UpsertTalkgroupBatchResults {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpsertTalkgroup")
+	}
+
+	var r0 *database.UpsertTalkgroupBatchResults
+	if rf, ok := ret.Get(0).(func(context.Context, []database.UpsertTalkgroupParams) *database.UpsertTalkgroupBatchResults); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*database.UpsertTalkgroupBatchResults)
+		}
+	}
+
+	return r0
+}
+
+// Store_UpsertTalkgroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpsertTalkgroup'
+type Store_UpsertTalkgroup_Call struct {
+	*mock.Call
+}
+
+// UpsertTalkgroup is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg []database.UpsertTalkgroupParams
+func (_e *Store_Expecter) UpsertTalkgroup(ctx interface{}, arg interface{}) *Store_UpsertTalkgroup_Call {
+	return &Store_UpsertTalkgroup_Call{Call: _e.mock.On("UpsertTalkgroup", ctx, arg)}
+}
+
+func (_c *Store_UpsertTalkgroup_Call) Run(run func(ctx context.Context, arg []database.UpsertTalkgroupParams)) *Store_UpsertTalkgroup_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]database.UpsertTalkgroupParams))
+	})
+	return _c
+}
+
+func (_c *Store_UpsertTalkgroup_Call) Return(_a0 *database.UpsertTalkgroupBatchResults) *Store_UpsertTalkgroup_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_UpsertTalkgroup_Call) RunAndReturn(run func(context.Context, []database.UpsertTalkgroupParams) *database.UpsertTalkgroupBatchResults) *Store_UpsertTalkgroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewStore creates a new instance of Store. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewStore(t interface {

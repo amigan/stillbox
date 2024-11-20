@@ -110,6 +110,7 @@ func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int,
 			gn := groupName // must take a copy
 			tgs = append(tgs, talkgroups.Talkgroup{
 				Talkgroup: database.Talkgroup{
+					ID:       len(tgs), // need unique ID for the UI to track
 					TGID:     int32(tgt.Talkgroup),
 					SystemID: int32(tgt.System),
 					Name:     &fields[4],

@@ -39,6 +39,7 @@ type Querier interface {
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error
 	UpdatePassword(ctx context.Context, username string, password string) error
 	UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error)
+	UpsertTalkgroup(ctx context.Context, arg []UpsertTalkgroupParams) *UpsertTalkgroupBatchResults
 }
 
 var _ Querier = (*Queries)(nil)

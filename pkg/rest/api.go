@@ -42,7 +42,6 @@ type errResponse struct {
 
 func (e *errResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	switch e.Code {
-	case http.StatusNotFound:
 	default:
 		log.Error().Str("path", r.URL.Path).Err(e.Err).Int("code", e.Code).Str("msg", e.Error).Msg("request failed")
 	}
@@ -71,7 +70,7 @@ func recordNotFound(err error) render.Renderer {
 func internalError(err error) render.Renderer {
 	return &errResponse{
 		Err:   err,
-		Code:  http.StatusNotFound,
+		Code:  http.StatusInternalServerError,
 		Error: "Internal server error",
 	}
 }

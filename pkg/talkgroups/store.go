@@ -3,9 +3,11 @@ package talkgroups
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 
@@ -23,6 +25,9 @@ var (
 type Store interface {
 	// UpdateTG updates a talkgroup record.
 	UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*Talkgroup, error)
+
+	// UpsertTGs upserts a slice of talkgroups.
+	UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*Talkgroup, error)
 
 	// TG retrieves a Talkgroup from the Store.
 	TG(ctx context.Context, tg ID) (*Talkgroup, error)
@@ -124,15 +129,13 @@ func (t *cache) Hint(ctx context.Context, tgs []ID) error {
 	return nil
 }
 
-func (t *cache) add(rec *Talkgroup) error {
+func (t *cache) add(rec *Talkgroup) {
 	t.Lock()
 	defer t.Unlock()
 
 	tg := TG(rec.System.ID, rec.Talkgroup.TGID)
 	t.tgs[tg] = rec
 	t.systems[int32(rec.System.ID)] = rec.System.Name
-
-	return nil
 }
 
 type row interface {
@@ -151,18 +154,15 @@ func rowToTalkgroup[T row](r T) *Talkgroup {
 	}
 }
 
-func addToRowList[T row](t *cache, r []*Talkgroup, tgRecords []T) ([]*Talkgroup, error) {
+func addToRowList[T row](t *cache, r []*Talkgroup, tgRecords []T) []*Talkgroup {
 	for _, rec := range tgRecords {
 		tg := rowToTalkgroup(rec)
-		err := t.add(tg)
-		if err != nil {
-			return nil, err
-		}
+		t.add(tg)
 
 		r = append(r, tg)
 	}
 
-	return r, nil
+	return r
 }
 
 func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
@@ -185,7 +185,7 @@ func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
 		if err != nil {
 			return nil, err
 		}
-		return addToRowList(t, r, tgRecords)
+		return addToRowList(t, r, tgRecords), nil
 	}
 
 	// get all talkgroups
@@ -194,7 +194,7 @@ func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
 	if err != nil {
 		return nil, err
 	}
-	return addToRowList(t, r, tgRecords)
+	return addToRowList(t, r, tgRecords), nil
 }
 
 func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
@@ -204,11 +204,7 @@ func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
 	}
 
 	for _, rec := range tgRecords {
-		err := t.add(rowToTalkgroup(rec))
-
-		if err != nil {
-			log.Error().Err(err).Msg("add alert config fail")
-		}
+		t.add(rowToTalkgroup(rec))
 	}
 
 	return nil
@@ -234,7 +230,7 @@ func (t *cache) SystemTGs(ctx context.Context, systemID int32) ([]*Talkgroup, er
 	}
 
 	r := make([]*Talkgroup, 0, len(recs))
-	return addToRowList(t, r, recs)
+	return addToRowList(t, r, recs), nil
 }
 
 func (t *cache) TG(ctx context.Context, tg ID) (*Talkgroup, error) {
@@ -256,11 +252,7 @@ func (t *cache) TG(ctx context.Context, tg ID) (*Talkgroup, error) {
 		return nil, errors.Join(ErrNotFound, err)
 	}
 
-	err = t.add(rowToTalkgroup(record))
-	if err != nil {
-		log.Error().Err(err).Msg("TG() cache add")
-		return rowToTalkgroup(record), errors.Join(ErrNotFound, err)
-	}
+	t.add(rowToTalkgroup(record))
 
 	return rowToTalkgroup(record), nil
 }
@@ -304,4 +296,65 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 	t.add(record)
 
 	return record, nil
+}
+
+func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*Talkgroup, error) {
+	db := database.FromCtx(ctx)
+	sysName, hasSys := t.SystemName(ctx, system)
+	if !hasSys {
+		return nil, ErrNoSuchSystem
+	}
+	sys := database.System{
+		ID:   system,
+		Name: sysName,
+	}
+
+	tgs := make([]*Talkgroup, 0, len(input))
+
+	err := db.InTx(ctx, func(db database.Store) error {
+		for i := range input {
+			// normalize tags
+			for j, tag := range input[i].Tags {
+				input[i].Tags[j] = strings.ToLower(tag)
+			}
+
+			input[i].SystemID = int32(system)
+			input[i].Learned = common.PtrTo(false)
+
+		}
+
+		var oerr error
+
+		batch := db.UpsertTalkgroup(ctx, input)
+		defer batch.Close()
+
+		batch.QueryRow(func(_ int, r database.Talkgroup, err error) {
+			if err != nil {
+				oerr = err
+				return
+			}
+			tgs = append(tgs, &Talkgroup{
+				Talkgroup: r,
+				System:    sys,
+				Learned:   r.Learned,
+			})
+		})
+
+		if oerr != nil {
+			return oerr
+		}
+
+		return nil
+	}, pgx.TxOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// update the cache
+	for _, tg := range tgs {
+		t.add(tg)
+	}
+
+	return tgs, nil
 }

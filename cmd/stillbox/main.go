@@ -35,5 +35,6 @@ func main() {
 	cmds := append([]*cobra.Command{serve.Command(cfg)}, admin.Command(cfg)...)
 	rootCmd.AddCommand(cmds...)
 
-	rootCmd.Execute()
+	// cobra is already checking for errors and will print them
+	_ = rootCmd.Execute()
 }

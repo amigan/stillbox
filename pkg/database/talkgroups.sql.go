@@ -57,7 +57,7 @@ INSERT INTO talkgroups (
 ) VALUES(
 	$1,
 	$2,
-	't'
+	TRUE
 )
 `
 
@@ -419,8 +419,9 @@ SET
 	tags = COALESCE($6, tags),
 	alert = COALESCE($7, alert),
 	alert_config = COALESCE($8, alert_config),
-	weight = COALESCE($9, weight)
-WHERE id = $10 OR (system_id = $11 AND tgid = $12)
+	weight = COALESCE($9, weight),
+	learned = COALESCE($10, learned)
+WHERE id = $11 OR (system_id = $12 AND tgid = $13)
 RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
 `
 
@@ -434,6 +435,7 @@ type UpdateTalkgroupParams struct {
 	Alert       *bool              `json:"alert"`
 	AlertConfig rules.AlertRules   `json:"alert_config"`
 	Weight      *float32           `json:"weight"`
+	Learned     *bool              `json:"learned"`
 	ID          *int32             `json:"id"`
 	SystemID    *int32             `json:"system_id"`
 	TGID        *int32             `json:"tgid"`
@@ -450,6 +452,7 @@ func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams
 		arg.Alert,
 		arg.AlertConfig,
 		arg.Weight,
+		arg.Learned,
 		arg.ID,
 		arg.SystemID,
 		arg.TGID,
