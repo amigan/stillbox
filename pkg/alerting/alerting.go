@@ -198,7 +198,6 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 }
 
 func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
-	alerts := make([]alert.Alert, 0, len(as.scores))
 	ctx := r.Context()
 
 	alerts, err := as.eval(ctx, time.Now(), true)

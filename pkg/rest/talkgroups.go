@@ -32,7 +32,7 @@ type tgParams struct {
 	ID     *int `param:"id"`
 }
 
-func (t tgParams) haveBoth() bool {
+func (t tgParams) hasBoth() bool {
 	return t.System != nil && t.ID != nil
 }
 
@@ -65,11 +65,12 @@ func (tga *talkgroupAPI) get(w http.ResponseWriter, r *http.Request) {
 
 	var res interface{}
 	switch {
-	case p.System != nil && p.ID != nil:
+	case p.hasBoth():
 		res, err = tgs.TG(ctx, talkgroups.TG(*p.System, *p.ID))
 	case p.System != nil:
 		res, err = tgs.SystemTGs(ctx, int32(*p.System))
 	default:
+		// get all talkgroups
 		res, err = tgs.TGs(ctx, nil)
 	}
 

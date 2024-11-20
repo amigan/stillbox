@@ -129,15 +129,13 @@ func (t *cache) Hint(ctx context.Context, tgs []ID) error {
 	return nil
 }
 
-func (t *cache) add(rec *Talkgroup) error {
+func (t *cache) add(rec *Talkgroup) {
 	t.Lock()
 	defer t.Unlock()
 
 	tg := TG(rec.System.ID, rec.Talkgroup.TGID)
 	t.tgs[tg] = rec
 	t.systems[int32(rec.System.ID)] = rec.System.Name
-
-	return nil
 }
 
 type row interface {
@@ -156,18 +154,15 @@ func rowToTalkgroup[T row](r T) *Talkgroup {
 	}
 }
 
-func addToRowList[T row](t *cache, r []*Talkgroup, tgRecords []T) ([]*Talkgroup, error) {
+func addToRowList[T row](t *cache, r []*Talkgroup, tgRecords []T) []*Talkgroup {
 	for _, rec := range tgRecords {
 		tg := rowToTalkgroup(rec)
-		err := t.add(tg)
-		if err != nil {
-			return nil, err
-		}
+		t.add(tg)
 
 		r = append(r, tg)
 	}
 
-	return r, nil
+	return r
 }
 
 func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
@@ -190,7 +185,7 @@ func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
 		if err != nil {
 			return nil, err
 		}
-		return addToRowList(t, r, tgRecords)
+		return addToRowList(t, r, tgRecords), nil
 	}
 
 	// get all talkgroups
@@ -199,7 +194,7 @@ func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
 	if err != nil {
 		return nil, err
 	}
-	return addToRowList(t, r, tgRecords)
+	return addToRowList(t, r, tgRecords), nil
 }
 
 func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
@@ -209,11 +204,7 @@ func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
 	}
 
 	for _, rec := range tgRecords {
-		err := t.add(rowToTalkgroup(rec))
-
-		if err != nil {
-			log.Error().Err(err).Msg("add alert config fail")
-		}
+		t.add(rowToTalkgroup(rec))
 	}
 
 	return nil
@@ -239,7 +230,7 @@ func (t *cache) SystemTGs(ctx context.Context, systemID int32) ([]*Talkgroup, er
 	}
 
 	r := make([]*Talkgroup, 0, len(recs))
-	return addToRowList(t, r, recs)
+	return addToRowList(t, r, recs), nil
 }
 
 func (t *cache) TG(ctx context.Context, tg ID) (*Talkgroup, error) {
@@ -261,11 +252,7 @@ func (t *cache) TG(ctx context.Context, tg ID) (*Talkgroup, error) {
 		return nil, errors.Join(ErrNotFound, err)
 	}
 
-	err = t.add(rowToTalkgroup(record))
-	if err != nil {
-		log.Error().Err(err).Msg("TG() cache add")
-		return rowToTalkgroup(record), errors.Join(ErrNotFound, err)
-	}
+	t.add(rowToTalkgroup(record))
 
 	return rowToTalkgroup(record), nil
 }
@@ -365,10 +352,8 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 	}
 
 	// update the cache
-	t.Lock()
-	defer t.Unlock()
 	for _, tg := range tgs {
-		t.tgs[TG(tg.SystemID, tg.TGID)] = tg
+		t.add(tg)
 	}
 
 	return tgs, nil
