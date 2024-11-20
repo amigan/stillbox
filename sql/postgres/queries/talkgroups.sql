@@ -91,12 +91,12 @@ SET
 WHERE id = sqlc.narg('id') OR (system_id = sqlc.narg('system_id') AND tgid = sqlc.narg('tgid'))
 RETURNING *;
 
--- name: UpsertTalkgroup :one
+-- name: UpsertTalkgroup :batchone
 INSERT INTO talkgroups AS tg (
 	system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
 ) VALUES (
 	@system_id,
-	@tg_id,
+	@tgid,
 	sqlc.narg('name'),
 	sqlc.narg('alpha_tag'),
 	sqlc.narg('tg_group'),

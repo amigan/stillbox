@@ -3,7 +3,6 @@ package alert
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/trending"
@@ -56,15 +55,7 @@ func Make(ctx context.Context, store talkgroups.Store, score trending.Score[talk
 	switch err {
 	case nil:
 		d.Weight = tgRecord.Talkgroup.Weight
-		if tgRecord.System.Name == "" {
-			tgRecord.System.Name = strconv.Itoa(int(score.ID.System))
-		}
-
-		if tgRecord.Talkgroup.Name != nil {
-			d.TGName = fmt.Sprintf("%s %s [%d]", tgRecord.System.Name, *tgRecord.Talkgroup.Name, score.ID.Talkgroup)
-		} else {
-			d.TGName = fmt.Sprintf("%s:%d", tgRecord.System.Name, int(score.ID.Talkgroup))
-		}
+		d.TGName = tgRecord.String()
 	default:
 		system, has := store.SystemName(ctx, int(score.ID.System))
 		if has {

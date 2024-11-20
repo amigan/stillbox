@@ -318,31 +318,43 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 		return nil, ErrNoSuchSystem
 	}
 	sys := database.System{
-		ID: system,
+		ID:   system,
 		Name: sysName,
 	}
 
 	tgs := make([]*Talkgroup, 0, len(input))
 
 	err := db.InTx(ctx, func(db database.Store) error {
-		for _, tgu := range input {
+		for i := range input {
 			// normalize tags
-			for i, tag := range tgu.Tags {
-				tgu.Tags[i] = strings.ToLower(tag)
+			for j, tag := range input[i].Tags {
+				input[i].Tags[j] = strings.ToLower(tag)
 			}
 
-			tgu.SystemID = int32(system)
-			tgu.Learned = common.PtrTo(false)
-			tg, err := db.UpsertTalkgroup(ctx, tgu)
+			input[i].SystemID = int32(system)
+			input[i].Learned = common.PtrTo(false)
+
+		}
+
+		var oerr error
+
+		batch := db.UpsertTalkgroup(ctx, input)
+		defer batch.Close()
+
+		batch.QueryRow(func(_ int, r database.Talkgroup, err error) {
 			if err != nil {
-				return err
+				oerr = err
+				return
 			}
-
 			tgs = append(tgs, &Talkgroup{
-				Talkgroup: tg,
-				System: sys,
-				Learned: tg.Learned,
+				Talkgroup: r,
+				System:    sys,
+				Learned:   r.Learned,
 			})
+		})
+
+		if oerr != nil {
+			return oerr
 		}
 
 		return nil

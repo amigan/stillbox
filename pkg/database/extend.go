@@ -1,5 +1,9 @@
 package database
 
+import (
+	"strconv"
+)
+
 func (d GetTalkgroupsRow) GetTalkgroup() Talkgroup                    { return d.Talkgroup }
 func (d GetTalkgroupsRow) GetSystem() System                          { return d.System }
 func (d GetTalkgroupsRow) GetLearned() bool                           { return d.Talkgroup.Learned }
@@ -15,3 +19,18 @@ func (g GetTalkgroupsWithLearnedBySystemRow) GetLearned() bool        { return g
 func (g Talkgroup) GetTalkgroup() Talkgroup                           { return g }
 func (g Talkgroup) GetSystem() System                                 { return System{ID: int(g.SystemID)} }
 func (g Talkgroup) GetLearned() bool                                  { return false }
+
+func (g Talkgroup) String() string {
+	switch {
+	case g.AlphaTag != nil:
+		return *g.AlphaTag
+	case g.Name != nil && g.TGGroup != nil:
+		return *g.TGGroup + " " + *g.Name
+	case g.Name != nil:
+		return *g.Name + " [" + strconv.Itoa(int(g.TGID)) + "]"
+	case g.TGGroup != nil:
+		return *g.TGGroup + " [" + strconv.Itoa(int(g.TGID)) + "]"
+	}
+
+	return strconv.Itoa(int(g.TGID))
+}

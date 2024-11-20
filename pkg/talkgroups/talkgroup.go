@@ -2,6 +2,7 @@ package talkgroups
 
 import (
 	"fmt"
+	"strconv"
 
 	"dynatron.me/x/stillbox/pkg/database"
 )
@@ -12,12 +13,19 @@ type Talkgroup struct {
 	Learned bool            `json:"learned"`
 }
 
-type Metadata map[string]interface{}
+func (t Talkgroup) String() string {
+	if t.System.Name == "" {
+		t.System.Name = strconv.Itoa(int(t.Talkgroup.TGID))
+	}
 
-type Names struct {
-	System    string
-	Talkgroup string
+	if t.Talkgroup.Name != nil || t.Talkgroup.TGGroup != nil || t.Talkgroup.AlphaTag != nil {
+		return t.System.Name + " " + t.Talkgroup.String()
+	}
+
+	return fmt.Sprintf("%s:%d", t.System.Name, int(t.Talkgroup.TGID))
 }
+
+type Metadata map[string]interface{}
 
 type ID struct {
 	System    uint32 `json:"sys"`

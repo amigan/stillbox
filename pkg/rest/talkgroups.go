@@ -19,7 +19,7 @@ func (tga *talkgroupAPI) Subrouter() http.Handler {
 
 	r.Get(`/{system:\d+}/{id:\d+}`, tga.get)
 	r.Put(`/{system:\d+}/{id:\d+}`, tga.put)
-	r.Put(`/{system:\d+}`, tga.putTalkgroups);
+	r.Put(`/{system:\d+}`, tga.putTalkgroups)
 	r.Get(`/{system:\d+}/`, tga.get)
 	r.Get("/", tga.get)
 	r.Post("/import", tga.tgImport)
@@ -50,7 +50,6 @@ func (t tgParams) ToID() talkgroups.ID {
 		Talkgroup: nilOr(t.ID),
 	}
 }
-
 
 func (tga *talkgroupAPI) get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
