@@ -21,8 +21,12 @@ func (g Talkgroup) GetSystem() System                                 { return S
 func (g Talkgroup) GetLearned() bool                                  { return false }
 
 func (g Talkgroup) String() string {
+	return g.StringTag(true)
+}
+
+func (g Talkgroup) StringTag(withTag bool) string {
 	switch {
-	case g.AlphaTag != nil:
+	case withTag && g.AlphaTag != nil:
 		return *g.AlphaTag
 	case g.Name != nil && g.TGGroup != nil:
 		return *g.TGGroup + " " + *g.Name

@@ -119,6 +119,7 @@ func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int,
 					Metadata: metadata,
 					Tags:     tags,
 					Weight:   1.0,
+					Alert:    true,
 				},
 				System: database.System{
 					ID:   sys,

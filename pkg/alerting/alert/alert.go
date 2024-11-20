@@ -16,6 +16,7 @@ type Alert struct {
 	ID         int
 	Timestamp  time.Time
 	TGName     string
+	Talkgroup  *talkgroups.Talkgroup
 	Score      trending.Score[talkgroups.ID]
 	OrigScore  float64
 	Weight     float32
@@ -56,6 +57,7 @@ func Make(ctx context.Context, store talkgroups.Store, score trending.Score[talk
 	case nil:
 		d.Weight = tgRecord.Talkgroup.Weight
 		d.TGName = tgRecord.String()
+		d.Talkgroup = tgRecord
 	default:
 		system, has := store.SystemName(ctx, int(score.ID.System))
 		if has {

@@ -320,7 +320,6 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 
 			input[i].SystemID = int32(system)
 			input[i].Learned = common.PtrTo(false)
-
 		}
 
 		var oerr error

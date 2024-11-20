@@ -3,6 +3,7 @@ package alerting
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"sort"
 	"sync"
@@ -200,12 +201,22 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	ridx := rand.Intn(len(as.scores))
+	a, err := alert.Make(ctx, talkgroups.StoreFrom(ctx), as.scores[ridx], 1.0)
+	if err != nil {
+		log.Error().Err(err).Msg("test notify make alert fail")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	alerts, err := as.eval(ctx, time.Now(), true)
 	if err != nil {
 		log.Error().Err(err).Msg("test notification eval")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	alerts = append(alerts, a)
 
 	err = as.notifier.Send(ctx, alerts)
 	if err != nil {
