@@ -3,9 +3,11 @@ package talkgroups
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 
@@ -23,6 +25,9 @@ var (
 type Store interface {
 	// UpdateTG updates a talkgroup record.
 	UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*Talkgroup, error)
+
+	// UpsertTGs upserts a slice of talkgroups.
+	UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*Talkgroup, error)
 
 	// TG retrieves a Talkgroup from the Store.
 	TG(ctx context.Context, tg ID) (*Talkgroup, error)
@@ -304,4 +309,55 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 	t.add(record)
 
 	return record, nil
+}
+
+func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*Talkgroup, error) {
+	db := database.FromCtx(ctx)
+	sysName, hasSys := t.SystemName(ctx, system)
+	if !hasSys {
+		return nil, ErrNoSuchSystem
+	}
+	sys := database.System{
+		ID: system,
+		Name: sysName,
+	}
+
+	tgs := make([]*Talkgroup, 0, len(input))
+
+	err := db.InTx(ctx, func(db database.Store) error {
+		for _, tgu := range input {
+			// normalize tags
+			for i, tag := range tgu.Tags {
+				tgu.Tags[i] = strings.ToLower(tag)
+			}
+
+			tgu.SystemID = int32(system)
+			tgu.Learned = common.PtrTo(false)
+			tg, err := db.UpsertTalkgroup(ctx, tgu)
+			if err != nil {
+				return err
+			}
+
+			tgs = append(tgs, &Talkgroup{
+				Talkgroup: tg,
+				System: sys,
+				Learned: tg.Learned,
+			})
+		}
+
+		return nil
+	}, pgx.TxOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// update the cache
+	t.Lock()
+	defer t.Unlock()
+	for _, tg := range tgs {
+		t.tgs[TG(tg.SystemID, tg.TGID)] = tg
+	}
+
+	return tgs, nil
 }

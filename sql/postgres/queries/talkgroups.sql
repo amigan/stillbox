@@ -86,8 +86,40 @@ SET
 	tags = COALESCE(sqlc.narg('tags'), tags),
 	alert = COALESCE(sqlc.narg('alert'), alert),
 	alert_config = COALESCE(sqlc.narg('alert_config'), alert_config),
-	weight = COALESCE(sqlc.narg('weight'), weight)
+	weight = COALESCE(sqlc.narg('weight'), weight),
+	learned = COALESCE(sqlc.narg('learned'), learned)
 WHERE id = sqlc.narg('id') OR (system_id = sqlc.narg('system_id') AND tgid = sqlc.narg('tgid'))
+RETURNING *;
+
+-- name: UpsertTalkgroup :one
+INSERT INTO talkgroups AS tg (
+	system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
+) VALUES (
+	@system_id,
+	@tg_id,
+	sqlc.narg('name'),
+	sqlc.narg('alpha_tag'),
+	sqlc.narg('tg_group'),
+	sqlc.narg('frequency'),
+	sqlc.narg('metadata'),
+	sqlc.narg('tags'),
+	sqlc.narg('alert'),
+	sqlc.narg('alert_config'),
+	sqlc.narg('weight'),
+	sqlc.narg('learned')
+)
+ON CONFLICT (system_id, tgid) DO UPDATE
+SET
+	name = COALESCE(sqlc.narg('name'), tg.name),
+	alpha_tag = COALESCE(sqlc.narg('alpha_tag'), tg.alpha_tag),
+	tg_group = COALESCE(sqlc.narg('tg_group'), tg.tg_group),
+	frequency = COALESCE(sqlc.narg('frequency'), tg.frequency),
+	metadata = COALESCE(sqlc.narg('metadata'), tg.metadata),
+	tags = COALESCE(sqlc.narg('tags'), tg.tags),
+	alert = COALESCE(sqlc.narg('alert'), tg.alert),
+	alert_config = COALESCE(sqlc.narg('alert_config'), tg.alert_config),
+	weight = COALESCE(sqlc.narg('weight'), tg.weight),
+	learned = COALESCE(sqlc.narg('learned'), tg.learned)
 RETURNING *;
 
 -- name: AddTalkgroupWithLearnedFlag :exec
@@ -98,7 +130,7 @@ INSERT INTO talkgroups (
 ) VALUES(
 	@system_id,
 	@tgid,
-	't'
+	TRUE
 );
 
 -- name: AddLearnedTalkgroup :one

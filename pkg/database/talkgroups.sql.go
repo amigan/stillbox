@@ -57,7 +57,7 @@ INSERT INTO talkgroups (
 ) VALUES(
 	$1,
 	$2,
-	't'
+	TRUE
 )
 `
 
@@ -419,8 +419,9 @@ SET
 	tags = COALESCE($6, tags),
 	alert = COALESCE($7, alert),
 	alert_config = COALESCE($8, alert_config),
-	weight = COALESCE($9, weight)
-WHERE id = $10 OR (system_id = $11 AND tgid = $12)
+	weight = COALESCE($9, weight),
+	learned = COALESCE($10, learned)
+WHERE id = $11 OR (system_id = $12 AND tgid = $13)
 RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
 `
 
@@ -434,6 +435,7 @@ type UpdateTalkgroupParams struct {
 	Alert       *bool              `json:"alert"`
 	AlertConfig rules.AlertRules   `json:"alert_config"`
 	Weight      *float32           `json:"weight"`
+	Learned     *bool              `json:"learned"`
 	ID          *int32             `json:"id"`
 	SystemID    *int32             `json:"system_id"`
 	TGID        *int32             `json:"tgid"`
@@ -450,9 +452,91 @@ func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams
 		arg.Alert,
 		arg.AlertConfig,
 		arg.Weight,
+		arg.Learned,
 		arg.ID,
 		arg.SystemID,
 		arg.TGID,
+	)
+	var i Talkgroup
+	err := row.Scan(
+		&i.ID,
+		&i.SystemID,
+		&i.TGID,
+		&i.Name,
+		&i.AlphaTag,
+		&i.TGGroup,
+		&i.Frequency,
+		&i.Metadata,
+		&i.Tags,
+		&i.Alert,
+		&i.AlertConfig,
+		&i.Weight,
+		&i.Learned,
+	)
+	return i, err
+}
+
+const upsertTalkgroup = `-- name: UpsertTalkgroup :one
+INSERT INTO talkgroups AS tg (
+	system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
+) VALUES (
+	$1,
+	$2,
+	$3,
+	$4,
+	$5,
+	$6,
+	$7,
+	$8,
+	$9,
+	$10,
+	$11,
+	$12
+)
+ON CONFLICT (system_id, tgid) DO UPDATE
+SET
+	name = COALESCE($3, tg.name),
+	alpha_tag = COALESCE($4, tg.alpha_tag),
+	tg_group = COALESCE($5, tg.tg_group),
+	frequency = COALESCE($6, tg.frequency),
+	metadata = COALESCE($7, tg.metadata),
+	tags = COALESCE($8, tg.tags),
+	alert = COALESCE($9, tg.alert),
+	alert_config = COALESCE($10, tg.alert_config),
+	weight = COALESCE($11, tg.weight),
+	learned = COALESCE($12, tg.learned)
+RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
+`
+
+type UpsertTalkgroupParams struct {
+	SystemID    int32              `json:"system_id"`
+	TGID        int32              `json:"tg_id"`
+	Name        *string            `json:"name"`
+	AlphaTag    *string            `json:"alpha_tag"`
+	TGGroup     *string            `json:"tg_group"`
+	Frequency   *int32             `json:"frequency"`
+	Metadata    jsontypes.Metadata `json:"metadata"`
+	Tags        []string           `json:"tags"`
+	Alert       *bool              `json:"alert"`
+	AlertConfig rules.AlertRules   `json:"alert_config"`
+	Weight      *float32           `json:"weight"`
+	Learned     *bool              `json:"learned"`
+}
+
+func (q *Queries) UpsertTalkgroup(ctx context.Context, arg UpsertTalkgroupParams) (Talkgroup, error) {
+	row := q.db.QueryRow(ctx, upsertTalkgroup,
+		arg.SystemID,
+		arg.TGID,
+		arg.Name,
+		arg.AlphaTag,
+		arg.TGGroup,
+		arg.Frequency,
+		arg.Metadata,
+		arg.Tags,
+		arg.Alert,
+		arg.AlertConfig,
+		arg.Weight,
+		arg.Learned,
 	)
 	var i Talkgroup
 	err := row.Scan(

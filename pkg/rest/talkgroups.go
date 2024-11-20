@@ -17,9 +17,10 @@ type talkgroupAPI struct {
 func (tga *talkgroupAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	r.Get("/{system:\\d+}/{id:\\d+}", tga.get)
-	r.Put("/{system:\\d+}/{id:\\d+}", tga.put)
-	r.Get("/{system:\\d+}/", tga.get)
+	r.Get(`/{system:\d+}/{id:\d+}`, tga.get)
+	r.Put(`/{system:\d+}/{id:\d+}`, tga.put)
+	r.Put(`/{system:\d+}`, tga.putTalkgroups);
+	r.Get(`/{system:\d+}/`, tga.get)
 	r.Get("/", tga.get)
 	r.Post("/import", tga.tgImport)
 
@@ -49,6 +50,7 @@ func (t tgParams) ToID() talkgroups.ID {
 		Talkgroup: nilOr(t.ID),
 	}
 }
+
 
 func (tga *talkgroupAPI) get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -99,6 +101,8 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	input.Learned = nil // ignore for this call
+
 	record, err := tgs.UpdateTG(ctx, input)
 	if err != nil {
 		wErr(w, r, autoError(err))
@@ -122,4 +126,37 @@ func (tga *talkgroupAPI) tgImport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond(w, r, recs)
+}
+
+func (tga *talkgroupAPI) putTalkgroups(w http.ResponseWriter, r *http.Request) {
+	var id tgParams
+	err := decodeParams(&id, r)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	if id.System == nil { // don't think this would ever happen
+		wErr(w, r, badRequest(talkgroups.ErrNoSuchSystem))
+		return
+	}
+
+	ctx := r.Context()
+	tgs := talkgroups.StoreFrom(ctx)
+
+	var input []database.UpsertTalkgroupParams
+
+	err = forms.Unmarshal(r, &input, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	record, err := tgs.UpsertTGs(ctx, *id.System, input)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, record)
 }
