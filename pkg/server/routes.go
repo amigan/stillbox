@@ -9,7 +9,7 @@ import (
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
@@ -28,7 +28,7 @@ func (s *Server) setupRoutes() {
 
 	r := s.r
 	r.Use(middleware.WithValue(database.DBCtxKey, s.db))
-	r.Use(middleware.WithValue(talkgroups.StoreCtxKey, s.tgs))
+	r.Use(middleware.WithValue(tgstore.StoreCtxKey, s.tgs))
 
 	s.installPprof()
 

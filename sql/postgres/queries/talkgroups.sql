@@ -29,47 +29,20 @@ SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE (tg.system_id, tg.tgid) = (@system_id, @tgid) AND tg.learned IS NOT TRUE
-UNION
-SELECT
-tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
-NOT tgl.ignored, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
-FROM talkgroups_learned tgl
-JOIN systems sys ON tgl.system_id = sys.id
-WHERE tgl.system_id = @system_id AND tgl.tgid = @tgid AND ignored IS NOT TRUE;
+WHERE (tg.system_id, tg.tgid) = (@system_id, @tgid);
 
 -- name: GetTalkgroupsWithLearnedBySystem :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.system_id = @system AND tg.learned IS NOT TRUE
-UNION
-SELECT
-tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
-NOT tgl.ignored, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
-FROM talkgroups_learned tgl
-JOIN systems sys ON tgl.system_id = sys.id
-WHERE tgl.system_id = @system AND ignored IS NOT TRUE;
+WHERE tg.system_id = @system;
 
 -- name: GetTalkgroupsWithLearned :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.learned IS NOT TRUE
-UNION
-SELECT
-tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
-NOT tgl.ignored, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
-FROM talkgroups_learned tgl
-JOIN systems sys ON tgl.system_id = sys.id
 WHERE ignored IS NOT TRUE;
 
 -- name: GetSystemName :one
@@ -122,28 +95,92 @@ SET
 	learned = COALESCE(sqlc.narg('learned'), tg.learned)
 RETURNING *;
 
--- name: AddTalkgroupWithLearnedFlag :exec
-INSERT INTO talkgroups (
+-- name: StoreTGVersion :batchexec
+INSERT INTO talkgroup_versions(time, created_by,
 	system_id,
 	tgid,
+	name,
+	alpha_tag,
+	tg_group,
+	frequency,
+	metadata,
+	tags,
+	alert,
+	alert_config,
+	weight,
 	learned
-) VALUES(
-	@system_id,
-	@tgid,
-	TRUE
-);
+) SELECT NOW(), @submitter,
+	tg.system_id,
+	tg.tgid,
+	tg.name,
+	tg.alpha_tag,
+	tg.tg_group,
+	tg.frequency,
+	tg.metadata,
+	tg.tags,
+	tg.alert,
+	tg.alert_config,
+	tg.weight,
+	tg.learned
+FROM talkgroups tg WHERE tg.system_id = @system_id AND tg.tgid = @tgid;
 
 -- name: AddLearnedTalkgroup :one
-INSERT INTO talkgroups_learned(
+INSERT INTO talkgroups(
 	system_id,
 	tgid,
+	learned,
 	name,
 	alpha_tag,
 	tg_group
 ) VALUES (
 	@system_id,
 	@tgid,
+	TRUE,
 	sqlc.narg('name'),
 	sqlc.narg('alpha_tag'),
 	sqlc.narg('tg_group')
-) RETURNING id;
+) RETURNING *;
+
+-- name: RestoreTalkgroupVersion :one
+INSERT INTO talkgroups(
+	system_id,
+	tgid,
+	name,
+	alpha_tag,
+	tg_group,
+	frequency,
+	metadata,
+	tags,
+	alert,
+	alert_config,
+	weight,
+	learned,
+	ignored
+)
+SELECT
+	system_id,
+	tgid,
+	name,
+	alpha_tag,
+	tg_group,
+	frequency,
+	metadata,
+	tags,
+	alert,
+	alert_config,
+	weight,
+	learned,
+	ignored
+FROM talkgroup_versions tgv ON CONFLICT (system_id, tgid) DO UPDATE SET
+	name = excluded.name,
+	alpha_tag = excluded.alpha_tag,
+	tg_group = excluded.tg_group,
+	metadata = excluded.metadata,
+	tags = excluded.tags,
+	alert = excluded.alert,
+	alert_config = excluded.alert_config,
+	weight = excluded.weight,
+	learned = excluded.learner,
+	ignored = excluded.ignored
+WHERE tgv.id = ANY(@version_ids)
+RETURNING *;

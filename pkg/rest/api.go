@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -67,6 +67,15 @@ func recordNotFound(err error) render.Renderer {
 	}
 }
 
+func errTextNotFound(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusNotFound,
+		Error: "Record not found: " + err.Error(),
+	}
+}
+
+
 func internalError(err error) render.Renderer {
 	return &errResponse{
 		Err:   err,
@@ -78,8 +87,8 @@ func internalError(err error) render.Renderer {
 type errResponder func(error) render.Renderer
 
 var statusMapping = map[error]errResponder{
-	talkgroups.ErrNoSuchSystem: recordNotFound,
-	talkgroups.ErrNotFound:     recordNotFound,
+	tgstore.ErrNoSuchSystem: errTextNotFound,
+	tgstore.ErrNotFound:     errTextNotFound,
 	pgx.ErrNoRows:              recordNotFound,
 }
 

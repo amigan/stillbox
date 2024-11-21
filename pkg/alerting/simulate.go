@@ -13,6 +13,7 @@ import (
 	"dynatron.me/x/stillbox/internal/trending"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/rs/zerolog/log"
 )
@@ -59,7 +60,7 @@ func (s *Simulation) stepClock(t time.Time) {
 // Simulate begins the simulation using the DB handle from ctx. It returns final scores.
 func (s *Simulation) Simulate(ctx context.Context) (trending.Scores[talkgroups.ID], error) {
 	now := time.Now()
-	tgc := talkgroups.NewCache()
+	tgc := tgstore.NewCache()
 
 	s.Enable = true
 	s.alerter = New(s.Alerting, tgc, WithClock(&s.clock)).(*alerter)

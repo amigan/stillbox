@@ -1,4 +1,4 @@
-package talkgroups
+package tgstore
 
 import (
 	"context"
@@ -8,14 +8,17 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/calls"
+	tgsp "dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 )
 
-type tgMap map[ID]*Talkgroup
+type tgMap map[tgsp.ID]*tgsp.Talkgroup
 
 var (
 	ErrNotFound     = errors.New("talkgroup not found")
@@ -24,25 +27,28 @@ var (
 
 type Store interface {
 	// UpdateTG updates a talkgroup record.
-	UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*Talkgroup, error)
+	UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*tgsp.Talkgroup, error)
 
 	// UpsertTGs upserts a slice of talkgroups.
-	UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*Talkgroup, error)
+	UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*tgsp.Talkgroup, error)
 
 	// TG retrieves a Talkgroup from the Store.
-	TG(ctx context.Context, tg ID) (*Talkgroup, error)
+	TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error)
 
 	// TGs retrieves many talkgroups from the Store.
-	TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error)
+	TGs(ctx context.Context, tgs tgsp.IDs) ([]*tgsp.Talkgroup, error)
+
+	// LearnTG learns the talkgroup from a Call.
+	LearnTG(ctx context.Context, call *calls.Call) (*tgsp.Talkgroup, error)
 
 	// SystemTGs retrieves all Talkgroups associated with a System.
-	SystemTGs(ctx context.Context, systemID int32) ([]*Talkgroup, error)
+	SystemTGs(ctx context.Context, systemID int32) ([]*tgsp.Talkgroup, error)
 
 	// SystemName retrieves a system name from the store. It returns the record and whether one was found.
 	SystemName(ctx context.Context, id int) (string, bool)
 
 	// Hint hints the Store that the provided talkgroups will be asked for.
-	Hint(ctx context.Context, tgs []ID) error
+	Hint(ctx context.Context, tgs []tgsp.ID) error
 
 	// Load loads the provided talkgroup ID tuples into the Store.
 	Load(ctx context.Context, tgs database.TGTuples) error
@@ -51,7 +57,7 @@ type Store interface {
 	Invalidate()
 
 	// Weight returns the final weight of this talkgroup, including its static and rules-derived weight.
-	Weight(ctx context.Context, id ID, t time.Time) float64
+	Weight(ctx context.Context, id tgsp.ID, t time.Time) float64
 
 	// Hupper
 	HUP(*config.Config)
@@ -65,7 +71,7 @@ func CtxWithStore(ctx context.Context, s Store) context.Context {
 	return context.WithValue(ctx, StoreCtxKey, s)
 }
 
-func StoreFrom(ctx context.Context) Store {
+func FromCtx(ctx context.Context) Store {
 	s, ok := ctx.Value(StoreCtxKey).(Store)
 	if !ok {
 		return NewCache()
@@ -101,7 +107,7 @@ func NewCache() Store {
 	return tgc
 }
 
-func (t *cache) Hint(ctx context.Context, tgs []ID) error {
+func (t *cache) Hint(ctx context.Context, tgs []tgsp.ID) error {
 	t.RLock()
 	var toLoad database.TGTuples
 	if len(t.tgs) > len(tgs)/2 { // TODO: instrument this
@@ -129,11 +135,11 @@ func (t *cache) Hint(ctx context.Context, tgs []ID) error {
 	return nil
 }
 
-func (t *cache) add(rec *Talkgroup) {
+func (t *cache) add(rec *tgsp.Talkgroup) {
 	t.Lock()
 	defer t.Unlock()
 
-	tg := TG(rec.System.ID, rec.Talkgroup.TGID)
+	tg := tgsp.TG(rec.System.ID, rec.Talkgroup.TGID)
 	t.tgs[tg] = rec
 	t.systems[int32(rec.System.ID)] = rec.System.Name
 }
@@ -146,15 +152,15 @@ type row interface {
 	GetLearned() bool
 }
 
-func rowToTalkgroup[T row](r T) *Talkgroup {
-	return &Talkgroup{
+func rowToTalkgroup[T row](r T) *tgsp.Talkgroup {
+	return &tgsp.Talkgroup{
 		Talkgroup: r.GetTalkgroup(),
 		System:    r.GetSystem(),
 		Learned:   r.GetLearned(),
 	}
 }
 
-func addToRowList[T row](t *cache, r []*Talkgroup, tgRecords []T) []*Talkgroup {
+func addToRowList[T row](t *cache, r []*tgsp.Talkgroup, tgRecords []T) []*tgsp.Talkgroup {
 	for _, rec := range tgRecords {
 		tg := rowToTalkgroup(rec)
 		t.add(tg)
@@ -165,11 +171,11 @@ func addToRowList[T row](t *cache, r []*Talkgroup, tgRecords []T) []*Talkgroup {
 	return r
 }
 
-func (t *cache) TGs(ctx context.Context, tgs IDs) ([]*Talkgroup, error) {
-	r := make([]*Talkgroup, 0, len(tgs))
+func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs) ([]*tgsp.Talkgroup, error) {
+	r := make([]*tgsp.Talkgroup, 0, len(tgs))
 	var err error
 	if tgs != nil {
-		toGet := make(IDs, 0, len(tgs))
+		toGet := make(tgsp.IDs, 0, len(tgs))
 		t.RLock()
 		for _, id := range tgs {
 			rec, has := t.tgs[id]
@@ -210,7 +216,7 @@ func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
 	return nil
 }
 
-func (t *cache) Weight(ctx context.Context, id ID, tm time.Time) float64 {
+func (t *cache) Weight(ctx context.Context, id tgsp.ID, tm time.Time) float64 {
 	tg, err := t.TG(ctx, id)
 	if err != nil {
 		return 1.0
@@ -223,17 +229,17 @@ func (t *cache) Weight(ctx context.Context, id ID, tm time.Time) float64 {
 	return float64(m)
 }
 
-func (t *cache) SystemTGs(ctx context.Context, systemID int32) ([]*Talkgroup, error) {
+func (t *cache) SystemTGs(ctx context.Context, systemID int32) ([]*tgsp.Talkgroup, error) {
 	recs, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedBySystem(ctx, systemID)
 	if err != nil {
 		return nil, err
 	}
 
-	r := make([]*Talkgroup, 0, len(recs))
+	r := make([]*tgsp.Talkgroup, 0, len(recs))
 	return addToRowList(t, r, recs), nil
 }
 
-func (t *cache) TG(ctx context.Context, tg ID) (*Talkgroup, error) {
+func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
 	t.RLock()
 	rec, has := t.tgs[tg]
 	t.RUnlock()
@@ -278,7 +284,7 @@ func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) 
 	return n, has
 }
 
-func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*Talkgroup, error) {
+func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*tgsp.Talkgroup, error) {
 	sysName, has := t.SystemName(ctx, int(*input.SystemID))
 	if !has {
 		return nil, ErrNoSuchSystem
@@ -289,7 +295,7 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 		return nil, err
 	}
 
-	record := &Talkgroup{
+	record := &tgsp.Talkgroup{
 		Talkgroup: tg,
 		System:    database.System{ID: int(tg.SystemID), Name: sysName},
 	}
@@ -298,7 +304,40 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 	return record, nil
 }
 
-func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*Talkgroup, error) {
+func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, error) {
+	db := database.FromCtx(ctx)
+
+	sys, has := t.SystemName(ctx, c.System)
+	if !has {
+		return nil, ErrNoSuchSystem
+	}
+
+	tgm, err := db.AddLearnedTalkgroup(ctx, database.AddLearnedTalkgroupParams{
+		SystemID: int32(c.System),
+		TGID:     int32(c.Talkgroup),
+		Name:     c.TalkgroupLabel,
+		AlphaTag: c.TGAlphaTag,
+		TGGroup:  c.TalkgroupGroup,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	tg := &tgsp.Talkgroup{
+		Talkgroup: tgm,
+		System: database.System{
+			ID: c.System,
+			Name: sys,
+		},
+		Learned: tgm.Learned,
+	}
+
+	t.add(tg)
+
+	return tg, nil
+}
+
+func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*tgsp.Talkgroup, error) {
 	db := database.FromCtx(ctx)
 	sysName, hasSys := t.SystemName(ctx, system)
 	if !hasSys {
@@ -309,9 +348,10 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 		Name: sysName,
 	}
 
-	tgs := make([]*Talkgroup, 0, len(input))
+	tgs := make([]*tgsp.Talkgroup, 0, len(input))
 
 	err := db.InTx(ctx, func(db database.Store) error {
+		versionParams := make([]database.StoreTGVersionParams, 0, len(input))
 		for i := range input {
 			// normalize tags
 			for j, tag := range input[i].Tags {
@@ -320,19 +360,26 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 
 			input[i].SystemID = int32(system)
 			input[i].Learned = common.PtrTo(false)
+
+			
 		}
 
 		var oerr error
 
-		batch := db.UpsertTalkgroup(ctx, input)
-		defer batch.Close()
+		tgUpsertBatch := db.UpsertTalkgroup(ctx, input)
+		defer tgUpsertBatch.Close()
 
-		batch.QueryRow(func(_ int, r database.Talkgroup, err error) {
+		tgUpsertBatch.QueryRow(func(_ int, r database.Talkgroup, err error) {
 			if err != nil {
 				oerr = err
 				return
 			}
-			tgs = append(tgs, &Talkgroup{
+			versionParams = append(versionParams, database.StoreTGVersionParams{
+				SystemID: int32(system),
+				TGID: r.TGID,
+				Submitter: auth.UIDFrom(ctx),
+			})
+			tgs = append(tgs, &tgsp.Talkgroup{
 				Talkgroup: r,
 				System:    sys,
 				Learned:   r.Learned,
@@ -343,7 +390,17 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 			return oerr
 		}
 
-		return nil
+		versionBatch := db.StoreTGVersion(ctx, versionParams)
+		defer versionBatch.Close()
+
+		versionBatch.Exec(func(_ int, err error) {
+			if err != nil {
+				oerr = err
+				return
+			}
+		})
+
+		return oerr
 	}, pgx.TxOptions{})
 
 	if err != nil {

@@ -40,6 +40,23 @@ type jwtAuth interface {
 
 type claims map[string]interface{}
 
+func UIDFrom(ctx context.Context) *int32 {
+	tok, _, err := jwtauth.FromContext(ctx)
+	if err != nil {
+		return nil
+	}
+
+	uidStr := tok.Subject()
+	uidInt, err := strconv.Atoi(uidStr)
+	if err != nil {
+		return nil
+	}
+
+	uid := int32(uidInt)
+
+	return &uid
+}
+
 func (a *Auth) Authenticated(r *http.Request) (claims, bool) {
 	// TODO: check IP against ACL, or conf.Public, and against map of routes
 	tok, cl, err := jwtauth.FromContext(r.Context())

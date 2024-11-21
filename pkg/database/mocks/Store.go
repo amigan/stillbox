@@ -123,22 +123,22 @@ func (_c *Store_AddCall_Call) RunAndReturn(run func(context.Context, database.Ad
 }
 
 // AddLearnedTalkgroup provides a mock function with given fields: ctx, arg
-func (_m *Store) AddLearnedTalkgroup(ctx context.Context, arg database.AddLearnedTalkgroupParams) (int, error) {
+func (_m *Store) AddLearnedTalkgroup(ctx context.Context, arg database.AddLearnedTalkgroupParams) (database.Talkgroup, error) {
 	ret := _m.Called(ctx, arg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddLearnedTalkgroup")
 	}
 
-	var r0 int
+	var r0 database.Talkgroup
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, database.AddLearnedTalkgroupParams) (int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, database.AddLearnedTalkgroupParams) (database.Talkgroup, error)); ok {
 		return rf(ctx, arg)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, database.AddLearnedTalkgroupParams) int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, database.AddLearnedTalkgroupParams) database.Talkgroup); ok {
 		r0 = rf(ctx, arg)
 	} else {
-		r0 = ret.Get(0).(int)
+		r0 = ret.Get(0).(database.Talkgroup)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, database.AddLearnedTalkgroupParams) error); ok {
@@ -169,60 +169,12 @@ func (_c *Store_AddLearnedTalkgroup_Call) Run(run func(ctx context.Context, arg 
 	return _c
 }
 
-func (_c *Store_AddLearnedTalkgroup_Call) Return(_a0 int, _a1 error) *Store_AddLearnedTalkgroup_Call {
+func (_c *Store_AddLearnedTalkgroup_Call) Return(_a0 database.Talkgroup, _a1 error) *Store_AddLearnedTalkgroup_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Store_AddLearnedTalkgroup_Call) RunAndReturn(run func(context.Context, database.AddLearnedTalkgroupParams) (int, error)) *Store_AddLearnedTalkgroup_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// AddTalkgroupWithLearnedFlag provides a mock function with given fields: ctx, systemID, tGID
-func (_m *Store) AddTalkgroupWithLearnedFlag(ctx context.Context, systemID int32, tGID int32) error {
-	ret := _m.Called(ctx, systemID, tGID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for AddTalkgroupWithLearnedFlag")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, int32, int32) error); ok {
-		r0 = rf(ctx, systemID, tGID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Store_AddTalkgroupWithLearnedFlag_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddTalkgroupWithLearnedFlag'
-type Store_AddTalkgroupWithLearnedFlag_Call struct {
-	*mock.Call
-}
-
-// AddTalkgroupWithLearnedFlag is a helper method to define mock.On call
-//   - ctx context.Context
-//   - systemID int32
-//   - tGID int32
-func (_e *Store_Expecter) AddTalkgroupWithLearnedFlag(ctx interface{}, systemID interface{}, tGID interface{}) *Store_AddTalkgroupWithLearnedFlag_Call {
-	return &Store_AddTalkgroupWithLearnedFlag_Call{Call: _e.mock.On("AddTalkgroupWithLearnedFlag", ctx, systemID, tGID)}
-}
-
-func (_c *Store_AddTalkgroupWithLearnedFlag_Call) Run(run func(ctx context.Context, systemID int32, tGID int32)) *Store_AddTalkgroupWithLearnedFlag_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int32), args[2].(int32))
-	})
-	return _c
-}
-
-func (_c *Store_AddTalkgroupWithLearnedFlag_Call) Return(_a0 error) *Store_AddTalkgroupWithLearnedFlag_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *Store_AddTalkgroupWithLearnedFlag_Call) RunAndReturn(run func(context.Context, int32, int32) error) *Store_AddTalkgroupWithLearnedFlag_Call {
+func (_c *Store_AddLearnedTalkgroup_Call) RunAndReturn(run func(context.Context, database.AddLearnedTalkgroupParams) (database.Talkgroup, error)) *Store_AddLearnedTalkgroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1569,6 +1521,63 @@ func (_c *Store_InTx_Call) RunAndReturn(run func(context.Context, func(database.
 	return _c
 }
 
+// RestoreTalkgroupVersion provides a mock function with given fields: ctx, versionIds
+func (_m *Store) RestoreTalkgroupVersion(ctx context.Context, versionIds int) (database.Talkgroup, error) {
+	ret := _m.Called(ctx, versionIds)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RestoreTalkgroupVersion")
+	}
+
+	var r0 database.Talkgroup
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) (database.Talkgroup, error)); ok {
+		return rf(ctx, versionIds)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int) database.Talkgroup); ok {
+		r0 = rf(ctx, versionIds)
+	} else {
+		r0 = ret.Get(0).(database.Talkgroup)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, versionIds)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_RestoreTalkgroupVersion_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RestoreTalkgroupVersion'
+type Store_RestoreTalkgroupVersion_Call struct {
+	*mock.Call
+}
+
+// RestoreTalkgroupVersion is a helper method to define mock.On call
+//   - ctx context.Context
+//   - versionIds int
+func (_e *Store_Expecter) RestoreTalkgroupVersion(ctx interface{}, versionIds interface{}) *Store_RestoreTalkgroupVersion_Call {
+	return &Store_RestoreTalkgroupVersion_Call{Call: _e.mock.On("RestoreTalkgroupVersion", ctx, versionIds)}
+}
+
+func (_c *Store_RestoreTalkgroupVersion_Call) Run(run func(ctx context.Context, versionIds int)) *Store_RestoreTalkgroupVersion_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int))
+	})
+	return _c
+}
+
+func (_c *Store_RestoreTalkgroupVersion_Call) Return(_a0 database.Talkgroup, _a1 error) *Store_RestoreTalkgroupVersion_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_RestoreTalkgroupVersion_Call) RunAndReturn(run func(context.Context, int) (database.Talkgroup, error)) *Store_RestoreTalkgroupVersion_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetCallTranscript provides a mock function with given fields: ctx, iD, transcript
 func (_m *Store) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error {
 	ret := _m.Called(ctx, iD, transcript)
@@ -1662,6 +1671,55 @@ func (_c *Store_SetTalkgroupTags_Call) Return(_a0 error) *Store_SetTalkgroupTags
 }
 
 func (_c *Store_SetTalkgroupTags_Call) RunAndReturn(run func(context.Context, []string, int32, int32) error) *Store_SetTalkgroupTags_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// StoreTGVersion provides a mock function with given fields: ctx, arg
+func (_m *Store) StoreTGVersion(ctx context.Context, arg []database.StoreTGVersionParams) *database.StoreTGVersionBatchResults {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for StoreTGVersion")
+	}
+
+	var r0 *database.StoreTGVersionBatchResults
+	if rf, ok := ret.Get(0).(func(context.Context, []database.StoreTGVersionParams) *database.StoreTGVersionBatchResults); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*database.StoreTGVersionBatchResults)
+		}
+	}
+
+	return r0
+}
+
+// Store_StoreTGVersion_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'StoreTGVersion'
+type Store_StoreTGVersion_Call struct {
+	*mock.Call
+}
+
+// StoreTGVersion is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg []database.StoreTGVersionParams
+func (_e *Store_Expecter) StoreTGVersion(ctx interface{}, arg interface{}) *Store_StoreTGVersion_Call {
+	return &Store_StoreTGVersion_Call{Call: _e.mock.On("StoreTGVersion", ctx, arg)}
+}
+
+func (_c *Store_StoreTGVersion_Call) Run(run func(ctx context.Context, arg []database.StoreTGVersionParams)) *Store_StoreTGVersion_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]database.StoreTGVersionParams))
+	})
+	return _c
+}
+
+func (_c *Store_StoreTGVersion_Call) Return(_a0 *database.StoreTGVersionBatchResults) *Store_StoreTGVersion_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_StoreTGVersion_Call) RunAndReturn(run func(context.Context, []database.StoreTGVersionParams) *database.StoreTGVersionBatchResults) *Store_StoreTGVersion_Call {
 	_c.Call.Return(run)
 	return _c
 }

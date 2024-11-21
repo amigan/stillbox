@@ -96,16 +96,26 @@ type Talkgroup struct {
 	AlertConfig rules.AlertRules   `json:"alert_config"`
 	Weight      float32            `json:"weight"`
 	Learned     bool               `json:"learned"`
+	Ignored     bool               `json:"ignored"`
 }
 
-type TalkgroupsLearned struct {
-	ID       int     `json:"id"`
-	SystemID int     `json:"system_id"`
-	TGID     int     `json:"tgid"`
-	Name     string  `json:"name"`
-	AlphaTag *string `json:"alpha_tag"`
-	TGGroup  *string `json:"tg_group"`
-	Ignored  *bool   `json:"ignored"`
+type TalkgroupVersion struct {
+	ID          int                `json:"id"`
+	Time        pgtype.Timestamptz `json:"time"`
+	CreatedBy   *int32             `json:"created_by"`
+	SystemID    *int32             `json:"system_id"`
+	TGID        *int32             `json:"tgid"`
+	Name        *string            `json:"name"`
+	AlphaTag    *string            `json:"alpha_tag"`
+	TGGroup     *string            `json:"tg_group"`
+	Frequency   *int32             `json:"frequency"`
+	Metadata    []byte             `json:"metadata"`
+	Tags        []string           `json:"tags"`
+	Alert       *bool              `json:"alert"`
+	AlertConfig []byte             `json:"alert_config"`
+	Weight      *float32           `json:"weight"`
+	Learned     *bool              `json:"learned"`
+	Ignored     *bool              `json:"ignored"`
 }
 
 type User struct {

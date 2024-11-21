@@ -15,7 +15,8 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/sinks"
-	talkgroups "dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"dynatron.me/x/stillbox/internal/timeseries"
 	"dynatron.me/x/stillbox/internal/trending"
@@ -51,7 +52,7 @@ type alerter struct {
 	alertCache map[talkgroups.ID]alert.Alert
 	renotify   time.Duration
 	notifier   notify.Notifier
-	tgCache    talkgroups.Store
+	tgCache    tgstore.Store
 }
 
 type offsetClock time.Duration
@@ -86,7 +87,7 @@ func WithNotifier(n notify.Notifier) AlertOption {
 }
 
 // New creates a new Alerter using the provided configuration.
-func New(cfg config.Alerting, tgCache talkgroups.Store, opts ...AlertOption) Alerter {
+func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerter {
 	if !cfg.Enable {
 		return &noopAlerter{}
 	}
@@ -169,7 +170,7 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 		if s.Score > as.cfg.AlertThreshold || testMode {
 			if old, inCache := as.alertCache[s.ID]; !inCache || now.Sub(old.Timestamp) > as.renotify {
 				s.Score *= as.tgCache.Weight(ctx, s.ID, now)
-				a, err := alert.Make(ctx, as.tgCache, s, origScore)
+				a, err := alert.Make(ctx, s, origScore)
 				if err != nil {
 					return nil, fmt.Errorf("makeAlert: %w", err)
 				}
@@ -202,7 +203,7 @@ func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	ridx := rand.Intn(len(as.scores))
-	a, err := alert.Make(ctx, talkgroups.StoreFrom(ctx), as.scores[ridx], 1.0)
+	a, err := alert.Make(ctx, as.scores[ridx], 1.0)
 	if err != nil {
 		log.Error().Err(err).Msg("test notify make alert fail")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
