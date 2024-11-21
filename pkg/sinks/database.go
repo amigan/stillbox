@@ -47,12 +47,12 @@ func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
 		return s.db.InTx(ctx, func(tx database.Store) error {
 			_, err := s.tgs.LearnTG(ctx, call)
 			if err != nil {
-				return fmt.Errorf("add call: learn tg: %w", err)
+				return fmt.Errorf("learn tg: %w", err)
 			}
 
 			err = tx.AddCall(ctx, params)
 			if err != nil {
-				return fmt.Errorf("add call: retry: %w", err)
+				return fmt.Errorf("learn tg retry: %w", err)
 			}
 
 			return nil

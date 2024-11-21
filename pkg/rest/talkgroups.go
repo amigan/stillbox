@@ -54,7 +54,7 @@ func (t tgParams) ToID() talkgroups.ID {
 
 func (tga *talkgroupAPI) get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	tgs := tgstore.From(ctx)
+	tgs := tgstore.FromCtx(ctx)
 
 	var p tgParams
 
@@ -92,7 +92,7 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	tgs := tgstore.From(ctx)
+	tgs := tgstore.FromCtx(ctx)
 
 	input := database.UpdateTalkgroupParams{}
 
@@ -143,7 +143,7 @@ func (tga *talkgroupAPI) putTalkgroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	tgs := tgstore.From(ctx)
+	tgs := tgstore.FromCtx(ctx)
 
 	var input []database.UpsertTalkgroupParams
 

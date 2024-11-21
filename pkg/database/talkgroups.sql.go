@@ -66,23 +66,6 @@ func (q *Queries) AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgro
 	return i, err
 }
 
-const addTalkgroupWithLearnedFlag = `-- name: AddTalkgroupWithLearnedFlag :exec
-INSERT INTO talkgroups (
-	system_id,
-	tgid,
-	learned
-) VALUES(
-	$1,
-	$2,
-	TRUE
-)
-`
-
-func (q *Queries) AddTalkgroupWithLearnedFlag(ctx context.Context, systemID int32, tGID int32) error {
-	_, err := q.db.Exec(ctx, addTalkgroupWithLearnedFlag, systemID, tGID)
-	return err
-}
-
 const getSystemName = `-- name: GetSystemName :one
 SELECT name FROM systems WHERE id = $1
 `
@@ -392,6 +375,73 @@ func (q *Queries) GetTalkgroupsWithLearnedBySystem(ctx context.Context, system i
 		return nil, err
 	}
 	return items, nil
+}
+
+const restoreTalkgroupVersion = `-- name: RestoreTalkgroupVersion :one
+INSERT INTO talkgroups(
+	system_id,
+	tgid,
+	name,
+	alpha_tag,
+	tg_group,
+	frequency,
+	metadata,
+	tags,
+	alert,
+	alert_config,
+	weight,
+	learned,
+	ignored
+)
+SELECT
+	system_id,
+	tgid,
+	name,
+	alpha_tag,
+	tg_group,
+	frequency,
+	metadata,
+	tags,
+	alert,
+	alert_config,
+	weight,
+	learned,
+	ignored
+FROM talkgroup_versions tgv ON CONFLICT (system_id, tgid) DO UPDATE SET
+	name = excluded.name,
+	alpha_tag = excluded.alpha_tag,
+	tg_group = excluded.tg_group,
+	metadata = excluded.metadata,
+	tags = excluded.tags,
+	alert = excluded.alert,
+	alert_config = excluded.alert_config,
+	weight = excluded.weight,
+	learned = excluded.learner,
+	ignored = excluded.ignored
+WHERE tgv.id = ANY($1)
+RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned, ignored
+`
+
+func (q *Queries) RestoreTalkgroupVersion(ctx context.Context, versionIds int) (Talkgroup, error) {
+	row := q.db.QueryRow(ctx, restoreTalkgroupVersion, versionIds)
+	var i Talkgroup
+	err := row.Scan(
+		&i.ID,
+		&i.SystemID,
+		&i.TGID,
+		&i.Name,
+		&i.AlphaTag,
+		&i.TGGroup,
+		&i.Frequency,
+		&i.Metadata,
+		&i.Tags,
+		&i.Alert,
+		&i.AlertConfig,
+		&i.Weight,
+		&i.Learned,
+		&i.Ignored,
+	)
+	return i, err
 }
 
 const setTalkgroupTags = `-- name: SetTalkgroupTags :exec

@@ -46,7 +46,7 @@ func (a *Alert) ToAddAlertParams() database.AddAlertParams {
 
 // Make creates an alert for later rendering or storage.
 func Make(ctx context.Context, score trending.Score[talkgroups.ID], origScore float64) (Alert, error) {
-	store := tgstore.From(ctx)
+	store := tgstore.FromCtx(ctx)
 	d := Alert{
 		Score:     score,
 		Timestamp: time.Now(),

@@ -124,17 +124,6 @@ INSERT INTO talkgroup_versions(time, created_by,
 	tg.learned
 FROM talkgroups tg WHERE tg.system_id = @system_id AND tg.tgid = @tgid;
 
--- name: AddTalkgroupWithLearnedFlag :exec
-INSERT INTO talkgroups (
-	system_id,
-	tgid,
-	learned
-) VALUES(
-	@system_id,
-	@tgid,
-	TRUE
-);
-
 -- name: AddLearnedTalkgroup :one
 INSERT INTO talkgroups(
 	system_id,
@@ -151,3 +140,47 @@ INSERT INTO talkgroups(
 	sqlc.narg('alpha_tag'),
 	sqlc.narg('tg_group')
 ) RETURNING *;
+
+-- name: RestoreTalkgroupVersion :one
+INSERT INTO talkgroups(
+	system_id,
+	tgid,
+	name,
+	alpha_tag,
+	tg_group,
+	frequency,
+	metadata,
+	tags,
+	alert,
+	alert_config,
+	weight,
+	learned,
+	ignored
+)
+SELECT
+	system_id,
+	tgid,
+	name,
+	alpha_tag,
+	tg_group,
+	frequency,
+	metadata,
+	tags,
+	alert,
+	alert_config,
+	weight,
+	learned,
+	ignored
+FROM talkgroup_versions tgv ON CONFLICT (system_id, tgid) DO UPDATE SET
+	name = excluded.name,
+	alpha_tag = excluded.alpha_tag,
+	tg_group = excluded.tg_group,
+	metadata = excluded.metadata,
+	tags = excluded.tags,
+	alert = excluded.alert,
+	alert_config = excluded.alert_config,
+	weight = excluded.weight,
+	learned = excluded.learner,
+	ignored = excluded.ignored
+WHERE tgv.id = ANY(@version_ids)
+RETURNING *;

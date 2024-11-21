@@ -3,7 +3,6 @@ package tgstore
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -72,7 +71,7 @@ func CtxWithStore(ctx context.Context, s Store) context.Context {
 	return context.WithValue(ctx, StoreCtxKey, s)
 }
 
-func From(ctx context.Context) Store {
+func FromCtx(ctx context.Context) Store {
 	s, ok := ctx.Value(StoreCtxKey).(Store)
 	if !ok {
 		return NewCache()
@@ -307,10 +306,7 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 
 func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, error) {
 	db := database.FromCtx(ctx)
-	err := db.AddTalkgroupWithLearnedFlag(ctx, int32(c.System), int32(c.Talkgroup))
-	if err != nil {
-		return nil, fmt.Errorf("addTalkgroupWithLearnedFlag: %w", err)
-	}
+
 	sys, has := t.SystemName(ctx, c.System)
 	if !has {
 		return nil, ErrNoSuchSystem

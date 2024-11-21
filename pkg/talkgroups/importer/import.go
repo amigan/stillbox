@@ -67,7 +67,7 @@ var rrRE = regexp.MustCompile(`DEC\s+HEX\s+Mode\s+Alpha Tag\s+Description\s+Tag`
 func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int, r io.Reader) ([]talkgroups.Talkgroup, error) {
 	sc := bufio.NewScanner(r)
 	tgs := make([]talkgroups.Talkgroup, 0, 8)
-	sysn, has := tgstore.From(ctx).SystemName(ctx, sys)
+	sysn, has := tgstore.FromCtx(ctx).SystemName(ctx, sys)
 	if !has {
 		return nil, tgstore.ErrNoSuchSystem
 	}

@@ -60,7 +60,7 @@ func (c *client) SendError(cmd *pb.Command, err error) {
 }
 
 func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
-	tgi, err := tgstore.From(ctx).TG(ctx, talkgroups.TG(tg.System, tg.Talkgroup))
+	tgi, err := tgstore.FromCtx(ctx).TG(ctx, talkgroups.TG(tg.System, tg.Talkgroup))
 	if err != nil {
 		if err != tgstore.ErrNotFound {
 			log.Error().Err(err).Int32("sys", tg.System).Int32("tg", tg.Talkgroup).Msg("get talkgroup fail")
