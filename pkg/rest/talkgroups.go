@@ -6,6 +6,7 @@ import (
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/importer"
 
 	"github.com/go-chi/chi/v5"
@@ -53,7 +54,7 @@ func (t tgParams) ToID() talkgroups.ID {
 
 func (tga *talkgroupAPI) get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	tgs := talkgroups.StoreFrom(ctx)
+	tgs := tgstore.From(ctx)
 
 	var p tgParams
 
@@ -91,7 +92,7 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	tgs := talkgroups.StoreFrom(ctx)
+	tgs := tgstore.From(ctx)
 
 	input := database.UpdateTalkgroupParams{}
 
@@ -137,12 +138,12 @@ func (tga *talkgroupAPI) putTalkgroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if id.System == nil { // don't think this would ever happen
-		wErr(w, r, badRequest(talkgroups.ErrNoSuchSystem))
+		wErr(w, r, badRequest(tgstore.ErrNoSuchSystem))
 		return
 	}
 
 	ctx := r.Context()
-	tgs := talkgroups.StoreFrom(ctx)
+	tgs := tgstore.From(ctx)
 
 	var input []database.UpsertTalkgroupParams
 

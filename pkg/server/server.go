@@ -15,7 +15,8 @@ import (
 	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/sources"
-	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -37,7 +38,7 @@ type Server struct {
 	alerter  alerting.Alerter
 	notifier notify.Notifier
 	hup      chan os.Signal
-	tgs      talkgroups.Store
+	tgs      tgstore.Store
 	rest     rest.API
 }
 
@@ -61,7 +62,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	tgCache := talkgroups.NewCache()
+	tgCache := tgstore.NewCache()
 	api := rest.New()
 
 	srv := &Server{
@@ -117,7 +118,7 @@ func (s *Server) Go(ctx context.Context) error {
 	s.installHupHandler()
 
 	ctx = database.CtxWithDB(ctx, s.db)
-	ctx = talkgroups.CtxWithStore(ctx, s.tgs)
+	ctx = tgstore.CtxWithStore(ctx, s.tgs)
 
 	httpSrv := &http.Server{
 		Addr:    s.conf.Listen,

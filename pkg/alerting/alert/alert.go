@@ -8,6 +8,7 @@ import (
 	"dynatron.me/x/stillbox/internal/trending"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -44,7 +45,8 @@ func (a *Alert) ToAddAlertParams() database.AddAlertParams {
 }
 
 // Make creates an alert for later rendering or storage.
-func Make(ctx context.Context, store talkgroups.Store, score trending.Score[talkgroups.ID], origScore float64) (Alert, error) {
+func Make(ctx context.Context, score trending.Score[talkgroups.ID], origScore float64) (Alert, error) {
+	store := tgstore.From(ctx)
 	d := Alert{
 		Score:     score,
 		Timestamp: time.Now(),
