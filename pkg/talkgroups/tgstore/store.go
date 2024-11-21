@@ -3,6 +3,7 @@ package tgstore
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/calls"
 	tgsp "dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"github.com/jackc/pgx/v5"
@@ -36,6 +38,9 @@ type Store interface {
 
 	// TGs retrieves many talkgroups from the Store.
 	TGs(ctx context.Context, tgs tgsp.IDs) ([]*tgsp.Talkgroup, error)
+
+	// LearnTG learns the talkgroup from a Call.
+	LearnTG(ctx context.Context, call *calls.Call) (learnedId int, err error)
 
 	// SystemTGs retrieves all Talkgroups associated with a System.
 	SystemTGs(ctx context.Context, systemID int32) ([]*tgsp.Talkgroup, error)
@@ -298,6 +303,22 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 	t.add(record)
 
 	return record, nil
+}
+
+func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (learnedId int, err error) {
+	db := database.FromCtx(ctx)
+	err = db.AddTalkgroupWithLearnedFlag(ctx, int32(c.System), int32(c.Talkgroup))
+	if err != nil {
+		return 0, fmt.Errorf("addTalkgroupWithLearnedFlag: %w", err)
+	}
+
+	return db.AddLearnedTalkgroup(ctx, database.AddLearnedTalkgroupParams{
+		SystemID: c.System,
+		TGID:     c.Talkgroup,
+		Name:     c.TalkgroupLabel,
+		AlphaTag: c.TGAlphaTag,
+		TGGroup:  c.TalkgroupGroup,
+	})
 }
 
 func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*tgsp.Talkgroup, error) {

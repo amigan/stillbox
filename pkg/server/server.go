@@ -79,7 +79,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		rest:     api,
 	}
 
-	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db), true)
+	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db, tgCache), true)
 	srv.sinks.Register("nexus", sinks.NewNexusSink(srv.nex), false)
 
 	if srv.alerter.Enabled() {

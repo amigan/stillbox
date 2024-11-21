@@ -7,6 +7,7 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -15,10 +16,11 @@ import (
 
 type DatabaseSink struct {
 	db database.Store
+	tgs tgstore.Store
 }
 
-func NewDatabaseSink(store database.Store) *DatabaseSink {
-	return &DatabaseSink{store}
+func NewDatabaseSink(store database.Store, tgs tgstore.Store) *DatabaseSink {
+	return &DatabaseSink{store, tgs}
 }
 
 func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
@@ -43,7 +45,7 @@ func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
 
 	if err != nil && database.IsTGConstraintViolation(err) {
 		return s.db.InTx(ctx, func(tx database.Store) error {
-			_, err := call.LearnTG(ctx, tx)
+			_, err := s.tgs.LearnTG(ctx, call)
 			if err != nil {
 				return fmt.Errorf("add call: learn tg: %w", err)
 			}
