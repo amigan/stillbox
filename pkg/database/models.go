@@ -115,6 +115,7 @@ type TalkgroupVersion struct {
 	AlertConfig []byte             `json:"alert_config"`
 	Weight      *float32           `json:"weight"`
 	Learned     *bool              `json:"learned"`
+	Ignored     *bool              `json:"ignored"`
 }
 
 type User struct {

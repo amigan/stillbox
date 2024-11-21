@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	alert_config JSONB,
 	weight REAL NOT NULL DEFAULT 1.0,
 	learned BOOLEAN NOT NULL DEFAULT FALSE,
+	ignored BOOLEAN NOT NULL DEFAULT FALSE,
 	UNIQUE (system_id, tgid)
 );
 
@@ -44,15 +45,25 @@ CREATE INDEX talkgroups_system_tgid_idx ON talkgroups (system_id, tgid);
 
 CREATE INDEX IF NOT EXISTS talkgroup_id_tags ON talkgroups USING GIN (tags);
 
-CREATE TABLE IF NOT EXISTS talkgroups_learned(
+CREATE TABLE IF NOT EXISTS talkgroup_versions(
+	-- version metadata
 	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	system_id INTEGER REFERENCES systems(id) NOT NULL,
-	tgid INTEGER NOT NULL,
-	name TEXT NOT NULL,
+	time TIMESTAMPTZ NOT NULL,
+	created_by INTEGER REFERENCES users(id),
+	-- talkgroup snapshot
+	system_id INT4 REFERENCES systems(id),
+	tgid INT4,
+	name TEXT,
 	alpha_tag TEXT,
 	tg_group TEXT,
-	ignored BOOLEAN,
-	UNIQUE (system_id, tgid, name)
+	frequency INTEGER,
+	metadata JSONB,
+	tags TEXT[],
+	alert BOOLEAN,
+	alert_config JSONB,
+	weight REAL,
+	learned BOOLEAN,
+	ignored BOOLEAN
 );
 
 CREATE TABLE IF NOT EXISTS alerts(
