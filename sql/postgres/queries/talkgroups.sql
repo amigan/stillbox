@@ -122,6 +122,35 @@ SET
 	learned = COALESCE(sqlc.narg('learned'), tg.learned)
 RETURNING *;
 
+-- name: StoreTGVersion :batchexec
+INSERT INTO talkgroup_versions(time, created_by,
+	system_id,
+	tgid,
+	name,
+	alpha_tag,
+	tg_group,
+	frequency,
+	metadata,
+	tags,
+	alert,
+	alert_config,
+	weight,
+	learned
+) SELECT NOW(), @submitter,
+	tg.system_id,
+	tg.tgid,
+	tg.name,
+	tg.alpha_tag,
+	tg.tg_group,
+	tg.frequency,
+	tg.metadata,
+	tg.tags,
+	tg.alert,
+	tg.alert_config,
+	tg.weight,
+	tg.learned
+FROM talkgroups tg WHERE tg.system_id = @system_id AND tg.tgid = @tgid;
+
 -- name: AddTalkgroupWithLearnedFlag :exec
 INSERT INTO talkgroups (
 	system_id,

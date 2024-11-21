@@ -1666,6 +1666,55 @@ func (_c *Store_SetTalkgroupTags_Call) RunAndReturn(run func(context.Context, []
 	return _c
 }
 
+// StoreTGVersion provides a mock function with given fields: ctx, arg
+func (_m *Store) StoreTGVersion(ctx context.Context, arg []database.StoreTGVersionParams) *database.StoreTGVersionBatchResults {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for StoreTGVersion")
+	}
+
+	var r0 *database.StoreTGVersionBatchResults
+	if rf, ok := ret.Get(0).(func(context.Context, []database.StoreTGVersionParams) *database.StoreTGVersionBatchResults); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*database.StoreTGVersionBatchResults)
+		}
+	}
+
+	return r0
+}
+
+// Store_StoreTGVersion_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'StoreTGVersion'
+type Store_StoreTGVersion_Call struct {
+	*mock.Call
+}
+
+// StoreTGVersion is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg []database.StoreTGVersionParams
+func (_e *Store_Expecter) StoreTGVersion(ctx interface{}, arg interface{}) *Store_StoreTGVersion_Call {
+	return &Store_StoreTGVersion_Call{Call: _e.mock.On("StoreTGVersion", ctx, arg)}
+}
+
+func (_c *Store_StoreTGVersion_Call) Run(run func(ctx context.Context, arg []database.StoreTGVersionParams)) *Store_StoreTGVersion_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]database.StoreTGVersionParams))
+	})
+	return _c
+}
+
+func (_c *Store_StoreTGVersion_Call) Return(_a0 *database.StoreTGVersionBatchResults) *Store_StoreTGVersion_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_StoreTGVersion_Call) RunAndReturn(run func(context.Context, []database.StoreTGVersionParams) *database.StoreTGVersionBatchResults) *Store_StoreTGVersion_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdatePassword provides a mock function with given fields: ctx, username, password
 func (_m *Store) UpdatePassword(ctx context.Context, username string, password string) error {
 	ret := _m.Called(ctx, username, password)

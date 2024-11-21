@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 
@@ -312,6 +313,7 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 	tgs := make([]*Talkgroup, 0, len(input))
 
 	err := db.InTx(ctx, func(db database.Store) error {
+		versionParams := make([]database.StoreTGVersionParams, 0, len(input))
 		for i := range input {
 			// normalize tags
 			for j, tag := range input[i].Tags {
@@ -320,18 +322,25 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 
 			input[i].SystemID = int32(system)
 			input[i].Learned = common.PtrTo(false)
+
+			
 		}
 
 		var oerr error
 
-		batch := db.UpsertTalkgroup(ctx, input)
-		defer batch.Close()
+		tgUpsertBatch := db.UpsertTalkgroup(ctx, input)
+		defer tgUpsertBatch.Close()
 
-		batch.QueryRow(func(_ int, r database.Talkgroup, err error) {
+		tgUpsertBatch.QueryRow(func(_ int, r database.Talkgroup, err error) {
 			if err != nil {
 				oerr = err
 				return
 			}
+			versionParams = append(versionParams, database.StoreTGVersionParams{
+				SystemID: int32(system),
+				TGID: r.TGID,
+				Submitter: auth.UIDFrom(ctx),
+			})
 			tgs = append(tgs, &Talkgroup{
 				Talkgroup: r,
 				System:    sys,
@@ -343,7 +352,17 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 			return oerr
 		}
 
-		return nil
+		versionBatch := db.StoreTGVersion(ctx, versionParams)
+		defer versionBatch.Close()
+
+		versionBatch.Exec(func(_ int, err error) {
+			if err != nil {
+				oerr = err
+				return
+			}
+		})
+
+		return oerr
 	}, pgx.TxOptions{})
 
 	if err != nil {

@@ -37,6 +37,7 @@ type Querier interface {
 	GetUsers(ctx context.Context) ([]User, error)
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error
+	StoreTGVersion(ctx context.Context, arg []StoreTGVersionParams) *StoreTGVersionBatchResults
 	UpdatePassword(ctx context.Context, username string, password string) error
 	UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error)
 	UpsertTalkgroup(ctx context.Context, arg []UpsertTalkgroupParams) *UpsertTalkgroupBatchResults

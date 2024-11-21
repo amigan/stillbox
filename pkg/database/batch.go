@@ -18,6 +18,83 @@ var (
 	ErrBatchAlreadyClosed = errors.New("batch already closed")
 )
 
+const storeTGVersion = `-- name: StoreTGVersion :batchexec
+INSERT INTO talkgroup_versions(time, created_by,
+	system_id,
+	tgid,
+	name,
+	alpha_tag,
+	tg_group,
+	frequency,
+	metadata,
+	tags,
+	alert,
+	alert_config,
+	weight,
+	learned
+) SELECT NOW(), $1,
+	tg.system_id,
+	tg.tgid,
+	tg.name,
+	tg.alpha_tag,
+	tg.tg_group,
+	tg.frequency,
+	tg.metadata,
+	tg.tags,
+	tg.alert,
+	tg.alert_config,
+	tg.weight,
+	tg.learned
+FROM talkgroups tg WHERE tg.system_id = $2 AND tg.tgid = $3
+`
+
+type StoreTGVersionBatchResults struct {
+	br     pgx.BatchResults
+	tot    int
+	closed bool
+}
+
+type StoreTGVersionParams struct {
+	Submitter *int32 `json:"submitter"`
+	SystemID  int32  `json:"system_id"`
+	TGID      int32  `json:"tgid"`
+}
+
+func (q *Queries) StoreTGVersion(ctx context.Context, arg []StoreTGVersionParams) *StoreTGVersionBatchResults {
+	batch := &pgx.Batch{}
+	for _, a := range arg {
+		vals := []interface{}{
+			a.Submitter,
+			a.SystemID,
+			a.TGID,
+		}
+		batch.Queue(storeTGVersion, vals...)
+	}
+	br := q.db.SendBatch(ctx, batch)
+	return &StoreTGVersionBatchResults{br, len(arg), false}
+}
+
+func (b *StoreTGVersionBatchResults) Exec(f func(int, error)) {
+	defer b.br.Close()
+	for t := 0; t < b.tot; t++ {
+		if b.closed {
+			if f != nil {
+				f(t, ErrBatchAlreadyClosed)
+			}
+			continue
+		}
+		_, err := b.br.Exec()
+		if f != nil {
+			f(t, err)
+		}
+	}
+}
+
+func (b *StoreTGVersionBatchResults) Close() error {
+	b.closed = true
+	return b.br.Close()
+}
+
 const upsertTalkgroup = `-- name: UpsertTalkgroup :batchone
 INSERT INTO talkgroups AS tg (
 	system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
