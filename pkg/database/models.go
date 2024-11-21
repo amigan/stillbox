@@ -96,6 +96,7 @@ type Talkgroup struct {
 	AlertConfig rules.AlertRules   `json:"alert_config"`
 	Weight      float32            `json:"weight"`
 	Learned     bool               `json:"learned"`
+	Ignored     bool               `json:"ignored"`
 }
 
 type TalkgroupVersion struct {
@@ -114,16 +115,6 @@ type TalkgroupVersion struct {
 	AlertConfig []byte             `json:"alert_config"`
 	Weight      *float32           `json:"weight"`
 	Learned     *bool              `json:"learned"`
-}
-
-type TalkgroupsLearned struct {
-	ID       int     `json:"id"`
-	SystemID int     `json:"system_id"`
-	TGID     int     `json:"tgid"`
-	Name     string  `json:"name"`
-	AlphaTag *string `json:"alpha_tag"`
-	TGGroup  *string `json:"tg_group"`
-	Ignored  *bool   `json:"ignored"`
 }
 
 type User struct {

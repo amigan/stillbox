@@ -123,22 +123,22 @@ func (_c *Store_AddCall_Call) RunAndReturn(run func(context.Context, database.Ad
 }
 
 // AddLearnedTalkgroup provides a mock function with given fields: ctx, arg
-func (_m *Store) AddLearnedTalkgroup(ctx context.Context, arg database.AddLearnedTalkgroupParams) (int, error) {
+func (_m *Store) AddLearnedTalkgroup(ctx context.Context, arg database.AddLearnedTalkgroupParams) (database.Talkgroup, error) {
 	ret := _m.Called(ctx, arg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddLearnedTalkgroup")
 	}
 
-	var r0 int
+	var r0 database.Talkgroup
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, database.AddLearnedTalkgroupParams) (int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, database.AddLearnedTalkgroupParams) (database.Talkgroup, error)); ok {
 		return rf(ctx, arg)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, database.AddLearnedTalkgroupParams) int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, database.AddLearnedTalkgroupParams) database.Talkgroup); ok {
 		r0 = rf(ctx, arg)
 	} else {
-		r0 = ret.Get(0).(int)
+		r0 = ret.Get(0).(database.Talkgroup)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, database.AddLearnedTalkgroupParams) error); ok {
@@ -169,12 +169,12 @@ func (_c *Store_AddLearnedTalkgroup_Call) Run(run func(ctx context.Context, arg 
 	return _c
 }
 
-func (_c *Store_AddLearnedTalkgroup_Call) Return(_a0 int, _a1 error) *Store_AddLearnedTalkgroup_Call {
+func (_c *Store_AddLearnedTalkgroup_Call) Return(_a0 database.Talkgroup, _a1 error) *Store_AddLearnedTalkgroup_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Store_AddLearnedTalkgroup_Call) RunAndReturn(run func(context.Context, database.AddLearnedTalkgroupParams) (int, error)) *Store_AddLearnedTalkgroup_Call {
+func (_c *Store_AddLearnedTalkgroup_Call) RunAndReturn(run func(context.Context, database.AddLearnedTalkgroupParams) (database.Talkgroup, error)) *Store_AddLearnedTalkgroup_Call {
 	_c.Call.Return(run)
 	return _c
 }

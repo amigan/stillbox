@@ -1,3 +1,25 @@
+ALTER TABLE talkgroups ADD COLUMN ignored BOOLEAN NOT NULL DEFAULT FALSE;
+
+INSERT INTO talkgroups(
+	system_id,
+	tgid,
+	name,
+	alpha_tag,
+	tg_group,
+	alert,
+	ignored,
+	learned
+) SELECT
+	tgl.system_id,
+	tgl.tgid,
+	tgl.name,
+	tgl.alpha_tag,
+	tgl.tg_group,
+	TRUE,
+	tgl.ignored,
+	TRUE
+FROM talkgroups_learned tgl ON CONFLICT DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS talkgroup_versions(
 	-- version metadata
 	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -15,11 +37,12 @@ CREATE TABLE IF NOT EXISTS talkgroup_versions(
 	alert BOOLEAN,
 	alert_config JSONB,
 	weight REAL,
-	learned BOOLEAN
+	learned BOOLEAN,
+	ignored BOOLEAN
 );
 
 -- Store current version
-INSERT INTO talkgroup_versions(time, created_by,
+INSERT INTO talkgroup_versions(time,
 	system_id,
 	tgid,
 	name,
@@ -32,7 +55,7 @@ INSERT INTO talkgroup_versions(time, created_by,
 	alert_config,
 	weight,
 	learned
-) SELECT NOW(), @submitter,
+) SELECT NOW(),
 	tg.system_id,
 	tg.tgid,
 	tg.name,
@@ -45,5 +68,6 @@ INSERT INTO talkgroup_versions(time, created_by,
 	tg.alert_config,
 	tg.weight,
 	tg.learned
-FROM talkgroups;
+FROM talkgroups tg;
 
+DROP TABLE IF EXISTS talkgroups_learned;

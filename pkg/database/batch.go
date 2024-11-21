@@ -124,7 +124,7 @@ SET
 	alert_config = COALESCE($10, tg.alert_config),
 	weight = COALESCE($11, tg.weight),
 	learned = COALESCE($12, tg.learned)
-RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
+RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned, ignored
 `
 
 type UpsertTalkgroupBatchResults struct {
@@ -196,6 +196,7 @@ func (b *UpsertTalkgroupBatchResults) QueryRow(f func(int, Talkgroup, error)) {
 			&i.AlertConfig,
 			&i.Weight,
 			&i.Learned,
+			&i.Ignored,
 		)
 		if f != nil {
 			f(t, i, err)

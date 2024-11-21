@@ -40,7 +40,7 @@ type Store interface {
 	TGs(ctx context.Context, tgs tgsp.IDs) ([]*tgsp.Talkgroup, error)
 
 	// LearnTG learns the talkgroup from a Call.
-	LearnTG(ctx context.Context, call *calls.Call) (learnedId int, err error)
+	LearnTG(ctx context.Context, call *calls.Call) (*tgsp.Talkgroup, error)
 
 	// SystemTGs retrieves all Talkgroups associated with a System.
 	SystemTGs(ctx context.Context, systemID int32) ([]*tgsp.Talkgroup, error)
@@ -305,20 +305,40 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 	return record, nil
 }
 
-func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (learnedId int, err error) {
+func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, error) {
 	db := database.FromCtx(ctx)
-	err = db.AddTalkgroupWithLearnedFlag(ctx, int32(c.System), int32(c.Talkgroup))
+	err := db.AddTalkgroupWithLearnedFlag(ctx, int32(c.System), int32(c.Talkgroup))
 	if err != nil {
-		return 0, fmt.Errorf("addTalkgroupWithLearnedFlag: %w", err)
+		return nil, fmt.Errorf("addTalkgroupWithLearnedFlag: %w", err)
+	}
+	sys, has := t.SystemName(ctx, c.System)
+	if !has {
+		return nil, ErrNoSuchSystem
 	}
 
-	return db.AddLearnedTalkgroup(ctx, database.AddLearnedTalkgroupParams{
-		SystemID: c.System,
-		TGID:     c.Talkgroup,
+	tgm, err := db.AddLearnedTalkgroup(ctx, database.AddLearnedTalkgroupParams{
+		SystemID: int32(c.System),
+		TGID:     int32(c.Talkgroup),
 		Name:     c.TalkgroupLabel,
 		AlphaTag: c.TGAlphaTag,
 		TGGroup:  c.TalkgroupGroup,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	tg := &tgsp.Talkgroup{
+		Talkgroup: tgm,
+		System: database.System{
+			ID: c.System,
+			Name: sys,
+		},
+		Learned: tgm.Learned,
+	}
+
+	t.add(tg)
+
+	return tg, nil
 }
 
 func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*tgsp.Talkgroup, error) {

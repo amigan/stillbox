@@ -136,16 +136,18 @@ INSERT INTO talkgroups (
 );
 
 -- name: AddLearnedTalkgroup :one
-INSERT INTO talkgroups_learned(
+INSERT INTO talkgroups(
 	system_id,
 	tgid,
+	learned,
 	name,
 	alpha_tag,
 	tg_group
 ) VALUES (
 	@system_id,
 	@tgid,
+	TRUE,
 	sqlc.narg('name'),
 	sqlc.narg('alpha_tag'),
 	sqlc.narg('tg_group')
-) RETURNING id;
+) RETURNING *;

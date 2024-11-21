@@ -14,7 +14,7 @@ import (
 type Querier interface {
 	AddAlert(ctx context.Context, arg AddAlertParams) error
 	AddCall(ctx context.Context, arg AddCallParams) error
-	AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (int, error)
+	AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error)
 	AddTalkgroupWithLearnedFlag(ctx context.Context, systemID int32, tGID int32) error
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)

@@ -16,6 +16,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database/mocks"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/importer"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 )
 
 func getFixture(fixture string) []byte {
@@ -62,7 +63,7 @@ func TestImport(t *testing.T) {
 				dbMock.EXPECT().GetSystemName(mock.AnythingOfType("*context.valueCtx"), tc.sysID).Return(tc.sysName, nil)
 			}
 			ctx := database.CtxWithDB(context.Background(), dbMock)
-			ctx = talkgroups.CtxWithStore(ctx, talkgroups.NewCache())
+			ctx = tgstore.CtxWithStore(ctx, tgstore.NewCache())
 			ij := &importer.ImportJob{
 				Type:     importer.ImportSource(tc.impType),
 				SystemID: tc.sysID,

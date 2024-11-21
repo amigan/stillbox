@@ -13,30 +13,32 @@ import (
 )
 
 const addLearnedTalkgroup = `-- name: AddLearnedTalkgroup :one
-INSERT INTO talkgroups_learned(
+INSERT INTO talkgroups(
 	system_id,
 	tgid,
+	learned,
 	name,
 	alpha_tag,
 	tg_group
 ) VALUES (
 	$1,
 	$2,
+	TRUE,
 	$3,
 	$4,
 	$5
-) RETURNING id
+) RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned, ignored
 `
 
 type AddLearnedTalkgroupParams struct {
-	SystemID int     `json:"system_id"`
-	TGID     int     `json:"tgid"`
+	SystemID int32   `json:"system_id"`
+	TGID     int32   `json:"tgid"`
 	Name     *string `json:"name"`
 	AlphaTag *string `json:"alpha_tag"`
 	TGGroup  *string `json:"tg_group"`
 }
 
-func (q *Queries) AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (int, error) {
+func (q *Queries) AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error) {
 	row := q.db.QueryRow(ctx, addLearnedTalkgroup,
 		arg.SystemID,
 		arg.TGID,
@@ -44,9 +46,24 @@ func (q *Queries) AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgro
 		arg.AlphaTag,
 		arg.TGGroup,
 	)
-	var id int
-	err := row.Scan(&id)
-	return id, err
+	var i Talkgroup
+	err := row.Scan(
+		&i.ID,
+		&i.SystemID,
+		&i.TGID,
+		&i.Name,
+		&i.AlphaTag,
+		&i.TGGroup,
+		&i.Frequency,
+		&i.Metadata,
+		&i.Tags,
+		&i.Alert,
+		&i.AlertConfig,
+		&i.Weight,
+		&i.Learned,
+		&i.Ignored,
+	)
+	return i, err
 }
 
 const addTalkgroupWithLearnedFlag = `-- name: AddTalkgroupWithLearnedFlag :exec
@@ -78,7 +95,7 @@ func (q *Queries) GetSystemName(ctx context.Context, systemID int) (string, erro
 }
 
 const getTalkgroup = `-- name: GetTalkgroup :one
-SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_config, talkgroups.weight, talkgroups.learned FROM talkgroups
+SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_config, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
 WHERE (system_id, tgid) = ($1, $2)
 `
 
@@ -103,6 +120,7 @@ func (q *Queries) GetTalkgroup(ctx context.Context, systemID int32, tGID int32) 
 		&i.Talkgroup.AlertConfig,
 		&i.Talkgroup.Weight,
 		&i.Talkgroup.Learned,
+		&i.Talkgroup.Ignored,
 	)
 	return i, err
 }
@@ -153,19 +171,10 @@ func (q *Queries) GetTalkgroupTags(ctx context.Context, systemID int32, tGID int
 
 const getTalkgroupWithLearned = `-- name: GetTalkgroupWithLearned :one
 SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, sys.id, sys.name
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE (tg.system_id, tg.tgid) = ($1, $2) AND tg.learned IS NOT TRUE
-UNION
-SELECT
-tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
-NOT tgl.ignored, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
-FROM talkgroups_learned tgl
-JOIN systems sys ON tgl.system_id = sys.id
-WHERE tgl.system_id = $1 AND tgl.tgid = $2 AND ignored IS NOT TRUE
+WHERE (tg.system_id, tg.tgid) = ($1, $2)
 `
 
 type GetTalkgroupWithLearnedRow struct {
@@ -190,6 +199,7 @@ func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int32, t
 		&i.Talkgroup.AlertConfig,
 		&i.Talkgroup.Weight,
 		&i.Talkgroup.Learned,
+		&i.Talkgroup.Ignored,
 		&i.System.ID,
 		&i.System.Name,
 	)
@@ -197,7 +207,7 @@ func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int32, t
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
-SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_config, talkgroups.weight, talkgroups.learned FROM talkgroups
+SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_config, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
 WHERE tags && ARRAY[$1]
 `
 
@@ -228,6 +238,7 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 			&i.Talkgroup.AlertConfig,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
+			&i.Talkgroup.Ignored,
 		); err != nil {
 			return nil, err
 		}
@@ -240,7 +251,7 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 }
 
 const getTalkgroupsWithAnyTags = `-- name: GetTalkgroupsWithAnyTags :many
-SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_config, talkgroups.weight, talkgroups.learned FROM talkgroups
+SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_config, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
 WHERE tags @> ARRAY[$1]
 `
 
@@ -271,6 +282,7 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 			&i.Talkgroup.AlertConfig,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
+			&i.Talkgroup.Ignored,
 		); err != nil {
 			return nil, err
 		}
@@ -284,18 +296,9 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 
 const getTalkgroupsWithLearned = `-- name: GetTalkgroupsWithLearned :many
 SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, sys.id, sys.name
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.learned IS NOT TRUE
-UNION
-SELECT
-tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
-NOT tgl.ignored, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
-FROM talkgroups_learned tgl
-JOIN systems sys ON tgl.system_id = sys.id
 WHERE ignored IS NOT TRUE
 `
 
@@ -327,6 +330,7 @@ func (q *Queries) GetTalkgroupsWithLearned(ctx context.Context) ([]GetTalkgroups
 			&i.Talkgroup.AlertConfig,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
+			&i.Talkgroup.Ignored,
 			&i.System.ID,
 			&i.System.Name,
 		); err != nil {
@@ -342,19 +346,10 @@ func (q *Queries) GetTalkgroupsWithLearned(ctx context.Context) ([]GetTalkgroups
 
 const getTalkgroupsWithLearnedBySystem = `-- name: GetTalkgroupsWithLearnedBySystem :many
 SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, sys.id, sys.name
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.system_id = $1 AND tg.learned IS NOT TRUE
-UNION
-SELECT
-tgl.id, tgl.system_id::INT4, tgl.tgid::INT4, tgl.name,
-tgl.alpha_tag, tgl.tg_group, NULL::INTEGER, NULL::JSONB,
-CASE WHEN tgl.tg_group IS NULL THEN NULL ELSE ARRAY[tgl.tg_group] END,
-NOT tgl.ignored, NULL::JSONB, 1.0, TRUE learned, sys.id, sys.name
-FROM talkgroups_learned tgl
-JOIN systems sys ON tgl.system_id = sys.id
-WHERE tgl.system_id = $1 AND ignored IS NOT TRUE
+WHERE tg.system_id = $1
 `
 
 type GetTalkgroupsWithLearnedBySystemRow struct {
@@ -385,6 +380,7 @@ func (q *Queries) GetTalkgroupsWithLearnedBySystem(ctx context.Context, system i
 			&i.Talkgroup.AlertConfig,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
+			&i.Talkgroup.Ignored,
 			&i.System.ID,
 			&i.System.Name,
 		); err != nil {
@@ -422,7 +418,7 @@ SET
 	weight = COALESCE($9, weight),
 	learned = COALESCE($10, learned)
 WHERE id = $11 OR (system_id = $12 AND tgid = $13)
-RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
+RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned, ignored
 `
 
 type UpdateTalkgroupParams struct {
@@ -472,6 +468,7 @@ func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams
 		&i.AlertConfig,
 		&i.Weight,
 		&i.Learned,
+		&i.Ignored,
 	)
 	return i, err
 }
