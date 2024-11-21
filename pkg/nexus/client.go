@@ -8,9 +8,9 @@ import (
 	"sync"
 
 	"dynatron.me/x/stillbox/internal/version"
-	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/pb"
+	tgfilter "dynatron.me/x/stillbox/pkg/talkgroups/filter"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -33,7 +33,7 @@ type client struct {
 	Connection
 
 	liveState pb.LiveState
-	filter    *calls.TalkgroupFilter
+	filter    *tgfilter.TalkgroupFilter
 
 	nexus *Nexus
 }

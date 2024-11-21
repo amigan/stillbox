@@ -1,4 +1,4 @@
-package importer_test
+package radioref_test
 
 import (
 	"context"
@@ -15,8 +15,8 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/mocks"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
-	"dynatron.me/x/stillbox/pkg/talkgroups/importer"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
 )
 
 func getFixture(fixture string) []byte {
@@ -28,7 +28,7 @@ func getFixture(fixture string) []byte {
 	return fixt
 }
 
-func TestImport(t *testing.T) {
+func TestRadioRef(t *testing.T) {
 	// this is for deterministic UUIDs
 	uuid.SetRand(rand.New(rand.NewSource(1)))
 
@@ -42,17 +42,12 @@ func TestImport(t *testing.T) {
 		expectErr error
 	}{
 		{
-			name:     "radioreference",
+			name:     "radioreference import",
 			impType:  "radioreference",
 			input:    getFixture("riscon.txt"),
 			jsExpect: getFixture("riscon.json"),
 			sysID:    197,
 			sysName:  "RISCON",
-		},
-		{
-			name:      "unknown importer",
-			impType:   "nonexistent",
-			expectErr: importer.ErrBadImportType,
 		},
 	}
 
@@ -64,8 +59,8 @@ func TestImport(t *testing.T) {
 			}
 			ctx := database.CtxWithDB(context.Background(), dbMock)
 			ctx = tgstore.CtxWithStore(ctx, tgstore.NewCache())
-			ij := &importer.ImportJob{
-				Type:     importer.ImportSource(tc.impType),
+			ij := &xport.ImportJob{
+				Type:     xport.Format(tc.impType),
 				SystemID: tc.sysID,
 				Body:     string(tc.input),
 			}

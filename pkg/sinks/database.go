@@ -15,7 +15,7 @@ import (
 )
 
 type DatabaseSink struct {
-	db database.Store
+	db  database.Store
 	tgs tgstore.Store
 }
 

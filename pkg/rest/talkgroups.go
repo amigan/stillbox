@@ -7,7 +7,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
-	"dynatron.me/x/stillbox/pkg/talkgroups/importer"
+	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -114,7 +114,7 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 }
 
 func (tga *talkgroupAPI) tgImport(w http.ResponseWriter, r *http.Request) {
-	var impJob importer.ImportJob
+	var impJob xport.ImportJob
 	err := forms.Unmarshal(r, &impJob, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
 	if err != nil {
 		wErr(w, r, badRequest(err))

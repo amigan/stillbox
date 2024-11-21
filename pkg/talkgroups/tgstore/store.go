@@ -9,9 +9,9 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/auth"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/calls"
 	tgsp "dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"github.com/jackc/pgx/v5"
@@ -326,7 +326,7 @@ func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, er
 	tg := &tgsp.Talkgroup{
 		Talkgroup: tgm,
 		System: database.System{
-			ID: c.System,
+			ID:   c.System,
 			Name: sys,
 		},
 		Learned: tgm.Learned,
@@ -361,7 +361,6 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 			input[i].SystemID = int32(system)
 			input[i].Learned = common.PtrTo(false)
 
-			
 		}
 
 		var oerr error
@@ -375,8 +374,8 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 				return
 			}
 			versionParams = append(versionParams, database.StoreTGVersionParams{
-				SystemID: int32(system),
-				TGID: r.TGID,
+				SystemID:  int32(system),
+				TGID:      r.TGID,
 				Submitter: auth.UIDFrom(ctx),
 			})
 			tgs = append(tgs, &tgsp.Talkgroup{

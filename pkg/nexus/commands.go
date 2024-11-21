@@ -3,9 +3,9 @@ package nexus
 import (
 	"context"
 
-	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
+	tgfilter "dynatron.me/x/stillbox/pkg/talkgroups/filter"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/rs/zerolog/log"
@@ -111,7 +111,7 @@ func (c *client) Live(ctx context.Context, cmd *pb.Live) error {
 	}
 
 	if cmd.Filter != nil {
-		filter, err := calls.TalkgroupFilterFromPB(ctx, cmd.Filter)
+		filter, err := tgfilter.TalkgroupFilterFromPB(ctx, cmd.Filter)
 		if err != nil {
 			log.Error().Err(err).Msg("filter create failed")
 			return err
