@@ -41,24 +41,33 @@ export class AuthService {
       );
   }
 
-  refresh(): Observable<HttpResponse<Jwt>> {
-    return this.http.get<Jwt>('/api/refresh', { withCredentials: true, observe: 'response' }).pipe(
-      tap((event) => {
+  logout() {
+    this.http
+      .get('/api/logout', { withCredentials: true, observe: 'response' })
+      .subscribe((event) => {
         if (event.status == 200) {
-          sessionStorage.setItem('jwt', event.body?.jwt.toString() ?? '');
-          this.loggedIn = true;
+          this.loggedIn = false;
         }
-      }),
-    );
+      });
+    sessionStorage.removeItem('jwt');
+    this.loggedIn = false;
+    this._router.navigateByUrl('/login');
+  }
+
+  refresh(): Observable<HttpResponse<Jwt>> {
+    return this.http
+      .get<Jwt>('/api/refresh', { withCredentials: true, observe: 'response' })
+      .pipe(
+        tap((event) => {
+          if (event.status == 200) {
+            sessionStorage.setItem('jwt', event.body?.jwt.toString() ?? '');
+            this.loggedIn = true;
+          }
+        }),
+      );
   }
 
   getToken(): string | null {
     return sessionStorage.getItem('jwt');
-  }
-
-  logout() {
-    sessionStorage.removeItem('jwt');
-    this.loggedIn = false;
-    this._router.navigateByUrl('/login');
   }
 }
