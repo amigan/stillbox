@@ -7,7 +7,6 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport/radioref"
-	"dynatron.me/x/stillbox/pkg/talkgroups/xport/sdrtrunk"
 )
 
 type Importer interface {
@@ -28,8 +27,6 @@ func (ij *ImportJob) Import(ctx context.Context) ([]talkgroups.Talkgroup, error)
 	switch ij.Type {
 	case FormatRadioReference:
 		ij.Importer = radioref.New()
-	case FormatSDRTrunk:
-		ij.Importer = sdrtrunk.New()
 	default:
 		return nil, ErrBadType
 	}

@@ -11,12 +11,13 @@ import (
 )
 
 type Exporter interface {
-	ExportTalkgroups(ctx context.Context, w io.Writer, tgs []*talkgroups.Talkgroup) error
+	ExportTalkgroups(ctx context.Context, w io.Writer, tgs []*talkgroups.Talkgroup, tmpl []byte) error
 }
 
 type ExportJob struct {
 	Type     Format `json:"type"`
 	SystemID int    `json:"systemID"`
+	Template []byte `json:"template"`
 
 	filter.TalkgroupFilter
 	Exporter
@@ -49,5 +50,5 @@ func (ej *ExportJob) Export(ctx context.Context, w io.Writer) error {
 		return ErrBadType
 	}
 
-	return ej.ExportTalkgroups(ctx, w, tgs)
+	return ej.ExportTalkgroups(ctx, w, tgs, ej.Template)
 }
