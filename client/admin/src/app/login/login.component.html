@@ -1,0 +1,36 @@
+<div class="flex justify-center">
+  <div class="card w-96 bg-base-100 shadow-xl mt-20 mb-20">
+    <div class="card-body">
+      <div class="items-center mt-2">
+        <label class="input input-bordered flex items-center gap-2 mb-2">
+          <input
+            type="text"
+            [(ngModel)]="username"
+            class="grow"
+            placeholder="login"
+            (keyup.enter)="onSubmit()"
+          />
+        </label>
+        <label class="input input-bordered flex items-center gap-2 mb-2">
+          <input
+            type="password"
+            [(ngModel)]="password"
+            class="grow"
+            placeholder="password"
+            (keyup.enter)="onSubmit()"
+          />
+        </label>
+      </div>
+      <div class="card-actions justify-end">
+        <button (click)="onSubmit()" class="btn btn-primary w-full">
+          Login
+        </button>
+      </div>
+    </div>
+    @if (failed) {
+      <div role="alert" class="alert alert-error">
+        <span>Login Failed!</span>
+      </div>
+    }
+  </div>
+</div>

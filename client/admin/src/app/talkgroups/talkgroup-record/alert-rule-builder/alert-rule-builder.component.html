@@ -1,0 +1,33 @@
+<div class="container flex">
+  @for (rule of rules; track $index) {
+    <div class="">
+      <table class="table">
+        <thead>
+          <tr>
+            <td>Start</td>
+            <td>Duration</td>
+            <td></td>
+          </tr>
+        </thead>
+        <tbody>
+          @for (time of rule.times; track $index) {
+            <tr>
+              <td>
+                {{ time.time }}
+              </td>
+              <td>
+                {{ time.duration }}
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td><em>No times</em></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @empty {
+    No rules
+  }
+</div>

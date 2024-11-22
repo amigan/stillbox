@@ -187,7 +187,7 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 
-	switch r.Header.Get("Content-Type") {
+	switch strings.Split(r.Header.Get("Content-Type"), ";")[0] {
 	case "application/json":
 		err = json.NewDecoder(r.Body).Decode(&creds)
 	default:
@@ -233,6 +233,33 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 		JWT string `json:"jwt"`
 	}{
 		JWT: tok,
+	}
+
+	render.JSON(w, r, &jr)
+}
+
+func (a *Auth) routeLogout(w http.ResponseWriter, r *http.Request) {
+	cookie := &http.Cookie{
+		Name:     "jwt",
+		Value:    "",
+		HttpOnly: true,
+		Secure:   true,
+		Expires:  time.Time{},
+	}
+
+	if a.allowInsecureCookie(r) {
+		cookie.Secure = false
+		cookie.SameSite = http.SameSiteLaxMode
+	} else {
+		cookie.Domain = a.cfg.Domain
+	}
+
+	http.SetCookie(w, cookie)
+
+	jr := struct {
+		Message string `json:"message"`
+	}{
+		Message: "logged out",
 	}
 
 	render.JSON(w, r, &jr)

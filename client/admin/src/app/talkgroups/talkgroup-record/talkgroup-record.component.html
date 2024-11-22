@@ -1,0 +1,68 @@
+<div class="flex">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="p-1 columns-2">
+      <label class="w-full" for="name">Name: </label
+      ><input
+        id="name"
+        type="text"
+        class="w-full input input-bordered"
+        formControlName="name"
+        [(ngModel)]="tg.name"
+      />
+    </div>
+    <div class="p-1 columns-2">
+      <label class="w-full" for="alpha_tag">Alpha Tag: </label
+      ><input
+        id="alpha_tag"
+        type="text"
+        class="w-full input input-bordered"
+        formControlName="alpha_tag"
+        [(ngModel)]="tg.alpha_tag"
+      />
+    </div>
+    <div class="p-1 columns-2">
+      <label class="w-full" for="tg_group">Group: </label
+      ><input
+        id="tg_group"
+        type="text"
+        class="w-full input input-bordered"
+        formControlName="tg_group"
+        [(ngModel)]="tg.tg_group"
+      />
+    </div>
+    <div class="p-1 columns-2">
+      <label class="w-full" for="frequency">Frequency: </label
+      ><input
+        id="frequency"
+        type="text"
+        class="w-full input input-bordered"
+        formControlName="frequency"
+        [(ngModel)]="tg.frequency"
+      />
+    </div>
+    <div class="p-1 columns-2">
+      <label class="w-full" for="alert">Alert: </label>
+      <div class="w-full">
+        <input
+          id="alert"
+          type="checkbox"
+          formControlName="alert"
+          [(ngModel)]="tg.alert"
+          class="checkbox"
+        />
+      </div>
+    </div>
+    <div class="p-1 columns-2">
+      <label class="w-full" for="weight">Weight: </label
+      ><input
+        id="weight"
+        type="text"
+        class="w-full input input-bordered"
+        formControlName="weight"
+        [(ngModel)]="tg.weight"
+      />
+    </div>
+    <alert-rule-builder [rules]="tg.alert_config" />
+    <input type="submit" class="btn btn-secondary" value="Save" />
+  </form>
+</div>
