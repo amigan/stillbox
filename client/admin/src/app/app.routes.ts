@@ -13,7 +13,6 @@ import { AuthGuard } from './auth.guard';
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: '', component: HomeComponent, canActivate: [AuthGuard] },
-  { path: '**', redirectTo: '' },
   { path: 'talkgroups', component: TalkgroupsComponent },
   { path: 'talkgroups/import', component: ImportComponent },
   { path: 'talkgroups/:sys/:tg', component: TalkgroupRecordComponent },

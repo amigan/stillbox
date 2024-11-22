@@ -30,7 +30,7 @@ export class LoginComponent {
       )
       .subscribe((event) => {
         if (event?.status == 200) {
-          this.router.navigateByUrl('/home');
+          this.router.navigateByUrl('/');
         } else {
           this.failed = true;
         }
