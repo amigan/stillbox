@@ -1,5 +1,6 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { environment } from './../environments/environment';
 import {
   HttpRequest,
   HttpHandlerFn,
@@ -12,17 +13,11 @@ import { AuthService } from './login/auth.service';
 
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
-
 export function apiBaseInterceptor(
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
 ): Observable<HttpEvent<unknown>> {
-  let baseUrl: string;
-  if (isDevMode()) {
-    baseUrl = 'http://xenon:3050';
-  } else {
-    baseUrl = '';
-  }
+  let baseUrl = environment.baseUrl;
   const apiReq = req.clone({ url: `${baseUrl}${req.url}` });
   return next(apiReq);
 }
