@@ -7,7 +7,7 @@
         <th>Sys ID</th>
         <th>Name</th>
         <th>TG ID</th>
-          <th>Learned</th>
+        <th>Learned</th>
         <th></th>
       </tr>
     </thead>
@@ -18,7 +18,7 @@
           <td>{{ tg.system?.id }}</td>
           <td>{{ tg.name }}</td>
           <td>{{ tg.tgid }}</td>
-          <td>{{ tg?.learned ? 'Y' : '' }}</td>
+          <td>{{ tg?.learned ? "Y" : "" }}</td>
           <td>
             <a routerLink="/talkgroups/{{ tg.system?.id }}/{{ tg.tgid }}"
               ><ng-icon name="ionCreateOutline"></ng-icon

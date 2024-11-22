@@ -19,8 +19,11 @@ export class TalkgroupService {
   }
 
   importRR(sysID: number, content: string): Observable<Talkgroup[]> {
-    return this.http.post<Talkgroup[]>('/api/talkgroup/import',
-                                      {systemID: sysID, type: 'radioreference', body: content});
+    return this.http.post<Talkgroup[]>('/api/talkgroup/import', {
+      systemID: sysID,
+      type: 'radioreference',
+      body: content,
+    });
   }
 
   putTalkgroup(tu: TalkgroupUpdate): Observable<Talkgroup> {
@@ -30,10 +33,10 @@ export class TalkgroupService {
     );
   }
 
-  putTalkgroups(sysID: Number, tgs: TalkgroupUpdate[]): Observable<Talkgroup[]> {
-    return this.http.put<Talkgroup[]>(
-      `/api/talkgroup/${sysID}`,
-      tgs,
-    );
+  putTalkgroups(
+    sysID: Number,
+    tgs: TalkgroupUpdate[],
+  ): Observable<Talkgroup[]> {
+    return this.http.put<Talkgroup[]>(`/api/talkgroup/${sysID}`, tgs);
   }
 }

@@ -1,5 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { RouterModule, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  RouterModule,
+  RouterOutlet,
+  RouterLink,
+  RouterLinkActive,
+} from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './login/auth.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';

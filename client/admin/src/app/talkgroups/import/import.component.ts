@@ -1,7 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { TalkgroupService } from '../talkgroups.service';
 import { Talkgroup, TalkgroupUI, TalkgroupUpdate } from '../../talkgroup';
-import { FormGroup, FormControl, ReactiveFormsModule, FormsModule  } from '@angular/forms';
+import {
+  FormGroup,
+  FormControl,
+  ReactiveFormsModule,
+  FormsModule,
+} from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { catchError, of } from 'rxjs';
@@ -9,7 +14,7 @@ import { catchError, of } from 'rxjs';
 @Component({
   selector: 'app-import',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule ],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './import.component.html',
   styleUrl: './import.component.css',
 })
@@ -33,7 +38,8 @@ export class ImportComponent {
   submit() {
     let content = this.form.controls['contents'].value;
     let sysID = Number(this.form.controls['systemID'].value);
-    this.tgService.importRR(sysID, content)
+    this.tgService
+      .importRR(sysID, content)
       .pipe(
         catchError(() => {
           return of(null);
@@ -46,24 +52,25 @@ export class ImportComponent {
   }
 
   isAllSelected() {
-    return this.tgs.every(_ => _.selected);
+    return this.tgs.every((_) => _.selected);
   }
 
   selectAllTGs(ev: any) {
-    this.tgs.forEach(x => x.selected = ev.target.checked);
+    this.tgs.forEach((x) => (x.selected = ev.target.checked));
   }
 
   save() {
     let toImport: TalkgroupUpdate[] = [];
     let sysID = Number(this.form.controls['systemID'].value);
     this.tgs.forEach((x) => {
-      if(x.selected) {
+      if (x.selected) {
         let ct: TalkgroupUpdate = x;
         toImport.push(ct);
       }
     });
-    this.tgService.putTalkgroups(sysID, toImport).
-      pipe(
+    this.tgService
+      .putTalkgroups(sysID, toImport)
+      .pipe(
         catchError(() => {
           return of(null);
         }),
@@ -71,7 +78,5 @@ export class ImportComponent {
       .subscribe((event) => {
         this.tgs = event!;
       });
-
-
   }
 }

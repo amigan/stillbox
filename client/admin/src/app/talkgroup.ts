@@ -30,7 +30,7 @@ export interface System {
 }
 
 export interface Metadata {
-  encrypted: boolean|null;
+  encrypted: boolean | null;
 }
 
 export interface Talkgroup {
@@ -41,7 +41,7 @@ export interface Talkgroup {
   alpha_tag: string;
   tg_group: string;
   frequency: number;
-  metadata: Metadata|null;
+  metadata: Metadata | null;
   tags: string[];
   alert: boolean;
   system?: System;
@@ -52,7 +52,7 @@ export interface Talkgroup {
 
 export interface TalkgroupUI extends Talkgroup {
   selected?: boolean;
-};
+}
 
 export interface TalkgroupUpdate {
   id: number;
