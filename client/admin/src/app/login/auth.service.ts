@@ -20,7 +20,6 @@ export class AuthService {
     let ssJWT = sessionStorage.getItem('jwt');
     if (ssJWT) {
       this.loggedIn = true;
-      this._router.navigateByUrl('/home');
     }
   }
 
