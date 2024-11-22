@@ -1,10 +1,8 @@
-package importer
+package radioref
 
 import (
 	"bufio"
-	"bytes"
 	"context"
-	"errors"
 	"io"
 	"regexp"
 	"strconv"
@@ -16,42 +14,10 @@ import (
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 )
 
-type ImportSource string
+type Driver struct{}
 
-const (
-	ImportSrcRadioReference ImportSource = "radioreference"
-)
-
-var (
-	ErrBadImportType = errors.New("unknown import type")
-)
-
-type importer interface {
-	importTalkgroups(ctx context.Context, sys int, r io.Reader) ([]talkgroups.Talkgroup, error)
-}
-
-type ImportJob struct {
-	Type     ImportSource `json:"type"`
-	SystemID int          `json:"systemID"`
-	Body     string       `json:"body"`
-
-	importer `json:"-"`
-}
-
-func (ij *ImportJob) Import(ctx context.Context) ([]talkgroups.Talkgroup, error) {
-	r := bytes.NewReader([]byte(ij.Body))
-
-	switch ij.Type {
-	case ImportSrcRadioReference:
-		ij.importer = new(radioReferenceImporter)
-	default:
-		return nil, ErrBadImportType
-	}
-
-	return ij.importTalkgroups(ctx, ij.SystemID, r)
-}
-
-type radioReferenceImporter struct {
+func New() *Driver {
+	return new(Driver)
 }
 
 type rrState int
@@ -64,7 +30,7 @@ const (
 
 var rrRE = regexp.MustCompile(`DEC\s+HEX\s+Mode\s+Alpha Tag\s+Description\s+Tag`)
 
-func (rr *radioReferenceImporter) importTalkgroups(ctx context.Context, sys int, r io.Reader) ([]talkgroups.Talkgroup, error) {
+func (rr *Driver) ImportTalkgroups(ctx context.Context, sys int, r io.Reader) ([]talkgroups.Talkgroup, error) {
 	sc := bufio.NewScanner(r)
 	tgs := make([]talkgroups.Talkgroup, 0, 8)
 	sysn, has := tgstore.FromCtx(ctx).SystemName(ctx, sys)

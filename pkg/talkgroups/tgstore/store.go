@@ -9,9 +9,9 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/auth"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/calls"
 	tgsp "dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"github.com/jackc/pgx/v5"
@@ -135,6 +135,15 @@ func (t *cache) Hint(ctx context.Context, tgs []tgsp.ID) error {
 	return nil
 }
 
+func (t *cache) get(id tgsp.ID) (*tgsp.Talkgroup, bool) {
+	t.RLock()
+	defer t.RUnlock()
+
+	tg, has := t.tgs[id]
+
+	return tg, has
+}
+
 func (t *cache) add(rec *tgsp.Talkgroup) {
 	t.Lock()
 	defer t.Unlock()
@@ -176,16 +185,14 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs) ([]*tgsp.Talkgroup, error
 	var err error
 	if tgs != nil {
 		toGet := make(tgsp.IDs, 0, len(tgs))
-		t.RLock()
 		for _, id := range tgs {
-			rec, has := t.tgs[id]
+			rec, has := t.get(id)
 			if has {
 				r = append(r, rec)
 			} else {
 				toGet = append(toGet, id)
 			}
 		}
-		t.RUnlock()
 
 		tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedBySysTGID(ctx, toGet.Tuples())
 		if err != nil {
@@ -240,9 +247,7 @@ func (t *cache) SystemTGs(ctx context.Context, systemID int32) ([]*tgsp.Talkgrou
 }
 
 func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
-	t.RLock()
-	rec, has := t.tgs[tg]
-	t.RUnlock()
+	rec, has := t.get(tg)
 
 	if has {
 		return rec, nil
@@ -326,7 +331,7 @@ func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, er
 	tg := &tgsp.Talkgroup{
 		Talkgroup: tgm,
 		System: database.System{
-			ID: c.System,
+			ID:   c.System,
 			Name: sys,
 		},
 		Learned: tgm.Learned,
@@ -361,7 +366,6 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 			input[i].SystemID = int32(system)
 			input[i].Learned = common.PtrTo(false)
 
-			
 		}
 
 		var oerr error
@@ -375,8 +379,8 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 				return
 			}
 			versionParams = append(versionParams, database.StoreTGVersionParams{
-				SystemID: int32(system),
-				TGID: r.TGID,
+				SystemID:  int32(system),
+				TGID:      r.TGID,
 				Submitter: auth.UIDFrom(ctx),
 			})
 			tgs = append(tgs, &tgsp.Talkgroup{

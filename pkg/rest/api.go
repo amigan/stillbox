@@ -75,7 +75,6 @@ func errTextNotFound(err error) render.Renderer {
 	}
 }
 
-
 func internalError(err error) render.Renderer {
 	return &errResponse{
 		Err:   err,
@@ -89,7 +88,7 @@ type errResponder func(error) render.Renderer
 var statusMapping = map[error]errResponder{
 	tgstore.ErrNoSuchSystem: errTextNotFound,
 	tgstore.ErrNotFound:     errTextNotFound,
-	pgx.ErrNoRows:              recordNotFound,
+	pgx.ErrNoRows:           recordNotFound,
 }
 
 func autoError(err error) render.Renderer {
