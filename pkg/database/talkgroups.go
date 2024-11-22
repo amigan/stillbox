@@ -44,8 +44,7 @@ const getTalkgroupsWithLearnedBySysTGID = `SELECT
 tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name, tg.learned, tg.ignored
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg)
-WHERE tg.learned IS NOT TRUE;`
+JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg);`
 
 type GetTalkgroupsRow struct {
 	Talkgroup Talkgroup `json:"talkgroup"`
