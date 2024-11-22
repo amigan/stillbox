@@ -135,6 +135,15 @@ func (t *cache) Hint(ctx context.Context, tgs []tgsp.ID) error {
 	return nil
 }
 
+func (t *cache) get(id tgsp.ID) (*tgsp.Talkgroup, bool) {
+	t.RLock()
+	defer t.RUnlock()
+
+	tg, has := t.tgs[id]
+
+	return tg, has
+}
+
 func (t *cache) add(rec *tgsp.Talkgroup) {
 	t.Lock()
 	defer t.Unlock()
@@ -176,16 +185,14 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs) ([]*tgsp.Talkgroup, error
 	var err error
 	if tgs != nil {
 		toGet := make(tgsp.IDs, 0, len(tgs))
-		t.RLock()
 		for _, id := range tgs {
-			rec, has := t.tgs[id]
+			rec, has := t.get(id)
 			if has {
 				r = append(r, rec)
 			} else {
 				toGet = append(toGet, id)
 			}
 		}
-		t.RUnlock()
 
 		tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedBySysTGID(ctx, toGet.Tuples())
 		if err != nil {
@@ -240,9 +247,7 @@ func (t *cache) SystemTGs(ctx context.Context, systemID int32) ([]*tgsp.Talkgrou
 }
 
 func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
-	t.RLock()
-	rec, has := t.tgs[tg]
-	t.RUnlock()
+	rec, has := t.get(tg)
 
 	if has {
 		return rec, nil
