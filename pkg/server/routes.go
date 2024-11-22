@@ -62,15 +62,6 @@ func (s *Server) setupRoutes() {
 	})
 }
 
-func (s *Server) notFoundRedirect(w http.ResponseWriter, r *http.Request) {
-	if strings.HasPrefix(strings.TrimLeft(r.URL.Path, "/"), "api/") {
-		http.NotFound(w, r)
-		return
-	}
-
-	http.Redirect(w, r, "/index.html", http.StatusFound)
-}
-
 func (s *Server) rateLimit(r chi.Router) {
 	if s.conf.RateLimit.Verify() {
 		r.Use(rateLimiter(&s.conf.RateLimit))
@@ -89,7 +80,7 @@ func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
 		f, err := hfs.Open(pc)
 		if err != nil {
 			if errors.As(err, &pe) {
-				s.notFoundRedirect(w, r)
+				http.ServeFileFS(w, r, clientRoot, "/index.html")
 				return
 			}
 		} else {

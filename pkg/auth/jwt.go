@@ -187,7 +187,7 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 
-	switch r.Header.Get("Content-Type") {
+	switch strings.Split(r.Header.Get("Content-Type"), ";")[0] {
 	case "application/json":
 		err = json.NewDecoder(r.Body).Decode(&creds)
 	default:
