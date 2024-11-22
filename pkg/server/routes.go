@@ -1,8 +1,10 @@
 package server
 
 import (
+	"errors"
 	"io/fs"
 	"net/http"
+	"path"
 	"strings"
 
 	"dynatron.me/x/stillbox/client"
@@ -14,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/go-chi/render"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -21,7 +24,7 @@ const (
 )
 
 func (s *Server) setupRoutes() {
-	clientRoot, err := fs.Sub(client.Calls, "calls")
+	clientRoot, err := fs.Sub(client.Client, client.Prefix)
 	if err != nil {
 		panic(err)
 	}
@@ -59,6 +62,15 @@ func (s *Server) setupRoutes() {
 	})
 }
 
+func (s *Server) notFoundRedirect(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(strings.TrimLeft(r.URL.Path, "/"), "api/") {
+		http.NotFound(w, r)
+		return
+	}
+
+	http.Redirect(w, r, "/index.html", http.StatusFound)
+}
+
 func (s *Server) rateLimit(r chi.Router) {
 	if s.conf.RateLimit.Verify() {
 		r.Use(rateLimiter(&s.conf.RateLimit))
@@ -70,8 +82,23 @@ func rateLimiter(cfg *config.RateLimit) func(http.Handler) http.Handler {
 
 func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		hfs := http.FS(clientRoot)
+		var pe *fs.PathError
+
+		pc := path.Clean(r.URL.Path)
+		f, err := hfs.Open(pc)
+		if err != nil {
+			if errors.As(err, &pe) {
+				s.notFoundRedirect(w, r)
+				return
+			}
+		} else {
+			f.Close()
+		}
+
 		rctx := chi.RouteContext(r.Context())
 		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+		log.Debug().Str("rurl", r.URL.Path).Str("prefix", pathPrefix).Msg("clir")
 		fs := http.StripPrefix(pathPrefix, http.FileServer(http.FS(clientRoot)))
 		fs.ServeHTTP(w, r)
 	})

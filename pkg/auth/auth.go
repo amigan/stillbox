@@ -76,7 +76,7 @@ func (a *Auth) PublicRoutes(r chi.Router) {
 }
 
 func (a *Auth) PrivateRoutes(r chi.Router) {
-	r.Get("/refresh", a.routeRefresh)
+	r.Get("/api/refresh", a.routeRefresh)
 }
 
 //go:embed login.html

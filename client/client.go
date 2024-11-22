@@ -4,5 +4,6 @@ import (
 	"embed"
 )
 
-//go:embed calls
-var Calls embed.FS
+const Prefix = "admin/dist/admin/browser"
+//go:embed admin/dist/admin/browser
+var Client embed.FS
