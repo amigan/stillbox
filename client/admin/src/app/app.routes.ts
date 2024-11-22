@@ -12,11 +12,13 @@ import { AuthGuard } from './auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
-  { path: '', component: HomeComponent, canActivate: [AuthGuard] },
-  { path: 'talkgroups', component: TalkgroupsComponent },
-  { path: 'talkgroups/import', component: ImportComponent },
-  { path: 'talkgroups/:sys/:tg', component: TalkgroupRecordComponent },
-  { path: 'calls', component: CallsComponent },
-  { path: 'incidents', component: IncidentsComponent },
-  { path: 'alerts', component: AlertsComponent },
+  { path: '', canActivateChild: [AuthGuard], children: [
+    { path: '', component: HomeComponent, pathMatch: 'full' },
+    { path: 'talkgroups', component: TalkgroupsComponent },
+    { path: 'talkgroups/import', component: ImportComponent },
+    { path: 'talkgroups/:sys/:tg', component: TalkgroupRecordComponent },
+    { path: 'calls', component: CallsComponent },
+    { path: 'incidents', component: IncidentsComponent },
+    { path: 'alerts', component: AlertsComponent },
+  ]},
 ];
