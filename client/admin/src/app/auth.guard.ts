@@ -7,12 +7,16 @@ export const AuthGuard: CanActivateFn = (route, state) => {
   const authSvc: AuthService = inject(AuthService);
   if (sessionStorage.getItem('jwt') == null) {
     let success = false;
-    authSvc.refresh().subscribe((event) => {
-      if (event?.status == 200) {
-        success = true;
-      }
-    });
-    router.navigate(['/login']);
+    authSvc.refresh().subscribe(
+      (event) => {
+        if (event?.status == 200) {
+          success = true;
+        }
+      },
+      (err) => {
+        router.navigate(['/login']);
+      },
+    );
     return success;
   } else {
     return true;
