@@ -31,23 +31,61 @@ export interface System {
 
 export interface Metadata {
   encrypted: boolean | null;
+  icon: string | null;
 }
 
-export interface Talkgroup {
-  id: number;
-  system_id: number;
-  tgid: number;
-  name: string;
-  alpha_tag: string;
-  tg_group: string;
-  frequency: number;
-  metadata: Metadata | null;
-  tags: string[];
-  alert: boolean;
+  export interface IconMap {
+    [name: string]: string;
+  }
+
+export const iconMapping: IconMap = {
+      'police': 'matLocalPoliceOutline',
+      'fire': 'matFireTruckOutline',
+      'ems': 'matEmergencyOutline',
+      'bus': 'matDirectionsBusOutline',
+      '': 'matGroupWorkOutline',
+};
+
+export class Talkgroup {
+  id!: number;
+  system_id!: number;
+  tgid!: number;
+  name!: string;
+  alpha_tag!: string;
+  tg_group!: string;
+  frequency!: number;
+  metadata!: Metadata | null;
+  tags!: string[];
+  alert!: boolean;
   system?: System;
-  alert_config: AlertRule[];
-  weight: number;
+  alert_config!: AlertRule[];
+  weight!: number;
   learned?: boolean;
+  icon?: string;
+  iconSvg?: string;
+  constructor(
+    id: number,
+    system_id: number,
+    tgid: number,
+    name: string,
+    alpha_tag: string,
+    tg_group: string,
+    frequency: number,
+    metadata: Metadata | null,
+    tags: string[],
+    alert: boolean,
+    alert_config: AlertRule[],
+    weight: number,
+    system?: System,
+    learned?: boolean,
+    icon?: string,
+  ) {
+    this.iconSvg = this.iconMap(this.metadata?.icon!);
+  }
+
+  iconMap(icon: string): string {
+    return iconMapping[icon]!;
+  }
 }
 
 export interface TalkgroupUI extends Talkgroup {
