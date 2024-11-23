@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter, withDebugTracing } from '@angular/router';
+import { provideRouter, } from '@angular/router';
 import { environment } from './../environments/environment';
 import {
   HttpRequest,
@@ -43,7 +43,7 @@ export function authIntercept(
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes, withDebugTracing()),
+    provideRouter(routes),
     provideHttpClient(withInterceptors([apiBaseInterceptor, authIntercept])),
   ],
 };

@@ -1,5 +1,5 @@
 <div class="flex">
-  <form [formGroup]="form" (ngSubmit)="submit()">
+  <form *ngIf="tg" [formGroup]="form" (ngSubmit)="submit()">
     <div class="p-1 columns-2">
       <label class="w-full" for="name">Name: </label
       ><input
@@ -7,7 +7,6 @@
         type="text"
         class="w-full input input-bordered"
         formControlName="name"
-        [(ngModel)]="tg.name"
       />
     </div>
     <div class="p-1 columns-2">
@@ -17,7 +16,6 @@
         type="text"
         class="w-full input input-bordered"
         formControlName="alpha_tag"
-        [(ngModel)]="tg.alpha_tag"
       />
     </div>
     <div class="p-1 columns-2">
@@ -27,7 +25,6 @@
         type="text"
         class="w-full input input-bordered"
         formControlName="tg_group"
-        [(ngModel)]="tg.tg_group"
       />
     </div>
     <div class="p-1 columns-2">
@@ -37,7 +34,6 @@
         type="text"
         class="w-full input input-bordered"
         formControlName="frequency"
-        [(ngModel)]="tg.frequency"
       />
     </div>
     <div class="p-1 columns-2">
@@ -47,7 +43,6 @@
           id="alert"
           type="checkbox"
           formControlName="alert"
-          [(ngModel)]="tg.alert"
           class="checkbox"
         />
       </div>
@@ -59,7 +54,6 @@
         type="text"
         class="w-full input input-bordered"
         formControlName="weight"
-        [(ngModel)]="tg.weight"
       />
     </div>
     <div>Rules:</div>
@@ -71,13 +65,10 @@
         name="icon"
         id="icon"
         formControlName="icon"
-        [(ngModel)]="tg.icon"
       >
-        <option value=""></option>
-        <option value="police">Police</option>
-        <option value="fire">Fire</option>
-        <option value="ems">EMS</option>
-        <option value="bus">Bus</option>
+        @for(opt of iconMapping | keyvalue; track opt) {
+        <option value="{{ opt.key }}" [selected]="opt.key == tg.metadata?.icon">{{ opt.key | titlecase }}</option>
+        }
       </select>
     </div>
     <input type="submit" class="btn btn-secondary" value="Save" />

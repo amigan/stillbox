@@ -6,19 +6,24 @@
         <th></th>
         <th>Sys</th>
         <th>Sys ID</th>
+        <th>Group</th>
         <th>Name</th>
+        <th>Alpha</th>
         <th>TG ID</th>
         <th>Learned</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
-      @for (tg of talkgroups$ | async; track tg.id) {
+      @for (tg of talkgroups$ | async ; track tg.id) {
         <tr>
-          <td>{{ tg.icon }}</td>
+          <!-- <td class="tgIcon" [innerHTML]="(tg | iconify).iconSvg! | sanitizeHtml"></td> -->
+          <td class="tgIcon"><ng-icon [name]="(tg | iconify).iconSvg!"></ng-icon></td>
           <td>{{ tg.system?.name }}</td>
           <td>{{ tg.system?.id }}</td>
+          <td>{{ tg.tg_group }}</td>
           <td>{{ tg.name }}</td>
+          <td>{{ tg.alpha_tag }}</td>
           <td>{{ tg.tgid }}</td>
           <td>{{ tg?.learned ? "Y" : "" }}</td>
           <td>

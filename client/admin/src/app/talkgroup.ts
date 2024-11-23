@@ -1,10 +1,3 @@
-import {
-  matFireTruckOutline,
-  matLocalPoliceOutline,
-  matEmergencyOutline,
-  matDirectionsBusOutline,
-} from '@ng-icons/material-icons/outline';
-
 export interface TGID {
   sys: number;
   tg: number;
@@ -40,6 +33,18 @@ export interface Metadata {
   encrypted: boolean | null;
   icon: string | null;
 }
+
+  export interface IconMap {
+    [name: string]: string;
+  }
+
+export const iconMapping: IconMap = {
+      'police': 'matLocalPoliceOutline',
+      'fire': 'matFireTruckOutline',
+      'ems': 'matEmergencyOutline',
+      'bus': 'matDirectionsBusOutline',
+      '': 'matGroupWorkOutline',
+};
 
 export class Talkgroup {
   id!: number;
@@ -79,12 +84,7 @@ export class Talkgroup {
   }
 
   iconMap(icon: string): string {
-    return {
-      police: matLocalPoliceOutline,
-      fire: matFireTruckOutline,
-      ems: matEmergencyOutline,
-      bus: matDirectionsBusOutline,
-    }[icon]!;
+    return iconMapping[icon]!;
   }
 }
 

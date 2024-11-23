@@ -1,13 +1,52 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Pipe, PipeTransform } from '@angular/core';
 import { TalkgroupService } from './talkgroups.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { ionCreateOutline } from '@ng-icons/ionicons';
-import { Talkgroup } from '../talkgroup';
+import {
+  matFireTruckOutline,
+  matLocalPoliceOutline,
+  matEmergencyOutline,
+  matDirectionsBusOutline,
+  matGroupWorkOutline,
+} from '@ng-icons/material-icons/outline';
+import { Talkgroup, iconMapping } from '../talkgroup';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { RouterModule, RouterOutlet, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+
+
+@Pipe({
+  standalone: true,
+  name: 'iconify',
+})
+export class IconifyPipe implements PipeTransform {
+  transform(value: Talkgroup): Talkgroup {
+    if (value?.metadata?.icon != null) {
+      value.iconSvg = iconMapping[value?.metadata?.icon];
+    } else if (value?.metadata?.icon == undefined) {
+      value.iconSvg = iconMapping[''];
+    }
+    return value;
+  }
+}
+
+@Pipe({
+  standalone: true,
+  name: 'sanitizeHtml'
+})
+export class SanitizeHtmlPipe implements PipeTransform {
+
+  constructor(private _sanitizer:DomSanitizer) {
+  }
+
+  transform(v:string):SafeHtml {
+    return this._sanitizer.bypassSecurityTrustHtml(v);
+  }
+}
+
 
 @Component({
   selector: 'talkgroups',
@@ -18,10 +57,18 @@ import { CommonModule } from '@angular/common';
     RouterModule,
     RouterLink,
     CommonModule,
+    IconifyPipe,
+    SanitizeHtmlPipe,
   ],
   templateUrl: './talkgroups.component.html',
   styleUrl: './talkgroups.component.css',
-  providers: [provideIcons({ ionCreateOutline })],
+  providers: [provideIcons({ ionCreateOutline,
+     matFireTruckOutline,
+  matLocalPoliceOutline,
+  matEmergencyOutline,
+  matDirectionsBusOutline,
+  matGroupWorkOutline,
+})],
 })
 export class TalkgroupsComponent {
   selectedSys: number = 0;

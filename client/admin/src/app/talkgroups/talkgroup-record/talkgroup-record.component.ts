@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { Talkgroup, TalkgroupUpdate } from '../../talkgroup';
+import { Talkgroup, TalkgroupUpdate, IconMap, iconMapping } from '../../talkgroup';
 import { TalkgroupService } from '../talkgroups.service';
 import { AlertRuleBuilderComponent } from './alert-rule-builder/alert-rule-builder.component';
 import { CommonModule } from '@angular/common';
@@ -22,6 +22,7 @@ import { Observable } from 'rxjs';
 })
 export class TalkgroupRecordComponent {
   tg!: Talkgroup;
+  iconMapping: IconMap = iconMapping;
   tgService: TalkgroupService = inject(TalkgroupService);
 
   form!: FormGroup;
@@ -39,17 +40,19 @@ export class TalkgroupRecordComponent {
       .getTalkgroup(Number(sysId), Number(tgId))
       .subscribe((data: Talkgroup) => {
         this.tg = data;
+    this.form = new FormGroup({
+      name: new FormControl(this.tg.name),
+      alpha_tag: new FormControl(this.tg.alpha_tag),
+      tg_group: new FormControl(this.tg.tg_group),
+      frequency: new FormControl(this.tg.frequency),
+      alert: new FormControl(this.tg.alert),
+      weight: new FormControl(this.tg.weight),
+      icon: new FormControl(this.tg.icon),
+    });
+    console.log(this.tg.icon);
       });
 
-    this.form = new FormGroup({
-      name: new FormControl(''),
-      alpha_tag: new FormControl(''),
-      tg_group: new FormControl(''),
-      frequency: new FormControl(0),
-      alert: new FormControl(true),
-      weight: new FormControl(1.0),
-      icon: new FormControl(''),
-    });
+
   }
 
   submit() {
@@ -59,22 +62,22 @@ export class TalkgroupRecordComponent {
       id: this.tg.id,
     };
     if (this.form.controls['name'].dirty) {
-      tgu.name = this.tg.name;
+      tgu.name = this.form.controls['name'].value;
     }
     if (this.form.controls['alpha_tag'].dirty) {
-      tgu.alpha_tag = this.tg.alpha_tag;
+      tgu.alpha_tag = this.form.controls['alpha_tag'].value;
     }
     if (this.form.controls['tg_group'].dirty) {
-      tgu.tg_group = this.tg.tg_group;
+      tgu.tg_group = this.form.controls['tg_group'].value;
     }
     if (this.form.controls['frequency'].dirty) {
-      tgu.frequency = this.tg.frequency;
+      tgu.frequency = this.form.controls['frequency'].value;
     }
     if (this.form.controls['alert'].dirty) {
-      tgu.alert = this.tg.alert;
+      tgu.alert = this.form.controls['alert'].value;
     }
     if (this.form.controls['weight'].dirty) {
-      tgu.weight = Number(this.tg.weight);
+      tgu.weight = Number(this.form.controls['weight'].value);
     }
     if (this.form.controls['icon'].dirty) {
       if (tgu.metadata == null) {
@@ -83,7 +86,7 @@ export class TalkgroupRecordComponent {
       if (this.tg.icon == null || this.tg.icon == '') {
         tgu.metadata = Object.assign(tgu.metadata, {icon: undefined});
       } else {
-      tgu.metadata = Object.assign(tgu.metadata!, { icon: this.tg.icon });
+      tgu.metadata = Object.assign(tgu.metadata!, { icon: this.form.controls['icon'] });
       }
     }
     this.tgService
