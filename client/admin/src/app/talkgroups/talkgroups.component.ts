@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { TalkgroupService } from './talkgroups.service';
-import { Talkgroup } from '../talkgroup';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { ionCreateOutline } from '@ng-icons/ionicons';
+import { Talkgroup } from '../talkgroup';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';

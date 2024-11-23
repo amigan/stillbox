@@ -3,6 +3,7 @@
   <table class="table">
     <thead>
       <tr>
+        <th></th>
         <th>Sys</th>
         <th>Sys ID</th>
         <th>Name</th>
@@ -14,6 +15,7 @@
     <tbody>
       @for (tg of talkgroups$ | async; track tg.id) {
         <tr>
+          <td>{{ tg.icon }}</td>
           <td>{{ tg.system?.name }}</td>
           <td>{{ tg.system?.id }}</td>
           <td>{{ tg.name }}</td>

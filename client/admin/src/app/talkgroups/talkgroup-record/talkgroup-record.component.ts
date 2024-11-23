@@ -48,6 +48,7 @@ export class TalkgroupRecordComponent {
       frequency: new FormControl(0),
       alert: new FormControl(true),
       weight: new FormControl(1.0),
+      icon: new FormControl(''),
     });
   }
 
@@ -74,6 +75,16 @@ export class TalkgroupRecordComponent {
     }
     if (this.form.controls['weight'].dirty) {
       tgu.weight = Number(this.tg.weight);
+    }
+    if (this.form.controls['icon'].dirty) {
+      if (tgu.metadata == null) {
+        tgu.metadata = {};
+      }
+      if (this.tg.icon == null || this.tg.icon == '') {
+        tgu.metadata = Object.assign(tgu.metadata, {icon: undefined});
+      } else {
+      tgu.metadata = Object.assign(tgu.metadata!, { icon: this.tg.icon });
+      }
     }
     this.tgService
       .putTalkgroup(tgu)

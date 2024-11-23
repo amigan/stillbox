@@ -62,7 +62,24 @@
         [(ngModel)]="tg.weight"
       />
     </div>
+    <div>Rules:</div>
     <alert-rule-builder [rules]="tg.alert_config" />
+    <div>
+      <label for="icon">Icon: </label>
+      <select
+        class="select"
+        name="icon"
+        id="icon"
+        formControlName="icon"
+        [(ngModel)]="tg.icon"
+      >
+        <option value=""></option>
+        <option value="police">Police</option>
+        <option value="fire">Fire</option>
+        <option value="ems">EMS</option>
+        <option value="bus">Bus</option>
+      </select>
+    </div>
     <input type="submit" class="btn btn-secondary" value="Save" />
   </form>
 </div>
