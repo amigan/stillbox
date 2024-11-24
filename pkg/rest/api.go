@@ -59,6 +59,14 @@ func badRequest(err error) render.Renderer {
 	}
 }
 
+func badRequestErrText(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusBadRequest,
+		Error: "Bad request: " + err.Error(),
+	}
+}
+
 func recordNotFound(err error) render.Renderer {
 	return &errResponse{
 		Err:   err,
@@ -67,7 +75,7 @@ func recordNotFound(err error) render.Renderer {
 	}
 }
 
-func errTextNotFound(err error) render.Renderer {
+func notFoundErrText(err error) render.Renderer {
 	return &errResponse{
 		Err:   err,
 		Code:  http.StatusNotFound,
@@ -86,9 +94,10 @@ func internalError(err error) render.Renderer {
 type errResponder func(error) render.Renderer
 
 var statusMapping = map[error]errResponder{
-	tgstore.ErrNoSuchSystem: errTextNotFound,
-	tgstore.ErrNotFound:     errTextNotFound,
-	pgx.ErrNoRows:           recordNotFound,
+	tgstore.ErrNoSuchSystem:   notFoundErrText,
+	tgstore.ErrNotFound:       notFoundErrText,
+	tgstore.ErrInvalidOrderBy: badRequestErrText,
+	pgx.ErrNoRows:             recordNotFound,
 }
 
 func autoError(err error) render.Renderer {

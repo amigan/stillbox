@@ -36,7 +36,7 @@ func PtrTo[T any](t T) *T {
 	return &t
 }
 
-func PtrOrNull[T comparable](val T) *T {
+func NilIfZero[T comparable](val T) *T {
 	var zero T
 	if val == zero {
 		return nil
@@ -45,10 +45,23 @@ func PtrOrNull[T comparable](val T) *T {
 	return &val
 }
 
-func ZeroOr[T any](v *T) T {
+func ZeroIfNil[T any](v *T) T {
 	var zero T
 	if v == nil {
 		return zero
+	}
+
+	return *v
+}
+
+func DefaultIfNilOrZero[T comparable](v *T, def T) T {
+	if v == nil {
+		return def
+	}
+
+	var zero T
+	if *v == zero {
+		return def
 	}
 
 	return *v

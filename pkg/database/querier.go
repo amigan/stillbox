@@ -30,6 +30,8 @@ type Querier interface {
 	GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAnyTagsRow, error)
 	GetTalkgroupsWithLearned(ctx context.Context) ([]GetTalkgroupsWithLearnedRow, error)
 	GetTalkgroupsWithLearnedBySystem(ctx context.Context, system int32) ([]GetTalkgroupsWithLearnedBySystemRow, error)
+	GetTalkgroupsWithLearnedBySystemP(ctx context.Context, system int32, offset int32, perPage int32) ([]GetTalkgroupsWithLearnedBySystemPRow, error)
+	GetTalkgroupsWithLearnedP(ctx context.Context, offset int32, perPage int32) ([]GetTalkgroupsWithLearnedPRow, error)
 	GetUserByID(ctx context.Context, id int) (User, error)
 	GetUserByUID(ctx context.Context, id int) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)

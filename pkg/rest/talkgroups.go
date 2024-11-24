@@ -12,6 +12,8 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+const DefaultPerPage = 20
+
 type talkgroupAPI struct {
 }
 
@@ -19,10 +21,15 @@ func (tga *talkgroupAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
 	r.Get(`/{system:\d+}/{id:\d+}`, tga.get)
-	r.Put(`/{system:\d+}/{id:\d+}`, tga.put)
-	r.Put(`/{system:\d+}`, tga.putTalkgroups)
 	r.Get(`/{system:\d+}/`, tga.get)
 	r.Get("/", tga.get)
+
+	r.Put(`/{system:\d+}/{id:\d+}`, tga.put)
+	r.Put(`/{system:\d+}`, tga.putTalkgroups)
+
+	r.Post(`/{system:\d+}/`, tga.postPaginated)
+	r.Post(`/`, tga.postPaginated)
+
 	r.Post("/import", tga.tgImport)
 
 	return r
@@ -73,6 +80,42 @@ func (tga *talkgroupAPI) get(w http.ResponseWriter, r *http.Request) {
 	default:
 		// get all talkgroups
 		res, err = tgs.TGs(ctx, nil)
+	}
+
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, res)
+}
+
+func (tga *talkgroupAPI) postPaginated(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	tgs := tgstore.FromCtx(ctx)
+
+	var p tgParams
+
+	err := decodeParams(&p, r)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	input := &tgstore.Pagination{}
+	err = forms.Unmarshal(r, input, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	var res interface{}
+	switch {
+	case p.System != nil:
+		res, err = tgs.SystemTGs(ctx, int32(*p.System), tgstore.WithPagination(input, DefaultPerPage))
+	default:
+		// get all talkgroups
+		res, err = tgs.TGs(ctx, nil, tgstore.WithPagination(input, DefaultPerPage))
 	}
 
 	if err != nil {

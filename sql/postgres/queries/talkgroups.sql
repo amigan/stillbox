@@ -31,6 +31,17 @@ FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE (tg.system_id, tg.tgid) = (@system_id, @tgid);
 
+-- name: GetTalkgroupsWithLearnedBySystemP :many
+SELECT
+sqlc.embed(tg), sqlc.embed(sys)
+FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+WHERE tg.system_id = @system
+ORDER BY tg.system_id ASC, tg.tgid ASC
+OFFSET sqlc.arg('offset') ROWS
+FETCH NEXT sqlc.arg('per_page') ROWS ONLY;
+;
+
 -- name: GetTalkgroupsWithLearnedBySystem :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)
@@ -44,6 +55,16 @@ sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE ignored IS NOT TRUE;
+
+-- name: GetTalkgroupsWithLearnedP :many
+SELECT
+sqlc.embed(tg), sqlc.embed(sys)
+FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+WHERE ignored IS NOT TRUE
+ORDER BY tg.system_id ASC, tg.tgid ASC
+OFFSET sqlc.arg('offset') ROWS
+FETCH NEXT sqlc.arg('per_page') ROWS ONLY;
 
 -- name: GetSystemName :one
 SELECT name FROM systems WHERE id = @system_id;

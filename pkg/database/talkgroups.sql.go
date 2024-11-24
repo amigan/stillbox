@@ -377,6 +377,112 @@ func (q *Queries) GetTalkgroupsWithLearnedBySystem(ctx context.Context, system i
 	return items, nil
 }
 
+const getTalkgroupsWithLearnedBySystemP = `-- name: GetTalkgroupsWithLearnedBySystemP :many
+SELECT
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
+FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+WHERE tg.system_id = $1
+ORDER BY tg.system_id ASC, tg.tgid ASC
+OFFSET $2 ROWS
+FETCH NEXT $3 ROWS ONLY
+`
+
+type GetTalkgroupsWithLearnedBySystemPRow struct {
+	Talkgroup Talkgroup `json:"talkgroup"`
+	System    System    `json:"system"`
+}
+
+func (q *Queries) GetTalkgroupsWithLearnedBySystemP(ctx context.Context, system int32, offset int32, perPage int32) ([]GetTalkgroupsWithLearnedBySystemPRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupsWithLearnedBySystemP, system, offset, perPage)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTalkgroupsWithLearnedBySystemPRow
+	for rows.Next() {
+		var i GetTalkgroupsWithLearnedBySystemPRow
+		if err := rows.Scan(
+			&i.Talkgroup.ID,
+			&i.Talkgroup.SystemID,
+			&i.Talkgroup.TGID,
+			&i.Talkgroup.Name,
+			&i.Talkgroup.AlphaTag,
+			&i.Talkgroup.TGGroup,
+			&i.Talkgroup.Frequency,
+			&i.Talkgroup.Metadata,
+			&i.Talkgroup.Tags,
+			&i.Talkgroup.Alert,
+			&i.Talkgroup.AlertConfig,
+			&i.Talkgroup.Weight,
+			&i.Talkgroup.Learned,
+			&i.Talkgroup.Ignored,
+			&i.System.ID,
+			&i.System.Name,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTalkgroupsWithLearnedP = `-- name: GetTalkgroupsWithLearnedP :many
+SELECT
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
+FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+WHERE ignored IS NOT TRUE
+ORDER BY tg.system_id ASC, tg.tgid ASC
+OFFSET $1 ROWS
+FETCH NEXT $2 ROWS ONLY
+`
+
+type GetTalkgroupsWithLearnedPRow struct {
+	Talkgroup Talkgroup `json:"talkgroup"`
+	System    System    `json:"system"`
+}
+
+func (q *Queries) GetTalkgroupsWithLearnedP(ctx context.Context, offset int32, perPage int32) ([]GetTalkgroupsWithLearnedPRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupsWithLearnedP, offset, perPage)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTalkgroupsWithLearnedPRow
+	for rows.Next() {
+		var i GetTalkgroupsWithLearnedPRow
+		if err := rows.Scan(
+			&i.Talkgroup.ID,
+			&i.Talkgroup.SystemID,
+			&i.Talkgroup.TGID,
+			&i.Talkgroup.Name,
+			&i.Talkgroup.AlphaTag,
+			&i.Talkgroup.TGGroup,
+			&i.Talkgroup.Frequency,
+			&i.Talkgroup.Metadata,
+			&i.Talkgroup.Tags,
+			&i.Talkgroup.Alert,
+			&i.Talkgroup.AlertConfig,
+			&i.Talkgroup.Weight,
+			&i.Talkgroup.Learned,
+			&i.Talkgroup.Ignored,
+			&i.System.ID,
+			&i.System.Name,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const restoreTalkgroupVersion = `-- name: RestoreTalkgroupVersion :one
 INSERT INTO talkgroups(
 	system_id,

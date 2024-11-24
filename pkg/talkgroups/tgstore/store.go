@@ -21,8 +21,9 @@ import (
 type tgMap map[tgsp.ID]*tgsp.Talkgroup
 
 var (
-	ErrNotFound     = errors.New("talkgroup not found")
-	ErrNoSuchSystem = errors.New("no such system")
+	ErrNotFound       = errors.New("talkgroup not found")
+	ErrNoSuchSystem   = errors.New("no such system")
+	ErrInvalidOrderBy = errors.New("invalid pagination orderBy value")
 )
 
 type Store interface {
@@ -36,13 +37,13 @@ type Store interface {
 	TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error)
 
 	// TGs retrieves many talkgroups from the Store.
-	TGs(ctx context.Context, tgs tgsp.IDs) ([]*tgsp.Talkgroup, error)
+	TGs(ctx context.Context, tgs tgsp.IDs, opts ...option) ([]*tgsp.Talkgroup, error)
 
 	// LearnTG learns the talkgroup from a Call.
 	LearnTG(ctx context.Context, call *calls.Call) (*tgsp.Talkgroup, error)
 
 	// SystemTGs retrieves all Talkgroups associated with a System.
-	SystemTGs(ctx context.Context, systemID int32) ([]*tgsp.Talkgroup, error)
+	SystemTGs(ctx context.Context, systemID int32, opts ...option) ([]*tgsp.Talkgroup, error)
 
 	// SystemName retrieves a system name from the store. It returns the record and whether one was found.
 	SystemName(ctx context.Context, id int) (string, bool)
@@ -61,6 +62,55 @@ type Store interface {
 
 	// Hupper
 	HUP(*config.Config)
+}
+
+type options struct {
+	pagination     *Pagination
+	perPageDefault int
+}
+
+func sOpt(opts []option) (o options) {
+	for _, opt := range opts {
+		opt(&o)
+	}
+	return
+}
+
+type option func(*options)
+
+func WithPagination(p *Pagination, defPerPage int) option {
+	return func(o *options) {
+		o.pagination = p
+		o.perPageDefault = defPerPage
+	}
+}
+
+type TGOrder string
+
+const (
+	TGOrderTGID  TGOrder = "tgid"
+	TGOrderGroup TGOrder = "group"
+	TGOrderName  TGOrder = "name"
+	TGOrderID    TGOrder = "id"
+)
+
+func (t *TGOrder) IsValid() bool {
+	if t == nil {
+		return true
+	}
+
+	switch *t {
+	case TGOrderTGID, TGOrderGroup, TGOrderName, TGOrderID:
+		return true
+	}
+
+	return false
+}
+
+type Pagination struct {
+	common.Pagination
+
+	OrderBy *TGOrder `json:"orderBy"`
 }
 
 type storeCtxKey string
@@ -148,20 +198,29 @@ func (t *cache) add(rec *tgsp.Talkgroup) {
 	t.Lock()
 	defer t.Unlock()
 
+	t.addNoLock(rec)
+}
+
+func (t *cache) addNoLock(rec *tgsp.Talkgroup) {
 	tg := tgsp.TG(rec.System.ID, rec.Talkgroup.TGID)
 	t.tgs[tg] = rec
 	t.systems[int32(rec.System.ID)] = rec.System.Name
 }
 
-type row interface {
+type rowType interface {
 	database.GetTalkgroupsRow | database.GetTalkgroupsWithLearnedRow |
-		database.GetTalkgroupsWithLearnedBySystemRow | database.GetTalkgroupWithLearnedRow
+		database.GetTalkgroupsWithLearnedBySystemRow | database.GetTalkgroupWithLearnedRow |
+		database.GetTalkgroupsWithLearnedBySystemPRow | database.GetTalkgroupsWithLearnedPRow
+	row
+}
+
+type row interface {
 	GetTalkgroup() database.Talkgroup
 	GetSystem() database.System
 	GetLearned() bool
 }
 
-func rowToTalkgroup[T row](r T) *tgsp.Talkgroup {
+func rowToTalkgroup[T rowType](r T) *tgsp.Talkgroup {
 	return &tgsp.Talkgroup{
 		Talkgroup: r.GetTalkgroup(),
 		System:    r.GetSystem(),
@@ -169,10 +228,13 @@ func rowToTalkgroup[T row](r T) *tgsp.Talkgroup {
 	}
 }
 
-func addToRowList[T row](t *cache, r []*tgsp.Talkgroup, tgRecords []T) []*tgsp.Talkgroup {
+func addToRowListS[T rowType](t *cache, r []*tgsp.Talkgroup, tgRecords []T) []*tgsp.Talkgroup {
+	t.Lock()
+	defer t.Unlock()
+
 	for _, rec := range tgRecords {
 		tg := rowToTalkgroup(rec)
-		t.add(tg)
+		t.addNoLock(tg)
 
 		r = append(r, tg)
 	}
@@ -180,8 +242,25 @@ func addToRowList[T row](t *cache, r []*tgsp.Talkgroup, tgRecords []T) []*tgsp.T
 	return r
 }
 
-func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs) ([]*tgsp.Talkgroup, error) {
+func addToRowList[T rowType](t *cache, tgRecords []T) []*tgsp.Talkgroup {
+	t.Lock()
+	defer t.Unlock()
+	r := make([]*tgsp.Talkgroup, 0, len(tgRecords))
+
+	for _, rec := range tgRecords {
+		tg := rowToTalkgroup(rec)
+		t.addNoLock(tg)
+
+		r = append(r, tg)
+	}
+
+	return r
+}
+
+func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...option) ([]*tgsp.Talkgroup, error) {
+	db := database.FromCtx(ctx)
 	r := make([]*tgsp.Talkgroup, 0, len(tgs))
+	opt := sOpt(opts)
 	var err error
 	if tgs != nil {
 		toGet := make(tgsp.IDs, 0, len(tgs))
@@ -194,20 +273,30 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs) ([]*tgsp.Talkgroup, error
 			}
 		}
 
-		tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedBySysTGID(ctx, toGet.Tuples())
+		tgRecords, err := db.GetTalkgroupsWithLearnedBySysTGID(ctx, toGet.Tuples())
 		if err != nil {
 			return nil, err
 		}
-		return addToRowList(t, r, tgRecords), nil
+		return addToRowList(t, tgRecords), nil
 	}
 
 	// get all talkgroups
 
-	tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearned(ctx)
+	if opt.pagination != nil {
+		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
+		tgRecords, err := db.GetTalkgroupsWithLearnedP(ctx, offset, perPage)
+
+		if err != nil {
+			return nil, err
+		}
+		return addToRowListS(t, r, tgRecords), nil
+	}
+
+	tgRecords, err := db.GetTalkgroupsWithLearned(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return addToRowList(t, r, tgRecords), nil
+	return addToRowListS(t, r, tgRecords), nil
 }
 
 func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
@@ -236,14 +325,25 @@ func (t *cache) Weight(ctx context.Context, id tgsp.ID, tm time.Time) float64 {
 	return float64(m)
 }
 
-func (t *cache) SystemTGs(ctx context.Context, systemID int32) ([]*tgsp.Talkgroup, error) {
-	recs, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedBySystem(ctx, systemID)
+func (t *cache) SystemTGs(ctx context.Context, systemID int32, opts ...option) ([]*tgsp.Talkgroup, error) {
+	db := database.FromCtx(ctx)
+	opt := sOpt(opts)
+	var err error
+	if opt.pagination != nil {
+		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
+		recs, err := db.GetTalkgroupsWithLearnedBySystemP(ctx, systemID, offset, perPage)
+		if err != nil {
+			return nil, err
+		}
+		return addToRowList(t, recs), nil
+	}
+
+	recs, err := db.GetTalkgroupsWithLearnedBySystem(ctx, systemID)
 	if err != nil {
 		return nil, err
 	}
 
-	r := make([]*tgsp.Talkgroup, 0, len(recs))
-	return addToRowList(t, r, recs), nil
+	return addToRowList(t, recs), nil
 }
 
 func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {

@@ -83,9 +83,9 @@ func (car *CallUploadRequest) ToCall(submitter auth.UserID) (*calls.Call, error)
 		Frequency:      car.Frequency,
 		Frequencies:    car.Frequencies,
 		Patches:        car.Patches,
-		TalkgroupLabel: common.PtrOrNull(car.TalkgroupLabel),
-		TGAlphaTag:     common.PtrOrNull(car.TalkgroupTag),
-		TalkgroupGroup: common.PtrOrNull(car.TalkgroupGroup),
+		TalkgroupLabel: common.NilIfZero(car.TalkgroupLabel),
+		TGAlphaTag:     common.NilIfZero(car.TalkgroupTag),
+		TalkgroupGroup: common.NilIfZero(car.TalkgroupGroup),
 		Source:         car.Source,
 	}, !car.DontStore)
 }
