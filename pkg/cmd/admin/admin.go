@@ -8,7 +8,7 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v2"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 )
@@ -115,59 +115,78 @@ func readPassword(prompt string) (string, error) {
 }
 
 // Command is the users command.
-func Command(cfg *config.Configuration) []*cobra.Command {
-	userCmd := &cobra.Command{
-		Use:               "users",
-		Aliases:           []string{"u"},
-		Short:             "administers the server",
-		PersistentPreRunE: cfg.PreRunE(),
+func Command(cfg *config.Configuration) *cli.Command {
+	c := &cfg.Config
+	userCmd := &cli.Command{
+		Name:    "users",
+		Aliases: []string{"u"},
+		Usage:   "administers users",
+		Subcommands: []*cli.Command{
+			addUserCommand(c),
+			passwdCommand(c),
+		},
 	}
-	userCmd.AddCommand(addUserCommand(&cfg.Config), passwdCommand(&cfg.Config))
 
-	return []*cobra.Command{userCmd}
+	return userCmd
 }
 
-func addUserCommand(cfg *config.Config) *cobra.Command {
-	c := &cobra.Command{
-		Use:   "add",
-		Short: "adds a user",
-		RunE: func(cmd *cobra.Command, args []string) error {
+func addUserCommand(cfg *config.Config) *cli.Command {
+	c := &cli.Command{
+		Name:        "add",
+		Description: "adds a user",
+		UsageText:   "stillbox users add [-a] [-m email] [username]",
+		Args:        true,
+		Action: func(ctx *cli.Context) error {
+			if ctx.Args().Len() != 1 {
+				return errors.New(ctx.Command.Usage)
+			}
+
 			db, err := database.NewClient(context.Background(), cfg.DB)
 			if err != nil {
 				return err
 			}
 
-			username := args[0]
-			isAdmin, err := cmd.Flags().GetBool("admin")
-			if err != nil {
-				return err
-			}
-			email, err := cmd.Flags().GetString("email")
-			if err != nil {
-				return err
-			}
+			username := ctx.Args().Get(0)
+			isAdmin := ctx.Bool("admin")
+			email := ctx.String("email")
 
 			return AddUser(database.CtxWithDB(context.Background(), db), username, email, isAdmin)
 		},
-		Args: cobra.ExactArgs(1),
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "admin",
+				Aliases: []string{"a"},
+				Value:   false,
+				Usage:   "user is an admin",
+			},
+			&cli.StringFlag{
+				Name:    "email",
+				Usage:   "email address",
+				Aliases: []string{"m"},
+			},
+		},
 	}
-	c.Flags().BoolP("admin", "a", false, "is admin")
-	c.Flags().StringP("email", "m", "", "email address")
 
 	return c
 }
 
-func passwdCommand(cfg *config.Config) *cobra.Command {
-	c := &cobra.Command{
-		Use:   "passwd userid",
-		Short: "changes password for a user",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+func passwdCommand(cfg *config.Config) *cli.Command {
+	c := &cli.Command{
+		Name:      "passwd",
+		Usage:     "changes password for a user",
+		UsageText: "stillbox users passwd [username]",
+		Args:      true,
+		Action: func(ctx *cli.Context) error {
+			if ctx.Args().Len() != 1 {
+				return errors.New(ctx.Command.Usage)
+			}
+
 			db, err := database.NewClient(context.Background(), cfg.DB)
 			if err != nil {
 				return err
 			}
-			username := args[0]
+			username := ctx.Args().Get(0)
+
 			return Passwd(database.CtxWithDB(context.Background(), db), username)
 		},
 	}

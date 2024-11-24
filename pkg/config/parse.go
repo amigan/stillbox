@@ -11,34 +11,31 @@ import (
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
-	//	"github.com/knadh/koanf/providers/posflag"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v2"
 )
 
-func (c *Configuration) PreRunE() func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		return c.ReadConfig()
+func New(configFile *string) *Configuration {
+	if configFile == nil {
+		panic("configFile must not be nil")
 	}
+
+	return &Configuration{configPath: configFile}
 }
 
-func New(rootCommand *cobra.Command) *Configuration {
-	c := &Configuration{}
-
-	rootCommand.PersistentFlags().StringVarP(&c.configPath, "config", "c", "config.yaml", "configuration file")
-
-	return c
+func (c *Configuration) Before(ctx *cli.Context) error {
+	return c.ReadConfig()
 }
 
 func (c *Configuration) ReadConfig() error {
-	log.Info().Str("configPath", c.configPath).Msg("read config")
+	log.Info().Str("configPath", *c.configPath).Msg("read config")
 
 	return c.read()
 }
 
 func (c *Configuration) read() error {
 	k := koanf.New(".")
-	err := k.Load(file.Provider(c.configPath), yaml.Parser())
+	err := k.Load(file.Provider(*c.configPath), yaml.Parser())
 	if err != nil {
 		return err
 	}
@@ -52,7 +49,7 @@ func (c *Configuration) read() error {
 		koanf.UnmarshalConf{
 			Tag: "yaml",
 			DecoderConfig: &mapstructure.DecoderConfig{
-				Result: &c.Config,
+				Result:           &c.Config,
 				WeaklyTypedInput: true,
 				DecodeHook: mapstructure.ComposeDecodeHookFunc(
 					mapstructure.StringToTimeDurationHookFunc(),

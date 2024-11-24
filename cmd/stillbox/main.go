@@ -13,28 +13,52 @@ import (
 	"dynatron.me/x/stillbox/pkg/cmd/serve"
 	"dynatron.me/x/stillbox/pkg/config"
 
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v2"
 )
 
+const DefaultConfig = "config.yaml"
+
 func main() {
+	configFile := DefaultConfig
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: common.TimeFormat})
 
-	rootCmd := &cobra.Command{
-		Use: common.AppName,
-	}
-	rootCmd.PersistentFlags().BoolP("version", "V", false, "show version")
-	cfg := config.New(rootCmd)
-	rootCmd.PreRun = func(cmd *cobra.Command, args []string) {
-		v, _ := rootCmd.PersistentFlags().GetBool("version")
-		if v {
-			fmt.Print(version.String())
-			os.Exit(0)
-		}
+	cfg := config.New(&configFile)
+	app := &cli.App{
+		Name:                   common.AppName,
+		Usage:                  "a scanner call server",
+		UseShortOptionHandling: true,
+		Before:                 cfg.Before,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "config",
+				Value:       DefaultConfig,
+				Usage:       "configuration file",
+				Destination: &configFile,
+				Aliases:     []string{"c"},
+			},
+			&cli.BoolFlag{
+				Name:    "version",
+				Aliases: []string{"V"},
+				Action: func(_ *cli.Context, v bool) error {
+					if v {
+						fmt.Print(version.String())
+						os.Exit(0)
+					}
+
+					return nil
+				},
+				DisableDefaultText: true,
+			},
+		},
+		Commands: []*cli.Command{
+			serve.Command(cfg),
+			admin.Command(cfg),
+		},
 	}
 
-	cmds := append([]*cobra.Command{serve.Command(cfg)}, admin.Command(cfg)...)
-	rootCmd.AddCommand(cmds...)
-
-	// cobra is already checking for errors and will print them
-	_ = rootCmd.Execute()
+	err := app.Run(os.Args)
+	if err != nil {
+		os.Stderr.Write([]byte("Error: " + err.Error() + "\n"))
+		os.Exit(1)
+	}
 }
