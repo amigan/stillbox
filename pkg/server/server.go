@@ -27,7 +27,7 @@ const shutdownTimeout = 5 * time.Second
 
 type Server struct {
 	auth     *auth.Auth
-	conf     *config.Config
+	conf     *config.Configuration
 	db       database.Store
 	r        *chi.Mux
 	sources  sources.Sources
@@ -42,7 +42,7 @@ type Server struct {
 	rest     rest.API
 }
 
-func New(ctx context.Context, cfg *config.Config) (*Server, error) {
+func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	logger, err := NewLogger(cfg.Log)
 	if err != nil {
 		return nil, err

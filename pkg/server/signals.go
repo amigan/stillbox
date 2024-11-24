@@ -34,7 +34,7 @@ func (s *Server) installHupHandler() {
 
 			hs := s.huppers()
 			for _, h := range hs {
-				h.HUP(s.conf)
+				h.HUP(&s.conf.Config)
 			}
 		}
 	}()

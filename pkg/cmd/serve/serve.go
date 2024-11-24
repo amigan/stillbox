@@ -9,32 +9,31 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/server"
 
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v2"
 )
 
 type ServeOptions struct {
-	cfg *config.Config
+	cfg *config.Configuration
 }
 
-func Command(cfg *config.Config) *cobra.Command {
+func Command(cfg *config.Configuration) *cli.Command {
 	opts := makeOptions(cfg)
-	serveCmd := &cobra.Command{
-		Use:               "serve",
-		Short:             "starts the" + common.AppName + " server",
-		PersistentPreRunE: cfg.PreRunE(),
-		RunE:              common.RunE(opts),
+	serveCmd := &cli.Command{
+		Name:   "serve",
+		Usage:  "starts the " + common.AppName + " server",
+		Action: common.Action(opts),
 	}
 
 	return serveCmd
 }
 
-func makeOptions(cfg *config.Config) *ServeOptions {
+func makeOptions(cfg *config.Configuration) *ServeOptions {
 	return &ServeOptions{
 		cfg: cfg,
 	}
 }
 
-func (o *ServeOptions) Options(_ *cobra.Command, args []string) error {
+func (o *ServeOptions) Options(_ *cli.Context) error {
 	return nil
 }
 

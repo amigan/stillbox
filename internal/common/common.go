@@ -1,34 +1,31 @@
 package common
 
 import (
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v2"
 )
 
-const AppName = "stillbox"
+const (
+	AppName   = "stillbox"
+	EnvPrefix = "STILLBOX_"
+)
 
 const (
 	TimeFormat = "Jan 2 15:04:05"
 )
 
 type cmdOptions interface {
-	Options(*cobra.Command, []string) error
+	Options(*cli.Context) error
 	Execute() error
 }
 
-func RunE(c cmdOptions) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		err := c.Options(cmd, args)
+func Action(c cmdOptions) cli.ActionFunc {
+	return func(ctx *cli.Context) error {
+		err := c.Options(ctx)
 		if err != nil {
-			cmd.SilenceUsage = true
 			return err
 		}
 
-		err = c.Execute()
-		if err != nil {
-			cmd.SilenceUsage = true
-		}
-
-		return err
+		return c.Execute()
 	}
 }
 
