@@ -9,6 +9,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type Configuration struct {
+	Config
+
+	configPath string `yaml:"-"`
+}
+
 type Config struct {
 	DB        DB        `yaml:"db"`
 	CORS      CORS      `yaml:"cors"`
@@ -20,8 +26,6 @@ type Config struct {
 	RateLimit RateLimit `yaml:"rateLimit"`
 	Notify    Notify    `yaml:"notify"`
 	Relay     []Relay   `yaml:"relay"`
-
-	configPath string
 }
 
 type Auth struct {

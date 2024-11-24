@@ -1,0 +1,38 @@
+db:
+  connect: 'postgres://stillbox:somepassword@stillbox:5432/stillbox?sslmode=disable'
+  logQueries: true
+cors:
+  allowedOrigins:
+    - 'http://localhost:*'
+auth:
+  jwtsecret: 'somesecret'
+  domain: xenon
+  allowInsecureFor:
+    "localhost": true
+    "stillbox": true
+listen: ':3051'
+public: true
+log:
+  - level: debug
+  - level: error
+    file: error.log
+rateLimit:
+  enable: true
+  requests: 200
+  over: 2m
+alerting:
+  enable: true
+  lookbackDays: 7
+  halfLife: 30m
+  recent: 2h
+  alertThreshold: 0.3
+  renotify: 30m
+notify:
+  - provider: slackwebhook
+    config:
+      webhookURL: "https://hook"
+relay:
+  - url: "http://relay"
+    apiKey: "secret"
+    required: true
+

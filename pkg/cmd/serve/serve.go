@@ -13,10 +13,10 @@ import (
 )
 
 type ServeOptions struct {
-	cfg *config.Config
+	cfg *config.Configuration
 }
 
-func Command(cfg *config.Config) *cobra.Command {
+func Command(cfg *config.Configuration) *cobra.Command {
 	opts := makeOptions(cfg)
 	serveCmd := &cobra.Command{
 		Use:               "serve",
@@ -28,7 +28,7 @@ func Command(cfg *config.Config) *cobra.Command {
 	return serveCmd
 }
 
-func makeOptions(cfg *config.Config) *ServeOptions {
+func makeOptions(cfg *config.Configuration) *ServeOptions {
 	return &ServeOptions{
 		cfg: cfg,
 	}

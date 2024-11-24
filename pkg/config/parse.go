@@ -8,32 +8,36 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (c *Config) PreRunE() func(*cobra.Command, []string) error {
+func (c *Configuration) PreRunE() func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		return c.ReadConfig()
 	}
 }
 
-func New(rootCommand *cobra.Command) *Config {
-	c := &Config{}
+func New(rootCommand *cobra.Command) *Configuration {
+	c := &Configuration{}
 
 	rootCommand.PersistentFlags().StringVarP(&c.configPath, "config", "c", "config.yaml", "configuration file")
 
 	return c
 }
 
-func (c *Config) ReadConfig() error {
+func (c *Configuration) ReadConfig() error {
+	log.Info().Str("configPath", c.configPath).Msg("read config")
+
+	return c.read()
+}
+
+func (c *Configuration) read() error {
 	cfgBytes, err := os.ReadFile(c.configPath)
 	if err != nil {
 		return err
 	}
 
-	err = yaml.Unmarshal(cfgBytes, c)
+	err = yaml.Unmarshal(cfgBytes, &c.Config)
 	if err != nil {
 		return err
 	}
-
-	log.Info().Str("configPath", c.configPath).Msg("read config")
 
 	return nil
 }

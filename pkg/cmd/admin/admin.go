@@ -115,14 +115,14 @@ func readPassword(prompt string) (string, error) {
 }
 
 // Command is the users command.
-func Command(cfg *config.Config) []*cobra.Command {
+func Command(cfg *config.Configuration) []*cobra.Command {
 	userCmd := &cobra.Command{
 		Use:               "users",
 		Aliases:           []string{"u"},
 		Short:             "administers the server",
 		PersistentPreRunE: cfg.PreRunE(),
 	}
-	userCmd.AddCommand(addUserCommand(cfg), passwdCommand(cfg))
+	userCmd.AddCommand(addUserCommand(&cfg.Config), passwdCommand(&cfg.Config))
 
 	return []*cobra.Command{userCmd}
 }
