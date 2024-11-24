@@ -4,7 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const AppName = "stillbox"
+const (
+	AppName = "stillbox"
+	EnvPrefix = "STILLBOX_"
+)
+
 
 const (
 	TimeFormat = "Jan 2 15:04:05"
