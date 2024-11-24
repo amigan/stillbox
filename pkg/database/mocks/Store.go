@@ -1244,6 +1244,127 @@ func (_c *Store_GetTalkgroupsWithLearnedBySystem_Call) RunAndReturn(run func(con
 	return _c
 }
 
+// GetTalkgroupsWithLearnedBySystemP provides a mock function with given fields: ctx, system, offset, perPage
+func (_m *Store) GetTalkgroupsWithLearnedBySystemP(ctx context.Context, system int32, offset int32, perPage int32) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error) {
+	ret := _m.Called(ctx, system, offset, perPage)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTalkgroupsWithLearnedBySystemP")
+	}
+
+	var r0 []database.GetTalkgroupsWithLearnedBySystemPRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int32, int32, int32) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error)); ok {
+		return rf(ctx, system, offset, perPage)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int32, int32, int32) []database.GetTalkgroupsWithLearnedBySystemPRow); ok {
+		r0 = rf(ctx, system, offset, perPage)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetTalkgroupsWithLearnedBySystemPRow)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int32, int32, int32) error); ok {
+		r1 = rf(ctx, system, offset, perPage)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetTalkgroupsWithLearnedBySystemP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearnedBySystemP'
+type Store_GetTalkgroupsWithLearnedBySystemP_Call struct {
+	*mock.Call
+}
+
+// GetTalkgroupsWithLearnedBySystemP is a helper method to define mock.On call
+//   - ctx context.Context
+//   - system int32
+//   - offset int32
+//   - perPage int32
+func (_e *Store_Expecter) GetTalkgroupsWithLearnedBySystemP(ctx interface{}, system interface{}, offset interface{}, perPage interface{}) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
+	return &Store_GetTalkgroupsWithLearnedBySystemP_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedBySystemP", ctx, system, offset, perPage)}
+}
+
+func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) Run(run func(ctx context.Context, system int32, offset int32, perPage int32)) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int32), args[2].(int32), args[3].(int32))
+	})
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) Return(_a0 []database.GetTalkgroupsWithLearnedBySystemPRow, _a1 error) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) RunAndReturn(run func(context.Context, int32, int32, int32) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error)) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetTalkgroupsWithLearnedP provides a mock function with given fields: ctx, offset, perPage
+func (_m *Store) GetTalkgroupsWithLearnedP(ctx context.Context, offset int32, perPage int32) ([]database.GetTalkgroupsWithLearnedPRow, error) {
+	ret := _m.Called(ctx, offset, perPage)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTalkgroupsWithLearnedP")
+	}
+
+	var r0 []database.GetTalkgroupsWithLearnedPRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int32, int32) ([]database.GetTalkgroupsWithLearnedPRow, error)); ok {
+		return rf(ctx, offset, perPage)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int32, int32) []database.GetTalkgroupsWithLearnedPRow); ok {
+		r0 = rf(ctx, offset, perPage)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetTalkgroupsWithLearnedPRow)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int32, int32) error); ok {
+		r1 = rf(ctx, offset, perPage)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetTalkgroupsWithLearnedP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearnedP'
+type Store_GetTalkgroupsWithLearnedP_Call struct {
+	*mock.Call
+}
+
+// GetTalkgroupsWithLearnedP is a helper method to define mock.On call
+//   - ctx context.Context
+//   - offset int32
+//   - perPage int32
+func (_e *Store_Expecter) GetTalkgroupsWithLearnedP(ctx interface{}, offset interface{}, perPage interface{}) *Store_GetTalkgroupsWithLearnedP_Call {
+	return &Store_GetTalkgroupsWithLearnedP_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedP", ctx, offset, perPage)}
+}
+
+func (_c *Store_GetTalkgroupsWithLearnedP_Call) Run(run func(ctx context.Context, offset int32, perPage int32)) *Store_GetTalkgroupsWithLearnedP_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int32), args[2].(int32))
+	})
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsWithLearnedP_Call) Return(_a0 []database.GetTalkgroupsWithLearnedPRow, _a1 error) *Store_GetTalkgroupsWithLearnedP_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsWithLearnedP_Call) RunAndReturn(run func(context.Context, int32, int32) ([]database.GetTalkgroupsWithLearnedPRow, error)) *Store_GetTalkgroupsWithLearnedP_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetUserByID provides a mock function with given fields: ctx, id
 func (_m *Store) GetUserByID(ctx context.Context, id int) (database.User, error) {
 	ret := _m.Called(ctx, id)

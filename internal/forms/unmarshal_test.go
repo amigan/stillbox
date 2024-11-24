@@ -14,6 +14,7 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/alerting"
 	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -114,6 +115,14 @@ var (
 		Talkgroup:      2,
 		TalkgroupGroup: "Wide Area",
 		TalkgroupLabel: "Wide Area 1 FD/EMS Intercity",
+	}
+
+	Pag1 = tgstore.Pagination{
+		Pagination: common.Pagination{
+			Page:    common.PtrTo(1),
+			PerPage: common.PtrTo(2),
+		},
+		OrderBy: common.PtrTo(tgstore.TGOrderID),
 	}
 )
 
@@ -221,6 +230,13 @@ func TestUnmarshal(t *testing.T) {
 			dest:   &alerting.Simulation{},
 			expect: realSim,
 			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithParseLocalTime()},
+		},
+		{
+			name:   "urlencode pagination",
+			r:      makeRequest("urlenc3.http"),
+			dest:   &tgstore.Pagination{},
+			expect: &Pag1,
+			opts:   []forms.Option{forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty()},
 		},
 	}
 

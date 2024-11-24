@@ -223,7 +223,15 @@ func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error
 			}
 			destFieldVal.Set(reflect.ValueOf(ar))
 		default:
-			panic(fmt.Errorf("unsupported type %T", v))
+			dvt := destFieldVal.Type()
+			if dvt.Kind() == reflect.Ptr {
+				dvt = dvt.Elem()
+			}
+			if reflect.ValueOf(ff).CanConvert(dvt) {
+				setVal(destFieldVal, ff != "" || o.acceptBlank, ff)
+			} else {
+				panic(fmt.Errorf("unsupported type %T", v))
+			}
 		}
 	}
 

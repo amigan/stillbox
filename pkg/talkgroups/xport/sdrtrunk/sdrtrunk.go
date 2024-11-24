@@ -30,8 +30,8 @@ type Alias struct {
 func tgToAlias(tg *talkgroups.Talkgroup) Alias {
 	return Alias{
 		XMLName: xml.Name{Local: "alias"},
-		Name:    common.ZeroOr(tg.Name),
-		Group:   common.ZeroOr(tg.TGGroup),
+		Name:    common.ZeroIfNil(tg.Name),
+		Group:   common.ZeroIfNil(tg.TGGroup),
 		List:    "Stillbox",
 		IDs: []ID{
 			ID{
