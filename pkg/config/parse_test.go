@@ -62,7 +62,7 @@ var expCfg = &Config{
 		},
 	},
 	Relay: []Relay{
-		Relay{
+		{
 			URL:      "http://relay",
 			APIKey:   "secret",
 			Required: true,
@@ -71,7 +71,7 @@ var expCfg = &Config{
 }
 
 func TestConfigParse(t *testing.T) {
-	c := &Configuration{configPath: "testdata/testconfig.yaml"}
+	c := &Configuration{configPath: common.PtrTo("testdata/testconfig.yaml")}
 
 	err := c.read()
 	require.NoError(t, err)
