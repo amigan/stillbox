@@ -14,7 +14,27 @@ type Playlist struct {
 	Version  int       `xml:"version,attr"`
 	Aliases  []Alias   `xml:"alias"`
 	Channels []Channel `xml:"channel,omitempty"`
-	Streams  []Stream  `xml:"stream,omitempty"`
+	Streams  []Stream   `xml:"stream,omitempty"`
+
+	streams map[string]struct{}
+}
+
+func (p *Playlist) buildMaps() {
+	p.streams = make(map[string]struct{})
+
+	for _, s := range p.Streams {
+		for _, a := range s.Attributes {
+			if a.Name.Local == "name" {
+				p.streams[a.Value] = struct{}{}
+			}
+		}
+	}
+}
+
+func (p *Playlist) HasStream(name string) bool {
+	_, has := p.streams[name]
+
+	return has
 }
 
 type Alias struct {
@@ -27,20 +47,33 @@ type Alias struct {
 	IDs      []ID     `xml:"id"`
 }
 
-func tgToAlias(tg *talkgroups.Talkgroup) Alias {
-	return Alias{
+func (p *Playlist) tgToAlias(tg *talkgroups.Talkgroup) Alias {
+	a := Alias{
 		XMLName: xml.Name{Local: "alias"},
 		Name:    common.ZeroIfNil(tg.Name),
 		Group:   common.ZeroIfNil(tg.TGGroup),
 		List:    "Stillbox",
 		IDs: []ID{
-			ID{
+			{
 				XMLName: xml.Name{Local: "id"},
 				Type:    "talkgroup",
 				Value:   common.PtrTo(int(tg.TGID)),
 			},
 		},
 	}
+
+	// be nice and assign it stream to ourselves
+	// TODO: make this more dynamic (exporter can have options, enumerate fields into a map[string]blah?)
+	// with which to specify the stillbox streamer
+	if p.HasStream("stillbox") {
+		a.IDs = append(a.IDs, ID{
+			Value:   common.PtrTo(int(tg.TGID)),
+			Type:    "broadcastChannel",
+			Channel: common.PtrTo("stillbox"),
+		})
+	}
+
+	return a
 }
 
 type ID struct {
@@ -114,7 +147,7 @@ func (st *Driver) ExportTalkgroups(ctx context.Context, w io.Writer, tgs []*talk
 	}
 
 	for _, tg := range tgs {
-		pl.Aliases = append(pl.Aliases, tgToAlias(tg))
+		pl.Aliases = append(pl.Aliases, pl.tgToAlias(tg))
 	}
 
 	enc := xml.NewEncoder(w)

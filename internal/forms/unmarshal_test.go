@@ -127,9 +127,9 @@ var (
 	}
 
 	ExpJob1 = xport.ExportJob{
-		Type: xport.FormatSDRTrunk,
-		SystemID: 197,
-		Template: []byte("this is a template\n\r\nthingy"),
+		Type:             xport.FormatSDRTrunk,
+		SystemID:         197,
+		Template:         []byte("this is a template\n\r\nthingy"),
 		TemplateFileName: "template.xml",
 	}
 )
@@ -247,9 +247,9 @@ func TestUnmarshal(t *testing.T) {
 			opts:   []forms.Option{forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty()},
 		},
 		{
-			name: "non multipart byte field",
-			r:     makeFunkyJSONExportRequest(&ExpJob1, "http://somewhere/export"),
-			dest: &xport.ExportJob{},
+			name:   "non multipart byte field",
+			r:      makeFunkyJSONExportRequest(&ExpJob1, "http://somewhere/export"),
+			dest:   &xport.ExportJob{},
 			expect: &ExpJob1,
 			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithOmitEmpty()},
 		},

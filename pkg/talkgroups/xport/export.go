@@ -15,9 +15,9 @@ type Exporter interface {
 }
 
 type ExportJob struct {
-	Type     Format `json:"type" form:"type"`
-	SystemID int    `json:"systemID" form:"systemID"`
-	Template []byte `json:"template" form:"template" filenameField:"TemplateFileName"`
+	Type             Format `json:"type" form:"type"`
+	SystemID         int    `json:"systemID" form:"systemID"`
+	Template         []byte `json:"template" form:"template" filenameField:"TemplateFileName"`
 	TemplateFileName string
 
 	filter.TalkgroupFilter

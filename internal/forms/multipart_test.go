@@ -16,7 +16,6 @@ func perr(err error) {
 	}
 }
 
-
 func makeExportRequest(ej *xport.ExportJob, url string) *http.Request {
 	var buf bytes.Buffer
 	body := multipart.NewWriter(&buf)
@@ -31,7 +30,6 @@ func makeExportRequest(ej *xport.ExportJob, url string) *http.Request {
 	_, err = w.Write(ej.Template)
 	perr(err)
 
-	
 	r, err := http.NewRequest(http.MethodPost, url, &buf)
 	perr(err)
 
@@ -43,7 +41,6 @@ func makeExportRequest(ej *xport.ExportJob, url string) *http.Request {
 func makeFunkyJSONExportRequest(ej *xport.ExportJob, url string) *http.Request {
 	var buf bytes.Buffer
 	je := json.NewEncoder(&buf)
-
 
 	err := je.Encode(ej)
 	perr(err)
