@@ -6,12 +6,22 @@ import { Talkgroup, TalkgroupUpdate } from '../talkgroup';
 @Injectable({
   providedIn: 'root',
 })
+
+export interface Pagination {
+  page: number;
+  perPage: number;
+}
+
 export class TalkgroupService {
   loggedIn: boolean = false;
   constructor(private http: HttpClient) {}
 
-  getTalkgroups(): Observable<Talkgroup[]> {
-    return this.http.get<Talkgroup[]>('/api/talkgroup/');
+  getTalkgroups(pagination?: Pagination): Observable<Talkgroup[]> {
+    if (pagination == null) {
+      return this.http.get<Talkgroup[]>('/api/talkgroup/');
+    }
+
+    return this.http.post<Talkgroup[]>('/api/talkgroup/', pagination);
   }
 
   getTalkgroup(sys: number, tg: number): Observable<Talkgroup> {

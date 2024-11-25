@@ -75,16 +75,29 @@ export class TalkgroupsComponent {
   selectedId: number = 0;
   talkgroups$!: Observable<Talkgroup[]>;
   tgService: TalkgroupService = inject(TalkgroupService);
+  page: number = 1;
+  perPage: number = 20;
 
   constructor(private route: ActivatedRoute) {}
 
-  ngOnInit() {
+  prevPage() {
+    if (this.page > 1) {
+      this.page--;
+    }
+    this.fetchTGs();
+  }
+
+  fetchTGs() {
     this.talkgroups$ = this.route.paramMap.pipe(
       switchMap((params) => {
         this.selectedSys = Number(params.get('sys'));
         this.selectedId = Number(params.get('tg'));
-        return this.tgService.getTalkgroups();
+        return this.tgService.getTalkgroups({page: this.page, perPage: perPage});
       }),
     );
+  }
+
+  ngOnInit() {
+    this.fetchTGs();
   }
 }
