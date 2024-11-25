@@ -24,11 +24,15 @@ func makeExportRequest(ej *xport.ExportJob, url string) *http.Request {
 
 	perr(body.WriteField("systemID", strconv.Itoa(int(ej.SystemID))))
 
+	perr(body.WriteField("talkgroups", "3,4"))
+
 	w, err := body.CreateFormFile("template", ej.TemplateFileName)
 	perr(err)
 
 	_, err = w.Write(ej.Template)
 	perr(err)
+
+	body.Close()
 
 	r, err := http.NewRequest(http.MethodPost, url, &buf)
 	perr(err)

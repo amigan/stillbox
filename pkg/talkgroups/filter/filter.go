@@ -11,11 +11,11 @@ import (
 )
 
 type TalkgroupFilter struct {
-	Talkgroups       []tgsp.ID `json:"talkgroups,omitempty"`
-	TalkgroupsNot    []tgsp.ID `json:"talkgroupsNot,omitempty"`
-	TalkgroupTagsAll []string  `json:"talkgroupTagsAll,omitempty"`
-	TalkgroupTagsAny []string  `json:"talkgroupTagsAny,omitempty"`
-	TalkgroupTagsNot []string  `json:"talkgroupTagsNot,omitempty"`
+	Talkgroups       []tgsp.ID `json:"talkgroups,omitempty" form:"talkgroups"`
+	TalkgroupsNot    []tgsp.ID `json:"talkgroupsNot,omitempty" form:"talkgroupsNot"`
+	TalkgroupTagsAll []string  `json:"talkgroupTagsAll,omitempty" form:"talkgroupTagsAll"`
+	TalkgroupTagsAny []string  `json:"talkgroupTagsAny,omitempty" form:"talkgroupTagsAny"`
+	TalkgroupTagsNot []string  `json:"talkgroupTagsNot,omitempty" form:"talkgroupTagsNot"`
 
 	talkgroups map[tgsp.ID]bool `json:"-"`
 }

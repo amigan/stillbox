@@ -14,6 +14,8 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/alerting"
 	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/talkgroups/filter"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
 
@@ -131,6 +133,13 @@ var (
 		SystemID:         197,
 		Template:         []byte("this is a template\n\r\nthingy"),
 		TemplateFileName: "template.xml",
+
+		TalkgroupFilter: filter.TalkgroupFilter{
+			Talkgroups: []talkgroups.ID{
+				talkgroups.TG(197, 3),
+				talkgroups.TG(197, 4),
+			},
+		},
 	}
 )
 
@@ -249,6 +258,13 @@ func TestUnmarshal(t *testing.T) {
 		{
 			name:   "non multipart byte field",
 			r:      makeFunkyJSONExportRequest(&ExpJob1, "http://somewhere/export"),
+			dest:   &xport.ExportJob{},
+			expect: &ExpJob1,
+			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithOmitEmpty()},
+		},
+		{
+			name:   "multipart byte field",
+			r:      makeExportRequest(&ExpJob1, "http://somewhere/export"),
 			dest:   &xport.ExportJob{},
 			expect: &ExpJob1,
 			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithOmitEmpty()},
