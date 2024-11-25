@@ -277,7 +277,7 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...option) ([]*tgsp.
 		if err != nil {
 			return nil, err
 		}
-		return addToRowList(t, tgRecords), nil
+		return addToRowListS(t, r, tgRecords), nil
 	}
 
 	// get all talkgroups
