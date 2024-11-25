@@ -15,6 +15,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/alerting"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -123,6 +124,13 @@ var (
 			PerPage: common.PtrTo(2),
 		},
 		OrderBy: common.PtrTo(tgstore.TGOrderID),
+	}
+
+	ExpJob1 = xport.ExportJob{
+		Type: xport.FormatSDRTrunk,
+		SystemID: 197,
+		Template: []byte("this is a template\n\r\nthingy"),
+		TemplateFileName: "template.xml",
 	}
 )
 
@@ -237,6 +245,13 @@ func TestUnmarshal(t *testing.T) {
 			dest:   &tgstore.Pagination{},
 			expect: &Pag1,
 			opts:   []forms.Option{forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty()},
+		},
+		{
+			name: "non multipart byte field",
+			r:     makeFunkyJSONExportRequest(&ExpJob1, "http://somewhere/export"),
+			dest: &xport.ExportJob{},
+			expect: &ExpJob1,
+			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithOmitEmpty()},
 		},
 	}
 
