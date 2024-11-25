@@ -137,7 +137,7 @@ var (
 		TalkgroupFilter: filter.TalkgroupFilter{
 			Talkgroups: []talkgroups.ID{
 				talkgroups.TG(197, 3),
-				talkgroups.TG(197, 4),
+				talkgroups.TG(0, 4),
 			},
 		},
 	}

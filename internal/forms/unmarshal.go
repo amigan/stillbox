@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -104,6 +105,7 @@ func (o *options) parseDuration(s string) (v time.Duration, set bool, err error)
 var typeOfByteSlice = reflect.TypeOf([]byte(nil))
 
 func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error {
+	textUnmarshaler := reflect.TypeFor[encoding.TextUnmarshaler]()
 	structType := destStruct.Type()
 	for i := 0; i < destStruct.NumField(); i++ {
 		destFieldVal := destStruct.Field(i)
@@ -175,6 +177,8 @@ func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error
 
 		ff := r.Form.Get(formField)
 
+		destFieldType := destFieldVal.Type()
+
 		switch v := destFieldIntf.(type) {
 		case string, *string:
 			setVal(destFieldVal, ff != "" || o.acceptBlank, ff)
@@ -223,11 +227,34 @@ func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error
 			}
 			destFieldVal.Set(reflect.ValueOf(ar))
 		default:
-			dvt := destFieldVal.Type()
-			if dvt.Kind() == reflect.Ptr {
-				dvt = dvt.Elem()
+			if destFieldType.Kind() == reflect.Slice && reflect.PointerTo(destFieldType.Elem()).Implements(textUnmarshaler) {
+				val := strings.Trim(ff, "[]")
+				if val == "" && o.acceptBlank {
+					continue
+				}
+
+				vals := strings.Split(val, ",")
+				elemType := destFieldType.Elem()
+				sliceVal := reflect.MakeSlice(destFieldType, len(vals), len(vals))
+
+				for i, tElem := range vals {
+					newElem := reflect.New(elemType)
+					tum := newElem.Interface().(encoding.TextUnmarshaler)
+					err := tum.UnmarshalText([]byte(tElem))
+					if err != nil {
+						return err
+					}
+					sliceVal.Index(i).Set(newElem.Elem())
+				}
+
+				destFieldVal.Set(sliceVal)
+
+				continue
 			}
-			if reflect.ValueOf(ff).CanConvert(dvt) {
+			if destFieldType.Kind() == reflect.Ptr {
+				destFieldType = destFieldType.Elem()
+			}
+			if reflect.ValueOf(ff).CanConvert(destFieldType) {
 				setVal(destFieldVal, ff != "" || o.acceptBlank, ff)
 			} else {
 				panic(fmt.Errorf("unsupported type %T", v))

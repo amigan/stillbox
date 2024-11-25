@@ -1,8 +1,12 @@
 package talkgroups
 
 import (
+	"encoding"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"dynatron.me/x/stillbox/pkg/database"
 )
@@ -30,6 +34,54 @@ type Metadata map[string]interface{}
 type ID struct {
 	System    uint32 `json:"sys"`
 	Talkgroup uint32 `json:"tg"`
+}
+
+var _ encoding.TextUnmarshaler = (*ID)(nil)
+
+var ErrBadTG = errors.New("bad talkgroup format")
+
+func (tid *ID) UnmarshalJSON(j []byte) error {
+	// this is a dirty hack since we cannot implement both TextUnmarshaler
+	// and json.Unmarshaler at the same time. sigh.
+	v := &struct{
+		System uint32 `json:"sys"`
+		Talkgroup uint32 `json:"tg"`
+	}{}
+	
+	if tid != nil {
+		v.System, v.Talkgroup = tid.System, tid.Talkgroup
+	}
+
+	err := json.Unmarshal(j, v)
+	if err != nil {
+		return err
+	}
+
+	tid.System, tid.Talkgroup = v.System, v.Talkgroup
+	return nil
+}
+
+func (tid *ID) UnmarshalText(txt []byte) error {
+	ar := strings.Split(string(txt), ":")
+	switch len(ar) {
+	case 2:
+		sys, err := strconv.Atoi(ar[0])
+		if err != nil {
+			return err
+		}
+		tid.System = uint32(sys)
+		fallthrough
+	case 1:
+		tg, err := strconv.Atoi(ar[len(ar)-1])
+		if err != nil {
+			return err
+		}
+		tid.Talkgroup = uint32(tg)
+	default:
+		return ErrBadTG
+	}
+
+	return nil
 }
 
 type IDs []ID

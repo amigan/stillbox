@@ -34,6 +34,11 @@ func (ej *ExportJob) Export(ctx context.Context, w io.Writer) error {
 			return err
 		}
 	} else {
+		for i, v := range ej.TalkgroupFilter.Talkgroups {
+			if v.System == 0 {
+				ej.TalkgroupFilter.Talkgroups[i].System = uint32(ej.SystemID)
+			}
+		}
 		ids, err := ej.TalkgroupFilter.TGs(ctx)
 		if err != nil {
 			return err
