@@ -43,11 +43,11 @@ var ErrBadTG = errors.New("bad talkgroup format")
 func (tid *ID) UnmarshalJSON(j []byte) error {
 	// this is a dirty hack since we cannot implement both TextUnmarshaler
 	// and json.Unmarshaler at the same time. sigh.
-	v := &struct{
-		System uint32 `json:"sys"`
+	v := &struct {
+		System    uint32 `json:"sys"`
 		Talkgroup uint32 `json:"tg"`
 	}{}
-	
+
 	if tid != nil {
 		v.System, v.Talkgroup = tid.System, tid.Talkgroup
 	}

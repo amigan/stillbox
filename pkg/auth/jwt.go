@@ -156,6 +156,7 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Name:     "jwt",
 		Value:    tok,
+		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 	}
@@ -216,6 +217,7 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Name:     "jwt",
 		Value:    tok,
+		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 	}
@@ -242,9 +244,10 @@ func (a *Auth) routeLogout(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Name:     "jwt",
 		Value:    "",
+		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		Expires:  time.Time{},
+		MaxAge:   -1,
 	}
 
 	if a.allowInsecureCookie(r) {
