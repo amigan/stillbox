@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 
 	"dynatron.me/x/stillbox/internal/forms"
@@ -31,6 +32,8 @@ func (tga *talkgroupAPI) Subrouter() http.Handler {
 	r.Post(`/`, tga.postPaginated)
 
 	r.Post("/import", tga.tgImport)
+
+	r.Post("/export", tga.tgExport)
 
 	return r
 }
@@ -154,6 +157,25 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond(w, r, record)
+}
+
+func (tga *talkgroupAPI) tgExport(w http.ResponseWriter, r *http.Request) {
+	var expJob xport.ExportJob
+	ctx := r.Context()
+
+	err := forms.Unmarshal(r, &expJob, forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=stillbox_%s", expJob.TemplateFileName))
+	w.Header().Set("Content-Type", "text/xml")
+
+	err = expJob.Export(ctx, w)
+	if err != nil {
+		wErr(w, r, autoError(err))
+	}
 }
 
 func (tga *talkgroupAPI) tgImport(w http.ResponseWriter, r *http.Request) {
