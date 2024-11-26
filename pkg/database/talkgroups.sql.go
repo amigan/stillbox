@@ -377,6 +377,18 @@ func (q *Queries) GetTalkgroupsWithLearnedBySystem(ctx context.Context, system i
 	return items, nil
 }
 
+const getTalkgroupsWithLearnedBySystemCount = `-- name: GetTalkgroupsWithLearnedBySystemCount :one
+SELECT COUNT(*) FROM talkgroups tg
+WHERE tg.system_id = $1
+`
+
+func (q *Queries) GetTalkgroupsWithLearnedBySystemCount(ctx context.Context, system int32) (int64, error) {
+	row := q.db.QueryRow(ctx, getTalkgroupsWithLearnedBySystemCount, system)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getTalkgroupsWithLearnedBySystemP = `-- name: GetTalkgroupsWithLearnedBySystemP :many
 SELECT
 tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
@@ -481,6 +493,18 @@ func (q *Queries) GetTalkgroupsWithLearnedP(ctx context.Context, offset int32, p
 		return nil, err
 	}
 	return items, nil
+}
+
+const getTalkgroupsWithLearnedPCount = `-- name: GetTalkgroupsWithLearnedPCount :one
+SELECT COUNT(*) FROM talkgroups tg
+WHERE ignored IS NOT TRUE
+`
+
+func (q *Queries) GetTalkgroupsWithLearnedPCount(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getTalkgroupsWithLearnedPCount)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const restoreTalkgroupVersion = `-- name: RestoreTalkgroupVersion :one

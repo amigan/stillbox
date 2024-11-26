@@ -66,6 +66,7 @@ type Store interface {
 
 type options struct {
 	pagination     *Pagination
+	totalDest      *int
 	perPageDefault int
 }
 
@@ -78,10 +79,11 @@ func sOpt(opts []option) (o options) {
 
 type option func(*options)
 
-func WithPagination(p *Pagination, defPerPage int) option {
+func WithPagination(p *Pagination, defPerPage int, totalDest *int) option {
 	return func(o *options) {
 		o.pagination = p
 		o.perPageDefault = defPerPage
+		o.totalDest = totalDest
 	}
 }
 
@@ -284,11 +286,30 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...option) ([]*tgsp.
 
 	if opt.pagination != nil {
 		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
-		tgRecords, err := db.GetTalkgroupsWithLearnedP(ctx, offset, perPage)
+		var tgRecords []database.GetTalkgroupsWithLearnedPRow
+		var err error
+		err = db.InTx(ctx, func(db database.Store) error {
+			tgRecords, err = db.GetTalkgroupsWithLearnedP(ctx, offset, perPage)
+			if err != nil {
+				return err
+			}
+
+			if opt.totalDest != nil {
+				count, err := db.GetTalkgroupsWithLearnedPCount(ctx)
+				if err != nil {
+					return err
+				}
+
+				*opt.totalDest = int(count)
+			}
+
+			return nil
+		}, pgx.TxOptions{})
 
 		if err != nil {
 			return nil, err
 		}
+
 		return addToRowListS(t, r, tgRecords), nil
 	}
 
