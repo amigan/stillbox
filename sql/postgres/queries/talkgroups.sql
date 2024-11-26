@@ -40,7 +40,10 @@ WHERE tg.system_id = @system
 ORDER BY tg.system_id ASC, tg.tgid ASC
 OFFSET sqlc.arg('offset') ROWS
 FETCH NEXT sqlc.arg('per_page') ROWS ONLY;
-;
+
+-- name: GetTalkgroupsWithLearnedBySystemCount :one
+SELECT COUNT(*) FROM talkgroups tg
+WHERE tg.system_id = @system;
 
 -- name: GetTalkgroupsWithLearnedBySystem :many
 SELECT
@@ -65,6 +68,10 @@ WHERE ignored IS NOT TRUE
 ORDER BY tg.system_id ASC, tg.tgid ASC
 OFFSET sqlc.arg('offset') ROWS
 FETCH NEXT sqlc.arg('per_page') ROWS ONLY;
+
+-- name: GetTalkgroupsWithLearnedPCount :one
+SELECT COUNT(*) FROM talkgroups tg
+WHERE ignored IS NOT TRUE;
 
 -- name: GetSystemName :one
 SELECT name FROM systems WHERE id = @system_id;

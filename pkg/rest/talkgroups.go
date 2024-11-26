@@ -112,13 +112,16 @@ func (tga *talkgroupAPI) postPaginated(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var res interface{}
+	res := struct {
+		Talkgroups []*talkgroups.Talkgroup `json:"talkgroups"`
+		Count      int                     `json:"count"`
+	}{}
 	switch {
 	case p.System != nil:
-		res, err = tgs.SystemTGs(ctx, int32(*p.System), tgstore.WithPagination(input, DefaultPerPage))
+		res.Talkgroups, err = tgs.SystemTGs(ctx, int32(*p.System), tgstore.WithPagination(input, DefaultPerPage, &res.Count))
 	default:
 		// get all talkgroups
-		res, err = tgs.TGs(ctx, nil, tgstore.WithPagination(input, DefaultPerPage))
+		res.Talkgroups, err = tgs.TGs(ctx, nil, tgstore.WithPagination(input, DefaultPerPage, &res.Count))
 	}
 
 	if err != nil {
