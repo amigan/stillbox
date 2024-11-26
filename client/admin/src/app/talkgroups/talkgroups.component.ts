@@ -1,7 +1,11 @@
 import { Component, inject, Pipe, PipeTransform } from '@angular/core';
-import { TalkgroupService } from './talkgroups.service';
+import { TalkgroupService, TalkgroupsPaginated } from './talkgroups.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { ionCreateOutline } from '@ng-icons/ionicons';
+import {
+  ionCreateOutline,
+  ionChevronBack,
+  ionChevronForward,
+} from '@ng-icons/ionicons';
 import {
   matFireTruckOutline,
   matLocalPoliceOutline,
@@ -12,11 +16,10 @@ import {
 import { Talkgroup, iconMapping } from '../talkgroup';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { RouterModule, RouterOutlet, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-
 
 @Pipe({
   standalone: true,
@@ -35,18 +38,15 @@ export class IconifyPipe implements PipeTransform {
 
 @Pipe({
   standalone: true,
-  name: 'sanitizeHtml'
+  name: 'sanitizeHtml',
 })
 export class SanitizeHtmlPipe implements PipeTransform {
+  constructor(private _sanitizer: DomSanitizer) {}
 
-  constructor(private _sanitizer:DomSanitizer) {
-  }
-
-  transform(v:string):SafeHtml {
+  transform(v: string): SafeHtml {
     return this._sanitizer.bypassSecurityTrustHtml(v);
   }
 }
-
 
 @Component({
   selector: 'talkgroups',
@@ -62,29 +62,68 @@ export class SanitizeHtmlPipe implements PipeTransform {
   ],
   templateUrl: './talkgroups.component.html',
   styleUrl: './talkgroups.component.css',
-  providers: [provideIcons({ ionCreateOutline,
-     matFireTruckOutline,
-  matLocalPoliceOutline,
-  matEmergencyOutline,
-  matDirectionsBusOutline,
-  matGroupWorkOutline,
-})],
+  providers: [
+    provideIcons({
+      ionCreateOutline,
+      matFireTruckOutline,
+      matLocalPoliceOutline,
+      matEmergencyOutline,
+      matDirectionsBusOutline,
+      matGroupWorkOutline,
+      ionChevronBack,
+      ionChevronForward,
+    }),
+  ],
 })
 export class TalkgroupsComponent {
   selectedSys: number = 0;
   selectedId: number = 0;
-  talkgroups$!: Observable<Talkgroup[]>;
+  talkgroups$!: Observable<TalkgroupsPaginated>;
   tgService: TalkgroupService = inject(TalkgroupService);
+  page: number = 1;
+  perPage: number = 20;
+  totalPages: number = 1;
 
   constructor(private route: ActivatedRoute) {}
 
-  ngOnInit() {
+  prevPage() {
+    if (this.page > 1) {
+      this.page--;
+      this.fetchTGs();
+    }
+  }
+
+  nextPage() {
+    if (this.page < this.totalPages) {
+      this.page++;
+      this.fetchTGs();
+    }
+  }
+
+  setPage(p: number) {
+    if (p <= this.totalPages && p > 0) {
+      this.page = p;
+      this.fetchTGs();
+    }
+  }
+
+  fetchTGs() {
     this.talkgroups$ = this.route.paramMap.pipe(
       switchMap((params) => {
         this.selectedSys = Number(params.get('sys'));
         this.selectedId = Number(params.get('tg'));
-        return this.tgService.getTalkgroups();
+        return this.tgService
+          .getTalkgroupsPag({ page: this.page, perPage: this.perPage })
+          .pipe(
+            tap((event) => {
+              this.totalPages = Math.ceil(event.count / this.perPage);
+            }),
+          );
       }),
     );
+  }
+
+  ngOnInit() {
+    this.fetchTGs();
   }
 }

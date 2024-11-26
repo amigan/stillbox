@@ -60,14 +60,14 @@
     <alert-rule-builder [rules]="tg.alert_config" />
     <div>
       <label for="icon">Icon: </label>
-      <select
-        class="select"
-        name="icon"
-        id="icon"
-        formControlName="icon"
-      >
-        @for(opt of iconMapping | keyvalue; track opt) {
-        <option value="{{ opt.key }}" [selected]="opt.key == tg.metadata?.icon">{{ opt.key | titlecase }}</option>
+      <select class="select" name="icon" id="icon" formControlName="icon">
+        @for (opt of iconMapping | keyvalue; track opt) {
+          <option
+            value="{{ opt.key }}"
+            [selected]="opt.key == tg.metadata?.icon"
+          >
+            {{ opt.key | titlecase }}
+          </option>
         }
       </select>
     </div>
