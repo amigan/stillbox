@@ -15,7 +15,8 @@
       </tr>
     </thead>
     <tbody>
-      @for (tg of talkgroups$ | async ; track tg.id) {
+      @let tgs = talkgroups$ | async;
+      @for (tg of tgs?.talkgroups ; track tg.id) {
         <tr>
           <!-- <td class="tgIcon" [innerHTML]="(tg | iconify).iconSvg! | sanitizeHtml"></td> -->
           <td class="tgIcon"><ng-icon [name]="(tg | iconify).iconSvg!"></ng-icon></td>
@@ -35,4 +36,10 @@
       }
     </tbody>
   </table>
+  <div class="w-100">
+    Total: {{ tgs?.count }}
+    <button class="btn btn-primary" (click)="prevPage()" [class.btn-ghost]="page == 1"><ng-icon name="ionChevronBack"></ng-icon></button>
+    Page {{ page }} of {{ totalPages }}
+    <button class="btn btn-primary" (click)="nextPage()" [class.btn-ghost]="page == totalPages"><ng-icon name="ionChevronForward"></ng-icon></button>
+  </div>
 </div>

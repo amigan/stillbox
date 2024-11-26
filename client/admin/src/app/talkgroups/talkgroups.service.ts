@@ -3,25 +3,29 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Talkgroup, TalkgroupUpdate } from '../talkgroup';
 
-@Injectable({
-  providedIn: 'root',
-})
-
 export interface Pagination {
   page: number;
   perPage: number;
 }
 
+export interface TalkgroupsPaginated {
+  talkgroups: Talkgroup[];
+  count: number;
+}
+
+@Injectable({
+  providedIn: 'root',
+})
 export class TalkgroupService {
   loggedIn: boolean = false;
   constructor(private http: HttpClient) {}
 
-  getTalkgroups(pagination?: Pagination): Observable<Talkgroup[]> {
-    if (pagination == null) {
-      return this.http.get<Talkgroup[]>('/api/talkgroup/');
-    }
+  getTalkgroups(): Observable<Talkgroup[]> {
+    return this.http.get<Talkgroup[]>('/api/talkgroup/');
+  }
 
-    return this.http.post<Talkgroup[]>('/api/talkgroup/', pagination);
+  getTalkgroupsPag(pagination: Pagination): Observable<TalkgroupsPaginated> {
+    return this.http.post<TalkgroupsPaginated>('/api/talkgroup/', pagination);
   }
 
   getTalkgroup(sys: number, tg: number): Observable<Talkgroup> {

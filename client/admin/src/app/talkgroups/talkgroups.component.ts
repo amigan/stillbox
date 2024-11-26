@@ -1,7 +1,7 @@
 import { Component, inject, Pipe, PipeTransform } from '@angular/core';
-import { TalkgroupService } from './talkgroups.service';
+import { TalkgroupService, TalkgroupsPaginated } from './talkgroups.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { ionCreateOutline } from '@ng-icons/ionicons';
+import { ionCreateOutline, ionChevronBack, ionChevronForward  } from '@ng-icons/ionicons';
 import {
   matFireTruckOutline,
   matLocalPoliceOutline,
@@ -12,7 +12,7 @@ import {
 import { Talkgroup, iconMapping } from '../talkgroup';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { RouterModule, RouterOutlet, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -68,23 +68,33 @@ export class SanitizeHtmlPipe implements PipeTransform {
   matEmergencyOutline,
   matDirectionsBusOutline,
   matGroupWorkOutline,
+  ionChevronBack,
+  ionChevronForward,
 })],
 })
 export class TalkgroupsComponent {
   selectedSys: number = 0;
   selectedId: number = 0;
-  talkgroups$!: Observable<Talkgroup[]>;
+  talkgroups$!: Observable<TalkgroupsPaginated>;
   tgService: TalkgroupService = inject(TalkgroupService);
   page: number = 1;
   perPage: number = 20;
+  totalPages: number = 1;
 
   constructor(private route: ActivatedRoute) {}
 
   prevPage() {
     if (this.page > 1) {
       this.page--;
+      this.fetchTGs();
     }
-    this.fetchTGs();
+  }
+
+  nextPage() {
+    if (this.page < this.totalPages) {
+      this.page++;
+      this.fetchTGs();
+    }
   }
 
   fetchTGs() {
@@ -92,7 +102,11 @@ export class TalkgroupsComponent {
       switchMap((params) => {
         this.selectedSys = Number(params.get('sys'));
         this.selectedId = Number(params.get('tg'));
-        return this.tgService.getTalkgroups({page: this.page, perPage: perPage});
+        return this.tgService.getTalkgroupsPag({page: this.page, perPage: this.perPage}).pipe(
+          tap((event) => {
+            this.totalPages = Math.ceil(event.count/this.perPage);
+          })
+        );
       }),
     );
   }
