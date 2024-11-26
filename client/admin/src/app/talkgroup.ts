@@ -34,16 +34,16 @@ export interface Metadata {
   icon: string | null;
 }
 
-  export interface IconMap {
-    [name: string]: string;
-  }
+export interface IconMap {
+  [name: string]: string;
+}
 
 export const iconMapping: IconMap = {
-      'police': 'matLocalPoliceOutline',
-      'fire': 'matFireTruckOutline',
-      'ems': 'matEmergencyOutline',
-      'bus': 'matDirectionsBusOutline',
-      '': 'matGroupWorkOutline',
+  police: 'matLocalPoliceOutline',
+  fire: 'matFireTruckOutline',
+  ems: 'matEmergencyOutline',
+  bus: 'matDirectionsBusOutline',
+  '': 'matGroupWorkOutline',
 };
 
 export class Talkgroup {

@@ -1,5 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { Talkgroup, TalkgroupUpdate, IconMap, iconMapping } from '../../talkgroup';
+import {
+  Talkgroup,
+  TalkgroupUpdate,
+  IconMap,
+  iconMapping,
+} from '../../talkgroup';
 import { TalkgroupService } from '../talkgroups.service';
 import { AlertRuleBuilderComponent } from './alert-rule-builder/alert-rule-builder.component';
 import { CommonModule } from '@angular/common';
@@ -40,19 +45,17 @@ export class TalkgroupRecordComponent {
       .getTalkgroup(Number(sysId), Number(tgId))
       .subscribe((data: Talkgroup) => {
         this.tg = data;
-    this.form = new FormGroup({
-      name: new FormControl(this.tg.name),
-      alpha_tag: new FormControl(this.tg.alpha_tag),
-      tg_group: new FormControl(this.tg.tg_group),
-      frequency: new FormControl(this.tg.frequency),
-      alert: new FormControl(this.tg.alert),
-      weight: new FormControl(this.tg.weight),
-      icon: new FormControl(this.tg.icon),
-    });
-    console.log(this.tg.icon);
+        this.form = new FormGroup({
+          name: new FormControl(this.tg.name),
+          alpha_tag: new FormControl(this.tg.alpha_tag),
+          tg_group: new FormControl(this.tg.tg_group),
+          frequency: new FormControl(this.tg.frequency),
+          alert: new FormControl(this.tg.alert),
+          weight: new FormControl(this.tg.weight),
+          icon: new FormControl(this.tg.icon),
+        });
+        console.log(this.tg.icon);
       });
-
-
   }
 
   submit() {
@@ -84,9 +87,11 @@ export class TalkgroupRecordComponent {
         tgu.metadata = {};
       }
       if (this.tg.icon == null || this.tg.icon == '') {
-        tgu.metadata = Object.assign(tgu.metadata, {icon: undefined});
+        tgu.metadata = Object.assign(tgu.metadata, { icon: undefined });
       } else {
-      tgu.metadata = Object.assign(tgu.metadata!, { icon: this.form.controls['icon'] });
+        tgu.metadata = Object.assign(tgu.metadata!, {
+          icon: this.form.controls['icon'],
+        });
       }
     }
     this.tgService
