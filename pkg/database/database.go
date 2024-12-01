@@ -94,7 +94,9 @@ func NewClient(ctx context.Context, conf config.DB) (*Postgres, error) {
 		return nil, err
 	}
 
-	log.Debug().Err(err).Msg("migrations done")
+	if !errors.Is(err, migrate.ErrNoChange) {
+		log.Info().Err(err).Msg("migrations done")
+	}
 
 	m.Close()
 
