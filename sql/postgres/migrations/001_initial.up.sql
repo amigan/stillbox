@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS alerts(
 	metadata JSONB
 );
 
-CREATE TABLE calls (
+CREATE TABLE IF NOT EXISTS calls(
 	id UUID,
 	submitter INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
 	system INTEGER NOT NULL,
