@@ -40,10 +40,13 @@ func (c *Configuration) read() error {
 		return err
 	}
 
-	k.Load(env.Provider(common.EnvPrefix, ".", func(s string) string {
+	err = k.Load(env.Provider(common.EnvPrefix, ".", func(s string) string {
 		return strings.Replace(strings.ToLower(
 			strings.TrimPrefix(s, common.EnvPrefix)), "_", ".", -1)
 	}), nil)
+	if err != nil {
+		return err
+	}
 
 	err = k.UnmarshalWithConf("", &c.Config,
 		koanf.UnmarshalConf{

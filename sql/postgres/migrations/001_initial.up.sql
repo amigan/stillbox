@@ -78,7 +78,33 @@ CREATE TABLE IF NOT EXISTS alerts(
 	metadata JSONB
 );
 
-CREATE TABLE IF NOT EXISTS calls(
+CREATE TABLE calls (
+	id UUID,
+	submitter INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
+	system INTEGER NOT NULL,
+	talkgroup INTEGER NOT NULL,
+	call_date TIMESTAMPTZ NOT NULL,
+	audio_name TEXT,
+	audio_blob BYTEA,
+	duration INTEGER,
+	audio_type TEXT,
+	audio_url TEXT,
+	frequency INTEGER NOT NULL,
+	frequencies INTEGER[],
+	patches INTEGER[],
+	tg_label TEXT,
+	tg_alpha_tag TEXT,
+	tg_group TEXT,
+	source INTEGER NOT NULL,
+	transcript TEXT,
+	PRIMARY KEY (id, call_date),
+	FOREIGN KEY (system, talkgroup) REFERENCES talkgroups(system_id, tgid)
+) PARTITION BY RANGE (call_date);
+
+CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector('english', transcript));
+CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(system, talkgroup, call_date);
+
+CREATE TABLE swept_calls (
 	id UUID PRIMARY KEY,
 	submitter INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
 	system INTEGER NOT NULL,
@@ -100,8 +126,9 @@ CREATE TABLE IF NOT EXISTS calls(
 	FOREIGN KEY (system, talkgroup) REFERENCES talkgroups(system_id, tgid)
 );
 
-CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector('english', transcript));
-CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(system, talkgroup, call_date);
+CREATE INDEX IF NOT EXISTS swept_calls_transcript_idx ON swept_calls USING GIN (to_tsvector('english', transcript));
+CREATE INDEX IF NOT EXISTS swept_calls_call_date_tg_idx ON swept_calls(system, talkgroup, call_date);
+
 
 CREATE TABLE IF NOT EXISTS settings(
 	name TEXT PRIMARY KEY,
@@ -125,8 +152,14 @@ CREATE INDEX IF NOT EXISTS incidents_name_description_idx ON incidents USING GIN
 );
 
 CREATE TABLE IF NOT EXISTS incidents_calls(
-	incident_id UUID REFERENCES incidents(id) ON UPDATE CASCADE ON DELETE CASCADE,
-	call_id UUID REFERENCES calls(id) ON UPDATE CASCADE,
+	incident_id UUID NOT NULL REFERENCES incidents(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	call_id UUID NOT NULL,
+	calls_tbl_id UUID NULL,
+	swept_call_id UUID NULL REFERENCES swept_calls(id),
+	call_date TIMESTAMPTZ NULL,
 	notes JSONB,
+	FOREIGN KEY (calls_tbl_id, call_date) REFERENCES calls(id, call_date),
 	PRIMARY KEY (incident_id, call_id)
 );
+
+

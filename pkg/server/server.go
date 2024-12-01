@@ -10,6 +10,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/database/partman"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/rest"
@@ -40,6 +41,7 @@ type Server struct {
 	hup      chan os.Signal
 	tgs      tgstore.Store
 	rest     rest.API
+	partman  partman.PartitionManager
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
@@ -77,6 +79,18 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		tgs:      tgCache,
 		sinks:    sinks.NewSinkManager(),
 		rest:     api,
+	}
+
+	if cfg.DB.Partition.Enabled {
+		srv.partman, err = partman.New(db, cfg.DB.Partition)
+		if err != nil {
+			return nil, err
+		}
+
+		err = srv.partman.Check(ctx, time.Now())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	srv.sinks.Register("database", sinks.NewDatabaseSink(srv.db, tgCache), true)
@@ -127,6 +141,10 @@ func (s *Server) Go(ctx context.Context) error {
 
 	go s.nex.Go(ctx)
 	go s.alerter.Go(ctx)
+
+	if pm := s.partman; pm != nil {
+		go pm.Go(ctx)
+	}
 
 	var err error
 	go func() {

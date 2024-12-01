@@ -205,7 +205,7 @@ func (n *notifier) Send(ctx context.Context, alerts []alert.Alert) error {
 	return nil
 }
 
-func New(cfg config.Notify) (Notifier, error) {
+func New(cfg config.Notify) (*notifier, error) {
 	n := new(notifier)
 
 	for _, s := range cfg {

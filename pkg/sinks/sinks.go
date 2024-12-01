@@ -36,7 +36,7 @@ type sinks struct {
 	sinks map[string]sinkInstance
 }
 
-func NewSinkManager() Sinks {
+func NewSinkManager() *sinks {
 	return &sinks{
 		sinks: make(map[string]sinkInstance),
 	}

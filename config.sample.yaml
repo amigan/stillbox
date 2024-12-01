@@ -1,5 +1,18 @@
 db:
   connect: 'postgres://postgres:password@localhost:5432/example'
+  partition:
+    # whether to enable the built-in partition manager
+    enabled: true
+    # the postgres schema containing our tables
+    schema: public
+    # daily|weekly|monthly|quarterly|yearly
+    interval: monthly
+    # number of partitions to retain, -1 to keep all
+    retain: 3
+    # whether to drop or simply detach
+    drop: true
+    # number of partitions to prepare ahead
+    preProvision: 3
 cors:
   allowedOrigins:
     - 'http://localhost:*'

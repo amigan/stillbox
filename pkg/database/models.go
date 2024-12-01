@@ -55,6 +55,111 @@ type Call struct {
 	Transcript  *string            `json:"transcript,omitempty"`
 }
 
+type CallsP202407 struct {
+	ID          uuid.UUID          `json:"id,omitempty"`
+	Submitter   *int32             `json:"submitter,omitempty"`
+	System      int                `json:"system,omitempty"`
+	Talkgroup   int                `json:"talkgroup,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"call_date,omitempty"`
+	AudioName   *string            `json:"audio_name,omitempty"`
+	AudioBlob   []byte             `json:"audio_blob,omitempty"`
+	Duration    *int32             `json:"duration,omitempty"`
+	AudioType   *string            `json:"audio_type,omitempty"`
+	AudioUrl    *string            `json:"audio_url,omitempty"`
+	Frequency   int                `json:"frequency,omitempty"`
+	Frequencies []int              `json:"frequencies,omitempty"`
+	Patches     []int              `json:"patches,omitempty"`
+	TGLabel     *string            `json:"tg_label,omitempty"`
+	TGAlphaTag  *string            `json:"tg_alpha_tag,omitempty"`
+	TGGroup     *string            `json:"tg_group,omitempty"`
+	Source      int                `json:"source,omitempty"`
+	Transcript  *string            `json:"transcript,omitempty"`
+}
+
+type CallsP202408 struct {
+	ID          uuid.UUID          `json:"id,omitempty"`
+	Submitter   *int32             `json:"submitter,omitempty"`
+	System      int                `json:"system,omitempty"`
+	Talkgroup   int                `json:"talkgroup,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"call_date,omitempty"`
+	AudioName   *string            `json:"audio_name,omitempty"`
+	AudioBlob   []byte             `json:"audio_blob,omitempty"`
+	Duration    *int32             `json:"duration,omitempty"`
+	AudioType   *string            `json:"audio_type,omitempty"`
+	AudioUrl    *string            `json:"audio_url,omitempty"`
+	Frequency   int                `json:"frequency,omitempty"`
+	Frequencies []int              `json:"frequencies,omitempty"`
+	Patches     []int              `json:"patches,omitempty"`
+	TGLabel     *string            `json:"tg_label,omitempty"`
+	TGAlphaTag  *string            `json:"tg_alpha_tag,omitempty"`
+	TGGroup     *string            `json:"tg_group,omitempty"`
+	Source      int                `json:"source,omitempty"`
+	Transcript  *string            `json:"transcript,omitempty"`
+}
+
+type CallsP202409 struct {
+	ID          uuid.UUID          `json:"id,omitempty"`
+	Submitter   *int32             `json:"submitter,omitempty"`
+	System      int                `json:"system,omitempty"`
+	Talkgroup   int                `json:"talkgroup,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"call_date,omitempty"`
+	AudioName   *string            `json:"audio_name,omitempty"`
+	AudioBlob   []byte             `json:"audio_blob,omitempty"`
+	Duration    *int32             `json:"duration,omitempty"`
+	AudioType   *string            `json:"audio_type,omitempty"`
+	AudioUrl    *string            `json:"audio_url,omitempty"`
+	Frequency   int                `json:"frequency,omitempty"`
+	Frequencies []int              `json:"frequencies,omitempty"`
+	Patches     []int              `json:"patches,omitempty"`
+	TGLabel     *string            `json:"tg_label,omitempty"`
+	TGAlphaTag  *string            `json:"tg_alpha_tag,omitempty"`
+	TGGroup     *string            `json:"tg_group,omitempty"`
+	Source      int                `json:"source,omitempty"`
+	Transcript  *string            `json:"transcript,omitempty"`
+}
+
+type CallsP202410 struct {
+	ID          uuid.UUID          `json:"id,omitempty"`
+	Submitter   *int32             `json:"submitter,omitempty"`
+	System      int                `json:"system,omitempty"`
+	Talkgroup   int                `json:"talkgroup,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"call_date,omitempty"`
+	AudioName   *string            `json:"audio_name,omitempty"`
+	AudioBlob   []byte             `json:"audio_blob,omitempty"`
+	Duration    *int32             `json:"duration,omitempty"`
+	AudioType   *string            `json:"audio_type,omitempty"`
+	AudioUrl    *string            `json:"audio_url,omitempty"`
+	Frequency   int                `json:"frequency,omitempty"`
+	Frequencies []int              `json:"frequencies,omitempty"`
+	Patches     []int              `json:"patches,omitempty"`
+	TGLabel     *string            `json:"tg_label,omitempty"`
+	TGAlphaTag  *string            `json:"tg_alpha_tag,omitempty"`
+	TGGroup     *string            `json:"tg_group,omitempty"`
+	Source      int                `json:"source,omitempty"`
+	Transcript  *string            `json:"transcript,omitempty"`
+}
+
+type CallsP202411 struct {
+	ID          uuid.UUID          `json:"id,omitempty"`
+	Submitter   *int32             `json:"submitter,omitempty"`
+	System      int                `json:"system,omitempty"`
+	Talkgroup   int                `json:"talkgroup,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"call_date,omitempty"`
+	AudioName   *string            `json:"audio_name,omitempty"`
+	AudioBlob   []byte             `json:"audio_blob,omitempty"`
+	Duration    *int32             `json:"duration,omitempty"`
+	AudioType   *string            `json:"audio_type,omitempty"`
+	AudioUrl    *string            `json:"audio_url,omitempty"`
+	Frequency   int                `json:"frequency,omitempty"`
+	Frequencies []int              `json:"frequencies,omitempty"`
+	Patches     []int              `json:"patches,omitempty"`
+	TGLabel     *string            `json:"tg_label,omitempty"`
+	TGAlphaTag  *string            `json:"tg_alpha_tag,omitempty"`
+	TGGroup     *string            `json:"tg_group,omitempty"`
+	Source      int                `json:"source,omitempty"`
+	Transcript  *string            `json:"transcript,omitempty"`
+}
+
 type Incident struct {
 	ID          uuid.UUID        `json:"id,omitempty"`
 	Name        string           `json:"name,omitempty"`
@@ -66,15 +171,39 @@ type Incident struct {
 }
 
 type IncidentsCall struct {
-	IncidentID uuid.UUID `json:"incident_id,omitempty"`
-	CallID     uuid.UUID `json:"call_id,omitempty"`
-	Notes      []byte    `json:"notes,omitempty"`
+	IncidentID  uuid.UUID          `json:"incident_id,omitempty"`
+	CallID      uuid.UUID          `json:"call_id,omitempty"`
+	CallsTblID  pgtype.UUID        `json:"calls_tbl_id,omitempty"`
+	SweptCallID pgtype.UUID        `json:"swept_call_id,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"call_date,omitempty"`
+	Notes       []byte             `json:"notes,omitempty"`
 }
 
 type Setting struct {
 	Name      string `json:"name,omitempty"`
 	UpdatedBy *int32 `json:"updated_by,omitempty"`
 	Value     []byte `json:"value,omitempty"`
+}
+
+type SweptCall struct {
+	ID          uuid.UUID          `json:"id,omitempty"`
+	Submitter   *int32             `json:"submitter,omitempty"`
+	System      int                `json:"system,omitempty"`
+	Talkgroup   int                `json:"talkgroup,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"call_date,omitempty"`
+	AudioName   *string            `json:"audio_name,omitempty"`
+	AudioBlob   []byte             `json:"audio_blob,omitempty"`
+	Duration    *int32             `json:"duration,omitempty"`
+	AudioType   *string            `json:"audio_type,omitempty"`
+	AudioUrl    *string            `json:"audio_url,omitempty"`
+	Frequency   int                `json:"frequency,omitempty"`
+	Frequencies []int              `json:"frequencies,omitempty"`
+	Patches     []int              `json:"patches,omitempty"`
+	TGLabel     *string            `json:"tg_label,omitempty"`
+	TGAlphaTag  *string            `json:"tg_alpha_tag,omitempty"`
+	TGGroup     *string            `json:"tg_group,omitempty"`
+	Source      int                `json:"source,omitempty"`
+	Transcript  *string            `json:"transcript,omitempty"`
 }
 
 type System struct {

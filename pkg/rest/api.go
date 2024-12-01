@@ -20,7 +20,7 @@ type API interface {
 type api struct {
 }
 
-func New() API {
+func New() *api {
 	s := new(api)
 
 	return s

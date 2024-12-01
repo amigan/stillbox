@@ -15,6 +15,7 @@ type Querier interface {
 	AddAlert(ctx context.Context, arg AddAlertParams) error
 	AddCall(ctx context.Context, arg AddCallParams) error
 	AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error)
+	CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteAPIKey(ctx context.Context, apiKey string) error
@@ -42,6 +43,7 @@ type Querier interface {
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error
 	StoreTGVersion(ctx context.Context, arg []StoreTGVersionParams) *StoreTGVersionBatchResults
+	SweepCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)
 	UpdatePassword(ctx context.Context, username string, password string) error
 	UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error)
 	UpsertTalkgroup(ctx context.Context, arg []UpsertTalkgroupParams) *UpsertTalkgroupBatchResults

@@ -39,8 +39,18 @@ type CORS struct {
 }
 
 type DB struct {
-	Connect    string `yaml:"connect"`
-	LogQueries bool   `yaml:"logQueries"`
+	Connect    string    `yaml:"connect"`
+	LogQueries bool      `yaml:"logQueries"`
+	Partition  Partition `yaml:"partition"`
+}
+
+type Partition struct {
+	Enabled      bool   `yaml:"enabled"`
+	Schema       string `yaml:"schema"`
+	Interval     string `yaml:"interval"`
+	Retain       int    `yaml:"retain"`
+	PreProvision *int   `yaml:"preProvision"`
+	Drop         bool   `yaml:"detach"`
 }
 
 type Logger struct {

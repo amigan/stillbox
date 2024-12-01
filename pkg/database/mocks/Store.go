@@ -12,6 +12,8 @@ import (
 
 	pgx "github.com/jackc/pgx/v5"
 
+	time "time"
+
 	uuid "github.com/google/uuid"
 )
 
@@ -227,6 +229,64 @@ func (_c *Store_BulkSetTalkgroupTags_Call) RunAndReturn(run func(context.Context
 	return _c
 }
 
+// CleanupSweptCalls provides a mock function with given fields: ctx, rangeStart, rangeEnd
+func (_m *Store) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
+	ret := _m.Called(ctx, rangeStart, rangeEnd)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CleanupSweptCalls")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)); ok {
+		return rf(ctx, rangeStart, rangeEnd)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) int64); ok {
+		r0 = rf(ctx, rangeStart, rangeEnd)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+		r1 = rf(ctx, rangeStart, rangeEnd)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_CleanupSweptCalls_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CleanupSweptCalls'
+type Store_CleanupSweptCalls_Call struct {
+	*mock.Call
+}
+
+// CleanupSweptCalls is a helper method to define mock.On call
+//   - ctx context.Context
+//   - rangeStart pgtype.Timestamptz
+//   - rangeEnd pgtype.Timestamptz
+func (_e *Store_Expecter) CleanupSweptCalls(ctx interface{}, rangeStart interface{}, rangeEnd interface{}) *Store_CleanupSweptCalls_Call {
+	return &Store_CleanupSweptCalls_Call{Call: _e.mock.On("CleanupSweptCalls", ctx, rangeStart, rangeEnd)}
+}
+
+func (_c *Store_CleanupSweptCalls_Call) Run(run func(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz)) *Store_CleanupSweptCalls_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(pgtype.Timestamptz), args[2].(pgtype.Timestamptz))
+	})
+	return _c
+}
+
+func (_c *Store_CleanupSweptCalls_Call) Return(_a0 int64, _a1 error) *Store_CleanupSweptCalls_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_CleanupSweptCalls_Call) RunAndReturn(run func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)) *Store_CleanupSweptCalls_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateAPIKey provides a mock function with given fields: ctx, owner, expires, disabled
 func (_m *Store) CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (database.ApiKey, error) {
 	ret := _m.Called(ctx, owner, expires, disabled)
@@ -282,6 +342,56 @@ func (_c *Store_CreateAPIKey_Call) Return(_a0 database.ApiKey, _a1 error) *Store
 }
 
 func (_c *Store_CreateAPIKey_Call) RunAndReturn(run func(context.Context, int, pgtype.Timestamp, *bool) (database.ApiKey, error)) *Store_CreateAPIKey_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreatePartition provides a mock function with given fields: ctx, parentTable, partitionName, start, end
+func (_m *Store) CreatePartition(ctx context.Context, parentTable string, partitionName string, start time.Time, end time.Time) error {
+	ret := _m.Called(ctx, parentTable, partitionName, start, end)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreatePartition")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, time.Time, time.Time) error); ok {
+		r0 = rf(ctx, parentTable, partitionName, start, end)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_CreatePartition_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreatePartition'
+type Store_CreatePartition_Call struct {
+	*mock.Call
+}
+
+// CreatePartition is a helper method to define mock.On call
+//   - ctx context.Context
+//   - parentTable string
+//   - partitionName string
+//   - start time.Time
+//   - end time.Time
+func (_e *Store_Expecter) CreatePartition(ctx interface{}, parentTable interface{}, partitionName interface{}, start interface{}, end interface{}) *Store_CreatePartition_Call {
+	return &Store_CreatePartition_Call{Call: _e.mock.On("CreatePartition", ctx, parentTable, partitionName, start, end)}
+}
+
+func (_c *Store_CreatePartition_Call) Run(run func(ctx context.Context, parentTable string, partitionName string, start time.Time, end time.Time)) *Store_CreatePartition_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(time.Time), args[4].(time.Time))
+	})
+	return _c
+}
+
+func (_c *Store_CreatePartition_Call) Return(_a0 error) *Store_CreatePartition_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_CreatePartition_Call) RunAndReturn(run func(context.Context, string, string, time.Time, time.Time) error) *Store_CreatePartition_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -344,19 +454,19 @@ func (_c *Store_CreateUser_Call) RunAndReturn(run func(context.Context, database
 }
 
 // DB provides a mock function with given fields:
-func (_m *Store) DB() *database.Database {
+func (_m *Store) DB() *database.Postgres {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for DB")
 	}
 
-	var r0 *database.Database
-	if rf, ok := ret.Get(0).(func() *database.Database); ok {
+	var r0 *database.Postgres
+	if rf, ok := ret.Get(0).(func() *database.Postgres); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*database.Database)
+			r0 = ret.Get(0).(*database.Postgres)
 		}
 	}
 
@@ -380,12 +490,59 @@ func (_c *Store_DB_Call) Run(run func()) *Store_DB_Call {
 	return _c
 }
 
-func (_c *Store_DB_Call) Return(_a0 *database.Database) *Store_DB_Call {
+func (_c *Store_DB_Call) Return(_a0 *database.Postgres) *Store_DB_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *Store_DB_Call) RunAndReturn(run func() *database.Database) *Store_DB_Call {
+func (_c *Store_DB_Call) RunAndReturn(run func() *database.Postgres) *Store_DB_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DBTX provides a mock function with given fields:
+func (_m *Store) DBTX() database.DBTX {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for DBTX")
+	}
+
+	var r0 database.DBTX
+	if rf, ok := ret.Get(0).(func() database.DBTX); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(database.DBTX)
+		}
+	}
+
+	return r0
+}
+
+// Store_DBTX_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DBTX'
+type Store_DBTX_Call struct {
+	*mock.Call
+}
+
+// DBTX is a helper method to define mock.On call
+func (_e *Store_Expecter) DBTX() *Store_DBTX_Call {
+	return &Store_DBTX_Call{Call: _e.mock.On("DBTX")}
+}
+
+func (_c *Store_DBTX_Call) Run(run func()) *Store_DBTX_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Store_DBTX_Call) Return(_a0 database.DBTX) *Store_DBTX_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_DBTX_Call) RunAndReturn(run func() database.DBTX) *Store_DBTX_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -480,6 +637,101 @@ func (_c *Store_DeleteUser_Call) Return(_a0 error) *Store_DeleteUser_Call {
 }
 
 func (_c *Store_DeleteUser_Call) RunAndReturn(run func(context.Context, string) error) *Store_DeleteUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DetachPartition provides a mock function with given fields: ctx, parentTable, partitionName
+func (_m *Store) DetachPartition(ctx context.Context, parentTable string, partitionName string) error {
+	ret := _m.Called(ctx, parentTable, partitionName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DetachPartition")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, parentTable, partitionName)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_DetachPartition_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DetachPartition'
+type Store_DetachPartition_Call struct {
+	*mock.Call
+}
+
+// DetachPartition is a helper method to define mock.On call
+//   - ctx context.Context
+//   - parentTable string
+//   - partitionName string
+func (_e *Store_Expecter) DetachPartition(ctx interface{}, parentTable interface{}, partitionName interface{}) *Store_DetachPartition_Call {
+	return &Store_DetachPartition_Call{Call: _e.mock.On("DetachPartition", ctx, parentTable, partitionName)}
+}
+
+func (_c *Store_DetachPartition_Call) Run(run func(ctx context.Context, parentTable string, partitionName string)) *Store_DetachPartition_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *Store_DetachPartition_Call) Return(_a0 error) *Store_DetachPartition_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_DetachPartition_Call) RunAndReturn(run func(context.Context, string, string) error) *Store_DetachPartition_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DropPartition provides a mock function with given fields: ctx, partitionName
+func (_m *Store) DropPartition(ctx context.Context, partitionName string) error {
+	ret := _m.Called(ctx, partitionName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DropPartition")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, partitionName)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_DropPartition_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DropPartition'
+type Store_DropPartition_Call struct {
+	*mock.Call
+}
+
+// DropPartition is a helper method to define mock.On call
+//   - ctx context.Context
+//   - partitionName string
+func (_e *Store_Expecter) DropPartition(ctx interface{}, partitionName interface{}) *Store_DropPartition_Call {
+	return &Store_DropPartition_Call{Call: _e.mock.On("DropPartition", ctx, partitionName)}
+}
+
+func (_c *Store_DropPartition_Call) Run(run func(ctx context.Context, partitionName string)) *Store_DropPartition_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Store_DropPartition_Call) Return(_a0 error) *Store_DropPartition_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_DropPartition_Call) RunAndReturn(run func(context.Context, string) error) *Store_DropPartition_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -650,6 +902,66 @@ func (_c *Store_GetSystemName_Call) Return(_a0 string, _a1 error) *Store_GetSyst
 }
 
 func (_c *Store_GetSystemName_Call) RunAndReturn(run func(context.Context, int) (string, error)) *Store_GetSystemName_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetTablePartitions provides a mock function with given fields: ctx, schemaName, tableName
+func (_m *Store) GetTablePartitions(ctx context.Context, schemaName string, tableName string) ([]database.PartitionResult, error) {
+	ret := _m.Called(ctx, schemaName, tableName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTablePartitions")
+	}
+
+	var r0 []database.PartitionResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) ([]database.PartitionResult, error)); ok {
+		return rf(ctx, schemaName, tableName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) []database.PartitionResult); ok {
+		r0 = rf(ctx, schemaName, tableName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.PartitionResult)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, schemaName, tableName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetTablePartitions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTablePartitions'
+type Store_GetTablePartitions_Call struct {
+	*mock.Call
+}
+
+// GetTablePartitions is a helper method to define mock.On call
+//   - ctx context.Context
+//   - schemaName string
+//   - tableName string
+func (_e *Store_Expecter) GetTablePartitions(ctx interface{}, schemaName interface{}, tableName interface{}) *Store_GetTablePartitions_Call {
+	return &Store_GetTablePartitions_Call{Call: _e.mock.On("GetTablePartitions", ctx, schemaName, tableName)}
+}
+
+func (_c *Store_GetTablePartitions_Call) Run(run func(ctx context.Context, schemaName string, tableName string)) *Store_GetTablePartitions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *Store_GetTablePartitions_Call) Return(_a0 []database.PartitionResult, _a1 error) *Store_GetTablePartitions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetTablePartitions_Call) RunAndReturn(run func(context.Context, string, string) ([]database.PartitionResult, error)) *Store_GetTablePartitions_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1954,6 +2266,64 @@ func (_c *Store_StoreTGVersion_Call) Return(_a0 *database.StoreTGVersionBatchRes
 }
 
 func (_c *Store_StoreTGVersion_Call) RunAndReturn(run func(context.Context, []database.StoreTGVersionParams) *database.StoreTGVersionBatchResults) *Store_StoreTGVersion_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SweepCalls provides a mock function with given fields: ctx, rangeStart, rangeEnd
+func (_m *Store) SweepCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
+	ret := _m.Called(ctx, rangeStart, rangeEnd)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SweepCalls")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)); ok {
+		return rf(ctx, rangeStart, rangeEnd)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) int64); ok {
+		r0 = rf(ctx, rangeStart, rangeEnd)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+		r1 = rf(ctx, rangeStart, rangeEnd)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_SweepCalls_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SweepCalls'
+type Store_SweepCalls_Call struct {
+	*mock.Call
+}
+
+// SweepCalls is a helper method to define mock.On call
+//   - ctx context.Context
+//   - rangeStart pgtype.Timestamptz
+//   - rangeEnd pgtype.Timestamptz
+func (_e *Store_Expecter) SweepCalls(ctx interface{}, rangeStart interface{}, rangeEnd interface{}) *Store_SweepCalls_Call {
+	return &Store_SweepCalls_Call{Call: _e.mock.On("SweepCalls", ctx, rangeStart, rangeEnd)}
+}
+
+func (_c *Store_SweepCalls_Call) Run(run func(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz)) *Store_SweepCalls_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(pgtype.Timestamptz), args[2].(pgtype.Timestamptz))
+	})
+	return _c
+}
+
+func (_c *Store_SweepCalls_Call) Return(_a0 int64, _a1 error) *Store_SweepCalls_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_SweepCalls_Call) RunAndReturn(run func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)) *Store_SweepCalls_Call {
 	_c.Call.Return(run)
 	return _c
 }

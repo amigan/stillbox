@@ -135,6 +135,26 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) error {
 	return err
 }
 
+const cleanupSweptCalls = `-- name: CleanupSweptCalls :execrows
+WITH to_sweep AS (
+	SELECT id FROM calls
+	JOIN incidents_calls ic ON ic.call_id = calls.id
+	WHERE calls.call_date >= $1 AND calls.call_date < $2
+) UPDATE incidents_calls
+	SET
+		swept_call_id = call_id,
+		calls_tbl_id = NULL
+	WHERE call_id IN (SELECT id FROM to_sweep)
+`
+
+func (q *Queries) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
+	result, err := q.db.Exec(ctx, cleanupSweptCalls, rangeStart, rangeEnd)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getDatabaseSize = `-- name: GetDatabaseSize :one
 SELECT pg_size_pretty(pg_database_size(current_database()))
 `
@@ -153,4 +173,21 @@ UPDATE calls SET transcript = $2 WHERE id = $1
 func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error {
 	_, err := q.db.Exec(ctx, setCallTranscript, iD, transcript)
 	return err
+}
+
+const sweepCalls = `-- name: SweepCalls :execrows
+WITH to_sweep AS (
+	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type, audio_url, frequency, frequencies, patches, tg_label, tg_alpha_tag, tg_group, source, transcript
+	FROM calls
+	JOIN incidents_calls ic ON ic.call_id = calls.id
+	WHERE calls.call_date >= $1 AND calls.call_date < $2
+) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_url, frequency, frequencies, patches, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
+`
+
+func (q *Queries) SweepCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
+	result, err := q.db.Exec(ctx, sweepCalls, rangeStart, rangeEnd)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }

@@ -150,7 +150,7 @@ type cache struct {
 }
 
 // NewCache returns a new cache Store.
-func NewCache() Store {
+func NewCache() *cache {
 	tgc := &cache{
 		tgs:     make(tgMap),
 		systems: make(map[int32]string),

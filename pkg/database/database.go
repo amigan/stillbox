@@ -23,21 +23,27 @@ import (
 type Store interface {
 	Querier
 	talkgroupQuerier
+	partitionsQuerier
 
-	DB() *Database
+	DB() *Postgres
+	DBTX() DBTX
 	InTx(context.Context, func(Store) error, pgx.TxOptions) error
 }
 
-type Database struct {
+type Postgres struct {
 	*pgxpool.Pool
 	*Queries
 }
 
-func (db *Database) DB() *Database {
+func (q *Queries) DBTX() DBTX {
+	return q.db
+}
+
+func (db *Postgres) DB() *Postgres {
 	return db
 }
 
-func (db *Database) InTx(ctx context.Context, f func(Store) error, opts pgx.TxOptions) error {
+func (db *Postgres) InTx(ctx context.Context, f func(Store) error, opts pgx.TxOptions) error {
 	tx, err := db.DB().Pool.BeginTx(ctx, opts)
 	if err != nil {
 		return fmt.Errorf("Tx begin: %w", err)
@@ -46,7 +52,7 @@ func (db *Database) InTx(ctx context.Context, f func(Store) error, opts pgx.TxOp
 	//nolint:errcheck
 	defer tx.Rollback(ctx)
 
-	dbtx := &Database{Pool: db.Pool, Queries: db.Queries.WithTx(tx)}
+	dbtx := &Postgres{Pool: db.Pool, Queries: db.Queries.WithTx(tx)}
 
 	err = f(dbtx)
 	if err != nil {
@@ -68,11 +74,11 @@ func (m dbLogger) Log(ctx context.Context, level tracelog.LogLevel, msg string, 
 }
 
 func Close(c Store) {
-	c.(*Database).Pool.Close()
+	c.(*Postgres).Pool.Close()
 }
 
 // NewClient creates a new DB using the provided config.
-func NewClient(ctx context.Context, conf config.DB) (Store, error) {
+func NewClient(ctx context.Context, conf config.DB) (*Postgres, error) {
 	dir, err := iofs.New(sqlembed.Migrations, "postgres/migrations")
 	if err != nil {
 		return nil, err
@@ -87,6 +93,8 @@ func NewClient(ctx context.Context, conf config.DB) (Store, error) {
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return nil, err
 	}
+
+	log.Debug().Err(err).Msg("migrations done")
 
 	m.Close()
 
@@ -107,7 +115,7 @@ func NewClient(ctx context.Context, conf config.DB) (Store, error) {
 		return nil, err
 	}
 
-	db := &Database{
+	db := &Postgres{
 		Pool:    pool,
 		Queries: New(pool),
 	}
