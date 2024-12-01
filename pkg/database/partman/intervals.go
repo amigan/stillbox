@@ -50,7 +50,7 @@ func getYearlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
 	return
 }
 
-func (p partition) Next(i int) partition {
+func (p Partition) Next(i int) Partition {
 	var t time.Time
 	switch p.Interval {
 	case Daily:
@@ -68,7 +68,7 @@ func (p partition) Next(i int) partition {
 
 		t = time.Date(year+i, 1, 1, 0, 0, 0, 0, p.Time.Location())
 	}
-	np := partition{
+	np := Partition{
 		ParentTable: p.ParentTable,
 		Name:        p.Name,
 		Schema:      p.Schema,
@@ -81,7 +81,7 @@ func (p partition) Next(i int) partition {
 	return np
 }
 
-func (p *partition) setName() {
+func (p *Partition) setName() {
 	t := p.Time
 	var suffix string
 
@@ -119,7 +119,7 @@ func (p *partition) setName() {
 	p.Name = fmt.Sprintf("%s_p_%s", p.ParentTable, suffix)
 }
 
-func (p partition) Prev(i int) partition {
+func (p Partition) Prev(i int) Partition {
 	var t time.Time
 	switch p.Interval {
 	case Daily:
@@ -138,7 +138,7 @@ func (p partition) Prev(i int) partition {
 		t = time.Date(year-i, 1, 1, 0, 0, 0, 0, p.Time.Location())
 	}
 
-	pp := partition{
+	pp := Partition{
 		ParentTable: p.ParentTable,
 		Name:        p.Name,
 		Schema:      p.Schema,

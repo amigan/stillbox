@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	callsTable = "calls"
+	CallsTable = "calls"
 
 	preProvisionDefault = 1
 )
@@ -93,6 +93,8 @@ func (p Interval) IsValid() bool {
 type PartitionManager interface {
 	Go(ctx context.Context)
 	Check(ctx context.Context, now time.Time) error
+	Interval() Interval
+	ExistingPartitions(parts []database.PartitionResult) ([]Partition, error)
 }
 
 type partman struct {
@@ -101,7 +103,11 @@ type partman struct {
 	intv Interval
 }
 
-type partition struct {
+func (pm *partman) Interval() Interval {
+	return pm.intv
+}
+
+type Partition struct {
 	ParentTable string
 	Schema      string
 	Name        string
@@ -139,9 +145,9 @@ func (pm *partman) Go(ctx context.Context) {
 	}
 }
 
-func (pm *partman) newPartition(t time.Time) partition {
-	p := partition{
-		ParentTable: callsTable,
+func (pm *partman) newPartition(t time.Time) Partition {
+	p := Partition{
+		ParentTable: CallsTable,
 		Schema:      pm.cfg.Schema,
 		Interval:    Interval(pm.cfg.Interval),
 		Time:        t,
@@ -152,8 +158,8 @@ func (pm *partman) newPartition(t time.Time) partition {
 	return p
 }
 
-func (pm *partman) retentionPartitions(cur partition) []partition {
-	partitions := make([]partition, 0, pm.cfg.Retain)
+func (pm *partman) retentionPartitions(cur Partition) []Partition {
+	partitions := make([]Partition, 0, pm.cfg.Retain)
 	for i := 1; i <= pm.cfg.Retain; i++ {
 		prev := cur.Prev(i)
 		partitions = append(partitions, prev)
@@ -162,13 +168,13 @@ func (pm *partman) retentionPartitions(cur partition) []partition {
 	return partitions
 }
 
-func (pm *partman) futurePartitions(cur partition) []partition {
+func (pm *partman) futurePartitions(cur Partition) []Partition {
 	preProv := preProvisionDefault
 	if pm.cfg.PreProvision != nil {
 		preProv = *pm.cfg.PreProvision
 	}
 
-	partitions := make([]partition, 0, preProv)
+	partitions := make([]Partition, 0, preProv)
 	for i := 1; i <= preProv; i++ {
 		next := cur.Next(i)
 		partitions = append(partitions, next)
@@ -177,10 +183,10 @@ func (pm *partman) futurePartitions(cur partition) []partition {
 	return partitions
 }
 
-func (pm *partman) expectedPartitions(now time.Time) []partition {
+func (pm *partman) expectedPartitions(now time.Time) []Partition {
 	curPart := pm.newPartition(now)
 
-	shouldExist := []partition{curPart}
+	shouldExist := []Partition{curPart}
 	if pm.cfg.Retain > -1 {
 		retain := pm.retentionPartitions(curPart)
 		shouldExist = append(shouldExist, retain...)
@@ -193,8 +199,8 @@ func (pm *partman) expectedPartitions(now time.Time) []partition {
 	return shouldExist
 }
 
-func (pm *partman) comparePartitions(existingTables, expectedTables []partition) (unexpectedTables, missingTables []partition) {
-	existing := make(map[string]partition)
+func (pm *partman) comparePartitions(existingTables, expectedTables []Partition) (unexpectedTables, missingTables []Partition) {
+	existing := make(map[string]Partition)
 	expectedAndExists := make(map[string]bool)
 
 	for _, t := range existingTables {
@@ -219,8 +225,8 @@ func (pm *partman) comparePartitions(existingTables, expectedTables []partition)
 	return unexpectedTables, missingTables
 }
 
-func (pm *partman) existingPartitions(parts []database.PartitionResult) ([]partition, error) {
-	existing := make([]partition, 0, len(parts))
+func (pm *partman) ExistingPartitions(parts []database.PartitionResult) ([]Partition, error) {
+	existing := make([]Partition, 0, len(parts))
 	for _, v := range parts {
 		if v.Schema != pm.cfg.Schema {
 			return nil, PartitionError(v.Schema+"."+v.Name, ErrWrongSchema)
@@ -243,7 +249,7 @@ func (pm *partman) fullTableName(s string) string {
 	return fmt.Sprintf("%s.%s", pm.cfg.Schema, s)
 }
 
-func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p partition) error {
+func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Partition) error {
 	s, e := p.Range()
 	start := pgtype.Timestamptz{Time: s, Valid: true}
 	end := pgtype.Timestamptz{Time: e, Valid: true}
@@ -262,7 +268,7 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p part
 	log.Debug().Int64("rows", swept).Time("start", s).Time("end", e).Msg("cleaned up swept calls")
 
 	log.Info().Str("partition", fullPartName).Msg("detaching partition")
-	err = tx.DetachPartition(ctx, callsTable, fullPartName)
+	err = tx.DetachPartition(ctx, CallsTable, fullPartName)
 	if err != nil {
 		return err
 	}
@@ -279,12 +285,12 @@ func (pm *partman) Check(ctx context.Context, now time.Time) error {
 	return pm.db.InTx(ctx, func(db database.Store) error {
 		// by default, we want to make sure a partition exists for this and next month
 		// since we run this at startup, it's safe to do only that.
-		partitions, err := db.GetTablePartitions(ctx, pm.cfg.Schema, callsTable)
+		partitions, err := db.GetTablePartitions(ctx, pm.cfg.Schema, CallsTable)
 		if err != nil {
 			return err
 		}
 
-		existing, err := pm.existingPartitions(partitions)
+		existing, err := pm.ExistingPartitions(partitions)
 		if err != nil {
 			return err
 		}
@@ -314,7 +320,7 @@ func (pm *partman) Check(ctx context.Context, now time.Time) error {
 	}, pgx.TxOptions{})
 }
 
-func (p partition) Range() (time.Time, time.Time) {
+func (p Partition) Range() (time.Time, time.Time) {
 	switch p.Interval {
 	case Daily:
 		return getDailyBounds(p.Time)
@@ -331,15 +337,15 @@ func (p partition) Range() (time.Time, time.Time) {
 	panic("unknown interval!")
 }
 
-func (p partition) PartitionName() string {
+func (p Partition) PartitionName() string {
 	return p.Name
 }
 
-func (pm *partman) createPartition(ctx context.Context, tx database.Store, part partition) error {
+func (pm *partman) createPartition(ctx context.Context, tx database.Store, part Partition) error {
 	start, end := part.Range()
 	name := part.PartitionName()
 	log.Info().Str("partition", name).Time("start", start).Time("end", end).Msg("creating partition")
-	return tx.CreatePartition(ctx, callsTable, name, start, end)
+	return tx.CreatePartition(ctx, CallsTable, name, start, end)
 }
 
 /*
@@ -351,13 +357,13 @@ func (pm *partman) createPartition(ctx context.Context, tx database.Store, part 
  * yearly: calls_p_2024
  */
 
-func (pm *partman) verifyPartName(pr database.PartitionResult) (p partition, err error) {
+func (pm *partman) verifyPartName(pr database.PartitionResult) (p Partition, err error) {
 	pn := pr.Name
 	low, _, err := pr.ParseBounds()
 	if err != nil {
 		return
 	}
-	p = partition{
+	p = Partition{
 		ParentTable: pr.ParentTable,
 		Name:        pr.Name,
 		Schema:      pr.Schema,

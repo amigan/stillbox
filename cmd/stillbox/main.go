@@ -52,7 +52,7 @@ func main() {
 		},
 		Commands: []*cli.Command{
 			serve.Command(cfg),
-			admin.Command(cfg),
+			admin.AdminCommand(cfg),
 		},
 	}
 

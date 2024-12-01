@@ -34,7 +34,6 @@ func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
 	err := s.db.InTx(ctx, func(tx database.Store) error {
 		err := tx.AddCall(ctx, params)
 		if err != nil {
-
 			return fmt.Errorf("add call: %w", err)
 		}
 

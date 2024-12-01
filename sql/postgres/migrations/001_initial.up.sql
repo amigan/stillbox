@@ -161,5 +161,3 @@ CREATE TABLE IF NOT EXISTS incidents_calls(
 	FOREIGN KEY (calls_tbl_id, call_date) REFERENCES calls(id, call_date),
 	PRIMARY KEY (incident_id, call_id)
 );
-
-
