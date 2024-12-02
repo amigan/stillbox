@@ -155,6 +155,29 @@ func (q *Queries) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Times
 	return result.RowsAffected(), nil
 }
 
+const getCallAudioByID = `-- name: GetCallAudioByID :one
+SELECT call_date, audio_name, audio_type, audio_blob FROM calls WHERE id = $1
+`
+
+type GetCallAudioByIDRow struct {
+	CallDate  pgtype.Timestamptz `json:"call_date"`
+	AudioName *string            `json:"audio_name"`
+	AudioType *string            `json:"audio_type"`
+	AudioBlob []byte             `json:"audio_blob"`
+}
+
+func (q *Queries) GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error) {
+	row := q.db.QueryRow(ctx, getCallAudioByID, id)
+	var i GetCallAudioByIDRow
+	err := row.Scan(
+		&i.CallDate,
+		&i.AudioName,
+		&i.AudioType,
+		&i.AudioBlob,
+	)
+	return i, err
+}
+
 const getDatabaseSize = `-- name: GetDatabaseSize :one
 SELECT pg_size_pretty(pg_database_size(current_database()))
 `
@@ -177,7 +200,8 @@ func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcrip
 
 const sweepCalls = `-- name: SweepCalls :execrows
 WITH to_sweep AS (
-	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type, audio_url, frequency, frequencies, patches, tg_label, tg_alpha_tag, tg_group, source, transcript
+	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type,
+		audio_url, frequency, frequencies, patches, tg_label, tg_alpha_tag, tg_group, source, transcript
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= $1 AND calls.call_date < $2

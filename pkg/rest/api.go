@@ -30,6 +30,7 @@ func (a *api) Subrouter() http.Handler {
 	r := chi.NewMux()
 
 	r.Mount("/talkgroup", new(talkgroupAPI).Subrouter())
+	r.Mount("/call", new(callsAPI).Subrouter())
 
 	return r
 }
@@ -135,6 +136,10 @@ func decodeParams(d interface{}, r *http.Request) error {
 		Result:           d,
 		TagName:          "param",
 		WeaklyTypedInput: true,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.TextUnmarshallerHookFunc(),
+		),
 	})
 	if err != nil {
 		return err
