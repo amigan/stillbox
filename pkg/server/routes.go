@@ -89,7 +89,6 @@ func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
 
 		rctx := chi.RouteContext(r.Context())
 		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
-		log.Debug().Str("rurl", r.URL.Path).Str("prefix", pathPrefix).Msg("clir")
 		fs := http.StripPrefix(pathPrefix, http.FileServer(http.FS(clientRoot)))
 		fs.ServeHTTP(w, r)
 	})
