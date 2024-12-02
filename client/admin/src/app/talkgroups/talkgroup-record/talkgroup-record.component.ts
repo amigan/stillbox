@@ -54,7 +54,6 @@ export class TalkgroupRecordComponent {
           weight: new FormControl(this.tg.weight),
           icon: new FormControl(this.tg.icon),
         });
-        console.log(this.tg.icon);
       });
   }
 
@@ -83,14 +82,15 @@ export class TalkgroupRecordComponent {
       tgu.weight = Number(this.form.controls['weight'].value);
     }
     if (this.form.controls['icon'].dirty) {
+      let iv: string = this.form.controls['icon'].value;
       if (tgu.metadata == null) {
         tgu.metadata = {};
       }
-      if (this.tg.icon == null || this.tg.icon == '') {
+      if (iv == '') {
         tgu.metadata = Object.assign(tgu.metadata, { icon: undefined });
       } else {
         tgu.metadata = Object.assign(tgu.metadata!, {
-          icon: this.form.controls['icon'],
+          icon: iv,
         });
       }
     }
