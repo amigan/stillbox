@@ -133,7 +133,7 @@
         </li>
 
         @for (pgn of [].constructor(totalPages); track i; let i = $index) {
-          @if (i != page) {
+          @if (i+1 != page) {
             <li>
               <button
                 (click)="setPage(i + 1)"
