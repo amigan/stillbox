@@ -38,10 +38,10 @@ var expCfg = &Config{
 		Renotify:       common.PtrTo(jsontypes.Duration(30 * time.Minute)),
 	},
 	Log: []Logger{
-		Logger{
+		{
 			Level: common.PtrTo("debug"),
 		},
-		Logger{
+		{
 			Level: common.PtrTo("error"),
 			File:  common.PtrTo("error.log"),
 		},
