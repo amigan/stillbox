@@ -39,10 +39,13 @@ export interface IconMap {
 }
 
 export const iconMapping: IconMap = {
-  police: 'matLocalPoliceOutline',
-  fire: 'matFireTruckOutline',
-  ems: 'matEmergencyOutline',
-  bus: 'matDirectionsBusOutline',
+  Ambulance: 'matEmergencyOutline',
+  'Dump Truck': '',
+  'Fire Truck': 'matFireTruckOutline',
+  'Garbage Truck': '',
+  Police: 'matLocalPoliceOutline',
+  'Transport Bus': 'matDirectionsBusOutline',
+  Van: '',
   '': 'matGroupWorkOutline',
 };
 
