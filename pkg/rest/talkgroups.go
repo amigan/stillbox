@@ -172,6 +172,7 @@ func (tga *talkgroupAPI) tgExport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=stillbox_%s", expJob.TemplateFileName))
 	w.Header().Set("Content-Type", "text/xml")
 

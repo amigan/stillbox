@@ -4,9 +4,15 @@ import (
 	"context"
 	"encoding/xml"
 	"io"
+	"strings"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
+)
+
+const (
+	listName = "Stillbox"
+	protocol = "APCO25" // this should be configurable
 )
 
 type Playlist struct {
@@ -22,10 +28,22 @@ type Playlist struct {
 func (p *Playlist) buildMaps() {
 	p.streams = make(map[string]struct{})
 
-	for _, s := range p.Streams {
-		if s.Type == "RDIOSCANNER_CALL" {
-			p.streams[s.Name] = struct{}{}
+	for i, s := range p.Streams {
+		var namespace string
+		for j, a := range s.Attributes {
+			if strings.HasPrefix(a.Name.Local, "wstxns") {
+				namespace = a.Name.Local
+
+			}
+			if a.Name.Local == "type" {
+				p.Streams[i].Attributes[j].Name.Space = namespace
+				p.streams[a.Value] = struct{}{}
+			}
 		}
+	}
+
+	for i := range p.Channels {
+		p.Channels[i].AliasList = listName
 	}
 }
 
@@ -46,16 +64,24 @@ type Alias struct {
 }
 
 func (p *Playlist) tgToAlias(tg *talkgroups.Talkgroup) Alias {
+	nameF := func() string {
+		if tg.AlphaTag != nil {
+			return *tg.AlphaTag
+		}
+
+		return common.ZeroIfNil(tg.Name)
+	}
 	a := Alias{
 		XMLName: xml.Name{Local: "alias"},
-		Name:    common.ZeroIfNil(tg.Name),
+		Name:    nameF(),
 		Group:   common.ZeroIfNil(tg.TGGroup),
-		List:    "Stillbox",
+		List:    listName,
 		IDs: []ID{
 			{
-				XMLName: xml.Name{Local: "id"},
-				Type:    "talkgroup",
-				Value:   common.PtrTo(int(tg.TGID)),
+				XMLName:  xml.Name{Local: "id"},
+				Type:     "talkgroup",
+				Value:    common.PtrTo(int(tg.TGID)),
+				Protocol: common.PtrTo(protocol),
 			},
 		},
 	}
@@ -92,37 +118,41 @@ type Channel struct {
 	Site    string   `xml:"site,attr"`
 	Order   int      `xml:"order,attr"`
 
-	AliasListName   string          `xml:"alias_list_name"`
-	EventLogConfig  EventLogConfig  `xml:"event_log_configuration"`
-	SourceConfig    SourceConfig    `xml:"source_configuration"`
-	AuxDecodeConfig AuxDecodeConfig `xml:"aux_decode_configuration"`
-	DecodeConfig    DecodeConfig    `xml:"decode_configuration"`
-	RecordConfig    RecordConfig    `xml:"record_configuration"`
+	AliasList           string          `xml:"alias_list_name"`
+	EventLogConfig      EventLogConfig  `xml:"event_log_configuration"`
+	SourceConfiguration SourceConfig    `xml:"source_configuration"`
+	AuxDecodeConfig     AuxDecodeConfig `xml:"aux_decode_configuration"`
+	DecodeConfig        DecodeConfig    `xml:"decode_configuration"`
+	RecordConfig        RecordConfig    `xml:"record_configuration"`
 }
 
 type EventLogConfig struct {
-	EventLogConfig []byte `xml:",innerxml"`
+	Attributes []xml.Attr `xml:",any,attr"`
+	Config     []byte     `xml:",innerxml"`
 }
 
 type SourceConfig struct {
-	SourceConfig []byte `xml:",innerxml"`
+	Attributes []xml.Attr `xml:",any,attr"`
+	Config     []byte     `xml:",innerxml"`
 }
 
 type AuxDecodeConfig struct {
-	AuxDecodeConfig []byte `xml:",innerxml"`
+	Attributes []xml.Attr `xml:",any,attr"`
+	Config     []byte     `xml:",innerxml"`
 }
 
 type DecodeConfig struct {
-	DecodeConfig []byte `xml:",innerxml"`
+	Attributes []xml.Attr `xml:",any,attr"`
+	Config     []byte     `xml:",innerxml"`
 }
 
 type RecordConfig struct {
-	RecordConfig []byte `xml:",innerxml"`
+	Attributes []xml.Attr `xml:",any,attr"`
+	Config     []byte     `xml:",innerxml"`
 }
 
 type Stream struct {
-	Type       string     `xml:"type,attr"`
-	Name       string     `xml:"name,attr"`
+	XMLName    xml.Name   `xml:"stream"`
 	Attributes []xml.Attr `xml:",any,attr"`
 	Stream     []byte     `xml:",innerxml"`
 }
