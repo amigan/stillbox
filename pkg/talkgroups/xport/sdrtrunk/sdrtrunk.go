@@ -74,11 +74,13 @@ func (p *Playlist) tgToAlias(tg *talkgroups.Talkgroup) Alias {
 
 		return common.ZeroIfNil(tg.Name)
 	}
+	icon, _ := tg.Metadata["icon"].(string)
 	a := Alias{
-		XMLName: xml.Name{Local: "alias"},
-		Name:    nameF(),
-		Group:   common.ZeroIfNil(tg.TGGroup),
-		List:    listName,
+		XMLName:  xml.Name{Local: "alias"},
+		Name:     nameF(),
+		Group:    common.ZeroIfNil(tg.TGGroup),
+		List:     listName,
+		IconName: icon,
 		IDs: []ID{
 			{
 				XMLName:  xml.Name{Local: "id"},
