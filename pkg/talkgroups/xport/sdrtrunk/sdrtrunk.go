@@ -37,6 +37,9 @@ func (p *Playlist) buildMaps() {
 			}
 			if a.Name.Local == "type" {
 				p.Streams[i].Attributes[j].Name.Space = namespace
+			}
+
+			if a.Name.Local == "name" {
 				p.streams[a.Value] = struct{}{}
 			}
 		}
