@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Talkgroup, TalkgroupUpdate } from '../talkgroup';
 
@@ -37,6 +37,21 @@ export class TalkgroupService {
       systemID: sysID,
       type: 'radioreference',
       body: content,
+    });
+  }
+
+  exportTGs(
+    type: string,
+    sysID: number,
+    template: File,
+  ): Observable<HttpResponse<Blob>> {
+    let fd = new FormData();
+    fd.append('type', type);
+    fd.append('systemID', sysID.toString());
+    fd.append('template', template);
+    return this.http.post<Blob>('/api/talkgroup/export', fd, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
     });
   }
 

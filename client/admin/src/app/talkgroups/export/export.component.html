@@ -1,0 +1,17 @@
+<div class="flex">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="file-upload-wrapper">
+      <label for="sysID">System ID: </label>
+      <input type="number" formControlName="sysID" />
+      <label for="template">Template File: </label>
+      <input
+        type="file"
+        formControlName="template"
+        (change)="fileChange($event)"
+        #fileInput
+        name="template"
+      />
+      <input type="submit" value="Export" />
+    </div>
+  </form>
+</div>

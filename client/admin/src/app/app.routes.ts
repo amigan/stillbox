@@ -8,6 +8,7 @@ import { CallsComponent } from './calls/calls.component';
 import { IncidentsComponent } from './incidents/incidents.component';
 import { AlertsComponent } from './alerts/alerts.component';
 import { ImportComponent } from './talkgroups/import/import.component';
+import { ExportComponent } from './talkgroups/export/export.component';
 import { AuthGuard } from './auth.guard';
 
 export const routes: Routes = [
@@ -19,6 +20,7 @@ export const routes: Routes = [
       { path: '', component: HomeComponent, pathMatch: 'full' },
       { path: 'talkgroups', component: TalkgroupsComponent },
       { path: 'talkgroups/import', component: ImportComponent },
+      { path: 'talkgroups/export', component: ExportComponent },
       { path: 'talkgroups/:sys/:tg', component: TalkgroupRecordComponent },
       { path: 'calls', component: CallsComponent },
       { path: 'incidents', component: IncidentsComponent },

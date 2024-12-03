@@ -30,8 +30,6 @@ export function authIntercept(
   if (authSvc.loggedIn) {
     req = req.clone({
       setHeaders: {
-        'Content-Type': 'application/json; charset=utf-8',
-        Accept: 'application/json',
         Authorization: `Bearer ${authSvc.getToken()}`,
       },
     });
