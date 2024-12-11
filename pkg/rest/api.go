@@ -68,6 +68,14 @@ func badRequestErrText(err error) render.Renderer {
 	}
 }
 
+func constraintErrText(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusConflict,
+		Error: "Constraint violation: " + err.Error(),
+	}
+}
+
 func recordNotFound(err error) render.Renderer {
 	return &errResponse{
 		Err:   err,
@@ -99,6 +107,10 @@ var statusMapping = map[error]errResponder{
 	tgstore.ErrNotFound:       notFoundErrText,
 	tgstore.ErrInvalidOrderBy: badRequestErrText,
 	pgx.ErrNoRows:             recordNotFound,
+	ErrMissingTGSys:           badRequestErrText,
+	ErrTGIDMismatch:           badRequestErrText,
+	ErrSysMismatch:            badRequestErrText,
+	tgstore.ErrReference:      constraintErrText,
 }
 
 func autoError(err error) render.Renderer {

@@ -66,6 +66,33 @@ func (q *Queries) AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgro
 	return i, err
 }
 
+const createSystem = `-- name: CreateSystem :exec
+INSERT INTO systems(id, name) VALUES($1, $2)
+`
+
+func (q *Queries) CreateSystem(ctx context.Context, iD int, name string) error {
+	_, err := q.db.Exec(ctx, createSystem, iD, name)
+	return err
+}
+
+const deleteSystem = `-- name: DeleteSystem :exec
+DELETE FROM systems WHERE id = $1
+`
+
+func (q *Queries) DeleteSystem(ctx context.Context, id int) error {
+	_, err := q.db.Exec(ctx, deleteSystem, id)
+	return err
+}
+
+const deleteTalkgroup = `-- name: DeleteTalkgroup :exec
+DELETE FROM talkgroups WHERE system_id = $1 AND tgid = $2
+`
+
+func (q *Queries) DeleteTalkgroup(ctx context.Context, systemID int32, tGID int32) error {
+	_, err := q.db.Exec(ctx, deleteTalkgroup, systemID, tGID)
+	return err
+}
+
 const getSystemName = `-- name: GetSystemName :one
 SELECT name FROM systems WHERE id = $1
 `
@@ -581,6 +608,21 @@ WHERE system_id = $2 AND tgid = $3
 
 func (q *Queries) SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error {
 	_, err := q.db.Exec(ctx, setTalkgroupTags, tags, systemID, tGID)
+	return err
+}
+
+const storeDeletedTGVersion = `-- name: StoreDeletedTGVersion :exec
+INSERT INTO talkgroup_versions(
+	system_id,
+	tgid,
+	time,
+	created_by,
+	deleted
+) VALUES($1, $2, NOW(), $3, TRUE)
+`
+
+func (q *Queries) StoreDeletedTGVersion(ctx context.Context, systemID *int32, tGID *int32, submitter *int32) error {
+	_, err := q.db.Exec(ctx, storeDeletedTGVersion, systemID, tGID, submitter)
 	return err
 }
 

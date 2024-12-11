@@ -29,7 +29,7 @@ func (ej *ExportJob) Export(ctx context.Context, w io.Writer) error {
 	var err error
 	tgst := tgstore.FromCtx(ctx)
 	if ej.TalkgroupFilter.IsEmpty() {
-		tgs, err = tgst.SystemTGs(ctx, int32(ej.SystemID))
+		tgs, err = tgst.SystemTGs(ctx, ej.SystemID)
 		if err != nil {
 			return err
 		}

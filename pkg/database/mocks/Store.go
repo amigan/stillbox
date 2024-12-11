@@ -396,6 +396,54 @@ func (_c *Store_CreatePartition_Call) RunAndReturn(run func(context.Context, str
 	return _c
 }
 
+// CreateSystem provides a mock function with given fields: ctx, iD, name
+func (_m *Store) CreateSystem(ctx context.Context, iD int, name string) error {
+	ret := _m.Called(ctx, iD, name)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateSystem")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string) error); ok {
+		r0 = rf(ctx, iD, name)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_CreateSystem_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateSystem'
+type Store_CreateSystem_Call struct {
+	*mock.Call
+}
+
+// CreateSystem is a helper method to define mock.On call
+//   - ctx context.Context
+//   - iD int
+//   - name string
+func (_e *Store_Expecter) CreateSystem(ctx interface{}, iD interface{}, name interface{}) *Store_CreateSystem_Call {
+	return &Store_CreateSystem_Call{Call: _e.mock.On("CreateSystem", ctx, iD, name)}
+}
+
+func (_c *Store_CreateSystem_Call) Run(run func(ctx context.Context, iD int, name string)) *Store_CreateSystem_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *Store_CreateSystem_Call) Return(_a0 error) *Store_CreateSystem_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_CreateSystem_Call) RunAndReturn(run func(context.Context, int, string) error) *Store_CreateSystem_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateUser provides a mock function with given fields: ctx, arg
 func (_m *Store) CreateUser(ctx context.Context, arg database.CreateUserParams) (database.User, error) {
 	ret := _m.Called(ctx, arg)
@@ -590,6 +638,101 @@ func (_c *Store_DeleteAPIKey_Call) Return(_a0 error) *Store_DeleteAPIKey_Call {
 }
 
 func (_c *Store_DeleteAPIKey_Call) RunAndReturn(run func(context.Context, string) error) *Store_DeleteAPIKey_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteSystem provides a mock function with given fields: ctx, id
+func (_m *Store) DeleteSystem(ctx context.Context, id int) error {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteSystem")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_DeleteSystem_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteSystem'
+type Store_DeleteSystem_Call struct {
+	*mock.Call
+}
+
+// DeleteSystem is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+func (_e *Store_Expecter) DeleteSystem(ctx interface{}, id interface{}) *Store_DeleteSystem_Call {
+	return &Store_DeleteSystem_Call{Call: _e.mock.On("DeleteSystem", ctx, id)}
+}
+
+func (_c *Store_DeleteSystem_Call) Run(run func(ctx context.Context, id int)) *Store_DeleteSystem_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int))
+	})
+	return _c
+}
+
+func (_c *Store_DeleteSystem_Call) Return(_a0 error) *Store_DeleteSystem_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_DeleteSystem_Call) RunAndReturn(run func(context.Context, int) error) *Store_DeleteSystem_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteTalkgroup provides a mock function with given fields: ctx, systemID, tGID
+func (_m *Store) DeleteTalkgroup(ctx context.Context, systemID int32, tGID int32) error {
+	ret := _m.Called(ctx, systemID, tGID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteTalkgroup")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int32, int32) error); ok {
+		r0 = rf(ctx, systemID, tGID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_DeleteTalkgroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteTalkgroup'
+type Store_DeleteTalkgroup_Call struct {
+	*mock.Call
+}
+
+// DeleteTalkgroup is a helper method to define mock.On call
+//   - ctx context.Context
+//   - systemID int32
+//   - tGID int32
+func (_e *Store_Expecter) DeleteTalkgroup(ctx interface{}, systemID interface{}, tGID interface{}) *Store_DeleteTalkgroup_Call {
+	return &Store_DeleteTalkgroup_Call{Call: _e.mock.On("DeleteTalkgroup", ctx, systemID, tGID)}
+}
+
+func (_c *Store_DeleteTalkgroup_Call) Run(run func(ctx context.Context, systemID int32, tGID int32)) *Store_DeleteTalkgroup_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int32), args[2].(int32))
+	})
+	return _c
+}
+
+func (_c *Store_DeleteTalkgroup_Call) Return(_a0 error) *Store_DeleteTalkgroup_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_DeleteTalkgroup_Call) RunAndReturn(run func(context.Context, int32, int32) error) *Store_DeleteTalkgroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2274,6 +2417,55 @@ func (_c *Store_SetTalkgroupTags_Call) Return(_a0 error) *Store_SetTalkgroupTags
 }
 
 func (_c *Store_SetTalkgroupTags_Call) RunAndReturn(run func(context.Context, []string, int32, int32) error) *Store_SetTalkgroupTags_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// StoreDeletedTGVersion provides a mock function with given fields: ctx, systemID, tGID, submitter
+func (_m *Store) StoreDeletedTGVersion(ctx context.Context, systemID *int32, tGID *int32, submitter *int32) error {
+	ret := _m.Called(ctx, systemID, tGID, submitter)
+
+	if len(ret) == 0 {
+		panic("no return value specified for StoreDeletedTGVersion")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *int32, *int32, *int32) error); ok {
+		r0 = rf(ctx, systemID, tGID, submitter)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_StoreDeletedTGVersion_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'StoreDeletedTGVersion'
+type Store_StoreDeletedTGVersion_Call struct {
+	*mock.Call
+}
+
+// StoreDeletedTGVersion is a helper method to define mock.On call
+//   - ctx context.Context
+//   - systemID *int32
+//   - tGID *int32
+//   - submitter *int32
+func (_e *Store_Expecter) StoreDeletedTGVersion(ctx interface{}, systemID interface{}, tGID interface{}, submitter interface{}) *Store_StoreDeletedTGVersion_Call {
+	return &Store_StoreDeletedTGVersion_Call{Call: _e.mock.On("StoreDeletedTGVersion", ctx, systemID, tGID, submitter)}
+}
+
+func (_c *Store_StoreDeletedTGVersion_Call) Run(run func(ctx context.Context, systemID *int32, tGID *int32, submitter *int32)) *Store_StoreDeletedTGVersion_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*int32), args[2].(*int32), args[3].(*int32))
+	})
+	return _c
+}
+
+func (_c *Store_StoreDeletedTGVersion_Call) Return(_a0 error) *Store_StoreDeletedTGVersion_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_StoreDeletedTGVersion_Call) RunAndReturn(run func(context.Context, *int32, *int32, *int32) error) *Store_StoreDeletedTGVersion_Call {
 	_c.Call.Return(run)
 	return _c
 }

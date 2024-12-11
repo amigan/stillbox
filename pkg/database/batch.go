@@ -12,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/alerting/rules"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 var (
@@ -106,11 +107,11 @@ INSERT INTO talkgroups AS tg (
 	$5,
 	$6,
 	$7,
-	$8,
-	$9,
+	COALESCE($8, '{}'::text[])::text[],
+	COALESCE($9, TRUE),
 	$10,
-	$11,
-	$12
+	COALESCE($11, 1.0)::numeric,
+	COALESCE($12, FALSE)::boolean
 )
 ON CONFLICT (system_id, tgid) DO UPDATE
 SET
@@ -142,9 +143,9 @@ type UpsertTalkgroupParams struct {
 	Frequency   *int32             `json:"frequency"`
 	Metadata    jsontypes.Metadata `json:"metadata"`
 	Tags        []string           `json:"tags"`
-	Alert       *bool              `json:"alert"`
+	Alert       interface{}        `json:"alert"`
 	AlertConfig rules.AlertRules   `json:"alert_config"`
-	Weight      *float32           `json:"weight"`
+	Weight      pgtype.Numeric     `json:"weight"`
 	Learned     *bool              `json:"learned"`
 }
 

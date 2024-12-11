@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -11,6 +12,14 @@ import (
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
 
 	"github.com/go-chi/chi/v5"
+)
+
+var (
+	ErrMissingTGSys = errors.New("missing talkgroup ID and system ID")
+	ErrTGIDMismatch = errors.New("url talkgroup ID and document talkgroup ID mismatch")
+	ErrSysMismatch  = errors.New("url system ID and document system ID mismatch")
+	ErrNoSuchSystem = tgstore.ErrNoSuchSystem
+	ErrBadSystem    = errors.New("invalid system")
 )
 
 const DefaultPerPage = 20
@@ -26,10 +35,14 @@ func (tga *talkgroupAPI) Subrouter() http.Handler {
 	r.Get("/", tga.get)
 
 	r.Put(`/{system:\d+}/{id:\d+}`, tga.put)
-	r.Put(`/{system:\d+}`, tga.putTalkgroups)
+	r.Put(`/{system:\d+}/`, tga.putTalkgroups)
+	r.Put(`/{system:\d+}`, tga.putSystem)
 
 	r.Post(`/{system:\d+}/`, tga.postPaginated)
 	r.Post(`/`, tga.postPaginated)
+
+	r.Delete(`/{system:\d+}`, tga.deleteSystem)
+	r.Delete(`/{system:\d+}/{id:\d+}`, tga.deleteTalkgroup)
 
 	r.Post("/import", tga.tgImport)
 
@@ -79,7 +92,7 @@ func (tga *talkgroupAPI) get(w http.ResponseWriter, r *http.Request) {
 	case p.hasBoth():
 		res, err = tgs.TG(ctx, talkgroups.TG(*p.System, *p.ID))
 	case p.System != nil:
-		res, err = tgs.SystemTGs(ctx, int32(*p.System))
+		res, err = tgs.SystemTGs(ctx, *p.System)
 	default:
 		// get all talkgroups
 		res, err = tgs.TGs(ctx, nil)
@@ -118,7 +131,7 @@ func (tga *talkgroupAPI) postPaginated(w http.ResponseWriter, r *http.Request) {
 	}{}
 	switch {
 	case p.System != nil:
-		res.Talkgroups, err = tgs.SystemTGs(ctx, int32(*p.System), tgstore.WithPagination(input, DefaultPerPage, &res.Count))
+		res.Talkgroups, err = tgs.SystemTGs(ctx, *p.System, tgstore.WithPagination(input, DefaultPerPage, &res.Count))
 	default:
 		// get all talkgroups
 		res.Talkgroups, err = tgs.TGs(ctx, nil, tgstore.WithPagination(input, DefaultPerPage, &res.Count))
@@ -143,7 +156,7 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tgs := tgstore.FromCtx(ctx)
 
-	input := database.UpdateTalkgroupParams{}
+	input := database.UpsertTalkgroupParams{}
 
 	err = forms.Unmarshal(r, &input, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
 	if err != nil {
@@ -151,15 +164,83 @@ func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !id.hasBoth() {
+		wErr(w, r, autoError(ErrMissingTGSys))
+		return
+	}
+
+	if input.TGID != 0 && input.TGID != int32(*id.ID) {
+		wErr(w, r, autoError(ErrTGIDMismatch))
+		return
+	}
+
+	if input.SystemID != 0 && input.SystemID != int32(*id.System) {
+		wErr(w, r, autoError(ErrSysMismatch))
+		return
+	}
+
+	input.SystemID = int32(*id.System)
+	input.TGID = int32(*id.ID)
+
 	input.Learned = nil // ignore for this call
 
-	record, err := tgs.UpdateTG(ctx, input)
+	record, err := tgs.UpsertTGs(ctx, *id.System, []database.UpsertTalkgroupParams{input})
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
 	}
 
-	respond(w, r, record)
+	respond(w, r, record[0])
+}
+
+func (tga *talkgroupAPI) deleteTalkgroup(w http.ResponseWriter, r *http.Request) {
+	var id tgParams
+	err := decodeParams(&id, r)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	if !id.hasBoth() {
+		wErr(w, r, badRequest(ErrMissingTGSys))
+		return
+	}
+
+	ctx := r.Context()
+	tgs := tgstore.FromCtx(ctx)
+
+	err = tgs.DeleteTG(ctx, id.ToID())
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (tga *talkgroupAPI) deleteSystem(w http.ResponseWriter, r *http.Request) {
+	var id tgParams
+	err := decodeParams(&id, r)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	if id.System == nil {
+		wErr(w, r, badRequest(ErrNoSuchSystem))
+		return
+	}
+
+	ctx := r.Context()
+	tgs := tgstore.FromCtx(ctx)
+
+	err = tgs.DeleteSystem(ctx, *id.System)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (tga *talkgroupAPI) tgExport(w http.ResponseWriter, r *http.Request) {
@@ -229,4 +310,37 @@ func (tga *talkgroupAPI) putTalkgroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond(w, r, record)
+}
+
+func (tga *talkgroupAPI) putSystem(w http.ResponseWriter, r *http.Request) {
+	var id tgParams
+	err := decodeParams(&id, r)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	if id.System == nil { // don't think this would ever happen
+		wErr(w, r, badRequest(ErrBadSystem))
+		return
+	}
+
+	ctx := r.Context()
+	tgs := tgstore.FromCtx(ctx)
+
+	var sysName string
+
+	err = forms.Unmarshal(r, &sysName, forms.WithTag("json"), forms.WithAcceptBlank())
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	err = tgs.CreateSystem(ctx, *id.System, sysName)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

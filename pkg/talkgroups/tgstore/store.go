@@ -24,6 +24,7 @@ var (
 	ErrNotFound       = errors.New("talkgroup not found")
 	ErrNoSuchSystem   = errors.New("no such system")
 	ErrInvalidOrderBy = errors.New("invalid pagination orderBy value")
+	ErrReference      = errors.New("item is still referenced, cannot delete")
 )
 
 type Store interface {
@@ -32,6 +33,9 @@ type Store interface {
 
 	// UpsertTGs upserts a slice of talkgroups.
 	UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*tgsp.Talkgroup, error)
+
+	// CreateSystem creates a new system with the specified name and ID.
+	CreateSystem(ctx context.Context, id int, name string) error
 
 	// TG retrieves a Talkgroup from the Store.
 	TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error)
@@ -43,7 +47,13 @@ type Store interface {
 	LearnTG(ctx context.Context, call *calls.Call) (*tgsp.Talkgroup, error)
 
 	// SystemTGs retrieves all Talkgroups associated with a System.
-	SystemTGs(ctx context.Context, systemID int32, opts ...option) ([]*tgsp.Talkgroup, error)
+	SystemTGs(ctx context.Context, systemID int, opts ...option) ([]*tgsp.Talkgroup, error)
+
+	// DeleteTG deletes a talkgroup record.
+	DeleteTG(ctx context.Context, id tgsp.ID) error
+
+	// DeleteSystem deletes a system. The system must have no talkgroups or incidents.
+	DeleteSystem(ctx context.Context, id int) error
 
 	// SystemName retrieves a system name from the store. It returns the record and whether one was found.
 	SystemName(ctx context.Context, id int) (string, bool)
@@ -139,6 +149,10 @@ func (t *cache) HUP(_ *config.Config) {
 func (t *cache) Invalidate() {
 	t.Lock()
 	defer t.Unlock()
+	t.invalidate()
+}
+
+func (t *cache) invalidate() {
 	clear(t.tgs)
 	clear(t.systems)
 }
@@ -146,20 +160,24 @@ func (t *cache) Invalidate() {
 type cache struct {
 	sync.RWMutex
 	tgs     tgMap
-	systems map[int32]string
+	systems map[int]string
 }
 
 // NewCache returns a new cache Store.
 func NewCache() *cache {
 	tgc := &cache{
 		tgs:     make(tgMap),
-		systems: make(map[int32]string),
+		systems: make(map[int]string),
 	}
 
 	return tgc
 }
 
 func (t *cache) Hint(ctx context.Context, tgs []tgsp.ID) error {
+	if len(tgs) < 1 {
+		return nil
+	}
+
 	t.RLock()
 	var toLoad database.TGTuples
 	if len(t.tgs) > len(tgs)/2 { // TODO: instrument this
@@ -206,7 +224,11 @@ func (t *cache) add(rec *tgsp.Talkgroup) {
 func (t *cache) addNoLock(rec *tgsp.Talkgroup) {
 	tg := tgsp.TG(rec.System.ID, rec.Talkgroup.TGID)
 	t.tgs[tg] = rec
-	t.systems[int32(rec.System.ID)] = rec.System.Name
+	t.systems[rec.System.ID] = rec.System.Name
+}
+
+func (t *cache) addSysNoLock(id int, name string) {
+	t.systems[id] = name
 }
 
 type rowType interface {
@@ -346,20 +368,20 @@ func (t *cache) Weight(ctx context.Context, id tgsp.ID, tm time.Time) float64 {
 	return float64(m)
 }
 
-func (t *cache) SystemTGs(ctx context.Context, systemID int32, opts ...option) ([]*tgsp.Talkgroup, error) {
+func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...option) ([]*tgsp.Talkgroup, error) {
 	db := database.FromCtx(ctx)
 	opt := sOpt(opts)
 	var err error
 	if opt.pagination != nil {
 		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
-		recs, err := db.GetTalkgroupsWithLearnedBySystemP(ctx, systemID, offset, perPage)
+		recs, err := db.GetTalkgroupsWithLearnedBySystemP(ctx, int32(systemID), offset, perPage)
 		if err != nil {
 			return nil, err
 		}
 		return addToRowList(t, recs), nil
 	}
 
-	recs, err := db.GetTalkgroupsWithLearnedBySystem(ctx, systemID)
+	recs, err := db.GetTalkgroupsWithLearnedBySystem(ctx, int32(systemID))
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +413,7 @@ func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
 
 func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) {
 	t.RLock()
-	n, has := t.systems[int32(id)]
+	n, has := t.systems[id]
 	t.RUnlock()
 
 	if !has {
@@ -401,7 +423,7 @@ func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) 
 		}
 
 		t.Lock()
-		t.systems[int32(id)] = sys
+		t.systems[id] = sys
 		t.Unlock()
 
 		return sys, true
@@ -415,8 +437,30 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 	if !has {
 		return nil, ErrNoSuchSystem
 	}
+	db := database.FromCtx(ctx)
+	var tg database.Talkgroup
+	err := db.InTx(ctx, func(db database.Store) error {
+		var oerr error
+		tg, oerr = db.UpdateTalkgroup(ctx, input)
+		if oerr != nil {
+			return oerr
+		}
+		versionBatch := db.StoreTGVersion(ctx, []database.StoreTGVersionParams{{
+			Submitter: auth.UIDFrom(ctx),
+			TGID:      *input.TGID,
+		}})
+		defer versionBatch.Close()
 
-	tg, err := database.FromCtx(ctx).UpdateTalkgroup(ctx, input)
+		versionBatch.Exec(func(_ int, err error) {
+			if err != nil {
+				oerr = err
+				return
+			}
+		})
+
+		return oerr
+	}, pgx.TxOptions{})
+
 	if err != nil {
 		return nil, err
 	}
@@ -428,6 +472,49 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 	t.add(record)
 
 	return record, nil
+}
+
+func (t *cache) DeleteSystem(ctx context.Context, id int) error {
+	t.Lock()
+	defer t.Unlock()
+
+	t.invalidate()
+
+	err := database.FromCtx(ctx).DeleteSystem(ctx, id)
+	switch {
+	case err == nil:
+		return nil
+	case database.IsSystemConstraintViolation(err):
+		return ErrReference
+	}
+
+	return err
+}
+
+func (t *cache) DeleteTG(ctx context.Context, id tgsp.ID) error {
+	t.Lock()
+	defer t.Unlock()
+
+	err := database.FromCtx(ctx).InTx(ctx, func(db database.Store) error {
+		err := db.StoreDeletedTGVersion(ctx, common.PtrTo(int32(id.System)), common.PtrTo(int32(id.Talkgroup)), auth.UIDFrom(ctx))
+		if err != nil {
+			return err
+		}
+
+		return db.DeleteTalkgroup(ctx, int32(id.System), int32(id.Talkgroup))
+	}, pgx.TxOptions{})
+
+	switch {
+	case err == nil:
+	case database.IsTGConstraintViolation(err):
+		return ErrReference
+	default:
+		return err
+	}
+
+	delete(t.tgs, id)
+
+	return nil
 }
 
 func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, error) {
@@ -537,4 +624,13 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 	}
 
 	return tgs, nil
+}
+
+func (t *cache) CreateSystem(ctx context.Context, id int, name string) error {
+	t.Lock()
+	defer t.Unlock()
+
+	t.addSysNoLock(id, name)
+
+	return database.FromCtx(ctx).CreateSystem(ctx, id, name)
 }

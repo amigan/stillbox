@@ -15,11 +15,22 @@ type talkgroupQuerier interface {
 
 type TGTuples [2][]uint32
 
-const TGConstraintName = "calls_system_talkgroup_fkey"
+const (
+	TGConstraintName  = "calls_system_talkgroup_fkey"
+	SysConstraintName = "talkgroups_system_id_fkey"
+)
 
 func IsTGConstraintViolation(e error) bool {
+	return IsConstraintViolation(e, TGConstraintName)
+}
+
+func IsSystemConstraintViolation(e error) bool {
+	return IsConstraintViolation(e, SysConstraintName)
+}
+
+func IsConstraintViolation(e error, constraintName string) bool {
 	var err *pgconn.PgError
-	if errors.As(e, &err) && err.Code == "23503" && err.ConstraintName == TGConstraintName {
+	if errors.As(e, &err) && err.Code == "23503" && err.ConstraintName == constraintName {
 		return true
 	}
 

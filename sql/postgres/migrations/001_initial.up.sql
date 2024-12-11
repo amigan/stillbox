@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS systems(
 	name TEXT NOT NULL
 );
 
+-- NB: if the column defaults are updated here, they must also be updated in the UpsertTalkgroup query
 CREATE TABLE IF NOT EXISTS talkgroups(
 	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	system_id INT4 REFERENCES systems(id) NOT NULL,
@@ -50,8 +51,9 @@ CREATE TABLE IF NOT EXISTS talkgroup_versions(
 	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	time TIMESTAMPTZ NOT NULL,
 	created_by INTEGER REFERENCES users(id),
+	deleted BOOLEAN,
 	-- talkgroup snapshot
-	system_id INT4 REFERENCES systems(id),
+	system_id INT4, 
 	tgid INT4,
 	name TEXT,
 	alpha_tag TEXT,

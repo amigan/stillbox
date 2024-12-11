@@ -22,6 +22,8 @@ import (
 const (
 	CallsTable = "calls"
 
+	CheckInterval = time.Hour // every 1h
+
 	preProvisionDefault = 1
 )
 
@@ -132,7 +134,7 @@ func New(db database.Store, cfg config.Partition) (*partman, error) {
 var _ PartitionManager = (*partman)(nil)
 
 func (pm *partman) Go(ctx context.Context) {
-	tick := time.NewTicker(60 * time.Minute)
+	tick := time.NewTicker(CheckInterval)
 
 	select {
 	case now := <-tick.C:

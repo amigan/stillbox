@@ -127,6 +127,7 @@ type TalkgroupVersion struct {
 	ID          int                `json:"id,omitempty"`
 	Time        pgtype.Timestamptz `json:"time,omitempty"`
 	CreatedBy   *int32             `json:"created_by,omitempty"`
+	Deleted     *bool              `json:"deleted,omitempty"`
 	SystemID    *int32             `json:"system_id,omitempty"`
 	TGID        *int32             `json:"tgid,omitempty"`
 	Name        *string            `json:"name,omitempty"`

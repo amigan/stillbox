@@ -103,11 +103,11 @@ INSERT INTO talkgroups AS tg (
 	sqlc.narg('tg_group'),
 	sqlc.narg('frequency'),
 	sqlc.narg('metadata'),
-	sqlc.narg('tags'),
-	sqlc.narg('alert'),
+	COALESCE(sqlc.narg('tags'), '{}'::text[])::text[],
+	COALESCE(sqlc.narg('alert'), TRUE),
 	sqlc.narg('alert_config'),
-	sqlc.narg('weight'),
-	sqlc.narg('learned')
+	COALESCE(sqlc.narg('weight'), 1.0)::numeric,
+	COALESCE(sqlc.narg('learned'), FALSE)::boolean
 )
 ON CONFLICT (system_id, tgid) DO UPDATE
 SET
@@ -212,3 +212,21 @@ FROM talkgroup_versions tgv ON CONFLICT (system_id, tgid) DO UPDATE SET
 	ignored = excluded.ignored
 WHERE tgv.id = ANY(@version_ids)
 RETURNING *;
+
+-- name: DeleteTalkgroup :exec
+DELETE FROM talkgroups WHERE system_id = @system_id AND tgid = @tg_id;
+
+-- name: StoreDeletedTGVersion :exec
+INSERT INTO talkgroup_versions(
+	system_id,
+	tgid,
+	time,
+	created_by,
+	deleted
+) VALUES(@system_id, @tg_id, NOW(), @submitter, TRUE);
+
+-- name: CreateSystem :exec
+INSERT INTO systems(id, name) VALUES(@id, @name);
+
+-- name: DeleteSystem :exec
+DELETE FROM systems WHERE id = @id;
