@@ -1,0 +1,36 @@
+<div class="loginForm">
+  <form class="loginForm">
+    <div>
+      <mat-form-field class="loginField">
+        <mat-label>Username</mat-label>
+        <input
+          matInput
+          name="username"
+          type="text"
+          [(ngModel)]="username"
+          (keyup.enter)="onSubmit()"
+        />
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field class="loginField">
+        <mat-label>Password</mat-label>
+        <input
+          matInput
+          name="password"
+          type="password"
+          [(ngModel)]="password"
+          (keyup.enter)="onSubmit()"
+        />
+      </mat-form-field>
+    </div>
+    <div>
+      <button class="login" (click)="onSubmit()">Login</button>
+    </div>
+  </form>
+  @if (failed) {
+    <div role="alert">
+      <span>Login Failed!</span>
+    </div>
+  }
+</div>

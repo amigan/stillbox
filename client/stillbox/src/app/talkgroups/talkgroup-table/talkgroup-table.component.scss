@@ -1,0 +1,26 @@
+table {
+  width: 100%;
+}
+
+.tableContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+tr.mat-mdc-row {
+  height: 1.6rem !important;
+  font-size: 9pt;
+}
+
+.tableContainer table {
+  flex: 1 1 auto;
+  overflow: scroll;
+}
+
+.pagFoot {
+  flex: 0 0 auto;
+  min-height: 2.5rem;
+  bottom: 0;
+}

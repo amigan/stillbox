@@ -1,0 +1,72 @@
+<!-- ========== HEADER ========== -->
+<header class="topHeader">
+  <mat-toolbar>
+    <div class="navbar">
+      <div class="stillboxLogo">
+        <a (click)="toggleNav()">Stillbox</a>
+      </div>
+      <div class="centerNav"></div>
+      <div class="rightNav">
+        @if (auth.loggedIn) {
+          <button class="ybtn">
+            <a (click)="logout()" class="logout">Logout</a>
+          </button>
+        }
+      </div>
+    </div>
+  </mat-toolbar>
+</header>
+
+<div class="container">
+  @if (auth.loggedIn) {
+    <app-navigation [events]="toggleNavSubject.asObservable()"></app-navigation>
+  } @else {
+    <div class="content">
+      <router-outlet />
+    </div>
+  }
+</div>
+<!--
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav #sidebar [(opened)]="opened" mode="side" class="sidenav">
+      <div class="navItems">
+        <nav>
+          <div class='menubutton'><input type='checkbox' id='menubuttoninput'><label for='menubuttoninput'><i
+                class="not-active">|</i><i class="active">C</i></label></div>
+          <ul>
+            <li>
+              <a routerLink="/" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="btn-active">
+                <ng-icon name="ionHome"></ng-icon><span class="sbLabel">Home</span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/talkgroups" routerLinkActive="btn-active" href="#">
+                <ng-icon name="ionChatbubbles"></ng-icon><span class="sbLabel">Talkgroups</span></a>
+            </li>
+            <li>
+              <a routerLink="/calls" routerLinkActive="btn-active" href="#">
+                <ng-icon name="ionMegaphoneOutline"></ng-icon><span class="sbLabel">Calls</span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/incidents" routerLinkActive="btn-active" href="#">
+                <ng-icon name="ionNewspaperOutline"></ng-icon><span class="sbLabel">Incidents</span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/alerts" routerLinkActive="btn-active">
+                <ng-icon name="ionAlertCircleOutline"></ng-icon><span class="sbLabel">Alerts</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </mat-sidenav>
+    <mat-sidenav-content>
+      <div class="content">
+        <router-outlet />
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
+-->

@@ -1,0 +1,30 @@
+.sidenav-container {
+  height: calc(100vh - var(--mat-toolbar-standard-height));
+  position: absolute;
+  width: 100%;
+}
+
+.sbLabel {
+  margin-left: 12px;
+  font-size: 12pt;
+  font-weight: normal;
+}
+
+.sidenav .mat-toolbar {
+  background: inherit;
+}
+
+.mat-toolbar.mat-primary {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.content {
+  height: calc(100vh - var(--mat-toolbar-standard-height));
+  margin-left: 2px;
+}
+
+.mdc-list-item--activated * {
+  color: rgb(255, 200, 0) !important;
+}

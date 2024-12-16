@@ -1,0 +1,8 @@
+<div class="tgTools">
+  <button [routerLink]="'/talkgroups/import'">Import</button>
+  <button [routerLink]="'/talkgroups/export'">Export</button>
+</div>
+<talkgroup-table
+  [talkgroups]="tgs"
+  (switchPage)="switchPage($event)"
+></talkgroup-table>

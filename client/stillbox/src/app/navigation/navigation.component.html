@@ -1,0 +1,42 @@
+<mat-sidenav-container class="sidenav-container" autosize>
+  <mat-sidenav
+    #drawer
+    class="sidenav"
+    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    [opened]="(isHandset$ | async) === false"
+  >
+    <mat-nav-list>
+      @for (r of homeRoutes; track r) {
+        <a
+          [routerLink]="r.url"
+          [routerLinkActiveOptions]="{ exact: r.exact }"
+          routerLinkActive
+          #routerLinkActiveInstance="routerLinkActive"
+          [activated]="routerLinkActiveInstance.isActive"
+          mat-list-item
+        >
+          <ng-icon [name]="r.icon"></ng-icon>
+          @if (isExpanded) {
+            <span class="sbLabel">{{ r.name }}</span>
+          }
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    @if (isHandset$ | async) {
+      <button
+        type="button"
+        aria-label="Toggle sidenav"
+        mat-icon-button
+        (click)="drawer.toggle()"
+      >
+        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+      </button>
+    }
+    <div class="content">
+      <router-outlet />
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

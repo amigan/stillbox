@@ -1,0 +1,62 @@
+<div class="tableContainer">
+  <table mat-table [dataSource]="dataSource">
+    <ng-container matColumnDef="icon">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let tg">
+        <ng-icon [name]="(tg | iconify).iconSvg!"></ng-icon>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="sysID">
+      <th mat-header-cell *matHeaderCellDef>Sys ID</th>
+      <td mat-cell *matCellDef="let tg">{{ tg.system?.id }}</td>
+    </ng-container>
+    <ng-container matColumnDef="sysName">
+      <th mat-header-cell *matHeaderCellDef>Sys</th>
+      <td mat-cell *matCellDef="let tg">{{ tg.system?.name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="group">
+      <th mat-header-cell *matHeaderCellDef>Group</th>
+      <td mat-cell *matCellDef="let tg">{{ tg.tg_group }}</td>
+    </ng-container>
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let tg">{{ tg.name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="alphaTag">
+      <th mat-header-cell *matHeaderCellDef>Alpha Tag</th>
+      <td mat-cell *matCellDef="let tg">{{ tg.alpha_tag }}</td>
+    </ng-container>
+    <ng-container matColumnDef="tgid">
+      <th mat-header-cell *matHeaderCellDef>TG ID</th>
+      <td mat-cell *matCellDef="let tg">{{ tg.tgid }}</td>
+    </ng-container>
+    <ng-container matColumnDef="learned">
+      <th mat-header-cell *matHeaderCellDef>Learned</th>
+      <td mat-cell *matCellDef="let tg">{{ tg?.learned ? "Y" : "" }}</td>
+    </ng-container>
+    <ng-container matColumnDef="edit">
+      <th mat-header-cell *matHeaderCellDef>Edit</th>
+      <td mat-cell *matCellDef="let tg">
+        <a routerLink="/talkgroups/{{ tg.system?.id }}/{{ tg.tgid }}"
+          ><ng-icon name="ionCreateOutline"></ng-icon
+        ></a>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let myRowData; columns: columns"></tr>
+  </table>
+  <div class="pagFoot">
+    <mat-paginator
+      #paginator
+      class="paginator"
+      (page)="setPage($event)"
+      [length]="count"
+      showFirstLastButtons="true"
+      [pageSize]="perPage"
+      [pageSizeOptions]="pageSizeOptions"
+      [pageIndex]="page"
+      aria-label="Select page"
+    >
+    </mat-paginator>
+  </div>
+</div>
