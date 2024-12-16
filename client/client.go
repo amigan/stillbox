@@ -4,7 +4,7 @@ import (
 	"embed"
 )
 
-const Prefix = "admin/dist/admin/browser"
+const Prefix = "stillbox/dist/stillbox/browser"
 
-//go:embed admin/dist/admin/browser
+//go:embed stillbox/dist/stillbox/browser
 var Client embed.FS
