@@ -31,6 +31,7 @@ func (a *api) Subrouter() http.Handler {
 
 	r.Mount("/talkgroup", new(talkgroupAPI).Subrouter())
 	r.Mount("/call", new(callsAPI).Subrouter())
+	r.Mount("/user", new(usersAPI).Subrouter())
 
 	return r
 }
@@ -65,6 +66,14 @@ func badRequestErrText(err error) render.Renderer {
 		Err:   err,
 		Code:  http.StatusBadRequest,
 		Error: "Bad request: " + err.Error(),
+	}
+}
+
+func unauthErrText(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusUnauthorized,
+		Error: "Unauthorized: " + err.Error(),
 	}
 }
 
@@ -111,6 +120,8 @@ var statusMapping = map[error]errResponder{
 	ErrTGIDMismatch:           badRequestErrText,
 	ErrSysMismatch:            badRequestErrText,
 	tgstore.ErrReference:      constraintErrText,
+	ErrBadUID:                 unauthErrText,
+	ErrBadAppName:             unauthErrText,
 }
 
 func autoError(err error) render.Renderer {

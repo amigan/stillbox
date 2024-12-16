@@ -43,3 +43,9 @@ DELETE FROM api_keys WHERE api_key = $1;
 
 -- name: GetAPIKey :one
 SELECT * FROM api_keys WHERE api_key = $1;
+
+-- name: GetAppPrefs :one
+SELECT (prefs->>(@app_name::TEXT))::JSONB FROM users WHERE id = @uid;
+
+-- name: SetAppPrefs :exec
+UPDATE users SET prefs = COALESCE(prefs, '{}'::JSONB) || jsonb_build_object(@app_name::TEXT, @prefs::JSONB) WHERE id = @uid;

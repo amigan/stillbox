@@ -108,6 +108,17 @@ func (q *Queries) GetAPIKey(ctx context.Context, apiKey string) (ApiKey, error) 
 	return i, err
 }
 
+const getAppPrefs = `-- name: GetAppPrefs :one
+SELECT (prefs->>($1::TEXT))::JSONB FROM users WHERE id = $2
+`
+
+func (q *Queries) GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error) {
+	row := q.db.QueryRow(ctx, getAppPrefs, appName, uid)
+	var column_1 []byte
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const getUserByID = `-- name: GetUserByID :one
 SELECT id, username, password, email, is_admin, prefs FROM users
 WHERE id = $1 LIMIT 1
@@ -194,6 +205,15 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const setAppPrefs = `-- name: SetAppPrefs :exec
+UPDATE users SET prefs = COALESCE(prefs, '{}'::JSONB) || jsonb_build_object($1::TEXT, $2::JSONB) WHERE id = $3
+`
+
+func (q *Queries) SetAppPrefs(ctx context.Context, appName string, prefs []byte, uid int) error {
+	_, err := q.db.Exec(ctx, setAppPrefs, appName, prefs, uid)
+	return err
 }
 
 const updatePassword = `-- name: UpdatePassword :exec

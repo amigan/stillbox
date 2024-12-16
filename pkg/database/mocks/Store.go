@@ -936,6 +936,66 @@ func (_c *Store_GetAPIKey_Call) RunAndReturn(run func(context.Context, string) (
 	return _c
 }
 
+// GetAppPrefs provides a mock function with given fields: ctx, appName, uid
+func (_m *Store) GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error) {
+	ret := _m.Called(ctx, appName, uid)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAppPrefs")
+	}
+
+	var r0 []byte
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, int) ([]byte, error)); ok {
+		return rf(ctx, appName, uid)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, int) []byte); ok {
+		r0 = rf(ctx, appName, uid)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, int) error); ok {
+		r1 = rf(ctx, appName, uid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetAppPrefs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAppPrefs'
+type Store_GetAppPrefs_Call struct {
+	*mock.Call
+}
+
+// GetAppPrefs is a helper method to define mock.On call
+//   - ctx context.Context
+//   - appName string
+//   - uid int
+func (_e *Store_Expecter) GetAppPrefs(ctx interface{}, appName interface{}, uid interface{}) *Store_GetAppPrefs_Call {
+	return &Store_GetAppPrefs_Call{Call: _e.mock.On("GetAppPrefs", ctx, appName, uid)}
+}
+
+func (_c *Store_GetAppPrefs_Call) Run(run func(ctx context.Context, appName string, uid int)) *Store_GetAppPrefs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(int))
+	})
+	return _c
+}
+
+func (_c *Store_GetAppPrefs_Call) Return(_a0 []byte, _a1 error) *Store_GetAppPrefs_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetAppPrefs_Call) RunAndReturn(run func(context.Context, string, int) ([]byte, error)) *Store_GetAppPrefs_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetCallAudioByID provides a mock function with given fields: ctx, id
 func (_m *Store) GetCallAudioByID(ctx context.Context, id uuid.UUID) (database.GetCallAudioByIDRow, error) {
 	ret := _m.Called(ctx, id)
@@ -2320,6 +2380,55 @@ func (_c *Store_RestoreTalkgroupVersion_Call) Return(_a0 database.Talkgroup, _a1
 }
 
 func (_c *Store_RestoreTalkgroupVersion_Call) RunAndReturn(run func(context.Context, int) (database.Talkgroup, error)) *Store_RestoreTalkgroupVersion_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetAppPrefs provides a mock function with given fields: ctx, appName, prefs, uid
+func (_m *Store) SetAppPrefs(ctx context.Context, appName string, prefs []byte, uid int) error {
+	ret := _m.Called(ctx, appName, prefs, uid)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetAppPrefs")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, []byte, int) error); ok {
+		r0 = rf(ctx, appName, prefs, uid)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_SetAppPrefs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetAppPrefs'
+type Store_SetAppPrefs_Call struct {
+	*mock.Call
+}
+
+// SetAppPrefs is a helper method to define mock.On call
+//   - ctx context.Context
+//   - appName string
+//   - prefs []byte
+//   - uid int
+func (_e *Store_Expecter) SetAppPrefs(ctx interface{}, appName interface{}, prefs interface{}, uid interface{}) *Store_SetAppPrefs_Call {
+	return &Store_SetAppPrefs_Call{Call: _e.mock.On("SetAppPrefs", ctx, appName, prefs, uid)}
+}
+
+func (_c *Store_SetAppPrefs_Call) Run(run func(ctx context.Context, appName string, prefs []byte, uid int)) *Store_SetAppPrefs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].([]byte), args[3].(int))
+	})
+	return _c
+}
+
+func (_c *Store_SetAppPrefs_Call) Return(_a0 error) *Store_SetAppPrefs_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_SetAppPrefs_Call) RunAndReturn(run func(context.Context, string, []byte, int) error) *Store_SetAppPrefs_Call {
 	_c.Call.Return(run)
 	return _c
 }

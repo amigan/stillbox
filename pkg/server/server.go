@@ -17,6 +17,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/sources"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -42,6 +43,7 @@ type Server struct {
 	tgs      tgstore.Store
 	rest     rest.API
 	partman  partman.PartitionManager
+	users    users.Store
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
@@ -79,6 +81,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		tgs:      tgCache,
 		sinks:    sinks.NewSinkManager(),
 		rest:     api,
+		users:    users.NewStore(),
 	}
 
 	if cfg.DB.Partition.Enabled {
@@ -133,6 +136,7 @@ func (s *Server) Go(ctx context.Context) error {
 
 	ctx = database.CtxWithDB(ctx, s.db)
 	ctx = tgstore.CtxWithStore(ctx, s.tgs)
+	ctx = users.CtxWithStore(ctx, s.users)
 
 	httpSrv := &http.Server{
 		Addr:    s.conf.Listen,

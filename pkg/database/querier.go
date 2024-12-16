@@ -24,6 +24,7 @@ type Querier interface {
 	DeleteTalkgroup(ctx context.Context, systemID int32, tGID int32) error
 	DeleteUser(ctx context.Context, username string) error
 	GetAPIKey(ctx context.Context, apiKey string) (ApiKey, error)
+	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
 	GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error)
 	GetDatabaseSize(ctx context.Context) (string, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
@@ -44,6 +45,7 @@ type Querier interface {
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUsers(ctx context.Context) ([]User, error)
 	RestoreTalkgroupVersion(ctx context.Context, versionIds int) (Talkgroup, error)
+	SetAppPrefs(ctx context.Context, appName string, prefs []byte, uid int) error
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error
 	StoreDeletedTGVersion(ctx context.Context, systemID *int32, tGID *int32, submitter *int32) error
