@@ -30,6 +30,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "favicon*",
+                "input": "src/assets/",
+                "output": "/"
               }
             ],
             "styles": ["src/styles.scss"],
