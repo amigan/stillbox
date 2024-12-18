@@ -25,6 +25,8 @@ var (
 	ErrNoSuchSystem   = errors.New("no such system")
 	ErrInvalidOrderBy = errors.New("invalid pagination orderBy value")
 	ErrReference      = errors.New("item is still referenced, cannot delete")
+	ErrBadOrder       = errors.New("invalid order")
+	ErrBadDirection   = errors.New("invalid direction")
 )
 
 type Store interface {
@@ -41,13 +43,13 @@ type Store interface {
 	TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error)
 
 	// TGs retrieves many talkgroups from the Store.
-	TGs(ctx context.Context, tgs tgsp.IDs, opts ...option) ([]*tgsp.Talkgroup, error)
+	TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.Talkgroup, error)
 
 	// LearnTG learns the talkgroup from a Call.
 	LearnTG(ctx context.Context, call *calls.Call) (*tgsp.Talkgroup, error)
 
 	// SystemTGs retrieves all Talkgroups associated with a System.
-	SystemTGs(ctx context.Context, systemID int, opts ...option) ([]*tgsp.Talkgroup, error)
+	SystemTGs(ctx context.Context, systemID int, opts ...Option) ([]*tgsp.Talkgroup, error)
 
 	// DeleteTG deletes a talkgroup record.
 	DeleteTG(ctx context.Context, id tgsp.ID) error
@@ -78,18 +80,20 @@ type options struct {
 	pagination     *Pagination
 	totalDest      *int
 	perPageDefault int
+
+	filter *string
 }
 
-func sOpt(opts []option) (o options) {
+func sOpt(opts []Option) (o options) {
 	for _, opt := range opts {
 		opt(&o)
 	}
 	return
 }
 
-type option func(*options)
+type Option func(*options)
 
-func WithPagination(p *Pagination, defPerPage int, totalDest *int) option {
+func WithPagination(p *Pagination, defPerPage int, totalDest *int) Option {
 	return func(o *options) {
 		o.pagination = p
 		o.perPageDefault = defPerPage
@@ -97,14 +101,64 @@ func WithPagination(p *Pagination, defPerPage int, totalDest *int) option {
 	}
 }
 
+func (p *Pagination) SortDir() (string, error) {
+	order := TGOrderTGID
+	dir := TGDirAsc
+
+	if p != nil {
+		if p.OrderBy != nil {
+			if !p.OrderBy.IsValid() {
+				return "", ErrBadOrder
+			}
+
+			order = *p.OrderBy
+		}
+
+		if p.Direction != nil {
+			if !p.Direction.IsValid() {
+				return "", ErrBadDirection
+			}
+
+			dir = *p.Direction
+		}
+	}
+
+	return string(order) + "_" + string(dir), nil
+}
+
+func WithFilter(f *string) Option {
+	return func(o *options) {
+		o.filter = f
+	}
+}
+
 type TGOrder string
+type TGDirection string
 
 const (
+	TGOrderID    TGOrder = "id"
 	TGOrderTGID  TGOrder = "tgid"
 	TGOrderGroup TGOrder = "group"
 	TGOrderName  TGOrder = "name"
-	TGOrderID    TGOrder = "id"
+	TGOrderAlpha TGOrder = "alpha"
+
+	TGDirAsc  TGDirection = "asc"
+	TGDirDesc TGDirection = "desc"
 )
+
+func (t *TGDirection) IsValid() bool {
+	if t == nil {
+		return true
+	}
+
+	switch *t {
+	case TGDirAsc, TGDirDesc:
+		return true
+	}
+
+	return false
+
+}
 
 func (t *TGOrder) IsValid() bool {
 	if t == nil {
@@ -112,7 +166,7 @@ func (t *TGOrder) IsValid() bool {
 	}
 
 	switch *t {
-	case TGOrderTGID, TGOrderGroup, TGOrderName, TGOrderID:
+	case TGOrderID, TGOrderTGID, TGOrderGroup, TGOrderName, TGOrderAlpha:
 		return true
 	}
 
@@ -122,7 +176,8 @@ func (t *TGOrder) IsValid() bool {
 type Pagination struct {
 	common.Pagination
 
-	OrderBy *TGOrder `json:"orderBy"`
+	OrderBy   *TGOrder     `json:"orderBy"`
+	Direction *TGDirection `json:"dir"`
 }
 
 type storeCtxKey string
@@ -196,7 +251,7 @@ func (t *cache) Hint(ctx context.Context, tgs []tgsp.ID) error {
 		}
 	}
 
-	if len(toLoad) > 0 {
+	if len(toLoad[0]) > 0 {
 		t.RUnlock()
 		return t.Load(ctx, toLoad)
 	}
@@ -281,8 +336,9 @@ func addToRowList[T rowType](t *cache, tgRecords []T) []*tgsp.Talkgroup {
 	return r
 }
 
-func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...option) ([]*tgsp.Talkgroup, error) {
+func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.Talkgroup, error) {
 	db := database.FromCtx(ctx)
+
 	r := make([]*tgsp.Talkgroup, 0, len(tgs))
 	opt := sOpt(opts)
 	var err error
@@ -307,17 +363,27 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...option) ([]*tgsp.
 	// get all talkgroups
 
 	if opt.pagination != nil {
+		sortDir, err := opt.pagination.SortDir()
+		if err != nil {
+			return nil, err
+		}
+
 		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
 		var tgRecords []database.GetTalkgroupsWithLearnedPRow
-		var err error
 		err = db.InTx(ctx, func(db database.Store) error {
-			tgRecords, err = db.GetTalkgroupsWithLearnedP(ctx, offset, perPage)
+			var err error
+			tgRecords, err = db.GetTalkgroupsWithLearnedP(ctx, database.GetTalkgroupsWithLearnedPParams{
+				Filter:  opt.filter,
+				OrderBy: sortDir,
+				Offset:  offset,
+				PerPage: perPage,
+			})
 			if err != nil {
 				return err
 			}
 
 			if opt.totalDest != nil {
-				count, err := db.GetTalkgroupsWithLearnedPCount(ctx)
+				count, err := db.GetTalkgroupsWithLearnedCount(ctx, opt.filter)
 				if err != nil {
 					return err
 				}
@@ -368,16 +434,47 @@ func (t *cache) Weight(ctx context.Context, id tgsp.ID, tm time.Time) float64 {
 	return float64(m)
 }
 
-func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...option) ([]*tgsp.Talkgroup, error) {
+func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...Option) ([]*tgsp.Talkgroup, error) {
 	db := database.FromCtx(ctx)
 	opt := sOpt(opts)
 	var err error
 	if opt.pagination != nil {
-		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
-		recs, err := db.GetTalkgroupsWithLearnedBySystemP(ctx, int32(systemID), offset, perPage)
+		sortDir, err := opt.pagination.SortDir()
 		if err != nil {
 			return nil, err
 		}
+
+		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
+		var recs []database.GetTalkgroupsWithLearnedBySystemPRow
+		err = db.InTx(ctx, func(db database.Store) error {
+			var err error
+			recs, err = db.GetTalkgroupsWithLearnedBySystemP(ctx, database.GetTalkgroupsWithLearnedBySystemPParams{
+				System:  int32(systemID),
+				Filter:  opt.filter,
+				OrderBy: sortDir,
+				Offset:  offset,
+				PerPage: perPage,
+			})
+			if err != nil {
+				return err
+			}
+
+			if opt.totalDest != nil {
+				count, err := db.GetTalkgroupsWithLearnedBySystemCount(ctx, int32(systemID), opt.filter)
+				if err != nil {
+					return err
+				}
+
+				*opt.totalDest = int(count)
+			}
+
+			return nil
+		}, pgx.TxOptions{})
+
+		if err != nil {
+			return nil, err
+		}
+
 		return addToRowList(t, recs), nil
 	}
 

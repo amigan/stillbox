@@ -1816,9 +1816,9 @@ func (_c *Store_GetTalkgroupsWithLearnedBySystem_Call) RunAndReturn(run func(con
 	return _c
 }
 
-// GetTalkgroupsWithLearnedBySystemCount provides a mock function with given fields: ctx, system
-func (_m *Store) GetTalkgroupsWithLearnedBySystemCount(ctx context.Context, system int32) (int64, error) {
-	ret := _m.Called(ctx, system)
+// GetTalkgroupsWithLearnedBySystemCount provides a mock function with given fields: ctx, system, filter
+func (_m *Store) GetTalkgroupsWithLearnedBySystemCount(ctx context.Context, system int32, filter *string) (int64, error) {
+	ret := _m.Called(ctx, system, filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTalkgroupsWithLearnedBySystemCount")
@@ -1826,17 +1826,17 @@ func (_m *Store) GetTalkgroupsWithLearnedBySystemCount(ctx context.Context, syst
 
 	var r0 int64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int32) (int64, error)); ok {
-		return rf(ctx, system)
+	if rf, ok := ret.Get(0).(func(context.Context, int32, *string) (int64, error)); ok {
+		return rf(ctx, system, filter)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int32) int64); ok {
-		r0 = rf(ctx, system)
+	if rf, ok := ret.Get(0).(func(context.Context, int32, *string) int64); ok {
+		r0 = rf(ctx, system, filter)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int32) error); ok {
-		r1 = rf(ctx, system)
+	if rf, ok := ret.Get(1).(func(context.Context, int32, *string) error); ok {
+		r1 = rf(ctx, system, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1852,13 +1852,14 @@ type Store_GetTalkgroupsWithLearnedBySystemCount_Call struct {
 // GetTalkgroupsWithLearnedBySystemCount is a helper method to define mock.On call
 //   - ctx context.Context
 //   - system int32
-func (_e *Store_Expecter) GetTalkgroupsWithLearnedBySystemCount(ctx interface{}, system interface{}) *Store_GetTalkgroupsWithLearnedBySystemCount_Call {
-	return &Store_GetTalkgroupsWithLearnedBySystemCount_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedBySystemCount", ctx, system)}
+//   - filter *string
+func (_e *Store_Expecter) GetTalkgroupsWithLearnedBySystemCount(ctx interface{}, system interface{}, filter interface{}) *Store_GetTalkgroupsWithLearnedBySystemCount_Call {
+	return &Store_GetTalkgroupsWithLearnedBySystemCount_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedBySystemCount", ctx, system, filter)}
 }
 
-func (_c *Store_GetTalkgroupsWithLearnedBySystemCount_Call) Run(run func(ctx context.Context, system int32)) *Store_GetTalkgroupsWithLearnedBySystemCount_Call {
+func (_c *Store_GetTalkgroupsWithLearnedBySystemCount_Call) Run(run func(ctx context.Context, system int32, filter *string)) *Store_GetTalkgroupsWithLearnedBySystemCount_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int32))
+		run(args[0].(context.Context), args[1].(int32), args[2].(*string))
 	})
 	return _c
 }
@@ -1868,14 +1869,14 @@ func (_c *Store_GetTalkgroupsWithLearnedBySystemCount_Call) Return(_a0 int64, _a
 	return _c
 }
 
-func (_c *Store_GetTalkgroupsWithLearnedBySystemCount_Call) RunAndReturn(run func(context.Context, int32) (int64, error)) *Store_GetTalkgroupsWithLearnedBySystemCount_Call {
+func (_c *Store_GetTalkgroupsWithLearnedBySystemCount_Call) RunAndReturn(run func(context.Context, int32, *string) (int64, error)) *Store_GetTalkgroupsWithLearnedBySystemCount_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetTalkgroupsWithLearnedBySystemP provides a mock function with given fields: ctx, system, offset, perPage
-func (_m *Store) GetTalkgroupsWithLearnedBySystemP(ctx context.Context, system int32, offset int32, perPage int32) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error) {
-	ret := _m.Called(ctx, system, offset, perPage)
+// GetTalkgroupsWithLearnedBySystemP provides a mock function with given fields: ctx, arg
+func (_m *Store) GetTalkgroupsWithLearnedBySystemP(ctx context.Context, arg database.GetTalkgroupsWithLearnedBySystemPParams) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error) {
+	ret := _m.Called(ctx, arg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTalkgroupsWithLearnedBySystemP")
@@ -1883,19 +1884,19 @@ func (_m *Store) GetTalkgroupsWithLearnedBySystemP(ctx context.Context, system i
 
 	var r0 []database.GetTalkgroupsWithLearnedBySystemPRow
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int32, int32, int32) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error)); ok {
-		return rf(ctx, system, offset, perPage)
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsWithLearnedBySystemPParams) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error)); ok {
+		return rf(ctx, arg)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int32, int32, int32) []database.GetTalkgroupsWithLearnedBySystemPRow); ok {
-		r0 = rf(ctx, system, offset, perPage)
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsWithLearnedBySystemPParams) []database.GetTalkgroupsWithLearnedBySystemPRow); ok {
+		r0 = rf(ctx, arg)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]database.GetTalkgroupsWithLearnedBySystemPRow)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int32, int32, int32) error); ok {
-		r1 = rf(ctx, system, offset, perPage)
+	if rf, ok := ret.Get(1).(func(context.Context, database.GetTalkgroupsWithLearnedBySystemPParams) error); ok {
+		r1 = rf(ctx, arg)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1910,16 +1911,14 @@ type Store_GetTalkgroupsWithLearnedBySystemP_Call struct {
 
 // GetTalkgroupsWithLearnedBySystemP is a helper method to define mock.On call
 //   - ctx context.Context
-//   - system int32
-//   - offset int32
-//   - perPage int32
-func (_e *Store_Expecter) GetTalkgroupsWithLearnedBySystemP(ctx interface{}, system interface{}, offset interface{}, perPage interface{}) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
-	return &Store_GetTalkgroupsWithLearnedBySystemP_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedBySystemP", ctx, system, offset, perPage)}
+//   - arg database.GetTalkgroupsWithLearnedBySystemPParams
+func (_e *Store_Expecter) GetTalkgroupsWithLearnedBySystemP(ctx interface{}, arg interface{}) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
+	return &Store_GetTalkgroupsWithLearnedBySystemP_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedBySystemP", ctx, arg)}
 }
 
-func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) Run(run func(ctx context.Context, system int32, offset int32, perPage int32)) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
+func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) Run(run func(ctx context.Context, arg database.GetTalkgroupsWithLearnedBySystemPParams)) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int32), args[2].(int32), args[3].(int32))
+		run(args[0].(context.Context), args[1].(database.GetTalkgroupsWithLearnedBySystemPParams))
 	})
 	return _c
 }
@@ -1929,14 +1928,71 @@ func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) Return(_a0 []database.Ge
 	return _c
 }
 
-func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) RunAndReturn(run func(context.Context, int32, int32, int32) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error)) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
+func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) RunAndReturn(run func(context.Context, database.GetTalkgroupsWithLearnedBySystemPParams) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error)) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetTalkgroupsWithLearnedP provides a mock function with given fields: ctx, offset, perPage
-func (_m *Store) GetTalkgroupsWithLearnedP(ctx context.Context, offset int32, perPage int32) ([]database.GetTalkgroupsWithLearnedPRow, error) {
-	ret := _m.Called(ctx, offset, perPage)
+// GetTalkgroupsWithLearnedCount provides a mock function with given fields: ctx, filter
+func (_m *Store) GetTalkgroupsWithLearnedCount(ctx context.Context, filter *string) (int64, error) {
+	ret := _m.Called(ctx, filter)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTalkgroupsWithLearnedCount")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *string) (int64, error)); ok {
+		return rf(ctx, filter)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *string) int64); ok {
+		r0 = rf(ctx, filter)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *string) error); ok {
+		r1 = rf(ctx, filter)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetTalkgroupsWithLearnedCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearnedCount'
+type Store_GetTalkgroupsWithLearnedCount_Call struct {
+	*mock.Call
+}
+
+// GetTalkgroupsWithLearnedCount is a helper method to define mock.On call
+//   - ctx context.Context
+//   - filter *string
+func (_e *Store_Expecter) GetTalkgroupsWithLearnedCount(ctx interface{}, filter interface{}) *Store_GetTalkgroupsWithLearnedCount_Call {
+	return &Store_GetTalkgroupsWithLearnedCount_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedCount", ctx, filter)}
+}
+
+func (_c *Store_GetTalkgroupsWithLearnedCount_Call) Run(run func(ctx context.Context, filter *string)) *Store_GetTalkgroupsWithLearnedCount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*string))
+	})
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsWithLearnedCount_Call) Return(_a0 int64, _a1 error) *Store_GetTalkgroupsWithLearnedCount_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsWithLearnedCount_Call) RunAndReturn(run func(context.Context, *string) (int64, error)) *Store_GetTalkgroupsWithLearnedCount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetTalkgroupsWithLearnedP provides a mock function with given fields: ctx, arg
+func (_m *Store) GetTalkgroupsWithLearnedP(ctx context.Context, arg database.GetTalkgroupsWithLearnedPParams) ([]database.GetTalkgroupsWithLearnedPRow, error) {
+	ret := _m.Called(ctx, arg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTalkgroupsWithLearnedP")
@@ -1944,19 +2000,19 @@ func (_m *Store) GetTalkgroupsWithLearnedP(ctx context.Context, offset int32, pe
 
 	var r0 []database.GetTalkgroupsWithLearnedPRow
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int32, int32) ([]database.GetTalkgroupsWithLearnedPRow, error)); ok {
-		return rf(ctx, offset, perPage)
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsWithLearnedPParams) ([]database.GetTalkgroupsWithLearnedPRow, error)); ok {
+		return rf(ctx, arg)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int32, int32) []database.GetTalkgroupsWithLearnedPRow); ok {
-		r0 = rf(ctx, offset, perPage)
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsWithLearnedPParams) []database.GetTalkgroupsWithLearnedPRow); ok {
+		r0 = rf(ctx, arg)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]database.GetTalkgroupsWithLearnedPRow)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int32, int32) error); ok {
-		r1 = rf(ctx, offset, perPage)
+	if rf, ok := ret.Get(1).(func(context.Context, database.GetTalkgroupsWithLearnedPParams) error); ok {
+		r1 = rf(ctx, arg)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1971,15 +2027,14 @@ type Store_GetTalkgroupsWithLearnedP_Call struct {
 
 // GetTalkgroupsWithLearnedP is a helper method to define mock.On call
 //   - ctx context.Context
-//   - offset int32
-//   - perPage int32
-func (_e *Store_Expecter) GetTalkgroupsWithLearnedP(ctx interface{}, offset interface{}, perPage interface{}) *Store_GetTalkgroupsWithLearnedP_Call {
-	return &Store_GetTalkgroupsWithLearnedP_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedP", ctx, offset, perPage)}
+//   - arg database.GetTalkgroupsWithLearnedPParams
+func (_e *Store_Expecter) GetTalkgroupsWithLearnedP(ctx interface{}, arg interface{}) *Store_GetTalkgroupsWithLearnedP_Call {
+	return &Store_GetTalkgroupsWithLearnedP_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedP", ctx, arg)}
 }
 
-func (_c *Store_GetTalkgroupsWithLearnedP_Call) Run(run func(ctx context.Context, offset int32, perPage int32)) *Store_GetTalkgroupsWithLearnedP_Call {
+func (_c *Store_GetTalkgroupsWithLearnedP_Call) Run(run func(ctx context.Context, arg database.GetTalkgroupsWithLearnedPParams)) *Store_GetTalkgroupsWithLearnedP_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int32), args[2].(int32))
+		run(args[0].(context.Context), args[1].(database.GetTalkgroupsWithLearnedPParams))
 	})
 	return _c
 }
@@ -1989,63 +2044,7 @@ func (_c *Store_GetTalkgroupsWithLearnedP_Call) Return(_a0 []database.GetTalkgro
 	return _c
 }
 
-func (_c *Store_GetTalkgroupsWithLearnedP_Call) RunAndReturn(run func(context.Context, int32, int32) ([]database.GetTalkgroupsWithLearnedPRow, error)) *Store_GetTalkgroupsWithLearnedP_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetTalkgroupsWithLearnedPCount provides a mock function with given fields: ctx
-func (_m *Store) GetTalkgroupsWithLearnedPCount(ctx context.Context) (int64, error) {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsWithLearnedPCount")
-	}
-
-	var r0 int64
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (int64, error)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context) int64); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(int64)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Store_GetTalkgroupsWithLearnedPCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearnedPCount'
-type Store_GetTalkgroupsWithLearnedPCount_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsWithLearnedPCount is a helper method to define mock.On call
-//   - ctx context.Context
-func (_e *Store_Expecter) GetTalkgroupsWithLearnedPCount(ctx interface{}) *Store_GetTalkgroupsWithLearnedPCount_Call {
-	return &Store_GetTalkgroupsWithLearnedPCount_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedPCount", ctx)}
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedPCount_Call) Run(run func(ctx context.Context)) *Store_GetTalkgroupsWithLearnedPCount_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedPCount_Call) Return(_a0 int64, _a1 error) *Store_GetTalkgroupsWithLearnedPCount_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedPCount_Call) RunAndReturn(run func(context.Context) (int64, error)) *Store_GetTalkgroupsWithLearnedPCount_Call {
+func (_c *Store_GetTalkgroupsWithLearnedP_Call) RunAndReturn(run func(context.Context, database.GetTalkgroupsWithLearnedPParams) ([]database.GetTalkgroupsWithLearnedPRow, error)) *Store_GetTalkgroupsWithLearnedP_Call {
 	_c.Call.Return(run)
 	return _c
 }

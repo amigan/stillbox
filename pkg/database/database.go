@@ -70,6 +70,19 @@ func (db *Postgres) InTx(ctx context.Context, f func(Store) error, opts pgx.TxOp
 type dbLogger struct{}
 
 func (m dbLogger) Log(ctx context.Context, level tracelog.LogLevel, msg string, data map[string]any) {
+	var rs string
+
+	// zerolog doesn't do this for us...
+	if i, ok := data["args"].([]interface{}); ok {
+		res := make([]string, 0, len(i))
+		for _, v := range i {
+			res = append(res, fmt.Sprintf("%T:%+v", v, v))
+		}
+
+		rs = strings.Join(res, ", ")
+		data["args"] = "ARRAY:[" + rs + "]"
+	}
+
 	log.Debug().Fields(data).Msg(msg)
 }
 

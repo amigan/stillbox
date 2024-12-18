@@ -115,6 +115,8 @@ var statusMapping = map[error]errResponder{
 	tgstore.ErrNoSuchSystem:   notFoundErrText,
 	tgstore.ErrNotFound:       notFoundErrText,
 	tgstore.ErrInvalidOrderBy: badRequestErrText,
+	tgstore.ErrBadDirection:   badRequestErrText,
+	tgstore.ErrBadOrder:       badRequestErrText,
 	pgx.ErrNoRows:             recordNotFound,
 	ErrMissingTGSys:           badRequestErrText,
 	ErrTGIDMismatch:           badRequestErrText,

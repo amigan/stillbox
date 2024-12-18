@@ -106,6 +106,12 @@ func (tga *talkgroupAPI) get(w http.ResponseWriter, r *http.Request) {
 	respond(w, r, res)
 }
 
+type FilterPagination struct {
+	tgstore.Pagination
+
+	Filter *string `json:"filter"`
+}
+
 func (tga *talkgroupAPI) postPaginated(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tgs := tgstore.FromCtx(ctx)
@@ -118,7 +124,7 @@ func (tga *talkgroupAPI) postPaginated(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	input := &tgstore.Pagination{}
+	input := &FilterPagination{}
 	err = forms.Unmarshal(r, input, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
 	if err != nil {
 		wErr(w, r, badRequest(err))
@@ -129,12 +135,18 @@ func (tga *talkgroupAPI) postPaginated(w http.ResponseWriter, r *http.Request) {
 		Talkgroups []*talkgroups.Talkgroup `json:"talkgroups"`
 		Count      int                     `json:"count"`
 	}{}
+
+	opts := []tgstore.Option{
+		tgstore.WithPagination(&input.Pagination, DefaultPerPage, &res.Count),
+		tgstore.WithFilter(input.Filter),
+	}
+
 	switch {
 	case p.System != nil:
-		res.Talkgroups, err = tgs.SystemTGs(ctx, *p.System, tgstore.WithPagination(input, DefaultPerPage, &res.Count))
+		res.Talkgroups, err = tgs.SystemTGs(ctx, *p.System, opts...)
 	default:
 		// get all talkgroups
-		res.Talkgroups, err = tgs.TGs(ctx, nil, tgstore.WithPagination(input, DefaultPerPage, &res.Count))
+		res.Talkgroups, err = tgs.TGs(ctx, nil, opts...)
 	}
 
 	if err != nil {

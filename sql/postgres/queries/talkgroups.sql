@@ -36,14 +36,38 @@ SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.system_id = @system
-ORDER BY tg.system_id ASC, tg.tgid ASC
+WHERE tg.system_id = @system AND
+(CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
+		tg.tg_group ILIKE '%' || @filter || '%' OR
+		tg.name ILIKE '%' || @filter || '%' OR
+		tg.alpha_tag ILIKE '%' || @filter || '%' OR
+		tg.tags @> ARRAY[LOWER(@filter)]
+	) ELSE TRUE END)
+ORDER BY
+CASE WHEN @order_by::TEXT = 'tgid_asc' THEN (tg.system_id, tg.tgid) END ASC,
+CASE WHEN @order_by = 'tgid_desc' THEN (tg.system_id, tg.tgid) END DESC,
+CASE WHEN @order_by = 'group_asc' THEN tg.tg_group END ASC,
+CASE WHEN @order_by = 'group_desc' THEN tg.tg_group END DESC,
+CASE WHEN @order_by = 'id_asc' THEN tg.id END ASC,
+CASE WHEN @order_by = 'id_desc' THEN tg.id END DESC,
+CASE WHEN @order_by = 'name_asc' THEN tg.name END ASC,
+CASE WHEN @order_by = 'name_desc' THEN tg.name END DESC,
+CASE WHEN @order_by = 'alpha_asc' THEN tg.alpha_tag END ASC,
+CASE WHEN @order_by = 'alpha_desc' THEN tg.alpha_tag END DESC
 OFFSET sqlc.arg('offset') ROWS
-FETCH NEXT sqlc.arg('per_page') ROWS ONLY;
+FETCH NEXT sqlc.arg('per_page') ROWS ONLY
+;
 
 -- name: GetTalkgroupsWithLearnedBySystemCount :one
 SELECT COUNT(*) FROM talkgroups tg
-WHERE tg.system_id = @system;
+WHERE tg.system_id = @system AND
+(CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
+		tg.tg_group ILIKE '%' || @filter || '%' OR
+		tg.name ILIKE '%' || @filter || '%' OR
+		tg.alpha_tag ILIKE '%' || @filter || '%' OR
+		tg.tags @> ARRAY[LOWER(@filter)]
+	) ELSE TRUE END)
+;
 
 -- name: GetTalkgroupsWithLearnedBySystem :many
 SELECT
@@ -64,14 +88,38 @@ SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE ignored IS NOT TRUE
-ORDER BY tg.system_id ASC, tg.tgid ASC
+WHERE ignored IS NOT TRUE AND
+(CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
+		tg.tg_group ILIKE '%' || @filter || '%' OR
+		tg.name ILIKE '%' || @filter || '%' OR
+		tg.alpha_tag ILIKE '%' || @filter || '%' OR
+		tg.tags @> ARRAY[LOWER(@filter)]
+	) ELSE TRUE END)
+ORDER BY
+CASE WHEN @order_by::TEXT = 'tgid_asc' THEN (tg.system_id, tg.tgid) END ASC,
+CASE WHEN @order_by = 'tgid_desc' THEN (tg.system_id, tg.tgid) END DESC,
+CASE WHEN @order_by = 'group_asc' THEN tg.tg_group END ASC,
+CASE WHEN @order_by = 'group_desc' THEN tg.tg_group END DESC,
+CASE WHEN @order_by = 'id_asc' THEN tg.id END ASC,
+CASE WHEN @order_by = 'id_desc' THEN tg.id END DESC,
+CASE WHEN @order_by = 'name_asc' THEN tg.name END ASC,
+CASE WHEN @order_by = 'name_desc' THEN tg.name END DESC,
+CASE WHEN @order_by = 'alpha_asc' THEN tg.alpha_tag END ASC,
+CASE WHEN @order_by = 'alpha_desc' THEN tg.alpha_tag END DESC
 OFFSET sqlc.arg('offset') ROWS
-FETCH NEXT sqlc.arg('per_page') ROWS ONLY;
+FETCH NEXT sqlc.arg('per_page') ROWS ONLY
+;
 
--- name: GetTalkgroupsWithLearnedPCount :one
+-- name: GetTalkgroupsWithLearnedCount :one
 SELECT COUNT(*) FROM talkgroups tg
-WHERE ignored IS NOT TRUE;
+WHERE ignored IS NOT TRUE AND
+(CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
+		tg.tg_group ILIKE '%' || @filter || '%' OR
+		tg.name ILIKE '%' || @filter || '%' OR
+		tg.alpha_tag ILIKE '%' || @filter || '%' OR
+		tg.tags @> ARRAY[LOWER(@filter)]
+	) ELSE TRUE END)
+;
 
 -- name: GetSystemName :one
 SELECT name FROM systems WHERE id = @system_id;
