@@ -60,6 +60,9 @@ type Store interface {
 	// SystemName retrieves a system name from the store. It returns the record and whether one was found.
 	SystemName(ctx context.Context, id int) (string, bool)
 
+	// Tags returns all distinct tags.
+	Tags(ctx context.Context) ([]string, error)
+
 	// Hint hints the Store that the provided talkgroups will be asked for.
 	Hint(ctx context.Context, tgs []tgsp.ID) error
 
@@ -730,4 +733,8 @@ func (t *cache) CreateSystem(ctx context.Context, id int, name string) error {
 	t.addSysNoLock(id, name)
 
 	return database.FromCtx(ctx).CreateSystem(ctx, id, name)
+}
+
+func (t *cache) Tags(ctx context.Context) ([]string, error) {
+	return database.FromCtx(ctx).GetAllTalkgroupTags(ctx)
 }

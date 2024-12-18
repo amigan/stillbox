@@ -93,6 +93,30 @@ func (q *Queries) DeleteTalkgroup(ctx context.Context, systemID int32, tGID int3
 	return err
 }
 
+const getAllTalkgroupTags = `-- name: GetAllTalkgroupTags :many
+SELECT UNNEST(tgs.tags)::TEXT tag FROM talkgroups tgs GROUP BY tag ORDER BY COUNT(*) DESC
+`
+
+func (q *Queries) GetAllTalkgroupTags(ctx context.Context) ([]string, error) {
+	rows, err := q.db.Query(ctx, getAllTalkgroupTags)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var tag string
+		if err := rows.Scan(&tag); err != nil {
+			return nil, err
+		}
+		items = append(items, tag)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSystemName = `-- name: GetSystemName :one
 SELECT name FROM systems WHERE id = $1
 `

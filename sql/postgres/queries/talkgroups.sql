@@ -24,6 +24,9 @@ WHERE system_id = @system_id AND tgid = @tg_id;
 SELECT sqlc.embed(talkgroups) FROM talkgroups
 WHERE (system_id, tgid) = (@system_id, @tg_id);
 
+-- name: GetAllTalkgroupTags :many
+SELECT UNNEST(tgs.tags)::TEXT tag FROM talkgroups tgs GROUP BY tag ORDER BY COUNT(*) DESC;
+
 -- name: GetTalkgroupWithLearned :one
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)

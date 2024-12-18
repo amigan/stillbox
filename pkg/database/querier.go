@@ -24,6 +24,7 @@ type Querier interface {
 	DeleteTalkgroup(ctx context.Context, systemID int32, tGID int32) error
 	DeleteUser(ctx context.Context, username string) error
 	GetAPIKey(ctx context.Context, apiKey string) (ApiKey, error)
+	GetAllTalkgroupTags(ctx context.Context) ([]string, error)
 	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
 	GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error)
 	GetDatabaseSize(ctx context.Context) (string, error)

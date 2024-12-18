@@ -44,6 +44,8 @@ func (tga *talkgroupAPI) Subrouter() http.Handler {
 	r.Delete(`/{system:\d+}`, tga.deleteSystem)
 	r.Delete(`/{system:\d+}/{id:\d+}`, tga.deleteTalkgroup)
 
+	r.Get(`/tags`, tga.tags)
+
 	r.Post("/import", tga.tgImport)
 
 	r.Post("/export", tga.tgExport)
@@ -355,4 +357,17 @@ func (tga *talkgroupAPI) putSystem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (tga *talkgroupAPI) tags(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	tgs := tgstore.FromCtx(ctx)
+
+	tags, err := tgs.Tags(ctx)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, tags)
 }
