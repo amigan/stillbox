@@ -27,8 +27,6 @@ export class PrefsService {
   }
 
   setTGsPerPage(pp: number) {
-    console.log(pp);
-    console.log(this.last);
     if (this.last.tgsPerPage != pp) {
       this.last.tgsPerPage = pp;
       this.setPrefs(this.last);

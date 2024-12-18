@@ -1,8 +1,21 @@
 <div class="tgTools">
-  <button [routerLink]="'/talkgroups/import'">Import</button>
-  <button [routerLink]="'/talkgroups/export'">Export</button>
+  <mat-form-field class="filterBox" subscriptSizing="dynamic">
+    <mat-label>Filter</mat-label>
+    <input matInput name="filter" type="search" autocomplete="off" [formControl]="filter" />
+  </mat-form-field>
+  <div class="impExp">
+    <button [routerLink]="'/talkgroups/import'">Import</button>
+    <button [routerLink]="'/talkgroups/export'">Export</button>
+  </div>
 </div>
 <talkgroup-table
+  *ngIf="tgs; else spinner"
   [talkgroups]="tgs"
   (switchPage)="switchPage($event)"
+  (changeFilter)="changeFilter($event)"
 ></talkgroup-table>
+<ng-template #spinner>
+  <div class="spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+</ng-template>

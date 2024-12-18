@@ -1,76 +1,93 @@
-<div class="flex">
+<div class="tgRecord">
   <form *ngIf="tg" [formGroup]="form" (ngSubmit)="submit()">
-    <div class="p-1 columns-2">
-      <label class="w-full" for="name">Name: </label
-      ><input
-        id="name"
-        type="text"
-        class="w-full input input-bordered"
-        formControlName="name"
-      />
-    </div>
-    <div class="p-1 columns-2">
-      <label class="w-full" for="alpha_tag">Alpha Tag: </label
-      ><input
-        id="alpha_tag"
-        type="text"
-        class="w-full input input-bordered"
-        formControlName="alpha_tag"
-      />
-    </div>
-    <div class="p-1 columns-2">
-      <label class="w-full" for="tg_group">Group: </label
-      ><input
-        id="tg_group"
-        type="text"
-        class="w-full input input-bordered"
-        formControlName="tg_group"
-      />
-    </div>
-    <div class="p-1 columns-2">
-      <label class="w-full" for="frequency">Frequency: </label
-      ><input
-        id="frequency"
-        type="text"
-        class="w-full input input-bordered"
-        formControlName="frequency"
-      />
-    </div>
-    <div class="p-1 columns-2">
-      <label class="w-full" for="alert">Alert: </label>
-      <div class="w-full">
-        <input
-          id="alert"
-          type="checkbox"
-          formControlName="alert"
-          class="checkbox"
-        />
-      </div>
-    </div>
-    <div class="p-1 columns-2">
-      <label class="w-full" for="weight">Weight: </label
-      ><input
-        id="weight"
-        type="text"
-        class="w-full input input-bordered"
-        formControlName="weight"
-      />
-    </div>
-    <div>Rules:</div>
-    <alert-rule-builder [rules]="tg.alert_config" />
     <div>
-      <label for="icon">Icon: </label>
-      <select class="select" name="icon" id="icon" formControlName="icon">
-        @for (opt of iconMapping | keyvalue; track opt) {
-          <option
-            value="{{ opt.key }}"
-            [selected]="opt.key == tg.metadata?.icon"
-          >
-            {{ opt.key | titlecase }}
-          </option>
-        }
-      </select>
+      <mat-form-field>
+        <mat-label>Name</mat-label>
+        <input matInput name="name" type="text" formControlName="name" />
+      </mat-form-field>
     </div>
-    <input type="submit" class="btn btn-secondary" value="Save" />
+    <div>
+      <mat-form-field>
+        <mat-label>Alpha Tag</mat-label
+        ><input
+          matInput
+          name="alpha_tag"
+          type="text"
+          formControlName="alpha_tag"
+        />
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field>
+        <mat-label>Group</mat-label
+        ><input
+          matInput
+          name="tg_group"
+          type="text"
+          formControlName="tg_group"
+        />
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field>
+        <mat-label>Frequency</mat-label
+        ><input
+          matInput
+          name="frequency"
+          type="text"
+          formControlName="frequency"
+        />
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field>
+        <mat-label>Weight</mat-label
+        ><input matInput name="weight" type="text" formControlName="weight" />
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field>
+        <mat-label>Icon</mat-label>
+        <select matNativeControl name="icon" formControlName="icon">
+          @for (opt of iconMapping | keyvalue; track opt) {
+            <option
+              value="{{ opt.key }}"
+              [selected]="opt.key == tg.metadata?.icon"
+            >
+              {{ opt.key | titlecase }}
+            </option>
+          }
+        </select>
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field class="tagsField">
+        <mat-label>Tags</mat-label>
+        <mat-chip-grid #tagsChipGrid [formControl]="tagsControl">
+          @for (tag of tg.tags; track tag) {
+            <mat-chip-row (removed)="removeTag(tag)">
+              {{ tag }}
+              <button matChipRemove>
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip-row>
+          }
+        </mat-chip-grid>
+        <input
+          placeholder="New tag..."
+          [matChipInputFor]="tagsChipGrid"
+          (matChipInputTokenEnd)="addTag($event)"
+        />
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-label>Alert</mat-label>
+      <mat-checkbox name="alert" formControlName="alert" />
+    </div>
+    <div>
+      Rules:
+      <alert-rule-builder [rules]="tg.alert_config" />
+    </div>
+    <button type="submit">Save</button>
   </form>
 </div>

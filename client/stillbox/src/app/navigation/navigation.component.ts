@@ -1,4 +1,4 @@
-import { Component, inject, Input, viewChild, ViewChild } from '@angular/core';
+import { Component, inject, Input, ViewChild } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { AsyncPipe } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -14,21 +14,8 @@ import {
   RouterOutlet,
   RouterLink,
   RouterLinkActive,
-  IsActiveMatchOptions,
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import {
-  ionMenuOutline,
-  ionChatbubbles,
-  ionNewspaperOutline,
-  ionAlertCircleOutline,
-  ionRadioOutline,
-  ionHome,
-  ionMegaphoneOutline,
-  ionCreateOutline,
-  ionMenu,
-} from '@ng-icons/ionicons';
 
 import { Subscription } from 'rxjs';
 
@@ -56,22 +43,9 @@ interface HomeRoute {
     RouterModule,
     RouterLink,
     RouterLinkActive,
-    NgIconComponent,
     FormsModule,
   ],
-  providers: [
-    provideIcons({
-      ionMenuOutline,
-      ionChatbubbles,
-      ionNewspaperOutline,
-      ionAlertCircleOutline,
-      ionRadioOutline,
-      ionHome,
-      ionMenu,
-      ionMegaphoneOutline,
-      ionCreateOutline,
-    }),
-  ],
+  providers: [],
 })
 export class NavigationComponent {
   private breakpointObserver = inject(BreakpointObserver);
@@ -85,7 +59,6 @@ export class NavigationComponent {
   ngOnInit() {
     this.toggleSubscription = this.events.subscribe(() => {
       this.isExpanded = !this.isExpanded;
-      // this.drawer.toggle()
     });
   }
 
@@ -97,28 +70,28 @@ export class NavigationComponent {
     {
       name: 'Home',
       url: '/',
-      icon: 'ionHome',
+      icon: 'home',
       exact: true,
     },
     {
       name: 'Talkgroups',
       url: '/talkgroups',
-      icon: 'ionChatbubbles',
+      icon: 'forum',
     },
     {
       name: 'Calls',
       url: '/calls',
-      icon: 'ionMegaphoneOutline',
+      icon: 'campaign',
     },
     {
       name: 'Incidents',
       url: '/incidents',
-      icon: 'ionNewspaperOutline',
+      icon: 'newspaper',
     },
     {
       name: 'Alerts',
       url: '/alerts',
-      icon: 'ionAlertCircleOutline',
+      icon: 'notifications',
     },
   ];
 

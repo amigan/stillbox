@@ -15,5 +15,18 @@ talkgroups {
 }
 
 .tgTools button {
-  width: 100%;
+  cursor: pointer;
+}
+
+.tgTools .impExp {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 5px;
+}
+
+.spinner {
+  display: flex;
+  margin-top: 40px;
+  justify-content: center;
 }

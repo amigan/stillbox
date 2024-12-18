@@ -5,8 +5,11 @@ table {
 .tableContainer {
   display: flex;
   flex-direction: column;
-  height: 100%;
   box-sizing: border-box;
+}
+
+mat-icon.tgIcon {
+  transform: scale(0.7);
 }
 
 tr.mat-mdc-row {

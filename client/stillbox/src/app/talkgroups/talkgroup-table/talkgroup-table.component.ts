@@ -5,41 +5,22 @@ import {
   PipeTransform,
   output,
   input,
-  Input,
-  computed,
-  Signal,
-  effect,
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { TalkgroupService, TalkgroupsPaginated } from '../talkgroups.service';
-import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import {
-  ionCreateOutline,
-  ionChevronBack,
-  ionChevronForward,
-} from '@ng-icons/ionicons';
-import {
-  matFireTruckOutline,
-  matLocalPoliceOutline,
-  matEmergencyOutline,
-  matDirectionsBusOutline,
-  matGroupWorkOutline,
-} from '@ng-icons/material-icons/outline';
 import { Talkgroup, iconMapping } from '../../talkgroup';
 import { ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
-import { RouterModule, RouterOutlet, RouterLink } from '@angular/router';
+import { RouterModule, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import {
-  MatPaginator,
-  MatPaginatorModule,
-  PageEvent,
-} from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { PrefsService } from '../../prefs/prefs.service';
+import { MatIconModule } from '@angular/material/icon';
+import {
+  MatChipSelectionChange,
+  MatChipsModule,
+} from '@angular/material/chips';
 
 @Pipe({
   standalone: true,
@@ -72,28 +53,18 @@ export class SanitizeHtmlPipe implements PipeTransform {
   selector: 'talkgroup-table',
   standalone: true,
   imports: [
-    NgIconComponent,
     RouterModule,
     RouterLink,
+    MatIconModule,
     CommonModule,
     IconifyPipe,
     MatTableModule,
     MatPaginatorModule,
+    MatChipsModule,
   ],
   templateUrl: './talkgroup-table.component.html',
   styleUrl: './talkgroup-table.component.scss',
-  providers: [
-    provideIcons({
-      ionCreateOutline,
-      matFireTruckOutline,
-      matLocalPoliceOutline,
-      matEmergencyOutline,
-      matDirectionsBusOutline,
-      matGroupWorkOutline,
-      ionChevronBack,
-      ionChevronForward,
-    }),
-  ],
+  providers: [],
 })
 export class TalkgroupTableComponent {
   selectedSys: number = 0;
@@ -102,6 +73,7 @@ export class TalkgroupTableComponent {
   prefsService: PrefsService = inject(PrefsService);
   page: number = 0;
   switchPage = output<PageEvent>();
+  changeFilter = output<string>();
   talkgroups = input<TalkgroupsPaginated>();
   talkgroups$ = toObservable(this.talkgroups);
   dataSource = new MatTableDataSource<Talkgroup>();
@@ -116,6 +88,7 @@ export class TalkgroupTableComponent {
     'name',
     'alphaTag',
     'tgid',
+    'tags',
     'learned',
     'edit',
   ];
@@ -127,12 +100,19 @@ export class TalkgroupTableComponent {
   }
 
   ngOnInit() {
+    this.perPage = this.prefsService.last.tgsPerPage;
     this.talkgroups$.subscribe((event) => {
       if (event != null) {
         this.dataSource.data = event!.talkgroups;
-        this.perPage = event!.talkgroups.length;
         this.count = event!.count;
       }
     });
+  }
+
+  searchChip(event: MouseEvent) {
+    // not a fan of how this looks, but it works...
+    this.changeFilter.emit(
+      (event.target as Element).childNodes[0].textContent ?? '',
+    );
   }
 }

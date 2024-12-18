@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import {
   Talkgroup,
   TalkgroupUpdate,
@@ -13,15 +13,29 @@ import {
   ReactiveFormsModule,
   FormGroup,
   FormControl,
-  Validators,
+  FormsModule,
 } from '@angular/forms';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
-import { Observable } from 'rxjs';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'talkgroup-record',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AlertRuleBuilderComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    AlertRuleBuilderComponent,
+    FormsModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatCheckboxModule,
+    MatChipsModule,
+    MatIconModule,
+  ],
   templateUrl: './talkgroup-record.component.html',
   styleUrl: './talkgroup-record.component.scss',
 })
@@ -29,6 +43,7 @@ export class TalkgroupRecordComponent {
   tg!: Talkgroup;
   iconMapping: IconMap = iconMapping;
   tgService: TalkgroupService = inject(TalkgroupService);
+  tagsControl = new FormControl<string[]>([]);
 
   form!: FormGroup;
 
@@ -36,6 +51,27 @@ export class TalkgroupRecordComponent {
     private route: ActivatedRoute,
     private router: Router,
   ) {}
+
+  removeTag(tag: string) {
+    const idx = this.tg.tags.indexOf(tag);
+    if (idx < 0) {
+      return this.tg.tags;
+    }
+
+    this.tg.tags.splice(idx, 1);
+
+    return [...this.tg.tags];
+  }
+
+  addTag(event: MatChipInputEvent) {
+    const value = (event.value || '').trim();
+
+    if (value) {
+      this.tg.tags = [...this.tg.tags, value];
+    }
+
+    event.chipInput!.clear();
+  }
 
   ngOnInit() {
     const sysId = this.route.snapshot.paramMap.get('sys');
@@ -52,8 +88,9 @@ export class TalkgroupRecordComponent {
           frequency: new FormControl(this.tg.frequency),
           alert: new FormControl(this.tg.alert),
           weight: new FormControl(this.tg.weight),
-          icon: new FormControl(this.tg.icon),
+          icon: new FormControl(this.tg?.metadata?.icon ?? ''),
         });
+        this.tagsControl.setValue(this.tg?.tags ?? []);
       });
   }
 
@@ -80,6 +117,9 @@ export class TalkgroupRecordComponent {
     }
     if (this.form.controls['weight'].dirty) {
       tgu.weight = Number(this.form.controls['weight'].value);
+    }
+    if (this.tagsControl.dirty) {
+      tgu.tags = this.tagsControl.value;
     }
     if (this.form.controls['icon'].dirty) {
       let iv: string = this.form.controls['icon'].value;

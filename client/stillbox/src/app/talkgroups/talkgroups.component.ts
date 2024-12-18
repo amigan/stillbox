@@ -1,29 +1,17 @@
-import { Component, inject, Pipe, PipeTransform } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { TalkgroupService, TalkgroupsPaginated } from './talkgroups.service';
-import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import {
-  ionCreateOutline,
-  ionChevronBack,
-  ionChevronForward,
-} from '@ng-icons/ionicons';
-import {
-  matFireTruckOutline,
-  matLocalPoliceOutline,
-  matEmergencyOutline,
-  matDirectionsBusOutline,
-  matGroupWorkOutline,
-} from '@ng-icons/material-icons/outline';
-import { Talkgroup, iconMapping } from '../talkgroup';
 import { ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
-import { RouterModule, RouterOutlet, RouterLink } from '@angular/router';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { RouterModule, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { TalkgroupTableComponent } from './talkgroup-table/talkgroup-table.component';
 import { PageEvent } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { PrefsService } from '../prefs/prefs.service';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatInputModule, MatInput } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 
 @Component({
   selector: 'talkgroups',
@@ -34,21 +22,15 @@ import { PrefsService } from '../prefs/prefs.service';
     CommonModule,
     TalkgroupTableComponent,
     MatToolbarModule,
+    MatInputModule,
+    MatFormFieldModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './talkgroups.component.html',
   styleUrl: './talkgroups.component.scss',
-  providers: [
-    provideIcons({
-      ionCreateOutline,
-      matFireTruckOutline,
-      matLocalPoliceOutline,
-      matEmergencyOutline,
-      matDirectionsBusOutline,
-      matGroupWorkOutline,
-      ionChevronBack,
-      ionChevronForward,
-    }),
-  ],
+  providers: [],
 })
 export class TalkgroupsComponent {
   selectedSys: number = 0;
@@ -57,10 +39,12 @@ export class TalkgroupsComponent {
   tgService: TalkgroupService = inject(TalkgroupService);
   prefsService: PrefsService = inject(PrefsService);
   perPage = 25;
-
+  filter = new FormControl('');
+  curPage = <PageEvent>{ pageIndex: 0, pageSize: this.perPage };
   constructor(private route: ActivatedRoute) {}
 
-  switchPage(p: PageEvent | undefined) {
+  switchPage(p: PageEvent) {
+    this.curPage = p;
     this.route.paramMap
       .pipe(
         switchMap((params) => {
@@ -70,6 +54,7 @@ export class TalkgroupsComponent {
           return this.tgService.getTalkgroupsPag({
             page: p!.pageIndex + 1,
             perPage: p!.pageSize,
+            filter: this.filter.value == '' ? null : this.filter.value,
           });
         }),
       )
@@ -82,7 +67,23 @@ export class TalkgroupsComponent {
   ngOnInit() {
     this.prefsService.prefs$.subscribe((event) => {
       this.perPage = event?.tgsPerPage ?? 25;
-      this.switchPage(<PageEvent>{ pageIndex: 0, pageSize: this.perPage });
+      this.switchPage(this.curPage);
     });
+  }
+
+  ngAfterViewInit() {
+    this.filter.valueChanges
+      .pipe(debounceTime(500))
+      .pipe(distinctUntilChanged())
+      .subscribe(() => {
+        this.filterChange();
+      });
+  }
+
+  changeFilter(f: string) {
+    this.filter.setValue(f);
+  }
+  filterChange() {
+    this.switchPage(this.curPage);
   }
 }

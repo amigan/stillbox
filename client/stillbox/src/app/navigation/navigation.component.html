@@ -16,7 +16,7 @@
           [activated]="routerLinkActiveInstance.isActive"
           mat-list-item
         >
-          <ng-icon [name]="r.icon"></ng-icon>
+          <mat-icon>{{ r.icon }}</mat-icon>
           @if (isExpanded) {
             <span class="sbLabel">{{ r.name }}</span>
           }

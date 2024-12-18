@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { TalkgroupService } from '../talkgroups.service';
-import { Talkgroup, TalkgroupUI, TalkgroupUpdate } from '../../talkgroup';
+import { TalkgroupUI, TalkgroupUpdate } from '../../talkgroup';
 import {
   FormGroup,
   FormControl,

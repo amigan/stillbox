@@ -6,6 +6,7 @@ import { Talkgroup, TalkgroupUpdate } from '../talkgroup';
 export interface Pagination {
   page: number;
   perPage: number;
+  filter: string | null;
 }
 
 export interface TalkgroupsPaginated {

@@ -3,7 +3,6 @@ import {
   FormGroup,
   FormControl,
   FormsModule,
-  Validators,
 } from '@angular/forms';
 import { TalkgroupService } from '../talkgroups.service';
 import { Component, inject, Pipe, PipeTransform } from '@angular/core';

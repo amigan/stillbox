@@ -3,7 +3,7 @@
     <ng-container matColumnDef="icon">
       <th mat-header-cell *matHeaderCellDef></th>
       <td mat-cell *matCellDef="let tg">
-        <ng-icon [name]="(tg | iconify).iconSvg!"></ng-icon>
+        <mat-icon class="tgIcon">{{ (tg | iconify).iconSvg! }}</mat-icon>
       </td>
     </ng-container>
     <ng-container matColumnDef="sysID">
@@ -30,6 +30,16 @@
       <th mat-header-cell *matHeaderCellDef>TG ID</th>
       <td mat-cell *matCellDef="let tg">{{ tg.tgid }}</td>
     </ng-container>
+    <ng-container matColumnDef="tags">
+      <th mat-header-cell *matHeaderCellDef>Tags</th>
+      <td mat-cell *matCellDef="let tg">
+        <mat-chip-set>
+          <span *ngFor="let tag of tg.tags">
+            <mat-chip (click)="searchChip($event)">{{ tag }}</mat-chip>
+          </span>
+        </mat-chip-set>
+      </td>
+    </ng-container>
     <ng-container matColumnDef="learned">
       <th mat-header-cell *matHeaderCellDef>Learned</th>
       <td mat-cell *matCellDef="let tg">{{ tg?.learned ? "Y" : "" }}</td>
@@ -38,8 +48,8 @@
       <th mat-header-cell *matHeaderCellDef>Edit</th>
       <td mat-cell *matCellDef="let tg">
         <a routerLink="/talkgroups/{{ tg.system?.id }}/{{ tg.tgid }}"
-          ><ng-icon name="ionCreateOutline"></ng-icon
-        ></a>
+          ><mat-icon>edit</mat-icon>
+        </a>
       </td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
