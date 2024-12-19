@@ -40,6 +40,10 @@ export class TalkgroupService {
     });
   }
 
+  allTags(): Observable<string[]> {
+    return this.http.get<string[]>('/api/talkgroup/tags');
+  }
+
   exportTGs(
     type: string,
     sysID: number,

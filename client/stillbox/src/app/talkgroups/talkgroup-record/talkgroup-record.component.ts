@@ -1,14 +1,33 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  model,
+  ChangeDetectionStrategy,
+  Signal,
+  ViewChild,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { debounceTime } from 'rxjs/operators';
 import {
   Talkgroup,
   TalkgroupUpdate,
   IconMap,
   iconMapping,
 } from '../../talkgroup';
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { TalkgroupService } from '../talkgroups.service';
 import { AlertRuleBuilderComponent } from './alert-rule-builder/alert-rule-builder.component';
+import {
+  MatAutocomplete,
+  MatAutocompleteModule,
+  MatAutocompleteSelectedEvent,
+  MatAutocompleteActivatedEvent,
+} from '@angular/material/autocomplete';
 import { CommonModule } from '@angular/common';
 import { catchError, of } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import {
   ReactiveFormsModule,
   FormGroup,
@@ -35,22 +54,49 @@ import { MatIconModule } from '@angular/material/icon';
     MatCheckboxModule,
     MatChipsModule,
     MatIconModule,
+    MatAutocompleteModule,
   ],
   templateUrl: './talkgroup-record.component.html',
   styleUrl: './talkgroup-record.component.scss',
+  //  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TalkgroupRecordComponent {
   tg!: Talkgroup;
   iconMapping: IconMap = iconMapping;
   tgService: TalkgroupService = inject(TalkgroupService);
-  tagsControl = new FormControl<string[]>([]);
-
-  form!: FormGroup;
+  allTags = <string[]>[];
+  readonly separatorKeysCodes: number[] = [ENTER, COMMA];
+  readonly filteredTags = computed(() => {
+    const currentTag = this.tagInputSig()?.toLowerCase() ?? '';
+    return currentTag
+      ? this.allTags.filter((tag) => tag.toLowerCase().includes(currentTag))
+      : this.allTags.slice();
+  });
+  readonly _allTags: Observable<string[]>;
+  form = new FormGroup({
+    name: new FormControl(''),
+    alpha_tag: new FormControl(''),
+    tg_group: new FormControl(''),
+    frequency: new FormControl(0),
+    alert: new FormControl(false),
+    weight: new FormControl(0.0),
+    icon: new FormControl(''),
+    tagInput: new FormControl(''),
+    tagsControl: new FormControl<string[]>([]),
+  });
+  tagInputSig = toSignal(
+    this.form.get('tagInput')!.valueChanges.pipe(debounceTime(300)) ?? of(null),
+    {},
+  );
+  @ViewChild('auto') autocomp!: MatAutocomplete;
+  active: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-  ) {}
+  ) {
+    this._allTags = this.tgService.allTags().pipe(shareReplay());
+  }
 
   removeTag(tag: string) {
     const idx = this.tg.tags.indexOf(tag);
@@ -63,17 +109,52 @@ export class TalkgroupRecordComponent {
     return [...this.tg.tags];
   }
 
-  addTag(event: MatChipInputEvent) {
-    const value = (event.value || '').trim();
-
-    if (value) {
-      this.tg.tags = [...this.tg.tags, value];
+  addTagEv(event: MatChipInputEvent) {
+    if (this.active != null) {
+      // this is a hack
+      this.addTag(this.active);
+      this.active = null;
+      event.chipInput!.clear();
+      return;
     }
+
+    const value = (event.value || '').trim();
+    this.addTag(value);
 
     event.chipInput!.clear();
   }
 
+  activated(event: MatAutocompleteActivatedEvent) {
+    console.log('activated');
+    this.active = event.option?.value;
+  }
+
+  addTag(tag: string) {
+    const idx = this.tg.tags.indexOf(tag);
+    if (idx > -1) {
+      return;
+    }
+
+    if (tag) {
+      this.tg.tags = [...this.tg.tags, tag];
+    }
+  }
+
+  selected(event: any) {
+    let ev = event as MatAutocompleteSelectedEvent;
+    this.addTag(ev.option.viewValue);
+    ev.option.deselect();
+    this.form.controls['tagInput'].reset();
+  }
+
+  loadTags() {
+    this._allTags.subscribe((event) => {
+      this.allTags = event;
+    });
+  }
+
   ngOnInit() {
+    this.loadTags();
     const sysId = this.route.snapshot.paramMap.get('sys');
     const tgId = this.route.snapshot.paramMap.get('tg');
 
@@ -81,16 +162,15 @@ export class TalkgroupRecordComponent {
       .getTalkgroup(Number(sysId), Number(tgId))
       .subscribe((data: Talkgroup) => {
         this.tg = data;
-        this.form = new FormGroup({
-          name: new FormControl(this.tg.name),
-          alpha_tag: new FormControl(this.tg.alpha_tag),
-          tg_group: new FormControl(this.tg.tg_group),
-          frequency: new FormControl(this.tg.frequency),
-          alert: new FormControl(this.tg.alert),
-          weight: new FormControl(this.tg.weight),
-          icon: new FormControl(this.tg?.metadata?.icon ?? ''),
-        });
-        this.tagsControl.setValue(this.tg?.tags ?? []);
+        this.form.controls['name'].setValue(this.tg.name);
+        this.form.controls['alpha_tag'].setValue(this.tg.alpha_tag);
+        this.form.controls['tg_group'].setValue(this.tg.tg_group);
+        this.form.controls['frequency'].setValue(this.tg.frequency);
+        this.form.controls['alert'].setValue(this.tg.alert);
+        this.form.controls['weight'].setValue(this.tg.weight);
+        this.form.controls['icon'].setValue(this.tg?.metadata?.icon ?? '');
+        this.form.controls['tagInput'].setValue('');
+        this.form.controls['tagsControl'].setValue(this.tg?.tags ?? []);
       });
   }
 
@@ -118,11 +198,11 @@ export class TalkgroupRecordComponent {
     if (this.form.controls['weight'].dirty) {
       tgu.weight = Number(this.form.controls['weight'].value);
     }
-    if (this.tagsControl.dirty) {
-      tgu.tags = this.tagsControl.value;
+    if (this.form.controls['tagsControl'].dirty) {
+      tgu.tags = this.form.controls['tagsControl'].value;
     }
     if (this.form.controls['icon'].dirty) {
-      let iv: string = this.form.controls['icon'].value;
+      let iv: string = this.form.controls['icon'].value ?? '';
       if (tgu.metadata == null) {
         tgu.metadata = {};
       }

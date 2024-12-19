@@ -63,7 +63,7 @@
     <div>
       <mat-form-field class="tagsField">
         <mat-label>Tags</mat-label>
-        <mat-chip-grid #tagsChipGrid [formControl]="tagsControl">
+        <mat-chip-grid #tagsChipGrid formControlName="tagsControl">
           @for (tag of tg.tags; track tag) {
             <mat-chip-row (removed)="removeTag(tag)">
               {{ tag }}
@@ -74,10 +74,25 @@
           }
         </mat-chip-grid>
         <input
+          name="tag"
           placeholder="New tag..."
           [matChipInputFor]="tagsChipGrid"
-          (matChipInputTokenEnd)="addTag($event)"
+          (matChipInputTokenEnd)="addTagEv($event)"
+          [matChipInputAddOnBlur]="false"
+          [formControlName]="'tagInput'"
+          #tagInput
+          [matAutocomplete]="auto"
+          [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
         />
+        <mat-autocomplete
+          #auto="matAutocomplete"
+          (optionSelected)="selected($event)"
+          (optionActivated)="activated($event)"
+        >
+          @for (tag of filteredTags(); track tag) {
+            <mat-option [value]="tag">{{ tag }}</mat-option>
+          }
+        </mat-autocomplete>
       </mat-form-field>
     </div>
     <div>
@@ -88,6 +103,6 @@
       Rules:
       <alert-rule-builder [rules]="tg.alert_config" />
     </div>
-    <button type="submit">Save</button>
+    <button class="sbButton" type="submit">Save</button>
   </form>
 </div>

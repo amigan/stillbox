@@ -1,30 +1,68 @@
 import { Routes } from '@angular/router';
 
-import { HomeComponent } from './home/home.component';
-import { LoginComponent } from './login/login.component';
-import { TalkgroupsComponent } from './talkgroups/talkgroups.component';
-import { TalkgroupRecordComponent } from './talkgroups/talkgroup-record/talkgroup-record.component';
-import { CallsComponent } from './calls/calls.component';
-import { IncidentsComponent } from './incidents/incidents.component';
-import { AlertsComponent } from './alerts/alerts.component';
-import { ImportComponent } from './talkgroups/import/import.component';
-import { ExportComponent } from './talkgroups/export/export.component';
 import { AuthGuard } from './auth.guard';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./login/login.component').then((m) => m.LoginComponent),
+  },
   {
     path: '',
     canActivateChild: [AuthGuard],
     children: [
-      { path: '', component: HomeComponent, pathMatch: 'full' },
-      { path: 'talkgroups', component: TalkgroupsComponent },
-      { path: 'talkgroups/import', component: ImportComponent },
-      { path: 'talkgroups/export', component: ExportComponent },
-      { path: 'talkgroups/:sys/:tg', component: TalkgroupRecordComponent },
-      { path: 'calls', component: CallsComponent },
-      { path: 'incidents', component: IncidentsComponent },
-      { path: 'alerts', component: AlertsComponent },
+      {
+        path: '',
+        loadComponent: () =>
+          import('./home/home.component').then((m) => m.HomeComponent),
+        pathMatch: 'full',
+      },
+      {
+        path: 'talkgroups',
+        loadComponent: () =>
+          import('./talkgroups/talkgroups.component').then(
+            (m) => m.TalkgroupsComponent,
+          ),
+      },
+      {
+        path: 'talkgroups/import',
+        loadComponent: () =>
+          import('./talkgroups/import/import.component').then(
+            (m) => m.ImportComponent,
+          ),
+      },
+      {
+        path: 'talkgroups/export',
+        loadComponent: () =>
+          import('./talkgroups/export/export.component').then(
+            (m) => m.ExportComponent,
+          ),
+      },
+      {
+        path: 'talkgroups/:sys/:tg',
+        loadComponent: () =>
+          import(
+            './talkgroups/talkgroup-record/talkgroup-record.component'
+          ).then((m) => m.TalkgroupRecordComponent),
+      },
+      {
+        path: 'calls',
+        loadComponent: () =>
+          import('./calls/calls.component').then((m) => m.CallsComponent),
+      },
+      {
+        path: 'incidents',
+        loadComponent: () =>
+          import('./incidents/incidents.component').then(
+            (m) => m.IncidentsComponent,
+          ),
+      },
+      {
+        path: 'alerts',
+        loadComponent: () =>
+          import('./alerts/alerts.component').then((m) => m.AlertsComponent),
+      },
     ],
   },
 ];

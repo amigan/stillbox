@@ -1,16 +1,33 @@
 <div class="tgTools">
   <mat-form-field class="filterBox" subscriptSizing="dynamic">
     <mat-label>Filter</mat-label>
-    <input matInput name="filter" type="search" autocomplete="off" [formControl]="filter" />
+    <input
+      matInput
+      name="filter"
+      type="text"
+      autocomplete="off"
+      [formControl]="filter"
+    />
+    <button
+      class="clearBtn"
+      *ngIf="filter.value"
+      matSuffix
+      mat-icon-button
+      (click)="filter.setValue('')"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
   </mat-form-field>
+  <div class="addTag"></div>
   <div class="impExp">
-    <button [routerLink]="'/talkgroups/import'">Import</button>
-    <button [routerLink]="'/talkgroups/export'">Export</button>
+    <button class="sbButton" [routerLink]="'/talkgroups/import'">Import</button>
+    <button class="sbButton" [routerLink]="'/talkgroups/export'">Export</button>
   </div>
 </div>
 <talkgroup-table
   *ngIf="tgs; else spinner"
   [talkgroups]="tgs"
+  [resetPage]="pageReset.asObservable()"
   (switchPage)="switchPage($event)"
   (changeFilter)="changeFilter($event)"
 ></talkgroup-table>

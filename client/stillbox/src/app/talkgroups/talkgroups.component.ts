@@ -8,10 +8,12 @@ import { TalkgroupTableComponent } from './talkgroup-table/talkgroup-table.compo
 import { PageEvent } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { PrefsService } from '../prefs/prefs.service';
+import { Subject } from 'rxjs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatInputModule, MatInput } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'talkgroups',
@@ -27,6 +29,7 @@ import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
     ReactiveFormsModule,
     FormsModule,
     MatProgressSpinnerModule,
+    MatIconModule,
   ],
   templateUrl: './talkgroups.component.html',
   styleUrl: './talkgroups.component.scss',
@@ -42,6 +45,12 @@ export class TalkgroupsComponent {
   filter = new FormControl('');
   curPage = <PageEvent>{ pageIndex: 0, pageSize: this.perPage };
   constructor(private route: ActivatedRoute) {}
+
+  pageReset: Subject<void> = new Subject<void>();
+
+  resetPage() {
+    this.pageReset.next();
+  }
 
   switchPage(p: PageEvent) {
     this.curPage = p;
@@ -84,6 +93,8 @@ export class TalkgroupsComponent {
     this.filter.setValue(f);
   }
   filterChange() {
+    this.curPage.pageIndex = 0;
+    this.resetPage();
     this.switchPage(this.curPage);
   }
 }
