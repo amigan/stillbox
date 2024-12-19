@@ -257,6 +257,7 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Part
 	end := pgtype.Timestamptz{Time: e, Valid: true}
 	fullPartName := pm.fullTableName(p.PartitionName())
 
+	// sweep calls that are referenced by an incident into swept_calls
 	swept, err := tx.SweepCalls(ctx, start, end)
 	if err != nil {
 		return err

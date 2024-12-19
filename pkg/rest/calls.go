@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 
 	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/internal/forms"
+	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/database"
 
 	"github.com/go-chi/chi/v5"
@@ -28,13 +30,15 @@ type callsAPI struct {
 func (ca *callsAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	r.Get(`/{call:[a-f0-9-]+}`, ca.get)
-	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.get)
+	r.Get(`/{call:[a-f0-9-]+}`, ca.getAudio)
+	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.getAudio)
+
+	r.Post(`/list`, ca.listCalls)
 
 	return r
 }
 
-func (ca *callsAPI) get(w http.ResponseWriter, r *http.Request) {
+func (ca *callsAPI) getAudio(w http.ResponseWriter, r *http.Request) {
 	p := struct {
 		CallID   *uuid.UUID `param:"call"`
 		Download *string    `param:"download"`
@@ -52,9 +56,9 @@ func (ca *callsAPI) get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	db := database.FromCtx(ctx)
+	calls := callstore.FromCtx(ctx)
 
-	call, err := db.GetCallAudioByID(ctx, *p.CallID)
+	call, err := calls.CallAudio(ctx, *p.CallID)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
@@ -77,7 +81,7 @@ func (ca *callsAPI) get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if call.AudioName == nil {
-		call.AudioName = common.PtrTo(call.CallDate.Time.Format(fileNameDateFmt))
+		call.AudioName = common.PtrTo(call.CallDate.Time().Format(fileNameDateFmt))
 	}
 
 	disposition := "inline"
@@ -90,4 +94,32 @@ func (ca *callsAPI) get(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf(`%s; filename="%s"`, disposition, *call.AudioName))
 
 	_, _ = w.Write(call.AudioBlob)
+}
+
+func (ca *callsAPI) listCalls(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	cSt := callstore.FromCtx(ctx)
+
+	var par callstore.CallsParams
+	err := forms.Unmarshal(r, &par, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	calls, count, err := cSt.Calls(ctx, par)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	res := struct {
+		Calls []database.ListCallsPRow `json:"calls"`
+		Count int                      `json:"count"`
+	}{
+		Calls: calls,
+		Count: count,
+	}
+
+	respond(w, r, res)
 }

@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	weight REAL NOT NULL DEFAULT 1.0,
 	learned BOOLEAN NOT NULL DEFAULT FALSE,
 	ignored BOOLEAN NOT NULL DEFAULT FALSE,
-	UNIQUE (system_id, tgid)
+	UNIQUE (system_id, tgid, learned)
 );
 
 CREATE INDEX talkgroups_system_tgid_idx ON talkgroups (system_id, tgid);

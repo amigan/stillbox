@@ -2384,6 +2384,122 @@ func (_c *Store_InTx_Call) RunAndReturn(run func(context.Context, func(database.
 	return _c
 }
 
+// ListCallsCount provides a mock function with given fields: ctx, arg
+func (_m *Store) ListCallsCount(ctx context.Context, arg database.ListCallsCountParams) (int64, error) {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListCallsCount")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, database.ListCallsCountParams) (int64, error)); ok {
+		return rf(ctx, arg)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, database.ListCallsCountParams) int64); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, database.ListCallsCountParams) error); ok {
+		r1 = rf(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_ListCallsCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListCallsCount'
+type Store_ListCallsCount_Call struct {
+	*mock.Call
+}
+
+// ListCallsCount is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.ListCallsCountParams
+func (_e *Store_Expecter) ListCallsCount(ctx interface{}, arg interface{}) *Store_ListCallsCount_Call {
+	return &Store_ListCallsCount_Call{Call: _e.mock.On("ListCallsCount", ctx, arg)}
+}
+
+func (_c *Store_ListCallsCount_Call) Run(run func(ctx context.Context, arg database.ListCallsCountParams)) *Store_ListCallsCount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(database.ListCallsCountParams))
+	})
+	return _c
+}
+
+func (_c *Store_ListCallsCount_Call) Return(_a0 int64, _a1 error) *Store_ListCallsCount_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_ListCallsCount_Call) RunAndReturn(run func(context.Context, database.ListCallsCountParams) (int64, error)) *Store_ListCallsCount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListCallsP provides a mock function with given fields: ctx, arg
+func (_m *Store) ListCallsP(ctx context.Context, arg database.ListCallsPParams) ([]database.ListCallsPRow, error) {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListCallsP")
+	}
+
+	var r0 []database.ListCallsPRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, database.ListCallsPParams) ([]database.ListCallsPRow, error)); ok {
+		return rf(ctx, arg)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, database.ListCallsPParams) []database.ListCallsPRow); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.ListCallsPRow)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, database.ListCallsPParams) error); ok {
+		r1 = rf(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_ListCallsP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListCallsP'
+type Store_ListCallsP_Call struct {
+	*mock.Call
+}
+
+// ListCallsP is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.ListCallsPParams
+func (_e *Store_Expecter) ListCallsP(ctx interface{}, arg interface{}) *Store_ListCallsP_Call {
+	return &Store_ListCallsP_Call{Call: _e.mock.On("ListCallsP", ctx, arg)}
+}
+
+func (_c *Store_ListCallsP_Call) Run(run func(ctx context.Context, arg database.ListCallsPParams)) *Store_ListCallsP_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(database.ListCallsPParams))
+	})
+	return _c
+}
+
+func (_c *Store_ListCallsP_Call) Return(_a0 []database.ListCallsPRow, _a1 error) *Store_ListCallsP_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_ListCallsP_Call) RunAndReturn(run func(context.Context, database.ListCallsPParams) ([]database.ListCallsPRow, error)) *Store_ListCallsP_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RestoreTalkgroupVersion provides a mock function with given fields: ctx, versionIds
 func (_m *Store) RestoreTalkgroupVersion(ctx context.Context, versionIds int) (database.Talkgroup, error) {
 	ret := _m.Called(ctx, versionIds)

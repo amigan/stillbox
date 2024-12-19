@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/audio"
+	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
@@ -30,6 +31,14 @@ func (d CallDuration) MsInt32Ptr() *int32 {
 
 func (d CallDuration) Seconds() int32 {
 	return int32(time.Duration(d).Seconds())
+}
+
+// CallAudio is a skinny Call used for audio API calls.
+type CallAudio struct {
+	CallDate  jsontypes.Time `json:"callDate"`
+	AudioName *string        `json:"audioName"`
+	AudioType *string        `json:"audioType"`
+	AudioBlob []byte         `json:"audioBlob"`
 }
 
 type Call struct {

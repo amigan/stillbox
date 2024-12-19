@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/araddon/dateparse"
+	"github.com/jackc/pgx/v5/pgtype"
 	"gopkg.in/yaml.v3"
 )
 
@@ -25,6 +26,17 @@ func (t *Time) UnmarshalYAML(n *yaml.Node) error {
 	}
 	*t = Time(tm)
 	return nil
+}
+
+func (t *Time) PGTypeTSTZ() pgtype.Timestamptz {
+	if t == nil {
+		return pgtype.Timestamptz{Valid: false}
+	}
+
+	return pgtype.Timestamptz{
+		Time:  time.Time(*t),
+		Valid: true,
+	}
 }
 
 func (t *Time) UnmarshalJSON(b []byte) error {

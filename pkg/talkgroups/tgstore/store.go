@@ -106,7 +106,7 @@ func WithPagination(p *Pagination, defPerPage int, totalDest *int) Option {
 
 func (p *Pagination) SortDir() (string, error) {
 	order := TGOrderTGID
-	dir := TGDirAsc
+	dir := common.DirAsc
 
 	if p != nil {
 		if p.OrderBy != nil {
@@ -136,7 +136,6 @@ func WithFilter(f *string) Option {
 }
 
 type TGOrder string
-type TGDirection string
 
 const (
 	TGOrderID    TGOrder = "id"
@@ -144,24 +143,7 @@ const (
 	TGOrderGroup TGOrder = "group"
 	TGOrderName  TGOrder = "name"
 	TGOrderAlpha TGOrder = "alpha"
-
-	TGDirAsc  TGDirection = "asc"
-	TGDirDesc TGDirection = "desc"
 )
-
-func (t *TGDirection) IsValid() bool {
-	if t == nil {
-		return true
-	}
-
-	switch *t {
-	case TGDirAsc, TGDirDesc:
-		return true
-	}
-
-	return false
-
-}
 
 func (t *TGOrder) IsValid() bool {
 	if t == nil {
@@ -179,8 +161,8 @@ func (t *TGOrder) IsValid() bool {
 type Pagination struct {
 	common.Pagination
 
-	OrderBy   *TGOrder     `json:"orderBy"`
-	Direction *TGDirection `json:"dir"`
+	OrderBy   *TGOrder              `json:"orderBy"`
+	Direction *common.SortDirection `json:"dir"`
 }
 
 type storeCtxKey string

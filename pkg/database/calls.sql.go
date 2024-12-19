@@ -147,6 +147,7 @@ WITH to_sweep AS (
 	WHERE call_id IN (SELECT id FROM to_sweep)
 `
 
+// This is used to sweep calls that are part of an incident prior to pruning a partition.
 func (q *Queries) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
 	result, err := q.db.Exec(ctx, cleanupSweptCalls, rangeStart, rangeEnd)
 	if err != nil {
@@ -187,6 +188,125 @@ func (q *Queries) GetDatabaseSize(ctx context.Context) (string, error) {
 	var pg_size_pretty string
 	err := row.Scan(&pg_size_pretty)
 	return pg_size_pretty, err
+}
+
+const listCallsCount = `-- name: ListCallsCount :one
+SELECT
+COUNT(*)
+FROM calls c
+JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
+WHERE
+CASE WHEN $1::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date >= $1 ELSE TRUE END AND
+CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date <= $2 ELSE TRUE END AND
+CASE WHEN $3::TEXT[] IS NOT NULL THEN
+	tgs.tags @> ARRAY[$3] ELSE TRUE END AND
+CASE WHEN $4::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags @> ARRAY[$4])) ELSE TRUE END
+`
+
+type ListCallsCountParams struct {
+	Start   pgtype.Timestamptz `json:"start"`
+	End     pgtype.Timestamptz `json:"end"`
+	TagsAny []string           `json:"tags_any"`
+	TagsNot []string           `json:"tags_not"`
+}
+
+func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error) {
+	row := q.db.QueryRow(ctx, listCallsCount,
+		arg.Start,
+		arg.End,
+		arg.TagsAny,
+		arg.TagsNot,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const listCallsP = `-- name: ListCallsP :many
+SELECT
+c.id,
+c.call_date,
+c.duration,
+tgs.system_id,
+tgs.tgid,
+sys.name system_name,
+tgs.name tg_name
+FROM calls c
+JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
+JOIN systems sys ON sys.id = tgs.system_id
+WHERE
+CASE WHEN $1::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date >= $1 ELSE TRUE END AND
+CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date <= $2 ELSE TRUE END AND
+CASE WHEN $3::TEXT[] IS NOT NULL THEN
+	tgs.tags @> ARRAY[$3] ELSE TRUE END AND
+CASE WHEN $4::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags @> ARRAY[$4])) ELSE TRUE END
+ORDER BY
+CASE WHEN $5::TEXT = 'asc' THEN c.call_date END ASC,
+CASE WHEN $5 = 'desc' THEN c.call_date END DESC
+OFFSET $6 ROWS
+FETCH NEXT $7 ROWS ONLY
+`
+
+type ListCallsPParams struct {
+	Start     pgtype.Timestamptz `json:"start"`
+	End       pgtype.Timestamptz `json:"end"`
+	TagsAny   []string           `json:"tags_any"`
+	TagsNot   []string           `json:"tags_not"`
+	Direction string             `json:"direction"`
+	Offset    int32              `json:"offset"`
+	PerPage   int32              `json:"per_page"`
+}
+
+type ListCallsPRow struct {
+	ID         uuid.UUID          `json:"id"`
+	CallDate   pgtype.Timestamptz `json:"call_date"`
+	Duration   *int32             `json:"duration"`
+	SystemID   int32              `json:"system_id"`
+	TGID       int32              `json:"tgid"`
+	SystemName string             `json:"system_name"`
+	TGName     *string            `json:"tg_name"`
+}
+
+func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error) {
+	rows, err := q.db.Query(ctx, listCallsP,
+		arg.Start,
+		arg.End,
+		arg.TagsAny,
+		arg.TagsNot,
+		arg.Direction,
+		arg.Offset,
+		arg.PerPage,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListCallsPRow
+	for rows.Next() {
+		var i ListCallsPRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CallDate,
+			&i.Duration,
+			&i.SystemID,
+			&i.TGID,
+			&i.SystemName,
+			&i.TGName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const setCallTranscript = `-- name: SetCallTranscript :exec

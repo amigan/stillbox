@@ -15,6 +15,7 @@ type Querier interface {
 	AddAlert(ctx context.Context, arg AddAlertParams) error
 	AddCall(ctx context.Context, arg AddCallParams) error
 	AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error)
+	// This is used to sweep calls that are part of an incident prior to pruning a partition.
 	CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateSystem(ctx context.Context, iD int, name string) error
@@ -45,6 +46,8 @@ type Querier interface {
 	GetUserByUID(ctx context.Context, id int) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUsers(ctx context.Context) ([]User, error)
+	ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error)
+	ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error)
 	RestoreTalkgroupVersion(ctx context.Context, versionIds int) (Talkgroup, error)
 	SetAppPrefs(ctx context.Context, appName string, prefs []byte, uid int) error
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error

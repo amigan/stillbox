@@ -70,6 +70,7 @@ WITH to_sweep AS (
 ) INSERT INTO swept_calls SELECT * FROM to_sweep;
 
 -- name: CleanupSweptCalls :execrows
+-- This is used to sweep calls that are part of an incident prior to pruning a partition.
 WITH to_sweep AS (
 	SELECT id FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
@@ -79,3 +80,47 @@ WITH to_sweep AS (
 		swept_call_id = call_id,
 		calls_tbl_id = NULL
 	WHERE call_id IN (SELECT id FROM to_sweep);
+
+-- name: ListCallsP :many
+SELECT
+c.id,
+c.call_date,
+c.duration,
+tgs.system_id,
+tgs.tgid,
+sys.name system_name,
+tgs.name tg_name
+FROM calls c
+JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
+JOIN systems sys ON sys.id = tgs.system_id
+WHERE
+CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date >= @start ELSE TRUE END AND
+CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date <= sqlc.narg('end') ELSE TRUE END AND
+CASE WHEN sqlc.narg('tags_any')::TEXT[] IS NOT NULL THEN
+	tgs.tags @> ARRAY[@tags_any] ELSE TRUE END AND
+CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags @> ARRAY[@tags_not])) ELSE TRUE END
+ORDER BY
+CASE WHEN @direction::TEXT = 'asc' THEN c.call_date END ASC,
+CASE WHEN @direction = 'desc' THEN c.call_date END DESC
+OFFSET sqlc.arg('offset') ROWS
+FETCH NEXT sqlc.arg('per_page') ROWS ONLY
+;
+
+-- name: ListCallsCount :one
+SELECT
+COUNT(*)
+FROM calls c
+JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
+WHERE
+CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date >= @start ELSE TRUE END AND
+CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date <= sqlc.narg('end') ELSE TRUE END AND
+CASE WHEN sqlc.narg('tags_any')::TEXT[] IS NOT NULL THEN
+	tgs.tags @> ARRAY[@tags_any] ELSE TRUE END AND
+CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags @> ARRAY[@tags_not])) ELSE TRUE END
+;

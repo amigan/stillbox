@@ -13,3 +13,32 @@ func (p Pagination) OffsetPerPage(perPageDefault int) (offset int32, perPage int
 
 	return
 }
+
+type SortDirection string
+
+const (
+	DirAsc  SortDirection = "asc"
+	DirDesc SortDirection = "desc"
+)
+
+func (t *SortDirection) DirString(def SortDirection) string {
+	if t == nil {
+		return string(def)
+	}
+
+	return string(*t)
+}
+
+func (t *SortDirection) IsValid() bool {
+	if t == nil {
+		return true
+	}
+
+	switch *t {
+	case DirAsc, DirDesc:
+		return true
+	}
+
+	return false
+
+}
