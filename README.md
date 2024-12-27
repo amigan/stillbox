@@ -15,6 +15,7 @@ Primary differences:
 * "Native" flutter client (Calls) for Android/iOS/macOS/Linux/Windows (in progress)
 * RadioReference talkgroup import, SDRtrunk talkgroup playlist export
 * Incidents functionality (group past calls together and retain them)
+* No premiumization nags
 * 3-clause BSD license
 
 **NOTE**
