@@ -99,9 +99,9 @@ CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date <= sqlc.narg('end') ELSE TRUE END AND
 CASE WHEN sqlc.narg('tags_any')::TEXT[] IS NOT NULL THEN
-	tgs.tags @> ARRAY[@tags_any] ELSE TRUE END AND
+	tgs.tags && ARRAY[@tags_any] ELSE TRUE END AND
 CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
-	(NOT (tgs.tags @> ARRAY[@tags_not])) ELSE TRUE END AND
+	(NOT (tgs.tags && ARRAY[@tags_not])) ELSE TRUE END AND
 (CASE WHEN sqlc.narg('tg_filter')::TEXT IS NOT NULL THEN (
 		tgs.tg_group ILIKE '%' || @tg_filter || '%' OR
 		tgs.name ILIKE '%' || @tg_filter || '%' OR
@@ -128,9 +128,9 @@ CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date <= sqlc.narg('end') ELSE TRUE END AND
 CASE WHEN sqlc.narg('tags_any')::TEXT[] IS NOT NULL THEN
-	tgs.tags @> ARRAY[@tags_any] ELSE TRUE END AND
+	tgs.tags && ARRAY[@tags_any] ELSE TRUE END AND
 CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
-	(NOT (tgs.tags @> ARRAY[@tags_not])) ELSE TRUE END AND
+	(NOT (tgs.tags && ARRAY[@tags_not])) ELSE TRUE END AND
 (CASE WHEN sqlc.narg('tg_filter')::TEXT IS NOT NULL THEN (
 		tgs.tg_group ILIKE '%' || @tg_filter || '%' OR
 		tgs.name ILIKE '%' || @tg_filter || '%' OR
