@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TalkgroupService, TalkgroupsPaginated } from './talkgroups.service';
 import { ActivatedRoute } from '@angular/router';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -8,16 +8,15 @@ import { TalkgroupTableComponent } from './talkgroup-table/talkgroup-table.compo
 import { PageEvent } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { PrefsService } from '../prefs/prefs.service';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, ReplaySubject, Subject, Subscription } from 'rxjs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatInputModule, MatInput } from '@angular/material/input';
+import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'talkgroups',
-  standalone: true,
   imports: [
     RouterModule,
     RouterLink,
@@ -41,10 +40,12 @@ export class TalkgroupsComponent {
   tgs!: TalkgroupsPaginated;
   tgService: TalkgroupService = inject(TalkgroupService);
   prefsService: PrefsService = inject(PrefsService);
-  perPage = 25;
+  perPage = 0;
   filter = new FormControl('');
   curPage = <PageEvent>{ pageIndex: 0, pageSize: this.perPage };
+  private getPage = new ReplaySubject<PageEvent>(1);
   constructor(private route: ActivatedRoute) {}
+  subs = new Subscription();
 
   pageReset: Subject<void> = new Subject<void>();
 
@@ -54,30 +55,60 @@ export class TalkgroupsComponent {
 
   switchPage(p: PageEvent) {
     this.curPage = p;
-    this.route.paramMap
-      .pipe(
-        switchMap((params) => {
-          this.perPage = p!.pageSize;
-          this.selectedSys = Number(params.get('sys'));
-          this.selectedId = Number(params.get('tg'));
-          return this.tgService.getTalkgroupsPag({
-            page: p!.pageIndex + 1,
-            perPage: p!.pageSize,
-            filter: this.filter.value == '' ? null : this.filter.value,
-          });
-        }),
-      )
-      .subscribe((ev) => {
-        this.tgs = ev;
-      });
-    this.prefsService.setTGsPerPage(p!.pageSize);
+
+    if (p.pageSize != this.perPage) {
+      this.perPage = p.pageSize;
+      this.prefsService.set('tgsPerPage', this.perPage);
+    }
+    this.getPage.next(p);
+  }
+
+  ngOnDestroy() {
+    this.subs.unsubscribe();
   }
 
   ngOnInit() {
-    this.prefsService.prefs$.subscribe((event) => {
-      this.perPage = event?.tgsPerPage ?? 25;
-      this.switchPage(this.curPage);
+    this.prefsService.get('tgsPerPage').subscribe((tgpp) => {
+      if (!tgpp) {
+        tgpp = 25;
+      }
+      if (tgpp != this.perPage) {
+        this.perPage = tgpp;
+
+        this.switchPage(<PageEvent>{
+          pageIndex: 0,
+          pageSize: tgpp,
+        });
+      }
     });
+    this.subs.add(
+      this.getPage
+        .pipe(
+          switchMap((p) =>
+            this.route.paramMap.pipe(
+              switchMap((params) => {
+                this.selectedSys = Number(params.get('sys'));
+                this.selectedId = Number(params.get('tg'));
+                return this.tgService.getTalkgroupsPag({
+                  page: p.pageIndex + 1,
+                  perPage: p.pageSize,
+                  filter: this.filter.value == '' ? null : this.filter.value,
+                });
+              }),
+            ),
+          ),
+        )
+        .subscribe((ev) => {
+          this.tgs = ev;
+        }),
+    );
+  }
+
+  zeroPage(): PageEvent {
+    return <PageEvent>{
+      pageIndex: 0,
+      pageSize: this.curPage.pageSize,
+    };
   }
 
   ngAfterViewInit() {

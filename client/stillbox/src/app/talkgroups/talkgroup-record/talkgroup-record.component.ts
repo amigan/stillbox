@@ -1,12 +1,4 @@
-import {
-  Component,
-  computed,
-  inject,
-  model,
-  ChangeDetectionStrategy,
-  Signal,
-  ViewChild,
-} from '@angular/core';
+import { Component, computed, inject, ViewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { debounceTime } from 'rxjs/operators';
 import {
@@ -25,7 +17,7 @@ import {
   MatAutocompleteActivatedEvent,
 } from '@angular/material/autocomplete';
 import { CommonModule } from '@angular/common';
-import { catchError, of } from 'rxjs';
+import { BehaviorSubject, catchError, of, Subscription } from 'rxjs';
 import { shareReplay } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import {
@@ -34,7 +26,7 @@ import {
   FormControl,
   FormsModule,
 } from '@angular/forms';
-import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -43,7 +35,6 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'talkgroup-record',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -58,7 +49,6 @@ import { MatIconModule } from '@angular/material/icon';
   ],
   templateUrl: './talkgroup-record.component.html',
   styleUrl: './talkgroup-record.component.scss',
-  //  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TalkgroupRecordComponent {
   tg!: Talkgroup;
@@ -90,6 +80,7 @@ export class TalkgroupRecordComponent {
   );
   @ViewChild('auto') autocomp!: MatAutocomplete;
   active: string | null = null;
+  subscriptions = new Subscription();
 
   constructor(
     private route: ActivatedRoute,
@@ -125,7 +116,6 @@ export class TalkgroupRecordComponent {
   }
 
   activated(event: MatAutocompleteActivatedEvent) {
-    console.log('activated');
     this.active = event.option?.value;
   }
 
@@ -147,31 +137,35 @@ export class TalkgroupRecordComponent {
     this.form.controls['tagInput'].reset();
   }
 
-  loadTags() {
-    this._allTags.subscribe((event) => {
-      this.allTags = event;
-    });
-  }
-
   ngOnInit() {
-    this.loadTags();
     const sysId = this.route.snapshot.paramMap.get('sys');
     const tgId = this.route.snapshot.paramMap.get('tg');
 
-    this.tgService
-      .getTalkgroup(Number(sysId), Number(tgId))
-      .subscribe((data: Talkgroup) => {
-        this.tg = data;
-        this.form.controls['name'].setValue(this.tg.name);
-        this.form.controls['alpha_tag'].setValue(this.tg.alpha_tag);
-        this.form.controls['tg_group'].setValue(this.tg.tg_group);
-        this.form.controls['frequency'].setValue(this.tg.frequency);
-        this.form.controls['alert'].setValue(this.tg.alert);
-        this.form.controls['weight'].setValue(this.tg.weight);
-        this.form.controls['icon'].setValue(this.tg?.metadata?.icon ?? '');
-        this.form.controls['tagInput'].setValue('');
-        this.form.controls['tagsControl'].setValue(this.tg?.tags ?? []);
-      });
+    this.subscriptions.add(
+      this.tgService
+        .getTalkgroup(Number(sysId), Number(tgId))
+        .subscribe((data: Talkgroup) => {
+          this.tg = data;
+          this.form.controls['name'].setValue(this.tg.name);
+          this.form.controls['alpha_tag'].setValue(this.tg.alpha_tag);
+          this.form.controls['tg_group'].setValue(this.tg.tg_group);
+          this.form.controls['frequency'].setValue(this.tg.frequency);
+          this.form.controls['alert'].setValue(this.tg.alert);
+          this.form.controls['weight'].setValue(this.tg.weight);
+          this.form.controls['icon'].setValue(this.tg?.metadata?.icon ?? '');
+          this.form.controls['tagInput'].setValue('');
+          this.form.controls['tagsControl'].setValue(this.tg?.tags ?? []);
+        }),
+    );
+    this.subscriptions.add(
+      this._allTags.subscribe((event) => {
+        this.allTags = event;
+      }),
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   submit() {

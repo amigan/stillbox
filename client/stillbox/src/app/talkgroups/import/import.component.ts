@@ -13,7 +13,6 @@ import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-import',
-  standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './import.component.html',
   styleUrl: './import.component.scss',

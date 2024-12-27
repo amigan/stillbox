@@ -73,18 +73,18 @@
     <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
     <tr mat-row *matRowDef="let myRowData; columns: columns"></tr>
   </table>
-  <div class="pagFoot">
-    <mat-paginator
-      #paginator
-      class="paginator"
-      (page)="setPage($event)"
-      [length]="count"
-      showFirstLastButtons="true"
-      [pageSize]="perPage"
-      [pageSizeOptions]="pageSizeOptions"
-      [pageIndex]="page"
-      aria-label="Select page"
-    >
-    </mat-paginator>
-  </div>
+</div>
+<div class="pagFoot">
+  <mat-paginator
+    #paginator
+    class="paginator"
+    (page)="setPage($event)"
+    [length]="count"
+    showFirstLastButtons="true"
+    [pageSize]="perPage"
+    [pageSizeOptions]="pageSizeOptions"
+    [pageIndex]="page"
+    aria-label="Select page"
+  >
+  </mat-paginator>
 </div>

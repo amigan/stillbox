@@ -57,7 +57,6 @@ export class SanitizeHtmlPipe implements PipeTransform {
 
 @Component({
   selector: 'talkgroup-table',
-  standalone: true,
   imports: [
     RouterModule,
     RouterLink,
@@ -84,7 +83,7 @@ export class TalkgroupTableComponent {
   talkgroups = input<TalkgroupsPaginated>();
   talkgroups$ = toObservable(this.talkgroups);
   dataSource = new MatTableDataSource<Talkgroup>();
-  pageSizeOptions = [25, 50, 75, 100, 200, 500];
+  pageSizeOptions = [25, 50, 75, 100, 200];
   perPage: number = 25;
   count = 0;
   columns = [
@@ -124,7 +123,9 @@ export class TalkgroupTableComponent {
       this.suppress = false;
     });
 
-    this.perPage = this.prefsService.last.tgsPerPage;
+    this.prefsService.get('tgsPerPage').subscribe((tgpp) => {
+      this.perPage = tgpp;
+    });
     this.talkgroups$.subscribe((event) => {
       if (event != null) {
         this.dataSource.data = event!.talkgroups;

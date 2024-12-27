@@ -33,7 +33,7 @@ func (ca *callsAPI) Subrouter() http.Handler {
 	r.Get(`/{call:[a-f0-9-]+}`, ca.getAudio)
 	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.getAudio)
 
-	r.Post(`/list`, ca.listCalls)
+	r.Post(`/`, ca.listCalls)
 
 	return r
 }

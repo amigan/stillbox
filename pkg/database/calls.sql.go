@@ -203,14 +203,24 @@ CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
 CASE WHEN $3::TEXT[] IS NOT NULL THEN
 	tgs.tags @> ARRAY[$3] ELSE TRUE END AND
 CASE WHEN $4::TEXT[] IS NOT NULL THEN
-	(NOT (tgs.tags @> ARRAY[$4])) ELSE TRUE END
+	(NOT (tgs.tags @> ARRAY[$4])) ELSE TRUE END AND
+(CASE WHEN $5::TEXT IS NOT NULL THEN (
+		tgs.tg_group ILIKE '%' || $5 || '%' OR
+		tgs.name ILIKE '%' || $5 || '%' OR
+		tgs.alpha_tag ILIKE '%' || $5 || '%'
+	) ELSE TRUE END) AND
+(CASE WHEN $6::NUMERIC IS NOT NULL THEN (
+		c.duration > $6
+	) ELSE TRUE END)
 `
 
 type ListCallsCountParams struct {
-	Start   pgtype.Timestamptz `json:"start"`
-	End     pgtype.Timestamptz `json:"end"`
-	TagsAny []string           `json:"tags_any"`
-	TagsNot []string           `json:"tags_not"`
+	Start      pgtype.Timestamptz `json:"start"`
+	End        pgtype.Timestamptz `json:"end"`
+	TagsAny    []string           `json:"tags_any"`
+	TagsNot    []string           `json:"tags_not"`
+	TGFilter   *string            `json:"tg_filter"`
+	LongerThan pgtype.Numeric     `json:"longer_than"`
 }
 
 func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error) {
@@ -219,6 +229,8 @@ func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) 
 		arg.End,
 		arg.TagsAny,
 		arg.TagsNot,
+		arg.TGFilter,
+		arg.LongerThan,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -245,22 +257,32 @@ CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
 CASE WHEN $3::TEXT[] IS NOT NULL THEN
 	tgs.tags @> ARRAY[$3] ELSE TRUE END AND
 CASE WHEN $4::TEXT[] IS NOT NULL THEN
-	(NOT (tgs.tags @> ARRAY[$4])) ELSE TRUE END
+	(NOT (tgs.tags @> ARRAY[$4])) ELSE TRUE END AND
+(CASE WHEN $5::TEXT IS NOT NULL THEN (
+		tgs.tg_group ILIKE '%' || $5 || '%' OR
+		tgs.name ILIKE '%' || $5 || '%' OR
+		tgs.alpha_tag ILIKE '%' || $5 || '%'
+	) ELSE TRUE END) AND
+(CASE WHEN $6::NUMERIC IS NOT NULL THEN (
+		c.duration > $6
+	) ELSE TRUE END)
 ORDER BY
-CASE WHEN $5::TEXT = 'asc' THEN c.call_date END ASC,
-CASE WHEN $5 = 'desc' THEN c.call_date END DESC
-OFFSET $6 ROWS
-FETCH NEXT $7 ROWS ONLY
+CASE WHEN $7::TEXT = 'asc' THEN c.call_date END ASC,
+CASE WHEN $7 = 'desc' THEN c.call_date END DESC
+OFFSET $8 ROWS
+FETCH NEXT $9 ROWS ONLY
 `
 
 type ListCallsPParams struct {
-	Start     pgtype.Timestamptz `json:"start"`
-	End       pgtype.Timestamptz `json:"end"`
-	TagsAny   []string           `json:"tags_any"`
-	TagsNot   []string           `json:"tags_not"`
-	Direction string             `json:"direction"`
-	Offset    int32              `json:"offset"`
-	PerPage   int32              `json:"per_page"`
+	Start      pgtype.Timestamptz `json:"start"`
+	End        pgtype.Timestamptz `json:"end"`
+	TagsAny    []string           `json:"tags_any"`
+	TagsNot    []string           `json:"tags_not"`
+	TGFilter   *string            `json:"tg_filter"`
+	LongerThan pgtype.Numeric     `json:"longer_than"`
+	Direction  string             `json:"direction"`
+	Offset     int32              `json:"offset"`
+	PerPage    int32              `json:"per_page"`
 }
 
 type ListCallsPRow struct {
@@ -279,6 +301,8 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 		arg.End,
 		arg.TagsAny,
 		arg.TagsNot,
+		arg.TGFilter,
+		arg.LongerThan,
 		arg.Direction,
 		arg.Offset,
 		arg.PerPage,

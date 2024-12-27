@@ -1,5 +1,4 @@
-import { Component, inject, Input, ViewChild } from '@angular/core';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { Component, Input, ViewChild } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,7 +6,6 @@ import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import {
   RouterModule,
@@ -18,6 +16,7 @@ import {
 import { CommonModule } from '@angular/common';
 
 import { Subscription } from 'rxjs';
+import { ToolbarContextService } from './toolbar-context.service';
 
 interface HomeRoute {
   name: string;
@@ -30,7 +29,6 @@ interface HomeRoute {
   selector: 'app-navigation',
   templateUrl: './navigation.component.html',
   styleUrl: './navigation.component.scss',
-  standalone: true,
   imports: [
     MatToolbarModule,
     MatButtonModule,
@@ -48,13 +46,16 @@ interface HomeRoute {
   providers: [],
 })
 export class NavigationComponent {
-  private breakpointObserver = inject(BreakpointObserver);
   @ViewChild('drawer', { static: true }) drawer!: MatDrawer;
 
   toggleSubscription!: Subscription;
   isExpanded = false;
+  showFilter = false;
+  showFilterSub!: Subscription;
 
   @Input() events!: Observable<void>;
+
+  constructor(public tcSvc: ToolbarContextService) {}
 
   ngOnInit() {
     this.toggleSubscription = this.events.subscribe(() => {
@@ -62,8 +63,15 @@ export class NavigationComponent {
     });
   }
 
+  ngAfterViewChecked() {
+    this.showFilterSub = this.tcSvc.filterBtn.subscribe((show) => {
+      this.showFilter = show;
+    });
+  }
+
   ngOnDestroy() {
     this.toggleSubscription.unsubscribe();
+    this.showFilterSub.unsubscribe();
   }
 
   homeRoutes = <HomeRoute[]>[
@@ -74,14 +82,14 @@ export class NavigationComponent {
       exact: true,
     },
     {
-      name: 'Talkgroups',
-      url: '/talkgroups',
-      icon: 'forum',
-    },
-    {
       name: 'Calls',
       url: '/calls',
       icon: 'campaign',
+    },
+    {
+      name: 'Talkgroups',
+      url: '/talkgroups',
+      icon: 'forum',
     },
     {
       name: 'Incidents',
@@ -95,10 +103,7 @@ export class NavigationComponent {
     },
   ];
 
-  isHandset$: Observable<boolean> = this.breakpointObserver
-    .observe(Breakpoints.Handset)
-    .pipe(
-      map((result) => result.matches),
-      shareReplay(),
-    );
+  toggleFilterPanel() {
+    this.tcSvc.filterPanel.next(!this.tcSvc.filterPanel.getValue());
+  }
 }

@@ -30,7 +30,6 @@ type Config struct {
 
 type Auth struct {
 	JWTSecret     string          `yaml:"jwtsecret"`
-	Domain        string          `yaml:"domain"`
 	AllowInsecure map[string]bool `yaml:"allowInsecureFor"`
 }
 

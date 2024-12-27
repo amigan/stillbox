@@ -9,7 +9,6 @@ import { Component, inject, Pipe, PipeTransform } from '@angular/core';
 
 @Component({
   selector: 'app-export',
-  standalone: true,
   imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './export.component.html',
   styleUrl: './export.component.scss',

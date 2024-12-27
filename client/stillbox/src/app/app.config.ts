@@ -14,6 +14,7 @@ import { AuthService } from './login/auth.service';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideServiceWorker } from '@angular/service-worker';
 export function apiBaseInterceptor(
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
@@ -45,5 +46,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([apiBaseInterceptor, authIntercept])),
     provideAnimationsAsync(),
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ],
 };

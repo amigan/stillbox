@@ -23,7 +23,6 @@ var expCfg = &Config{
 	},
 	Auth: Auth{
 		JWTSecret: "somesecret",
-		Domain:    "xenon",
 		AllowInsecure: map[string]bool{
 			"localhost": true,
 			"stillbox":  true,

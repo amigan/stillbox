@@ -17,6 +17,7 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./home/home.component').then((m) => m.HomeComponent),
         pathMatch: 'full',
+        data: { title: 'Home' },
       },
       {
         path: 'talkgroups',
@@ -24,6 +25,7 @@ export const routes: Routes = [
           import('./talkgroups/talkgroups.component').then(
             (m) => m.TalkgroupsComponent,
           ),
+        data: { title: 'Talkgroups' },
       },
       {
         path: 'talkgroups/import',
@@ -31,6 +33,7 @@ export const routes: Routes = [
           import('./talkgroups/import/import.component').then(
             (m) => m.ImportComponent,
           ),
+        data: { title: 'Import Talkgroups' },
       },
       {
         path: 'talkgroups/export',
@@ -38,6 +41,7 @@ export const routes: Routes = [
           import('./talkgroups/export/export.component').then(
             (m) => m.ExportComponent,
           ),
+        data: { title: 'Export Talkgroups' },
       },
       {
         path: 'talkgroups/:sys/:tg',
@@ -45,11 +49,13 @@ export const routes: Routes = [
           import(
             './talkgroups/talkgroup-record/talkgroup-record.component'
           ).then((m) => m.TalkgroupRecordComponent),
+        data: { title: 'Edit Talkgroup' },
       },
       {
         path: 'calls',
         loadComponent: () =>
           import('./calls/calls.component').then((m) => m.CallsComponent),
+        data: { title: 'Calls' },
       },
       {
         path: 'incidents',
@@ -57,11 +63,13 @@ export const routes: Routes = [
           import('./incidents/incidents.component').then(
             (m) => m.IncidentsComponent,
           ),
+        data: { title: 'Incidents' },
       },
       {
         path: 'alerts',
         loadComponent: () =>
           import('./alerts/alerts.component').then((m) => m.AlertsComponent),
+        data: { title: 'Alerts' },
       },
     ],
   },

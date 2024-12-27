@@ -6,6 +6,13 @@ table {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  max-height: calc(
+    (
+        100vh - var(--mat-mat-maginator-container-size, 56px) - 2 *
+          (var(--mat-toolbar-standard-height, 64px))
+      ) + 7px
+  );
+  overflow: auto;
 }
 
 mat-icon.tgIcon {

@@ -1,1 +1,181 @@
-<p>calls works!</p>
+<div [ngClass]="{ hidden: (tcSvc.filterPanel | async) }" class="toolbar">
+  <form [formGroup]="form">
+    <mat-form-field subscriptSizing="dynamic" class="timeFilterBox">
+      <mat-label>Start</mat-label>
+      <input
+        matInput
+        type="datetime-local"
+        name="start"
+        placeholder="Start date"
+        formControlName="start"
+      />
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic" class="timeFilterBox">
+      <mat-label>End</mat-label>
+      <input
+        matInput
+        type="datetime-local"
+        name="end"
+        placeholder="End date"
+        formControlName="end"
+      />
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic" class="durationFilter">
+      <mat-label>Dur (s) &gt;</mat-label>
+      <input
+        matInput
+        type="number"
+        name="duration"
+        placeholder="Seconds"
+        formControlName="duration"
+      />
+    </mat-form-field>
+    <mat-form-field class="filterBox" subscriptSizing="dynamic">
+      <mat-label>Filter</mat-label>
+      <input
+        matInput
+        name="filter"
+        type="text"
+        autocomplete="off"
+        formControlName="filter"
+      />
+      <button
+        class="clearBtn"
+        *ngIf="form.controls['filter'].value"
+        matSuffix
+        mat-icon-button
+        (click)="form.controls['filter'].setValue('')"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+    <mat-form-field class="tagSelect" subscriptSizing="dynamic">
+      <mat-label>Any Tags</mat-label>
+      <mat-select
+        matNativeControl
+        name="tagsAny"
+        formControlName="tagsAny"
+        multiple
+      >
+        @for (tag of tgSvc.allTags() | async; track tag) {
+          <mat-option value="{{ tag }}">{{ tag }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="tagSelect" subscriptSizing="dynamic">
+      <mat-label>Not Tags</mat-label>
+      <mat-select
+        matNativeControl
+        name="tagsNot"
+        class="tagSelect"
+        formControlName="tagsNot"
+        multiple
+      >
+        @for (tag of tgSvc.allTags() | async; track tag) {
+          <mat-option value="{{ tag }}">{{ tag }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <div class="toolbarButtons">
+      <button class="sbButton" (click)="resetFilter()">
+        <mat-icon class="material-symbols-outlined">reset_settings</mat-icon>
+      </button>
+      <button class="sbButton" (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </form>
+</div>
+<div class="tabContainer" *ngIf="!isLoading; else spinner">
+  <table class="callsTable" mat-table [dataSource]="callsResult">
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox
+          (change)="$event ? masterToggle() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+        >
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+        >
+        </mat-checkbox>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="play">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let call">
+        <a class="playButton" (click)="playAudio($event, call)"
+          ><mat-icon>play_arrow</mat-icon></a
+        >
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="download">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let call">
+        <a [href]="call | audioDownloadURL"><mat-icon>download</mat-icon></a>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="date">
+      <th mat-header-cell *matHeaderCellDef>Date</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call.call_date | grabDate }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="time">
+      <th mat-header-cell *matHeaderCellDef>Time</th>
+      <td [title]="call.call_date" mat-cell *matCellDef="let call">
+        {{ call.call_date | time }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="system">
+      <th mat-header-cell *matHeaderCellDef>System</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call | talkgroup: "system" | async }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="group">
+      <th mat-header-cell *matHeaderCellDef>Group</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call | talkgroup: "group" | async }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="talkgroup">
+      <th mat-header-cell *matHeaderCellDef>Talkgroup</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call | talkgroup: "alpha" | async }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="duration">
+      <th mat-header-cell *matHeaderCellDef class="durationHdr">Duration</th>
+      <td mat-cell *matCellDef="let call" class="duration">
+        {{ call.duration | fixedPoint: 1000 : 2 }}s
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let myRowData; columns: columns"></tr>
+  </table>
+</div>
+<div class="pagFoot">
+  <mat-paginator
+    #paginator
+    class="paginator"
+    (page)="setPage($event)"
+    [length]="count"
+    showFirstLastButtons="true"
+    [pageSize]="curPage.pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    [pageIndex]="curPage.pageIndex"
+    aria-label="Select page"
+  >
+  </mat-paginator>
+</div>
+<ng-template #spinner>
+  <div class="spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+</ng-template>

@@ -18,6 +18,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	CookieName = "stillboxJwt"
+)
+
 type jwtAuth interface {
 	// Authenticated returns whether the request is authenticated. It also returns the claims.
 	Authenticated(r *http.Request) (claims, bool)
@@ -67,12 +71,20 @@ func (a *Auth) VerifyMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			token, err := jwtauth.VerifyRequest(a.jwt, r, jwtauth.TokenFromHeader, jwtauth.TokenFromCookie)
+			token, err := jwtauth.VerifyRequest(a.jwt, r, jwtauth.TokenFromHeader, TokenFromCookie)
 			ctx = jwtauth.NewContext(ctx, token, err)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 		return http.HandlerFunc(hfn)
 	}
+}
+
+func TokenFromCookie(r *http.Request) string {
+	cookie, err := r.Cookie(CookieName)
+	if err != nil {
+		return ""
+	}
+	return cookie.Value
 }
 
 func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
@@ -154,7 +166,7 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	tok := a.newToken(uid)
 
 	cookie := &http.Cookie{
-		Name:     "jwt",
+		Name:     CookieName,
 		Value:    tok,
 		Path:     "/",
 		HttpOnly: true,
@@ -167,7 +179,7 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cookie.Secure {
-		cookie.Domain = a.cfg.Domain
+		cookie.Domain = r.Host
 	}
 	http.SetCookie(w, cookie)
 
@@ -215,18 +227,17 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookie := &http.Cookie{
-		Name:     "jwt",
+		Name:     CookieName,
 		Value:    tok,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 	}
 
+	cookie.Domain = r.Host
 	if a.allowInsecureCookie(r) {
 		cookie.Secure = false
 		cookie.SameSite = http.SameSiteLaxMode
-	} else {
-		cookie.Domain = a.cfg.Domain
 	}
 
 	http.SetCookie(w, cookie)
@@ -242,7 +253,7 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 
 func (a *Auth) routeLogout(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
-		Name:     "jwt",
+		Name:     CookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
@@ -250,11 +261,10 @@ func (a *Auth) routeLogout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	}
 
+	cookie.Domain = r.Host
 	if a.allowInsecureCookie(r) {
 		cookie.Secure = false
 		cookie.SameSite = http.SameSiteLaxMode
-	} else {
-		cookie.Domain = a.cfg.Domain
 	}
 
 	http.SetCookie(w, cookie)

@@ -5,18 +5,18 @@ import { inject } from '@angular/core';
 export const AuthGuard: CanActivateFn = (route, state) => {
   const router: Router = inject(Router);
   const authSvc: AuthService = inject(AuthService);
-  if (sessionStorage.getItem('jwt') == null) {
+  if (localStorage.getItem('jwt') == null) {
     let success = false;
-    authSvc.refresh().subscribe(
-      (event) => {
+    authSvc.refresh().subscribe({
+      next: (event) => {
         if (event?.status == 200) {
           success = true;
         }
       },
-      (err) => {
+      error: (err) => {
         router.navigate(['/login']);
       },
-    );
+    });
     return success;
   } else {
     return true;

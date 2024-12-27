@@ -2,6 +2,7 @@ package callstore
 
 import (
 	"context"
+	"fmt"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Store interface {
@@ -65,10 +67,12 @@ type CallsParams struct {
 	common.Pagination
 	Direction *common.SortDirection `json:"dir"`
 
-	Start   *jsontypes.Time `json:"start"`
-	End     *jsontypes.Time `json:"end"`
-	TagsAny []string        `json:"tagsAny"`
-	TagsNot []string        `json:"tagsNot"`
+	Start          *jsontypes.Time `json:"start"`
+	End            *jsontypes.Time `json:"end"`
+	TagsAny        []string        `json:"tagsAny"`
+	TagsNot        []string        `json:"tagsNot"`
+	TGFilter       *string         `json:"tgFilter"`
+	AtLeastSeconds *float32        `json:"atLeastSeconds"`
 }
 
 func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
@@ -83,16 +87,27 @@ func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListC
 		Offset:    offset,
 		PerPage:   perPage,
 		Direction: p.Direction.DirString(common.DirAsc),
+		TGFilter:  p.TGFilter,
+	}
+
+	if p.AtLeastSeconds != nil {
+		var n pgtype.Numeric
+		if err := n.Scan(fmt.Sprint(*p.AtLeastSeconds * 1000)); err != nil {
+			return nil, 0, err
+		}
+
+		par.LongerThan = n
 	}
 
 	var count int64
 	txErr := db.InTx(ctx, func(db database.Store) error {
 		var err error
 		count, err = db.ListCallsCount(ctx, database.ListCallsCountParams{
-			Start:   par.Start,
-			End:     par.End,
-			TagsAny: par.TagsAny,
-			TagsNot: par.TagsNot,
+			Start:    par.Start,
+			End:      par.End,
+			TagsAny:  par.TagsAny,
+			TagsNot:  par.TagsNot,
+			TGFilter: par.TGFilter,
 		})
 		if err != nil {
 			return err

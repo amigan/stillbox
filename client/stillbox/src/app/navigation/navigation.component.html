@@ -2,9 +2,9 @@
   <mat-sidenav
     #drawer
     class="sidenav"
-    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-    [mode]="(isHandset$ | async) ? 'over' : 'side'"
-    [opened]="(isHandset$ | async) === false"
+    [attr.role]="(tcSvc.isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(tcSvc.isHandset$ | async) ? 'over' : 'side'"
+    [opened]="(tcSvc.isHandset$ | async) === false"
   >
     <mat-nav-list>
       @for (r of homeRoutes; track r) {
@@ -25,7 +25,7 @@
     </mat-nav-list>
   </mat-sidenav>
   <mat-sidenav-content>
-    @if (isHandset$ | async) {
+    @if (tcSvc.isHandset$ | async) {
       <button
         type="button"
         aria-label="Toggle sidenav"
@@ -34,6 +34,17 @@
       >
         <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
       </button>
+      @if (tcSvc.filterBtn | async) {
+        <button
+          *ngIf="showFilter"
+          type="button"
+          aria-label="Toggle filters"
+          mat-icon-button
+          (click)="toggleFilterPanel()"
+        >
+          <mat-icon aria-label="Filter toggle icon">tune</mat-icon>
+        </button>
+      }
     }
     <div class="content">
       <router-outlet />

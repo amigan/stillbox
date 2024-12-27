@@ -3,7 +3,6 @@ import { AlertRule } from '../../../talkgroup';
 
 @Component({
   selector: 'alert-rule-builder',
-  standalone: true,
   imports: [],
   templateUrl: './alert-rule-builder.component.html',
   styleUrl: './alert-rule-builder.component.scss',

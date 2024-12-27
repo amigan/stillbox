@@ -17,7 +17,7 @@ export class AuthService {
     private http: HttpClient,
     private _router: Router,
   ) {
-    let ssJWT = sessionStorage.getItem('jwt');
+    let ssJWT = localStorage.getItem('jwt');
     if (ssJWT) {
       this.loggedIn = true;
     }
@@ -33,7 +33,7 @@ export class AuthService {
       .pipe(
         tap((event) => {
           if (event.status == 200) {
-            sessionStorage.setItem('jwt', event.body?.jwt.toString() ?? '');
+            localStorage.setItem('jwt', event.body?.jwt.toString() ?? '');
             this.loggedIn = true;
             this._router.navigateByUrl('/home');
           }
@@ -49,7 +49,7 @@ export class AuthService {
           this.loggedIn = false;
         }
       });
-    sessionStorage.removeItem('jwt');
+    localStorage.removeItem('jwt');
     this.loggedIn = false;
     this._router.navigateByUrl('/login');
   }
@@ -60,7 +60,7 @@ export class AuthService {
       .pipe(
         tap((event) => {
           if (event.status == 200) {
-            sessionStorage.setItem('jwt', event.body?.jwt.toString() ?? '');
+            localStorage.setItem('jwt', event.body?.jwt.toString() ?? '');
             this.loggedIn = true;
           }
         }),
@@ -68,6 +68,6 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return sessionStorage.getItem('jwt');
+    return localStorage.getItem('jwt');
   }
 }

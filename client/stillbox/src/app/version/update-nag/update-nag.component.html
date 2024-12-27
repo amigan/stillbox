@@ -1,0 +1,6 @@
+@if (checkerSvc.updateAvailable) {
+  <div class="updater" (click)="update()">
+    <p>New version available!</p>
+    <button class="sbButton" (click)="checkerSvc.doUpdate()">Update</button>
+  </div>
+}
