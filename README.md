@@ -33,7 +33,7 @@ Primary differences:
 
  - [x] Talkgroup activity alerting
 
-   We use [go-trending](https://github.com/andygrunwald/go-trending) to implement this.
+   We use [go-trending](https://github.com/codesuki/go-trending) to implement this.
 
  - [x] "Native" flutter client (Calls) for Android/iOS/macOS/Linux/Windows (in progress)
 
@@ -64,4 +64,14 @@ protobuf best practices (i.e. not changing field numbers).
 
 ## License and Copyright
 
-© 2024, Daniel Ponte <dan AT dynatron DOT me>. Licensed under the 3-clause BSD license. See LICENSE for details.
+© 2024, Daniel Ponte <dan AT dynatron DOT me>
+
+Licensed under the 3-clause BSD license. See LICENSE for details.
+
+## Credits
+
+Thanks to, among others:
+* rdio-scanner for the original inspiration
+* [go-trending](https://github.com/codesuki/go-trending) and [go-time-series](https://github.com/codesuki/go-time-series)
+* [isoweek](https://github.com/snabb/isoweek)
+* [minimp3](https://github.com/tosone/minimp3)

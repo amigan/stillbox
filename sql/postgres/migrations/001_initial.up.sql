@@ -142,8 +142,8 @@ CREATE TABLE IF NOT EXISTS incidents(
 	id UUID PRIMARY KEY,
 	name TEXT NOT NULL,
 	description TEXT,
-	start_time TIMESTAMP,
-	end_time TIMESTAMP,
+	start_time TIMESTAMPTZ,
+	end_time TIMESTAMPTZ,
 	location JSONB,
 	metadata JSONB
 );
