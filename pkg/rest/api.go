@@ -32,6 +32,7 @@ func (a *api) Subrouter() http.Handler {
 	r.Mount("/talkgroup", new(talkgroupAPI).Subrouter())
 	r.Mount("/call", new(callsAPI).Subrouter())
 	r.Mount("/user", new(usersAPI).Subrouter())
+	r.Mount("/incident", new(incidentsAPI).Subrouter())
 
 	return r
 }

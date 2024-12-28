@@ -26,7 +26,7 @@ type Store interface {
 type store struct {
 }
 
-func New() *store {
+func NewStore() *store {
 	return new(store)
 }
 
@@ -41,7 +41,7 @@ func CtxWithStore(ctx context.Context, s Store) context.Context {
 func FromCtx(ctx context.Context) Store {
 	s, ok := ctx.Value(StoreCtxKey).(Store)
 	if !ok {
-		return New()
+		return NewStore()
 	}
 
 	return s
