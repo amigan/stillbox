@@ -33,3 +33,14 @@ func (u *UUID) UnmarshalJSON(b []byte) error {
     *u = UUID(id)
     return nil
 }
+
+func (u *UUID) UnmarshalText(t []byte) error {
+	var gu uuid.UUID
+	err := gu.UnmarshalText(t)
+	if err != nil {
+		return err
+	}
+	*u = UUID(gu)
+
+	return nil
+}
