@@ -1,5 +1,11 @@
 package common
 
+import "errors"
+
+var (
+	ErrPageOutOfRange = errors.New("requested page out of range")
+)
+
 type Pagination struct {
 	Page    *int `json:"page"`
 	PerPage *int `json:"perPage"`

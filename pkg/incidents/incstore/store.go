@@ -133,6 +133,10 @@ func (s *store) Incidents(ctx context.Context, p IncidentsParams) (rows []databa
 			return err
 		}
 
+		if offset > int32(count) {
+			return common.ErrPageOutOfRange
+		}
+
 		rows, err = db.ListIncidentsP(ctx, dbParam)
 		return err
 	}, pgx.TxOptions{})

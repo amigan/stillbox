@@ -115,7 +115,7 @@ func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListC
 		}
 
 		if offset > int32(count) {
-			return fmt.Errorf("requested page out of range")
+			return common.ErrPageOutOfRange
 		}
 
 		rows, err = db.ListCallsP(ctx, par)

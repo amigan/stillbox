@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"
@@ -128,6 +129,7 @@ var statusMapping = map[error]errResponder{
 	tgstore.ErrReference:      constraintErrText,
 	ErrBadUID:                 unauthErrText,
 	ErrBadAppName:             unauthErrText,
+	common.ErrPageOutOfRange:  badRequestErrText,
 }
 
 func autoError(err error) render.Renderer {
