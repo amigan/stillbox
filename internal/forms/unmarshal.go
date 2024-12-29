@@ -41,22 +41,6 @@ func (o *options) parseTime(s string, dpo ...dateparse.ParserOption) (t time.Tim
 	return
 }
 
-func (o *options) parseUUID(s string) (u uuid.UUID, set bool, err error) {
-	if o.acceptBlank && s == "" {
-		set = false
-		return
-	}
-
-	set = true
-
-	u, err = uuid.Parse(s)
-	if err != nil {
-		return u, set, fmt.Errorf("parseUUID('%s'): %w", s, err)
-	}
-
-	return
-}
-
 func (o *options) parseBool(s string) (v bool, set bool, err error) {
 	if o.acceptBlank && s == "" {
 		set = false
@@ -229,12 +213,6 @@ func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error
 				return err
 			}
 			setVal(destFieldVal, set, d)
-		case uuid.UUID, jsontypes.UUID:
-			u, set, err := o.parseUUID(ff)
-			if err != nil {
-				return err
-			}
-			setVal(destFieldVal, set, u)
 		case jsontypes.UUIDs:
 			val := strings.Trim(ff, "[]")
 			if val == "" && o.acceptBlank {
@@ -285,6 +263,16 @@ func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error
 				}
 
 				destFieldVal.Set(sliceVal)
+
+				continue
+			}
+
+			if reflect.PointerTo(destFieldType).Implements(textUnmarshaler) {
+				tum := destFieldVal.Addr().Interface().(encoding.TextUnmarshaler)
+				err := tum.UnmarshalText([]byte(ff))
+				if err != nil {
+					return err
+				}
 
 				continue
 			}
