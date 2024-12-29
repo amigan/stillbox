@@ -36,7 +36,7 @@ func (ia *incidentsAPI) Subrouter() http.Handler {
 	r.Post(`/`, ia.listIncidents)
 	r.Post(`/{id:[a-f0-9-]+}/calls`, ia.postCalls)
 
-	r.Put(`/{id:[a-f0-9-]+}`, ia.updateIncident)
+	r.Patch(`/{id:[a-f0-9-]+}`, ia.updateIncident)
 
 	r.Delete(`/{id:[a-f0-9-]+}`, ia.deleteIncident)
 
