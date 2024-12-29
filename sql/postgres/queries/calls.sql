@@ -38,7 +38,22 @@ source
 );
 
 -- name: GetCallAudioByID :one
-SELECT call_date, audio_name, audio_type, audio_blob FROM calls WHERE id = @id;
+SELECT
+	c.call_date,
+	c.audio_name,
+	c.audio_type,
+	c.audio_blob
+FROM calls c
+WHERE c.id = @id
+UNION
+SELECT
+	sc.call_date,
+	sc.audio_name,
+	sc.audio_type,
+	sc.audio_blob
+FROM swept_calls sc
+WHERE sc.id = @id
+;
 
 -- name: SetCallTranscript :exec
 UPDATE calls SET transcript = $2 WHERE id = $1;

@@ -32,7 +32,7 @@ func call(url string, call *calls.Call) error {
 	var buf bytes.Buffer
 	body := multipart.NewWriter(&buf)
 
-	err := forms.Marshal(call, body)
+	err := forms.Marshal(call, body, forms.WithTag("json"))
 	if err != nil {
 		return fmt.Errorf("relay form parse: %w", err)
 	}
@@ -88,6 +88,8 @@ func TestMarshal(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var serr error
 			var called bool
+
+			// setup request handler
 			h := hand(func(w http.ResponseWriter, r *http.Request) {
 				called = true
 				serr = r.ParseMultipartForm(1024 * 1024 * 2)
@@ -112,6 +114,7 @@ func TestMarshal(t *testing.T) {
 			})
 			svr := httptest.NewServer(h)
 
+			// perform the request
 			err := call(svr.URL, &tc.call)
 			assert.True(t, called)
 			assert.NoError(t, err)

@@ -20,6 +20,15 @@ FROM inp
 JOIN calls c ON c.id = inp.id
 ;
 
+-- name: RemoveFromIncident :exec
+DELETE FROM incidents_calls ic
+WHERE ic.incident_id = @id AND ic.call_id = ANY(@call_ids::UUID[]);
+
+-- name: UpdateCallIncidentNotes :exec
+UPDATE incidents_Calls
+SET notes = @notes
+WHERE incident_id = @incident_id AND call_id = @call_id;
+
 -- name: CreateIncident :one
 INSERT INTO incidents (
 	id,
@@ -73,13 +82,40 @@ CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 	i.start_time <= sqlc.narg('end') ELSE TRUE END
 ;
 
--- name: IncidentCalls :many
--- INCOMPLETE
-SELECT
-ic.incident_id, call_date,
-ic.call_id,
-ic.notes
-FROM incidents_calls ic;
+-- name: GetIncidentCalls :many
+SELECT ic.call_id, ic.call_date, ic.notes, c.*
+FROM incidents_calls ic, LATERAL (
+	SELECT 
+	ca.submitter,
+	ca.system,
+	ca.talkgroup,
+	ca.audio_name,
+	ca.duration,
+	ca.audio_type,
+	ca.audio_url,
+	ca.frequency,
+	ca.frequencies,
+	ca.patches,
+	ca.source,
+	ca.transcript
+	FROM calls ca WHERE ca.id = ic.calls_tbl_id AND ca.call_date = ic.call_date
+	UNION
+	SELECT
+	sc.submitter,
+	sc.system,
+	sc.talkgroup,
+	sc.audio_name,
+	sc.duration,
+	sc.audio_type,
+	sc.audio_url,
+	sc.frequency,
+	sc.frequencies,
+	sc.patches,
+	sc.source,
+	sc.transcript
+	FROM swept_calls sc WHERE sc.id = ic.swept_call_id
+) c
+WHERE ic.incident_id = @id;
 
 -- name: GetIncident :one
 SELECT

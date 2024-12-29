@@ -34,9 +34,8 @@ message Call {
   int64 frequency = 8;
   repeated int64 frequencies = 9;
   repeated int32 patches = 10;
-  repeated int32 sources = 11;
-  optional int32 duration = 12;
-  bytes audio = 13;
+  optional int32 duration = 11;
+  bytes audio = 12;
 }
 
 message Hello {

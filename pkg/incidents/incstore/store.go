@@ -2,9 +2,12 @@ package incstore
 
 import (
 	"context"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
+	"dynatron.me/x/stillbox/pkg/auth"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/incidents"
 	"github.com/google/uuid"
@@ -25,13 +28,16 @@ type Store interface {
 
 	// AddToIncident adds the specified call IDs to an incident.
 	// If not nil, notes must be valid json.
-	AddToIncident(ctx context.Context, incidentID uuid.UUID, callIDs []uuid.UUID, notes []byte) error
+	AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID, addCallIDs []uuid.UUID, notes []byte, removeCallIDs []uuid.UUID) error
+
+	// UpdateNotes updates the notes for a call-incident mapping.
+	UpdateNotes(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID, notes []byte) error
 
 	// Incidents gets incidents matching parameters and pagination.
 	Incidents(ctx context.Context, p IncidentsParams) (incs []database.Incident, totalCount int, err error)
 
 	// Incident gets a single incident.
-	Incident(ctx context.Context, id uuid.UUID) (database.Incident, error)
+	Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error)
 
 	// UpdateIncident updates an incident.
 	UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncidentParams) (database.Incident, error)
@@ -79,18 +85,32 @@ func (s *store) CreateIncident(ctx context.Context, inc incidents.Incident) (dat
 	return dbInc, err
 }
 
-func (s *store) AddToIncident(ctx context.Context, incidentID uuid.UUID, callIDs []uuid.UUID, notes []byte) error {
-	db := database.FromCtx(ctx)
+func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID, addCallIDs []uuid.UUID, notes []byte, removeCallIDs []uuid.UUID) error {
+	return database.FromCtx(ctx).InTx(ctx, func(db database.Store) error {
+		if len(addCallIDs) > 0 {
+			var noteAr [][]byte
+			if notes != nil {
+				noteAr = make([][]byte, len(addCallIDs))
+				for i := range addCallIDs {
+					noteAr[i] = notes
+				}
+			}
 
-	var noteAr [][]byte
-	if notes != nil {
-		noteAr = make([][]byte, len(callIDs))
-		for i := range callIDs {
-			noteAr[i] = notes
+			err := db.AddToIncident(ctx, incidentID, addCallIDs, noteAr)
+			if err != nil {
+				return err
+			}
 		}
-	}
 
-	return db.AddToIncident(ctx, incidentID, callIDs, noteAr)
+		if len(removeCallIDs) > 0 {
+			err := db.RemoveFromIncident(ctx, incidentID, removeCallIDs)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}, pgx.TxOptions{})
 }
 
 func (s *store) Incidents(ctx context.Context, p IncidentsParams) (rows []database.Incident, totalCount int, err error) {
@@ -123,8 +143,67 @@ func (s *store) Incidents(ctx context.Context, p IncidentsParams) (rows []databa
 	return rows, int(count), err
 }
 
-func (s *store) Incident(ctx context.Context, id uuid.UUID) (database.Incident, error) {
-	return database.FromCtx(ctx).GetIncident(ctx, id)
+func fromDBIncident(id uuid.UUID, d database.Incident) incidents.Incident {
+	return incidents.Incident{
+		ID:          id,
+		Name:        d.Name,
+		Description: d.Description,
+		StartTime:   jsontypes.TimePtrFromTSTZ(d.StartTime),
+		EndTime:     jsontypes.TimePtrFromTSTZ(d.EndTime),
+		Metadata:    d.Metadata,
+	}
+}
+
+func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
+	r := make([]incidents.IncidentCall, 0, len(d))
+	for _, v := range d {
+		dur := calls.CallDuration(time.Duration(common.ZeroIfNil(v.Duration)) * time.Millisecond)
+		sub := common.PtrTo(auth.UserID(common.ZeroIfNil(v.Submitter)))
+		r = append(r, incidents.IncidentCall{
+			Call: calls.Call{
+				ID:          v.CallID,
+				AudioName:   common.ZeroIfNil(v.AudioName),
+				AudioType:   common.ZeroIfNil(v.AudioType),
+				Duration:    dur,
+				DateTime:    v.CallDate.Time,
+				Frequencies: v.Frequencies,
+				Frequency:   v.Frequency,
+				Patches:     v.Patches,
+				Source:      v.Source,
+				System:      v.System,
+				Submitter:   sub,
+				Talkgroup:   v.Talkgroup,
+			},
+			Notes: v.Notes,
+		})
+	}
+
+	return r
+}
+
+func (s *store) Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error) {
+	var r incidents.Incident
+	txErr := database.FromCtx(ctx).InTx(ctx, func(db database.Store) error {
+		inc, err := db.GetIncident(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		calls, err := db.GetIncidentCalls(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		r = fromDBIncident(id, inc)
+		r.Calls = fromDBCalls(calls)
+
+		return nil
+	}, pgx.TxOptions{})
+	if txErr != nil {
+		return nil, txErr
+	}
+
+	return &r, nil
 }
 
 type UpdateIncidentParams struct {
@@ -156,4 +235,8 @@ func (s *store) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncide
 
 func (s *store) DeleteIncident(ctx context.Context, id uuid.UUID) error {
 	return database.FromCtx(ctx).DeleteIncident(ctx, id)
+}
+
+func (s *store) UpdateNotes(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID, notes []byte) error {
+	return database.FromCtx(ctx).UpdateCallIncidentNotes(ctx, notes, incidentID, callID)
 }

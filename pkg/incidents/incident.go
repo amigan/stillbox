@@ -1,7 +1,10 @@
 package incidents
 
 import (
+	"encoding/json"
+
 	"dynatron.me/x/stillbox/internal/jsontypes"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"github.com/google/uuid"
 )
 
@@ -13,4 +16,10 @@ type Incident struct {
 	EndTime     *jsontypes.Time    `json:"endTime"`
 	Location    jsontypes.Location `json:"location"`
 	Metadata    jsontypes.Metadata `json:"metadata"`
+	Calls       []IncidentCall     `json:"calls"`
+}
+
+type IncidentCall struct {
+	calls.Call
+	Notes json.RawMessage `json:"notes"`
 }

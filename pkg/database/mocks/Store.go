@@ -1377,6 +1377,65 @@ func (_c *Store_GetIncident_Call) RunAndReturn(run func(context.Context, uuid.UU
 	return _c
 }
 
+// GetIncidentCalls provides a mock function with given fields: ctx, id
+func (_m *Store) GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]database.GetIncidentCallsRow, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetIncidentCalls")
+	}
+
+	var r0 []database.GetIncidentCallsRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) ([]database.GetIncidentCallsRow, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) []database.GetIncidentCallsRow); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetIncidentCallsRow)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetIncidentCalls_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetIncidentCalls'
+type Store_GetIncidentCalls_Call struct {
+	*mock.Call
+}
+
+// GetIncidentCalls is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *Store_Expecter) GetIncidentCalls(ctx interface{}, id interface{}) *Store_GetIncidentCalls_Call {
+	return &Store_GetIncidentCalls_Call{Call: _e.mock.On("GetIncidentCalls", ctx, id)}
+}
+
+func (_c *Store_GetIncidentCalls_Call) Run(run func(ctx context.Context, id uuid.UUID)) *Store_GetIncidentCalls_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *Store_GetIncidentCalls_Call) Return(_a0 []database.GetIncidentCallsRow, _a1 error) *Store_GetIncidentCalls_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetIncidentCalls_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]database.GetIncidentCallsRow, error)) *Store_GetIncidentCalls_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetSystemName provides a mock function with given fields: ctx, systemID
 func (_m *Store) GetSystemName(ctx context.Context, systemID int) (string, error) {
 	ret := _m.Called(ctx, systemID)
@@ -2594,64 +2653,6 @@ func (_c *Store_InTx_Call) RunAndReturn(run func(context.Context, func(database.
 	return _c
 }
 
-// IncidentCalls provides a mock function with given fields: ctx
-func (_m *Store) IncidentCalls(ctx context.Context) ([]database.IncidentCallsRow, error) {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for IncidentCalls")
-	}
-
-	var r0 []database.IncidentCallsRow
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]database.IncidentCallsRow, error)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context) []database.IncidentCallsRow); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.IncidentCallsRow)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Store_IncidentCalls_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IncidentCalls'
-type Store_IncidentCalls_Call struct {
-	*mock.Call
-}
-
-// IncidentCalls is a helper method to define mock.On call
-//   - ctx context.Context
-func (_e *Store_Expecter) IncidentCalls(ctx interface{}) *Store_IncidentCalls_Call {
-	return &Store_IncidentCalls_Call{Call: _e.mock.On("IncidentCalls", ctx)}
-}
-
-func (_c *Store_IncidentCalls_Call) Run(run func(ctx context.Context)) *Store_IncidentCalls_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
-	})
-	return _c
-}
-
-func (_c *Store_IncidentCalls_Call) Return(_a0 []database.IncidentCallsRow, _a1 error) *Store_IncidentCalls_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *Store_IncidentCalls_Call) RunAndReturn(run func(context.Context) ([]database.IncidentCallsRow, error)) *Store_IncidentCalls_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // ListCallsCount provides a mock function with given fields: ctx, arg
 func (_m *Store) ListCallsCount(ctx context.Context, arg database.ListCallsCountParams) (int64, error) {
 	ret := _m.Called(ctx, arg)
@@ -2881,6 +2882,54 @@ func (_c *Store_ListIncidentsP_Call) Return(_a0 []database.Incident, _a1 error) 
 }
 
 func (_c *Store_ListIncidentsP_Call) RunAndReturn(run func(context.Context, database.ListIncidentsPParams) ([]database.Incident, error)) *Store_ListIncidentsP_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveFromIncident provides a mock function with given fields: ctx, iD, callIds
+func (_m *Store) RemoveFromIncident(ctx context.Context, iD uuid.UUID, callIds []uuid.UUID) error {
+	ret := _m.Called(ctx, iD, callIds)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveFromIncident")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, []uuid.UUID) error); ok {
+		r0 = rf(ctx, iD, callIds)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_RemoveFromIncident_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveFromIncident'
+type Store_RemoveFromIncident_Call struct {
+	*mock.Call
+}
+
+// RemoveFromIncident is a helper method to define mock.On call
+//   - ctx context.Context
+//   - iD uuid.UUID
+//   - callIds []uuid.UUID
+func (_e *Store_Expecter) RemoveFromIncident(ctx interface{}, iD interface{}, callIds interface{}) *Store_RemoveFromIncident_Call {
+	return &Store_RemoveFromIncident_Call{Call: _e.mock.On("RemoveFromIncident", ctx, iD, callIds)}
+}
+
+func (_c *Store_RemoveFromIncident_Call) Run(run func(ctx context.Context, iD uuid.UUID, callIds []uuid.UUID)) *Store_RemoveFromIncident_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].([]uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *Store_RemoveFromIncident_Call) Return(_a0 error) *Store_RemoveFromIncident_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_RemoveFromIncident_Call) RunAndReturn(run func(context.Context, uuid.UUID, []uuid.UUID) error) *Store_RemoveFromIncident_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -3240,6 +3289,55 @@ func (_c *Store_SweepCalls_Call) Return(_a0 int64, _a1 error) *Store_SweepCalls_
 }
 
 func (_c *Store_SweepCalls_Call) RunAndReturn(run func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)) *Store_SweepCalls_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateCallIncidentNotes provides a mock function with given fields: ctx, notes, incidentID, callID
+func (_m *Store) UpdateCallIncidentNotes(ctx context.Context, notes []byte, incidentID uuid.UUID, callID uuid.UUID) error {
+	ret := _m.Called(ctx, notes, incidentID, callID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCallIncidentNotes")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uuid.UUID, uuid.UUID) error); ok {
+		r0 = rf(ctx, notes, incidentID, callID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_UpdateCallIncidentNotes_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCallIncidentNotes'
+type Store_UpdateCallIncidentNotes_Call struct {
+	*mock.Call
+}
+
+// UpdateCallIncidentNotes is a helper method to define mock.On call
+//   - ctx context.Context
+//   - notes []byte
+//   - incidentID uuid.UUID
+//   - callID uuid.UUID
+func (_e *Store_Expecter) UpdateCallIncidentNotes(ctx interface{}, notes interface{}, incidentID interface{}, callID interface{}) *Store_UpdateCallIncidentNotes_Call {
+	return &Store_UpdateCallIncidentNotes_Call{Call: _e.mock.On("UpdateCallIncidentNotes", ctx, notes, incidentID, callID)}
+}
+
+func (_c *Store_UpdateCallIncidentNotes_Call) Run(run func(ctx context.Context, notes []byte, incidentID uuid.UUID, callID uuid.UUID)) *Store_UpdateCallIncidentNotes_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]byte), args[2].(uuid.UUID), args[3].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *Store_UpdateCallIncidentNotes_Call) Return(_a0 error) *Store_UpdateCallIncidentNotes_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_UpdateCallIncidentNotes_Call) RunAndReturn(run func(context.Context, []byte, uuid.UUID, uuid.UUID) error) *Store_UpdateCallIncidentNotes_Call {
 	_c.Call.Return(run)
 	return _c
 }

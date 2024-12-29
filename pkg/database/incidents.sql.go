@@ -131,36 +131,85 @@ func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (Incident, erro
 	return i, err
 }
 
-const incidentCalls = `-- name: IncidentCalls :many
-SELECT
-ic.incident_id, call_date,
-ic.call_id,
-ic.notes
-FROM incidents_calls ic
+const getIncidentCalls = `-- name: GetIncidentCalls :many
+SELECT ic.call_id, ic.call_date, ic.notes, c.submitter, c.system, c.talkgroup, c.audio_name, c.duration, c.audio_type, c.audio_url, c.frequency, c.frequencies, c.patches, c.source, c.transcript
+FROM incidents_calls ic, LATERAL (
+	SELECT 
+	ca.submitter,
+	ca.system,
+	ca.talkgroup,
+	ca.audio_name,
+	ca.duration,
+	ca.audio_type,
+	ca.audio_url,
+	ca.frequency,
+	ca.frequencies,
+	ca.patches,
+	ca.source,
+	ca.transcript
+	FROM calls ca WHERE ca.id = ic.calls_tbl_id AND ca.call_date = ic.call_date
+	UNION
+	SELECT
+	sc.submitter,
+	sc.system,
+	sc.talkgroup,
+	sc.audio_name,
+	sc.duration,
+	sc.audio_type,
+	sc.audio_url,
+	sc.frequency,
+	sc.frequencies,
+	sc.patches,
+	sc.source,
+	sc.transcript
+	FROM swept_calls sc WHERE sc.id = ic.swept_call_id
+) c
+WHERE ic.incident_id = $1
 `
 
-type IncidentCallsRow struct {
-	IncidentID uuid.UUID          `json:"incident_id"`
-	CallDate   pgtype.Timestamptz `json:"call_date"`
-	CallID     uuid.UUID          `json:"call_id"`
-	Notes      []byte             `json:"notes"`
+type GetIncidentCallsRow struct {
+	CallID      uuid.UUID          `json:"call_id"`
+	CallDate    pgtype.Timestamptz `json:"call_date"`
+	Notes       []byte             `json:"notes"`
+	Submitter   *int32             `json:"submitter"`
+	System      int                `json:"system"`
+	Talkgroup   int                `json:"talkgroup"`
+	AudioName   *string            `json:"audio_name"`
+	Duration    *int32             `json:"duration"`
+	AudioType   *string            `json:"audio_type"`
+	AudioUrl    *string            `json:"audio_url"`
+	Frequency   int                `json:"frequency"`
+	Frequencies []int              `json:"frequencies"`
+	Patches     []int              `json:"patches"`
+	Source      int                `json:"source"`
+	Transcript  *string            `json:"transcript"`
 }
 
-// INCOMPLETE
-func (q *Queries) IncidentCalls(ctx context.Context) ([]IncidentCallsRow, error) {
-	rows, err := q.db.Query(ctx, incidentCalls)
+func (q *Queries) GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetIncidentCallsRow, error) {
+	rows, err := q.db.Query(ctx, getIncidentCalls, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []IncidentCallsRow
+	var items []GetIncidentCallsRow
 	for rows.Next() {
-		var i IncidentCallsRow
+		var i GetIncidentCallsRow
 		if err := rows.Scan(
-			&i.IncidentID,
-			&i.CallDate,
 			&i.CallID,
+			&i.CallDate,
 			&i.Notes,
+			&i.Submitter,
+			&i.System,
+			&i.Talkgroup,
+			&i.AudioName,
+			&i.Duration,
+			&i.AudioType,
+			&i.AudioUrl,
+			&i.Frequency,
+			&i.Frequencies,
+			&i.Patches,
+			&i.Source,
+			&i.Transcript,
 		); err != nil {
 			return nil, err
 		}
@@ -251,6 +300,27 @@ func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const removeFromIncident = `-- name: RemoveFromIncident :exec
+DELETE FROM incidents_calls ic
+WHERE ic.incident_id = $1 AND ic.call_id = ANY($2::UUID[])
+`
+
+func (q *Queries) RemoveFromIncident(ctx context.Context, iD uuid.UUID, callIds []uuid.UUID) error {
+	_, err := q.db.Exec(ctx, removeFromIncident, iD, callIds)
+	return err
+}
+
+const updateCallIncidentNotes = `-- name: UpdateCallIncidentNotes :exec
+UPDATE incidents_Calls
+SET notes = $1
+WHERE incident_id = $2 AND call_id = $3
+`
+
+func (q *Queries) UpdateCallIncidentNotes(ctx context.Context, notes []byte, incidentID uuid.UUID, callID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, updateCallIncidentNotes, notes, incidentID, callID)
+	return err
 }
 
 const updateIncident = `-- name: UpdateIncident :one

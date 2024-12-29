@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-viper/mapstructure/v2"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -172,6 +173,21 @@ func decodeParams(d interface{}, r *http.Request) error {
 	}
 
 	return dec.Decode(m)
+}
+
+// idOnlyParam checks for a sole URL parameter, id, and writes an errorif this fails.
+func idOnlyParam(w http.ResponseWriter, r *http.Request) (uuid.UUID, error) {
+	params := struct {
+		ID uuid.UUID `param:"id"`
+	}{}
+
+	err := decodeParams(&params, r)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return uuid.UUID{}, err
+	}
+
+	return params.ID, nil
 }
 
 func respond(w http.ResponseWriter, r *http.Request, v interface{}) {
