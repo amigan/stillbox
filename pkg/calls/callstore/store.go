@@ -103,14 +103,19 @@ func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListC
 	txErr := db.InTx(ctx, func(db database.Store) error {
 		var err error
 		count, err = db.ListCallsCount(ctx, database.ListCallsCountParams{
-			Start:    par.Start,
-			End:      par.End,
-			TagsAny:  par.TagsAny,
-			TagsNot:  par.TagsNot,
-			TGFilter: par.TGFilter,
+			Start:      par.Start,
+			End:        par.End,
+			TagsAny:    par.TagsAny,
+			TagsNot:    par.TagsNot,
+			TGFilter:   par.TGFilter,
+			LongerThan: par.LongerThan,
 		})
 		if err != nil {
 			return err
+		}
+
+		if offset > int32(count) {
+			return fmt.Errorf("requested page out of range")
 		}
 
 		rows, err = db.ListCallsP(ctx, par)
