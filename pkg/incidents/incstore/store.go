@@ -34,7 +34,7 @@ type Store interface {
 	UpdateNotes(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID, notes []byte) error
 
 	// Incidents gets incidents matching parameters and pagination.
-	Incidents(ctx context.Context, p IncidentsParams) (incs []database.Incident, totalCount int, err error)
+	Incidents(ctx context.Context, p IncidentsParams) (incs []incidents.Incident, totalCount int, err error)
 
 	// Incident gets a single incident.
 	Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error)
@@ -113,7 +113,7 @@ func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID
 	}, pgx.TxOptions{})
 }
 
-func (s *store) Incidents(ctx context.Context, p IncidentsParams) (rows []database.Incident, totalCount int, err error) {
+func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []incidents.Incident, totalCount int, err error) {
 	db := database.FromCtx(ctx)
 
 	offset, perPage := p.Pagination.OffsetPerPage(100)
@@ -126,6 +126,7 @@ func (s *store) Incidents(ctx context.Context, p IncidentsParams) (rows []databa
 	}
 
 	var count int64
+	var rows []database.Incident
 	txErr := db.InTx(ctx, func(db database.Store) error {
 		var err error
 		count, err = db.ListIncidentsCount(ctx, dbParam.Start, dbParam.End)
@@ -144,7 +145,12 @@ func (s *store) Incidents(ctx context.Context, p IncidentsParams) (rows []databa
 		return nil, 0, txErr
 	}
 
-	return rows, int(count), err
+	incs = make([]incidents.Incident, 0, len(rows))
+	for _, v := range rows {
+		incs = append(incs, fromDBIncident(v.ID, v))
+	}
+
+	return incs, int(count), err
 }
 
 func fromDBIncident(id uuid.UUID, d database.Incident) incidents.Incident {

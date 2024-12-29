@@ -10,7 +10,6 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/internal/jsontypes"
-	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/incidents"
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
@@ -56,8 +55,8 @@ func (ia *incidentsAPI) listIncidents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := struct {
-		Incidents []database.Incident `json:"incidents"`
-		Count     int                 `json:"count"`
+		Incidents []incidents.Incident `json:"incidents"`
+		Count     int                  `json:"count"`
 	}{}
 
 	res.Incidents, res.Count, err = incs.Incidents(ctx, p)
