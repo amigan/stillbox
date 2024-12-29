@@ -1,6 +1,8 @@
 package jsontypes
 
 import (
+	"encoding/json"
+
 	"github.com/google/uuid"
 )
 
@@ -17,6 +19,28 @@ func (u *UUIDs) UUIDs() []uuid.UUID {
 	return r
 }
 
+func (u *UUIDs) UnmarshalJSON(b []byte) error {
+	var ss []string
+	err := json.Unmarshal(b, &ss)
+	if err != nil {
+		return err
+	}
+
+	usl := make([]UUID, 0, len(ss))
+	for _, s := range ss {
+		uu, err := uuid.Parse(s)
+		if err != nil {
+			return err
+		}
+
+		usl = append(usl, UUID(uu))
+	}
+
+	*u = usl
+
+	return nil
+}
+
 func (u UUID) UUID() uuid.UUID {
 	return uuid.UUID(u)
 }
@@ -26,12 +50,12 @@ func (u *UUID) MarshalJSON() ([]byte, error) {
 }
 
 func (u *UUID) UnmarshalJSON(b []byte) error {
-    id, err := uuid.Parse(string(b[:]))
-    if err != nil {
-            return err
-    }
-    *u = UUID(id)
-    return nil
+	id, err := uuid.Parse(string(b[:]))
+	if err != nil {
+		return err
+	}
+	*u = UUID(id)
+	return nil
 }
 
 func (u *UUID) UnmarshalText(t []byte) error {

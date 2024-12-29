@@ -71,7 +71,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	}
 
 	tgCache := tgstore.NewCache()
-	api := rest.New()
+	api := rest.New(cfg.BaseURL.URL())
 
 	srv := &Server{
 		auth:      authenticator,

@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
+	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/incidents"
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
@@ -17,6 +20,11 @@ import (
 )
 
 type incidentsAPI struct {
+	baseURL *url.URL
+}
+
+func newIncidentsAPI(baseURL *url.URL) API {
+	return &incidentsAPI{baseURL}
 }
 
 func (ia *incidentsAPI) Subrouter() http.Handler {
@@ -25,13 +33,13 @@ func (ia *incidentsAPI) Subrouter() http.Handler {
 	r.Get(`/{id:[a-f0-9-]+}`, ia.getIncident)
 	r.Get(`/{id:[a-f0-9-]+}.m3u`, ia.getCallsM3U)
 
-	r.Post(`/create`, ia.createIncident)
+	r.Post(`/new`, ia.createIncident)
 	r.Post(`/`, ia.listIncidents)
 	r.Post(`/{id:[a-f0-9-]+}/calls`, ia.postCalls)
 
 	r.Put(`/{id:[a-f0-9]+}`, ia.updateIncident)
 
-	r.Delete(`/{id:[a-f0-9]+}`, ia.deleteIncident)
+	r.Delete(`/{id:[a-f0-9-]+}`, ia.deleteIncident)
 
 	return r
 }
@@ -148,10 +156,10 @@ func (ia *incidentsAPI) deleteIncident(w http.ResponseWriter, r *http.Request) {
 }
 
 type CallIncidentParams struct {
-	Add   []uuid.UUID     `json:"add"`
+	Add   jsontypes.UUIDs `json:"add"`
 	Notes json.RawMessage `json:"notes"`
 
-	Remove []uuid.UUID `json:"remove"`
+	Remove jsontypes.UUIDs `json:"remove"`
 }
 
 func (ia *incidentsAPI) postCalls(w http.ResponseWriter, r *http.Request) {
@@ -170,7 +178,7 @@ func (ia *incidentsAPI) postCalls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = incs.AddRemoveIncidentCalls(ctx, id, p.Add, p.Notes, p.Remove)
+	err = incs.AddRemoveIncidentCalls(ctx, id, p.Add.UUIDs(), p.Notes, p.Remove.UUIDs())
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
@@ -197,9 +205,7 @@ func (ia *incidentsAPI) getCallsM3U(w http.ResponseWriter, r *http.Request) {
 
 	var b bytes.Buffer
 
-	callUrl := r.URL
-	callUrl.RawQuery = ""
-	callUrl.Fragment = ""
+	callUrl := common.PtrTo(*ia.baseURL)
 
 	b.WriteString("#EXTM3U\n\n")
 	for _, c := range inc.Calls {
@@ -213,7 +219,7 @@ func (ia *incidentsAPI) getCallsM3U(w http.ResponseWriter, r *http.Request) {
 			from = fmt.Sprintf(" from %d", c.Source)
 		}
 
-		callUrl.Path = "/api/call/%s" + c.ID.String()
+		callUrl.Path = "/api/call/" + c.ID.String()
 
 		fmt.Fprintf(w, "#EXTINF:%d,%s%s (%s)\n%s\n\n",
 			c.Duration.Seconds(),

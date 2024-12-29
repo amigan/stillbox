@@ -3,6 +3,7 @@ package rest
 import (
 	"errors"
 	"net/http"
+	"net/url"
 
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
@@ -19,10 +20,11 @@ type API interface {
 }
 
 type api struct {
+	baseURL url.URL
 }
 
-func New() *api {
-	s := new(api)
+func New(baseURL url.URL) *api {
+	s := &api{baseURL}
 
 	return s
 }
@@ -33,7 +35,7 @@ func (a *api) Subrouter() http.Handler {
 	r.Mount("/talkgroup", new(talkgroupAPI).Subrouter())
 	r.Mount("/call", new(callsAPI).Subrouter())
 	r.Mount("/user", new(usersAPI).Subrouter())
-	r.Mount("/incident", new(incidentsAPI).Subrouter())
+	r.Mount("/incident", newIncidentsAPI(&a.baseURL).Subrouter())
 
 	return r
 }
