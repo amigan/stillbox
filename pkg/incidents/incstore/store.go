@@ -24,7 +24,7 @@ type IncidentsParams struct {
 
 type Store interface {
 	// CreateIncident creates an incident.
-	CreateIncident(ctx context.Context, inc incidents.Incident) (database.Incident, error)
+	CreateIncident(ctx context.Context, inc incidents.Incident) (*incidents.Incident, error)
 
 	// AddToIncident adds the specified call IDs to an incident.
 	// If not nil, notes must be valid json.
@@ -40,7 +40,7 @@ type Store interface {
 	Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error)
 
 	// UpdateIncident updates an incident.
-	UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncidentParams) (database.Incident, error)
+	UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncidentParams) (*incidents.Incident, error)
 
 	// DeleteIncident deletes an incident.
 	DeleteIncident(ctx context.Context, id uuid.UUID) error
@@ -70,19 +70,57 @@ func NewStore() Store {
 	return &store{}
 }
 
-func (s *store) CreateIncident(ctx context.Context, inc incidents.Incident) (database.Incident, error) {
+func (s *store) CreateIncident(ctx context.Context, inc incidents.Incident) (*incidents.Incident, error) {
 	db := database.FromCtx(ctx)
-	dbInc, err := db.CreateIncident(ctx, database.CreateIncidentParams{
-		ID:          uuid.New(),
-		Name:        inc.Name,
-		Description: inc.Description,
-		StartTime:   inc.StartTime.PGTypeTSTZ(),
-		EndTime:     inc.EndTime.PGTypeTSTZ(),
-		Location:    inc.Location.RawMessage,
-		Metadata:    inc.Metadata,
-	})
+	var dbInc database.Incident
 
-	return dbInc, err
+	id := uuid.New()
+
+	txErr := db.InTx(ctx, func(db database.Store) error {
+		var err error
+		dbInc, err = db.CreateIncident(ctx, database.CreateIncidentParams{
+			ID:          id,
+			Name:        inc.Name,
+			Description: inc.Description,
+			StartTime:   inc.StartTime.PGTypeTSTZ(),
+			EndTime:     inc.EndTime.PGTypeTSTZ(),
+			Location:    inc.Location.RawMessage,
+			Metadata:    inc.Metadata,
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(inc.Calls) > 0 {
+			callIDs := make([]uuid.UUID, 0, len(inc.Calls))
+			notes := make([][]byte, 0, len(inc.Calls))
+			hasNote := false
+			for _, c := range inc.Calls {
+				callIDs = append(callIDs, c.ID)
+				if c.Notes != nil {
+					hasNote = true
+				}
+				notes = append(notes, c.Notes)
+			}
+			if !hasNote {
+				notes = nil
+			}
+
+			err = db.AddToIncident(ctx, dbInc.ID, callIDs, notes)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}, pgx.TxOptions{})
+	if txErr != nil {
+		return nil, txErr
+	}
+
+	inc = fromDBIncident(id, dbInc)
+
+	return &inc, nil
 }
 
 func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID, addCallIDs []uuid.UUID, notes []byte, removeCallIDs []uuid.UUID) error {
@@ -237,10 +275,17 @@ func (uip UpdateIncidentParams) toDBUIP(id uuid.UUID) database.UpdateIncidentPar
 	}
 }
 
-func (s *store) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncidentParams) (database.Incident, error) {
+func (s *store) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncidentParams) (*incidents.Incident, error) {
 	db := database.FromCtx(ctx)
 
-	return db.UpdateIncident(ctx, p.toDBUIP(id))
+	dbInc, err := db.UpdateIncident(ctx, p.toDBUIP(id))
+	if err != nil {
+		return nil, err
+	}
+
+	inc := fromDBIncident(id, dbInc)
+
+	return &inc, nil
 }
 
 func (s *store) DeleteIncident(ctx context.Context, id uuid.UUID) error {
