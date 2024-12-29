@@ -14,6 +14,7 @@ import (
 	"dynatron.me/x/stillbox/internal/jsontypes"
 
 	"github.com/araddon/dateparse"
+	"github.com/google/uuid"
 )
 
 func (o *options) parseTime(s string, dpo ...dateparse.ParserOption) (t time.Time, set bool, err error) {
@@ -36,6 +37,22 @@ func (o *options) parseTime(s string, dpo ...dateparse.ParserOption) (t time.Tim
 	}
 
 	set = true
+
+	return
+}
+
+func (o *options) parseUUID(s string) (u uuid.UUID, set bool, err error) {
+	if o.acceptBlank && s == "" {
+		set = false
+		return
+	}
+
+	set = true
+
+	u, err = uuid.Parse(s)
+	if err != nil {
+		return u, set, fmt.Errorf("parseUUID('%s'): %w", s, err)
+	}
 
 	return
 }
@@ -212,6 +229,26 @@ func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error
 				return err
 			}
 			setVal(destFieldVal, set, d)
+		case uuid.UUID, jsontypes.UUID:
+			u, set, err := o.parseUUID(ff)
+			if err != nil {
+				return err
+			}
+			setVal(destFieldVal, set, u)
+		case jsontypes.UUIDs:
+			val := strings.Trim(ff, "[]")
+			if val == "" && o.acceptBlank {
+				continue
+			}
+			vals := strings.Split(val, ",")
+			ar := make([]jsontypes.UUID, 0, len(vals))
+			for _, v := range vals {
+				i, err := uuid.Parse(v)
+				if err == nil {
+					ar = append(ar, jsontypes.UUID(i))
+				}
+			}
+			destFieldVal.Set(reflect.ValueOf(ar))
 		case []int:
 			val := strings.Trim(ff, "[]")
 			if val == "" && o.acceptBlank {
