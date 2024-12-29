@@ -261,7 +261,7 @@ func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error
 
 				continue
 			}
-			if destFieldType.Kind() == reflect.Ptr {
+			for destFieldType.Kind() == reflect.Ptr {
 				destFieldType = destFieldType.Elem()
 			}
 			if reflect.ValueOf(ff).CanConvert(destFieldType) {
