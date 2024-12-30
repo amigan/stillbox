@@ -85,10 +85,11 @@ export class IncidentsComponent {
   incsResult = new BehaviorSubject(new Array<IncidentRecord>(0));
   @ViewChild('paginator') paginator!: MatPaginator;
   count = 0;
+  curLen = 0;
   page = 0;
   perPage = 25;
   pageSizeOptions = [25, 50, 75, 100, 200];
-  columns = ['startTime', 'endTime', 'name', 'numCalls', 'edit'];
+  columns = ['select', 'startTime', 'endTime', 'name', 'numCalls', 'edit'];
   curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };
   currentSet!: IncidentRecord[];
   currentServerPage = 0; // page is never 0, forces load
@@ -119,7 +120,7 @@ export class IncidentsComponent {
 
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.curPage.pageSize;
+    const numRows = this.curLen;
     return numSelected === numRows;
   }
 
@@ -237,6 +238,11 @@ export class IncidentsComponent {
               : [],
           );
         }),
+    );
+    this.subscriptions.add(
+      this.incsResult.subscribe((cr) => {
+        this.curLen = cr.length;
+      }),
     );
   }
 

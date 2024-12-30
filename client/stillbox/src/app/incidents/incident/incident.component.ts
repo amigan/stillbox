@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-incident',
   imports: [],
   templateUrl: './incident.component.html',
-  styleUrl: './incident.component.scss'
+  styleUrl: './incident.component.scss',
 })
-export class IncidentComponent {
-
-}
+export class IncidentComponent {}

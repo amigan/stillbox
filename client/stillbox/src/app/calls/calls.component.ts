@@ -166,6 +166,7 @@ export class CallsComponent {
     'duration',
   ];
   curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };
+  curLen = 0;
   currentSet!: CallRecord[];
   currentServerPage = 0; // page is never 0, forces load
   isLoading = true;
@@ -198,7 +199,7 @@ export class CallsComponent {
 
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.curPage.pageSize;
+    const numRows = this.curLen;
     return numSelected === numRows;
   }
 
@@ -333,6 +334,11 @@ export class CallsComponent {
               : [],
           );
         }),
+    );
+    this.subscriptions.add(
+      this.callsResult.subscribe((cr) => {
+        this.curLen = cr.length;
+      }),
     );
   }
 
