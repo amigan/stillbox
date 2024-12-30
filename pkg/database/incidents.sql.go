@@ -250,8 +250,10 @@ SELECT
 	i.start_time,
 	i.end_time,
 	i.location,
-	i.metadata
+	i.metadata,
+	COUNT(ic.incident_id) calls_count
 FROM incidents i
+LEFT JOIN incidents_calls ic ON i.id = ic.incident_id
 WHERE
 CASE WHEN $1::TIMESTAMPTZ IS NOT NULL THEN
 	i.start_time >= $1 ELSE TRUE END AND
@@ -261,6 +263,7 @@ CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
 		i.name ILIKE '%' || $3 || '%' OR
 		i.description ILIKE '%' || $3 || '%'
 	) ELSE TRUE END)
+GROUP BY i.id
 ORDER BY
 CASE WHEN $4::TEXT = 'asc' THEN i.start_time END ASC,
 CASE WHEN $4::TEXT = 'desc' THEN i.start_time END DESC
@@ -277,7 +280,18 @@ type ListIncidentsPParams struct {
 	PerPage   int32              `json:"per_page"`
 }
 
-func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) ([]Incident, error) {
+type ListIncidentsPRow struct {
+	ID          uuid.UUID          `json:"id"`
+	Name        string             `json:"name"`
+	Description *string            `json:"description"`
+	StartTime   pgtype.Timestamptz `json:"start_time"`
+	EndTime     pgtype.Timestamptz `json:"end_time"`
+	Location    []byte             `json:"location"`
+	Metadata    jsontypes.Metadata `json:"metadata"`
+	CallsCount  int64              `json:"calls_count"`
+}
+
+func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) ([]ListIncidentsPRow, error) {
 	rows, err := q.db.Query(ctx, listIncidentsP,
 		arg.Start,
 		arg.End,
@@ -290,9 +304,9 @@ func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Incident
+	var items []ListIncidentsPRow
 	for rows.Next() {
-		var i Incident
+		var i ListIncidentsPRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -301,6 +315,7 @@ func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) 
 			&i.EndTime,
 			&i.Location,
 			&i.Metadata,
+			&i.CallsCount,
 		); err != nil {
 			return nil, err
 		}

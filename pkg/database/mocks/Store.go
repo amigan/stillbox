@@ -2829,23 +2829,23 @@ func (_c *Store_ListIncidentsCount_Call) RunAndReturn(run func(context.Context, 
 }
 
 // ListIncidentsP provides a mock function with given fields: ctx, arg
-func (_m *Store) ListIncidentsP(ctx context.Context, arg database.ListIncidentsPParams) ([]database.Incident, error) {
+func (_m *Store) ListIncidentsP(ctx context.Context, arg database.ListIncidentsPParams) ([]database.ListIncidentsPRow, error) {
 	ret := _m.Called(ctx, arg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListIncidentsP")
 	}
 
-	var r0 []database.Incident
+	var r0 []database.ListIncidentsPRow
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, database.ListIncidentsPParams) ([]database.Incident, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, database.ListIncidentsPParams) ([]database.ListIncidentsPRow, error)); ok {
 		return rf(ctx, arg)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, database.ListIncidentsPParams) []database.Incident); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, database.ListIncidentsPParams) []database.ListIncidentsPRow); ok {
 		r0 = rf(ctx, arg)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.Incident)
+			r0 = ret.Get(0).([]database.ListIncidentsPRow)
 		}
 	}
 
@@ -2877,12 +2877,12 @@ func (_c *Store_ListIncidentsP_Call) Run(run func(ctx context.Context, arg datab
 	return _c
 }
 
-func (_c *Store_ListIncidentsP_Call) Return(_a0 []database.Incident, _a1 error) *Store_ListIncidentsP_Call {
+func (_c *Store_ListIncidentsP_Call) Return(_a0 []database.ListIncidentsPRow, _a1 error) *Store_ListIncidentsP_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Store_ListIncidentsP_Call) RunAndReturn(run func(context.Context, database.ListIncidentsPParams) ([]database.Incident, error)) *Store_ListIncidentsP_Call {
+func (_c *Store_ListIncidentsP_Call) RunAndReturn(run func(context.Context, database.ListIncidentsPParams) ([]database.ListIncidentsPRow, error)) *Store_ListIncidentsP_Call {
 	_c.Call.Return(run)
 	return _c
 }

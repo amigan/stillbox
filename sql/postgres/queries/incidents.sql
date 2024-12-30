@@ -58,8 +58,10 @@ SELECT
 	i.start_time,
 	i.end_time,
 	i.location,
-	i.metadata
+	i.metadata,
+	COUNT(ic.incident_id) calls_count
 FROM incidents i
+LEFT JOIN incidents_calls ic ON i.id = ic.incident_id
 WHERE
 CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 	i.start_time >= sqlc.narg('start') ELSE TRUE END AND
@@ -69,6 +71,7 @@ CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 		i.name ILIKE '%' || @filter || '%' OR
 		i.description ILIKE '%' || @filter || '%'
 	) ELSE TRUE END)
+GROUP BY i.id
 ORDER BY
 CASE WHEN @direction::TEXT = 'asc' THEN i.start_time END ASC,
 CASE WHEN @direction::TEXT = 'desc' THEN i.start_time END DESC

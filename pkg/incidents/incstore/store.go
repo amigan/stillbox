@@ -35,7 +35,7 @@ type Store interface {
 	UpdateNotes(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID, notes []byte) error
 
 	// Incidents gets incidents matching parameters and pagination.
-	Incidents(ctx context.Context, p IncidentsParams) (incs []incidents.Incident, totalCount int, err error)
+	Incidents(ctx context.Context, p IncidentsParams) (incs []Incident, totalCount int, err error)
 
 	// Incident gets a single incident.
 	Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error)
@@ -152,7 +152,7 @@ func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID
 	}, pgx.TxOptions{})
 }
 
-func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []incidents.Incident, totalCount int, err error) {
+func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []Incident, totalCount int, err error) {
 	db := database.FromCtx(ctx)
 
 	offset, perPage := p.Pagination.OffsetPerPage(100)
@@ -166,7 +166,7 @@ func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []incide
 	}
 
 	var count int64
-	var rows []database.Incident
+	var rows []database.ListIncidentsPRow
 	txErr := db.InTx(ctx, func(db database.Store) error {
 		var err error
 		count, err = db.ListIncidentsCount(ctx, dbParam.Start, dbParam.End, dbParam.Filter)
@@ -185,9 +185,9 @@ func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []incide
 		return nil, 0, txErr
 	}
 
-	incs = make([]incidents.Incident, 0, len(rows))
+	incs = make([]Incident, 0, len(rows))
 	for _, v := range rows {
-		incs = append(incs, fromDBIncident(v.ID, v))
+		incs = append(incs, fromDBListInPRow(v.ID, v))
 	}
 
 	return incs, int(count), err
@@ -201,6 +201,26 @@ func fromDBIncident(id uuid.UUID, d database.Incident) incidents.Incident {
 		StartTime:   jsontypes.TimePtrFromTSTZ(d.StartTime),
 		EndTime:     jsontypes.TimePtrFromTSTZ(d.EndTime),
 		Metadata:    d.Metadata,
+	}
+}
+
+type Incident struct {
+	incidents.Incident
+
+	CallCount int `json:"callCount"`
+}
+
+func fromDBListInPRow(id uuid.UUID, d database.ListIncidentsPRow) Incident {
+	return Incident{
+		Incident: incidents.Incident{
+			ID:          id,
+			Name:        d.Name,
+			Description: d.Description,
+			StartTime:   jsontypes.TimePtrFromTSTZ(d.StartTime),
+			EndTime:     jsontypes.TimePtrFromTSTZ(d.EndTime),
+			Metadata:    d.Metadata,
+		},
+		CallCount: int(d.CallsCount),
 	}
 }
 

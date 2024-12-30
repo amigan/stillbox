@@ -54,7 +54,7 @@ type Querier interface {
 	ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error)
 	ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error)
 	ListIncidentsCount(ctx context.Context, start pgtype.Timestamptz, end pgtype.Timestamptz, filter *string) (int64, error)
-	ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) ([]Incident, error)
+	ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) ([]ListIncidentsPRow, error)
 	RemoveFromIncident(ctx context.Context, iD uuid.UUID, callIds []uuid.UUID) error
 	RestoreTalkgroupVersion(ctx context.Context, versionIds int) (Talkgroup, error)
 	SetAppPrefs(ctx context.Context, appName string, prefs []byte, uid int) error

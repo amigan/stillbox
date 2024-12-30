@@ -55,7 +55,7 @@ func (ia *incidentsAPI) listIncidents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := struct {
-		Incidents []incidents.Incident `json:"incidents"`
+		Incidents []incstore.Incident `json:"incidents"`
 		Count     int                  `json:"count"`
 	}{}
 
