@@ -169,7 +169,7 @@ func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []incide
 	var rows []database.Incident
 	txErr := db.InTx(ctx, func(db database.Store) error {
 		var err error
-		count, err = db.ListIncidentsCount(ctx, dbParam.Start, dbParam.End)
+		count, err = db.ListIncidentsCount(ctx, dbParam.Start, dbParam.End, dbParam.Filter)
 		if err != nil {
 			return err
 		}

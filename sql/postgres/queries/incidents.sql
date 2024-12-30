@@ -67,7 +67,7 @@ CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 	i.start_time <= sqlc.narg('end') ELSE TRUE END AND
 (CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
 		i.name ILIKE '%' || @filter || '%' OR
-		i.description ILIKE '%' || @tg_filter || '%'
+		i.description ILIKE '%' || @filter || '%'
 	) ELSE TRUE END)
 ORDER BY
 CASE WHEN @direction::TEXT = 'asc' THEN i.start_time END ASC,
@@ -86,7 +86,7 @@ CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 	i.start_time <= sqlc.narg('end') ELSE TRUE END AND
 (CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
 		i.name ILIKE '%' || @filter || '%' OR
-		i.description ILIKE '%' || @tg_filter || '%'
+		i.description ILIKE '%' || @filter || '%'
 	) ELSE TRUE END)
 ;
 
