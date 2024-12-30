@@ -17,6 +17,7 @@ import (
 type IncidentsParams struct {
 	common.Pagination
 	Direction *common.SortDirection `json:"dir"`
+	Filter    *string               `json:"filter"`
 
 	Start *jsontypes.Time `json:"start"`
 	End   *jsontypes.Time `json:"end"`
@@ -158,6 +159,7 @@ func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []incide
 	dbParam := database.ListIncidentsPParams{
 		Start:     p.Start.PGTypeTSTZ(),
 		End:       p.End.PGTypeTSTZ(),
+		Filter:    p.Filter,
 		Direction: p.Direction.DirString(common.DirAsc),
 		Offset:    offset,
 		PerPage:   perPage,

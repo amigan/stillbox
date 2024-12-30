@@ -64,7 +64,11 @@ WHERE
 CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 	i.start_time >= sqlc.narg('start') ELSE TRUE END AND
 CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
-	i.start_time <= sqlc.narg('end') ELSE TRUE END
+	i.start_time <= sqlc.narg('end') ELSE TRUE END AND
+(CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
+		i.name ILIKE '%' || @filter || '%' OR
+		i.description ILIKE '%' || @tg_filter || '%'
+	) ELSE TRUE END)
 ORDER BY
 CASE WHEN @direction::TEXT = 'asc' THEN i.start_time END ASC,
 CASE WHEN @direction::TEXT = 'desc' THEN i.start_time END DESC
@@ -79,7 +83,11 @@ WHERE
 CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 	i.start_time >= sqlc.narg('start') ELSE TRUE END AND
 CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
-	i.start_time <= sqlc.narg('end') ELSE TRUE END
+	i.start_time <= sqlc.narg('end') ELSE TRUE END AND
+(CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
+		i.name ILIKE '%' || @filter || '%' OR
+		i.description ILIKE '%' || @tg_filter || '%'
+	) ELSE TRUE END)
 ;
 
 -- name: GetIncidentCalls :many

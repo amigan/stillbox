@@ -2769,9 +2769,9 @@ func (_c *Store_ListCallsP_Call) RunAndReturn(run func(context.Context, database
 	return _c
 }
 
-// ListIncidentsCount provides a mock function with given fields: ctx, start, end
-func (_m *Store) ListIncidentsCount(ctx context.Context, start pgtype.Timestamptz, end pgtype.Timestamptz) (int64, error) {
-	ret := _m.Called(ctx, start, end)
+// ListIncidentsCount provides a mock function with given fields: ctx, arg
+func (_m *Store) ListIncidentsCount(ctx context.Context, arg database.ListIncidentsCountParams) (int64, error) {
+	ret := _m.Called(ctx, arg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListIncidentsCount")
@@ -2779,17 +2779,17 @@ func (_m *Store) ListIncidentsCount(ctx context.Context, start pgtype.Timestampt
 
 	var r0 int64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)); ok {
-		return rf(ctx, start, end)
+	if rf, ok := ret.Get(0).(func(context.Context, database.ListIncidentsCountParams) (int64, error)); ok {
+		return rf(ctx, arg)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) int64); ok {
-		r0 = rf(ctx, start, end)
+	if rf, ok := ret.Get(0).(func(context.Context, database.ListIncidentsCountParams) int64); ok {
+		r0 = rf(ctx, arg)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
-		r1 = rf(ctx, start, end)
+	if rf, ok := ret.Get(1).(func(context.Context, database.ListIncidentsCountParams) error); ok {
+		r1 = rf(ctx, arg)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -2804,15 +2804,14 @@ type Store_ListIncidentsCount_Call struct {
 
 // ListIncidentsCount is a helper method to define mock.On call
 //   - ctx context.Context
-//   - start pgtype.Timestamptz
-//   - end pgtype.Timestamptz
-func (_e *Store_Expecter) ListIncidentsCount(ctx interface{}, start interface{}, end interface{}) *Store_ListIncidentsCount_Call {
-	return &Store_ListIncidentsCount_Call{Call: _e.mock.On("ListIncidentsCount", ctx, start, end)}
+//   - arg database.ListIncidentsCountParams
+func (_e *Store_Expecter) ListIncidentsCount(ctx interface{}, arg interface{}) *Store_ListIncidentsCount_Call {
+	return &Store_ListIncidentsCount_Call{Call: _e.mock.On("ListIncidentsCount", ctx, arg)}
 }
 
-func (_c *Store_ListIncidentsCount_Call) Run(run func(ctx context.Context, start pgtype.Timestamptz, end pgtype.Timestamptz)) *Store_ListIncidentsCount_Call {
+func (_c *Store_ListIncidentsCount_Call) Run(run func(ctx context.Context, arg database.ListIncidentsCountParams)) *Store_ListIncidentsCount_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(pgtype.Timestamptz), args[2].(pgtype.Timestamptz))
+		run(args[0].(context.Context), args[1].(database.ListIncidentsCountParams))
 	})
 	return _c
 }
@@ -2822,7 +2821,7 @@ func (_c *Store_ListIncidentsCount_Call) Return(_a0 int64, _a1 error) *Store_Lis
 	return _c
 }
 
-func (_c *Store_ListIncidentsCount_Call) RunAndReturn(run func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)) *Store_ListIncidentsCount_Call {
+func (_c *Store_ListIncidentsCount_Call) RunAndReturn(run func(context.Context, database.ListIncidentsCountParams) (int64, error)) *Store_ListIncidentsCount_Call {
 	_c.Call.Return(run)
 	return _c
 }

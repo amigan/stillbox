@@ -228,11 +228,27 @@ WHERE
 CASE WHEN $1::TIMESTAMPTZ IS NOT NULL THEN
 	i.start_time >= $1 ELSE TRUE END AND
 CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
-	i.start_time <= $2 ELSE TRUE END
+	i.start_time <= $2 ELSE TRUE END AND
+(CASE WHEN $3::TEXT IS NOT NULL THEN (
+		i.name ILIKE '%' || $3 || '%' OR
+		i.description ILIKE '%' || $4 || '%'
+	) ELSE TRUE END)
 `
 
-func (q *Queries) ListIncidentsCount(ctx context.Context, start pgtype.Timestamptz, end pgtype.Timestamptz) (int64, error) {
-	row := q.db.QueryRow(ctx, listIncidentsCount, start, end)
+type ListIncidentsCountParams struct {
+	Start    pgtype.Timestamptz `json:"start"`
+	End      pgtype.Timestamptz `json:"end"`
+	Filter   *string            `json:"filter"`
+	TGFilter *string            `json:"tg_filter"`
+}
+
+func (q *Queries) ListIncidentsCount(ctx context.Context, arg ListIncidentsCountParams) (int64, error) {
+	row := q.db.QueryRow(ctx, listIncidentsCount,
+		arg.Start,
+		arg.End,
+		arg.Filter,
+		arg.TGFilter,
+	)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -252,17 +268,23 @@ WHERE
 CASE WHEN $1::TIMESTAMPTZ IS NOT NULL THEN
 	i.start_time >= $1 ELSE TRUE END AND
 CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
-	i.start_time <= $2 ELSE TRUE END
+	i.start_time <= $2 ELSE TRUE END AND
+(CASE WHEN $3::TEXT IS NOT NULL THEN (
+		i.name ILIKE '%' || $3 || '%' OR
+		i.description ILIKE '%' || $4 || '%'
+	) ELSE TRUE END)
 ORDER BY
-CASE WHEN $3::TEXT = 'asc' THEN i.start_time END ASC,
-CASE WHEN $3::TEXT = 'desc' THEN i.start_time END DESC
-OFFSET $4 ROWS
-FETCH NEXT $5 ROWS ONLY
+CASE WHEN $5::TEXT = 'asc' THEN i.start_time END ASC,
+CASE WHEN $5::TEXT = 'desc' THEN i.start_time END DESC
+OFFSET $6 ROWS
+FETCH NEXT $7 ROWS ONLY
 `
 
 type ListIncidentsPParams struct {
 	Start     pgtype.Timestamptz `json:"start"`
 	End       pgtype.Timestamptz `json:"end"`
+	Filter    *string            `json:"filter"`
+	TGFilter  *string            `json:"tg_filter"`
 	Direction string             `json:"direction"`
 	Offset    int32              `json:"offset"`
 	PerPage   int32              `json:"per_page"`
@@ -272,6 +294,8 @@ func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) 
 	rows, err := q.db.Query(ctx, listIncidentsP,
 		arg.Start,
 		arg.End,
+		arg.Filter,
+		arg.TGFilter,
 		arg.Direction,
 		arg.Offset,
 		arg.PerPage,
