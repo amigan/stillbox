@@ -55,7 +55,7 @@ export class TimePipe implements PipeTransform {
     return timestamp.toLocaleTimeString(navigator.language, {
       hour: '2-digit',
       minute: '2-digit',
-      hourCycle: 'h24',
+      hourCycle: 'h23',
     });
   }
 }
@@ -274,7 +274,9 @@ export class CallsComponent {
     this.pageWindow = pageStart % reqPageSize;
     if (serverPage == this.currentServerPage && !force && this.currentSet) {
       this.callsResult.next(
-        this.callsResult ? this.currentSet.slice(this.pageWindow, this.pageWindow + p.pageSize) : [],
+        this.callsResult
+          ? this.currentSet.slice(this.pageWindow, this.pageWindow + p.pageSize)
+          : [],
       );
     } else {
       this.currentServerPage = serverPage;

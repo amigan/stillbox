@@ -1,0 +1,98 @@
+.timeFilterBox {
+  flex: 0 0 240px;
+}
+
+table,
+.incsTable {
+  width: 100%;
+}
+
+.duration {
+  text-align: right;
+}
+
+.tabContainer {
+  max-height: calc(
+    (
+        100vh - var(--mat-mat-maginator-container-size, 56px) - 2 *
+          (var(--mat-toolbar-standard-height, 64px))
+      ) + 7px
+  );
+  overflow: auto;
+}
+
+.toolbarButtons button,
+.toolbarButtons form,
+.toolbarButtons form button {
+  justify-content: flex-end;
+  align-content: center;
+}
+
+.playButton {
+  cursor: pointer;
+}
+
+tr.mat-mdc-row {
+  height: 2.3rem !important;
+  font-size: 12pt;
+}
+
+.mdc-text-field__input::-webkit-calendar-picker-indicator {
+  display: block !important;
+}
+
+.mat-column-select,
+.mat-column-time,
+.mat-column-play,
+.mat-column-download,
+.mat-column-duration {
+  width: 10px;
+  padding: 0 2px;
+}
+
+.mat-column-date {
+  width: 10px;
+  padding: 0 6px;
+}
+
+.mat-column-system {
+  width: 4%;
+}
+
+.mat-column-talkgroup {
+  width: 40%;
+}
+
+@media screen and (max-width: 768px) {
+  .mat-column-group,
+  .mat-column-system {
+    display: none;
+  }
+
+  .tabFootContainer {
+    padding: 0;
+  }
+}
+
+.toolbar,
+.toolbar form {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+form {
+  flex: 1 0;
+  display: flex;
+}
+
+.filterBox {
+  flex: 1 1 300px;
+}
+
+.durationFilter {
+  flex: 0 0 80px;
+}
+
+.tagSelect {
+  flex: 1 1 250px;
+}
