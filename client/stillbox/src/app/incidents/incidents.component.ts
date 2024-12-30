@@ -12,8 +12,8 @@ import { PrefsService } from '../prefs/prefs.service';
 import { MatIconModule } from '@angular/material/icon';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { IncidentsListParams, IncidentsService } from './incidents.service';
 import { IncidentRecord } from '../incidents';
 
@@ -26,8 +26,6 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
-import { MatTimepickerModule } from '@angular/material/timepicker';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { debounceTime } from 'rxjs/operators';
 import { ToolbarContextService } from '../navigation/toolbar-context.service';
 
@@ -71,8 +69,6 @@ const reqPageSize = 200;
     ReactiveFormsModule,
     FormsModule,
     MatInputModule,
-    MatDatepickerModule,
-    MatTimepickerModule,
     MatCheckboxModule,
     RouterLink,
     CommonModule,

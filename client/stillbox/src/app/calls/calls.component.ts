@@ -26,11 +26,9 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
-import { MatTimepickerModule } from '@angular/material/timepicker';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { debounceTime } from 'rxjs/operators';
 import { ToolbarContextService } from '../navigation/toolbar-context.service';
-import { MatSelect, MatSelectModule } from '@angular/material/select';
+import { MatSelectModule } from '@angular/material/select';
 
 @Pipe({
   name: 'grabDate',
@@ -137,8 +135,6 @@ const reqPageSize = 200;
     ReactiveFormsModule,
     FormsModule,
     MatInputModule,
-    MatDatepickerModule,
-    MatTimepickerModule,
     MatCheckboxModule,
     CommonModule,
     MatProgressSpinnerModule,
