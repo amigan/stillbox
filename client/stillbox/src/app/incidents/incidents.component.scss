@@ -1,0 +1,63 @@
+.timeFilterBox {
+  flex: 0 0 240px;
+}
+
+table,
+.incsTable {
+  width: 100%;
+}
+
+.callCount {
+  text-align: right;
+}
+
+.mat-column-numCalls {
+  width: 50px;
+}
+
+.tabContainer {
+  max-height: calc(
+    (
+        100vh - var(--mat-mat-maginator-container-size, 56px) - 2 *
+          (var(--mat-toolbar-standard-height, 64px))
+      ) + 7px
+  );
+  overflow: auto;
+}
+
+.toolbarButtons button,
+.toolbarButtons form,
+.toolbarButtons form button {
+  justify-content: flex-end;
+  align-content: center;
+}
+
+tr.mat-mdc-row {
+  height: 2.3rem !important;
+  font-size: 12pt;
+}
+
+.mdc-text-field__input::-webkit-calendar-picker-indicator {
+  display: block !important;
+}
+
+@media screen and (max-width: 768px) {
+  .tabFootContainer {
+    padding: 0;
+  }
+}
+
+.toolbar,
+.toolbar form {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+form {
+  flex: 1 0;
+  display: flex;
+}
+
+.filterBox {
+  flex: 1 1 300px;
+}

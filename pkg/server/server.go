@@ -8,9 +8,11 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/alerting"
 	"dynatron.me/x/stillbox/pkg/auth"
+	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/partman"
+	"dynatron.me/x/stillbox/pkg/incidents/incstore"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/rest"
@@ -28,22 +30,24 @@ import (
 const shutdownTimeout = 5 * time.Second
 
 type Server struct {
-	auth     *auth.Auth
-	conf     *config.Configuration
-	db       database.Store
-	r        *chi.Mux
-	sources  sources.Sources
-	sinks    sinks.Sinks
-	relayer  *sinks.RelayManager
-	nex      *nexus.Nexus
-	logger   *Logger
-	alerter  alerting.Alerter
-	notifier notify.Notifier
-	hup      chan os.Signal
-	tgs      tgstore.Store
-	rest     rest.API
-	partman  partman.PartitionManager
-	users    users.Store
+	auth      *auth.Auth
+	conf      *config.Configuration
+	db        database.Store
+	r         *chi.Mux
+	sources   sources.Sources
+	sinks     sinks.Sinks
+	relayer   *sinks.RelayManager
+	nex       *nexus.Nexus
+	logger    *Logger
+	alerter   alerting.Alerter
+	notifier  notify.Notifier
+	hup       chan os.Signal
+	tgs       tgstore.Store
+	rest      rest.API
+	partman   partman.PartitionManager
+	users     users.Store
+	calls     callstore.Store
+	incidents incstore.Store
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
@@ -67,21 +71,23 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	}
 
 	tgCache := tgstore.NewCache()
-	api := rest.New()
+	api := rest.New(cfg.BaseURL.URL())
 
 	srv := &Server{
-		auth:     authenticator,
-		conf:     cfg,
-		db:       db,
-		r:        r,
-		nex:      nexus.New(),
-		logger:   logger,
-		alerter:  alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
-		notifier: notifier,
-		tgs:      tgCache,
-		sinks:    sinks.NewSinkManager(),
-		rest:     api,
-		users:    users.NewStore(),
+		auth:      authenticator,
+		conf:      cfg,
+		db:        db,
+		r:         r,
+		nex:       nexus.New(),
+		logger:    logger,
+		alerter:   alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
+		notifier:  notifier,
+		tgs:       tgCache,
+		sinks:     sinks.NewSinkManager(),
+		rest:      api,
+		users:     users.NewStore(),
+		calls:     callstore.NewStore(),
+		incidents: incstore.NewStore(),
 	}
 
 	if cfg.DB.Partition.Enabled {
@@ -129,14 +135,22 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	return srv, nil
 }
 
+func (s *Server) addStoresTo(ctx context.Context) context.Context {
+	ctx = database.CtxWithDB(ctx, s.db)
+	ctx = tgstore.CtxWithStore(ctx, s.tgs)
+	ctx = users.CtxWithStore(ctx, s.users)
+	ctx = callstore.CtxWithStore(ctx, s.calls)
+	ctx = incstore.CtxWithStore(ctx, s.incidents)
+
+	return ctx
+}
+
 func (s *Server) Go(ctx context.Context) error {
 	defer database.Close(s.db)
 
 	s.installHupHandler()
 
-	ctx = database.CtxWithDB(ctx, s.db)
-	ctx = tgstore.CtxWithStore(ctx, s.tgs)
-	ctx = users.CtxWithStore(ctx, s.users)
+	ctx = s.addStoresTo(ctx)
 
 	httpSrv := &http.Server{
 		Addr:    s.conf.Listen,

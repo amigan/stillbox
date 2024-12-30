@@ -38,7 +38,22 @@ source
 );
 
 -- name: GetCallAudioByID :one
-SELECT call_date, audio_name, audio_type, audio_blob FROM calls WHERE id = @id;
+SELECT
+	c.call_date,
+	c.audio_name,
+	c.audio_type,
+	c.audio_blob
+FROM calls c
+WHERE c.id = @id
+UNION
+SELECT
+	sc.call_date,
+	sc.audio_name,
+	sc.audio_type,
+	sc.audio_blob
+FROM swept_calls sc
+WHERE sc.id = @id
+;
 
 -- name: SetCallTranscript :exec
 UPDATE calls SET transcript = $2 WHERE id = $1;
@@ -61,6 +76,7 @@ VALUES
 SELECT pg_size_pretty(pg_database_size(current_database()));
 
 -- name: SweepCalls :execrows
+-- This is used to sweep calls that are part of an incident prior to pruning a partition.
 WITH to_sweep AS (
 	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type,
 		audio_url, frequency, frequencies, patches, tg_label, tg_alpha_tag, tg_group, source, transcript
@@ -70,7 +86,6 @@ WITH to_sweep AS (
 ) INSERT INTO swept_calls SELECT * FROM to_sweep;
 
 -- name: CleanupSweptCalls :execrows
--- This is used to sweep calls that are part of an incident prior to pruning a partition.
 WITH to_sweep AS (
 	SELECT id FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id

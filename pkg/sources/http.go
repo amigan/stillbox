@@ -46,7 +46,6 @@ type CallUploadRequest struct {
 	Key            string    `form:"key"`
 	Patches        []int     `form:"patches"`
 	Source         int       `form:"source"`
-	Sources        []int     `form:"sources"`
 	System         int       `form:"system"`
 	SystemLabel    string    `form:"systemLabel"`
 	Talkgroup      int       `form:"talkgroup"`

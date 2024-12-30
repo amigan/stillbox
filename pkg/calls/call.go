@@ -42,26 +42,25 @@ type CallAudio struct {
 }
 
 type Call struct {
-	ID             uuid.UUID    `form:"-"`
-	Audio          []byte       `form:"audio" filenameField:"AudioName"`
-	AudioName      string       `form:"audioName"`
-	AudioType      string       `form:"audioType"`
-	Duration       CallDuration `form:"-"`
-	DateTime       time.Time    `form:"dateTime"`
-	Frequencies    []int        `form:"frequencies"`
-	Frequency      int          `form:"frequency"`
-	Patches        []int        `form:"patches"`
-	Source         int          `form:"source"`
-	Sources        []int        `form:"sources"`
-	System         int          `form:"system"`
-	Submitter      *auth.UserID `form:"-"`
-	SystemLabel    string       `form:"systemLabel"`
-	Talkgroup      int          `form:"talkgroup"`
-	TalkgroupGroup *string      `form:"talkgroupGroup"`
-	TalkgroupLabel *string      `form:"talkgroupLabel"`
-	TGAlphaTag     *string      `form:"talkgroupTag"` // not 1:1
+	ID             uuid.UUID    `json:"-"`
+	Audio          []byte       `json:"audio,omitempty" filenameField:"AudioName"`
+	AudioName      string       `json:"audioName,omitempty"`
+	AudioType      string       `json:"audioType,omitempty"`
+	Duration       CallDuration `json:"-"`
+	DateTime       time.Time    `json:"dateTime,omitempty"`
+	Frequencies    []int        `json:"frequencies,omitempty"`
+	Frequency      int          `json:"frequency,omitempty"`
+	Patches        []int        `json:"patches,omitempty"`
+	Source         int          `json:"source,omitempty"`
+	System         int          `json:"system,omitempty"`
+	Submitter      *auth.UserID `json:"-,omitempty"`
+	SystemLabel    string       `json:"systemLabel,omitempty"`
+	Talkgroup      int          `json:"talkgroup,omitempty"`
+	TalkgroupGroup *string      `json:"talkgroupGroup,omitempty"`
+	TalkgroupLabel *string      `json:"talkgroupLabel,omitempty"`
+	TGAlphaTag     *string      `json:"talkgroupTag,omitempty"`
 
-	shouldStore bool `form:"-"`
+	shouldStore bool `json:"-"`
 }
 
 func (c *Call) String() string {
@@ -114,7 +113,6 @@ func (c *Call) ToPB() *pb.Call {
 		Frequency:   int64(c.Frequency),
 		Frequencies: toInt64Slice(c.Frequencies),
 		Patches:     toInt32Slice(c.Patches),
-		Sources:     toInt32Slice(c.Sources),
 		Duration:    c.Duration.MsInt32Ptr(),
 		Audio:       c.Audio,
 	}

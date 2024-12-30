@@ -1,0 +1,17 @@
+import { CallRecord } from './calls';
+
+export interface IncidentCall extends CallRecord {
+  notes: Object | null;
+}
+
+export interface IncidentRecord {
+  id: string;
+  name: string | null;
+  description: string | null;
+  startTime: Date | null;
+  endTime: Date | null;
+  location: Object | null;
+  metadata: Object | null;
+  calls: IncidentCall[] | null;
+  callCount: number | null;
+}

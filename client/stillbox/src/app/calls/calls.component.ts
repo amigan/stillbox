@@ -26,11 +26,9 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
-import { MatTimepickerModule } from '@angular/material/timepicker';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { debounceTime } from 'rxjs/operators';
 import { ToolbarContextService } from '../navigation/toolbar-context.service';
-import { MatSelect, MatSelectModule } from '@angular/material/select';
+import { MatSelectModule } from '@angular/material/select';
 
 @Pipe({
   name: 'grabDate',
@@ -55,7 +53,7 @@ export class TimePipe implements PipeTransform {
     return timestamp.toLocaleTimeString(navigator.language, {
       hour: '2-digit',
       minute: '2-digit',
-      hourCycle: 'h24',
+      hourCycle: 'h23',
     });
   }
 }
@@ -137,8 +135,6 @@ const reqPageSize = 200;
     ReactiveFormsModule,
     FormsModule,
     MatInputModule,
-    MatDatepickerModule,
-    MatTimepickerModule,
     MatCheckboxModule,
     CommonModule,
     MatProgressSpinnerModule,
@@ -166,6 +162,7 @@ export class CallsComponent {
     'duration',
   ];
   curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };
+  curLen = 0;
   currentSet!: CallRecord[];
   currentServerPage = 0; // page is never 0, forces load
   isLoading = true;
@@ -198,7 +195,7 @@ export class CallsComponent {
 
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.curPage.pageSize;
+    const numRows = this.curLen;
     return numSelected === numRows;
   }
 
@@ -274,7 +271,9 @@ export class CallsComponent {
     this.pageWindow = pageStart % reqPageSize;
     if (serverPage == this.currentServerPage && !force && this.currentSet) {
       this.callsResult.next(
-        this.callsResult ? this.currentSet.slice(this.pageWindow, this.pageWindow + p.pageSize) : [],
+        this.callsResult
+          ? this.currentSet.slice(this.pageWindow, this.pageWindow + p.pageSize)
+          : [],
       );
     } else {
       this.currentServerPage = serverPage;
@@ -331,6 +330,11 @@ export class CallsComponent {
               : [],
           );
         }),
+    );
+    this.subscriptions.add(
+      this.callsResult.subscribe((cr) => {
+        this.curLen = cr.length;
+      }),
     );
   }
 

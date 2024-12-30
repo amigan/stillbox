@@ -26,7 +26,7 @@ type Store interface {
 type store struct {
 }
 
-func New() *store {
+func NewStore() *store {
 	return new(store)
 }
 
@@ -41,7 +41,7 @@ func CtxWithStore(ctx context.Context, s Store) context.Context {
 func FromCtx(ctx context.Context) Store {
 	s, ok := ctx.Value(StoreCtxKey).(Store)
 	if !ok {
-		return New()
+		return NewStore()
 	}
 
 	return s
@@ -103,14 +103,19 @@ func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListC
 	txErr := db.InTx(ctx, func(db database.Store) error {
 		var err error
 		count, err = db.ListCallsCount(ctx, database.ListCallsCountParams{
-			Start:    par.Start,
-			End:      par.End,
-			TagsAny:  par.TagsAny,
-			TagsNot:  par.TagsNot,
-			TGFilter: par.TGFilter,
+			Start:      par.Start,
+			End:        par.End,
+			TagsAny:    par.TagsAny,
+			TagsNot:    par.TagsNot,
+			TGFilter:   par.TGFilter,
+			LongerThan: par.LongerThan,
 		})
 		if err != nil {
 			return err
+		}
+
+		if offset > int32(count) {
+			return common.ErrPageOutOfRange
 		}
 
 		rows, err = db.ListCallsP(ctx, par)

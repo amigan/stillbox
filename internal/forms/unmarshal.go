@@ -251,7 +251,17 @@ func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error
 
 				continue
 			}
-			if destFieldType.Kind() == reflect.Ptr {
+
+			if reflect.PointerTo(destFieldType).Implements(textUnmarshaler) {
+				tum := destFieldVal.Addr().Interface().(encoding.TextUnmarshaler)
+				err := tum.UnmarshalText([]byte(ff))
+				if err != nil {
+					return err
+				}
+
+				continue
+			}
+			for destFieldType.Kind() == reflect.Ptr {
 				destFieldType = destFieldType.Elem()
 			}
 			if reflect.ValueOf(ff).CanConvert(destFieldType) {

@@ -3,12 +3,15 @@ package rest
 import (
 	"errors"
 	"net/http"
+	"net/url"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-viper/mapstructure/v2"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -18,10 +21,11 @@ type API interface {
 }
 
 type api struct {
+	baseURL url.URL
 }
 
-func New() *api {
-	s := new(api)
+func New(baseURL url.URL) *api {
+	s := &api{baseURL}
 
 	return s
 }
@@ -32,6 +36,7 @@ func (a *api) Subrouter() http.Handler {
 	r.Mount("/talkgroup", new(talkgroupAPI).Subrouter())
 	r.Mount("/call", new(callsAPI).Subrouter())
 	r.Mount("/user", new(usersAPI).Subrouter())
+	r.Mount("/incident", newIncidentsAPI(&a.baseURL).Subrouter())
 
 	return r
 }
@@ -124,6 +129,7 @@ var statusMapping = map[error]errResponder{
 	tgstore.ErrReference:      constraintErrText,
 	ErrBadUID:                 unauthErrText,
 	ErrBadAppName:             unauthErrText,
+	common.ErrPageOutOfRange:  badRequestErrText,
 }
 
 func autoError(err error) render.Renderer {
@@ -171,6 +177,21 @@ func decodeParams(d interface{}, r *http.Request) error {
 	}
 
 	return dec.Decode(m)
+}
+
+// idOnlyParam checks for a sole URL parameter, id, and writes an errorif this fails.
+func idOnlyParam(w http.ResponseWriter, r *http.Request) (uuid.UUID, error) {
+	params := struct {
+		ID uuid.UUID `param:"id"`
+	}{}
+
+	err := decodeParams(&params, r)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return uuid.UUID{}, err
+	}
+
+	return params.ID, nil
 }
 
 func respond(w http.ResponseWriter, r *http.Request, v interface{}) {

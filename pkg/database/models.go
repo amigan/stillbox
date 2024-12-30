@@ -56,13 +56,13 @@ type Call struct {
 }
 
 type Incident struct {
-	ID          uuid.UUID        `json:"id,omitempty"`
-	Name        string           `json:"name,omitempty"`
-	Description *string          `json:"description,omitempty"`
-	StartTime   pgtype.Timestamp `json:"start_time,omitempty"`
-	EndTime     pgtype.Timestamp `json:"end_time,omitempty"`
-	Location    []byte           `json:"location,omitempty"`
-	Metadata    []byte           `json:"metadata,omitempty"`
+	ID          uuid.UUID          `json:"id,omitempty"`
+	Name        string             `json:"name,omitempty"`
+	Description *string            `json:"description,omitempty"`
+	StartTime   pgtype.Timestamptz `json:"start_time,omitempty"`
+	EndTime     pgtype.Timestamptz `json:"end_time,omitempty"`
+	Location    []byte             `json:"location,omitempty"`
+	Metadata    jsontypes.Metadata `json:"metadata,omitempty"`
 }
 
 type IncidentsCall struct {

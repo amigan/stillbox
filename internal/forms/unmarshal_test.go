@@ -2,6 +2,7 @@ package forms_test
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"os"
@@ -19,6 +20,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +35,6 @@ type callUploadRequest struct {
 	Key            string    `form:"key"`
 	Patches        []int     `form:"patches"`
 	Source         int       `form:"source"`
-	Sources        []int     `form:"sources"`
 	System         int       `form:"system"`
 	SystemLabel    string    `form:"systemLabel"`
 	Talkgroup      int       `form:"talkgroup"`
@@ -65,6 +66,14 @@ type ptrTestJT struct {
 	Recent       *string             `form:"recent"`
 	ScoreStart   *jsontypes.Time     `form:"scoreStart"`
 	ScoreEnd     jsontypes.Time      `form:"scoreEnd"`
+}
+
+type CallIncidentParams struct {
+	Add   jsontypes.UUIDs `json:"add"`
+	Notes json.RawMessage `json:"notes"`
+
+	Remove jsontypes.UUIDs `json:"remove"`
+	Single jsontypes.UUID  `json:"single"`
 }
 
 var (
@@ -140,6 +149,15 @@ var (
 				talkgroups.TG(0, 4),
 			},
 		},
+	}
+
+	Cap1 = CallIncidentParams{
+		Add: jsontypes.UUIDs{
+			jsontypes.UUID(uuid.MustParse("f25ef14b-c5f6-11ef-a555-00e04c0122ba")),
+			jsontypes.UUID(uuid.MustParse("f25ef14b-c5f6-11ef-a555-06e04c0122ba")),
+		},
+		Single: jsontypes.UUID(uuid.MustParse("17cedf8e-c60b-11ef-a555-00e04c0122ba")),
+		Notes:  []byte(`{"this":"note"}`),
 	}
 )
 
@@ -268,6 +286,13 @@ func TestUnmarshal(t *testing.T) {
 			dest:   &xport.ExportJob{},
 			expect: &ExpJob1,
 			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithOmitEmpty()},
+		},
+		{
+			name:   "uuid and json raw message",
+			r:      makeRequest("uuid1.http"),
+			dest:   &CallIncidentParams{},
+			expect: &Cap1,
+			opts:   []forms.Option{forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty()},
 		},
 	}
 

@@ -28,6 +28,14 @@ func (t *Time) UnmarshalYAML(n *yaml.Node) error {
 	return nil
 }
 
+func TimePtrFromTSTZ(t pgtype.Timestamptz) *Time {
+	if t.Valid {
+		return (*Time)(&t.Time)
+	}
+
+	return nil
+}
+
 func (t *Time) PGTypeTSTZ() pgtype.Timestamptz {
 	if t == nil {
 		return pgtype.Timestamptz{Valid: false}

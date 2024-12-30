@@ -1,1 +1,126 @@
-<p>incidents works!</p>
+<div [ngClass]="{ hidden: (tcSvc.filterPanel | async) }" class="toolbar">
+  <form [formGroup]="form">
+    <mat-form-field subscriptSizing="dynamic" class="timeFilterBox">
+      <mat-label>Start</mat-label>
+      <input
+        matInput
+        type="datetime-local"
+        name="start"
+        placeholder="Start date"
+        formControlName="start"
+      />
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic" class="timeFilterBox">
+      <mat-label>End</mat-label>
+      <input
+        matInput
+        type="datetime-local"
+        name="end"
+        placeholder="End date"
+        formControlName="end"
+      />
+    </mat-form-field>
+    <mat-form-field class="filterBox" subscriptSizing="dynamic">
+      <mat-label>Filter</mat-label>
+      <input
+        matInput
+        name="filter"
+        type="text"
+        autocomplete="off"
+        formControlName="filter"
+      />
+      <button
+        class="clearBtn"
+        *ngIf="form.controls['filter'].value"
+        matSuffix
+        mat-icon-button
+        (click)="form.controls['filter'].setValue('')"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+    <div class="toolbarButtons">
+      <button class="sbButton" (click)="resetFilter()">
+        <mat-icon class="material-symbols-outlined">reset_settings</mat-icon>
+      </button>
+      <button class="sbButton" (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </form>
+</div>
+<div class="tabContainer" *ngIf="!isLoading; else spinner">
+  <table class="incsTable" mat-table [dataSource]="incsResult">
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox
+          (change)="$event ? masterToggle() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+        >
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+        >
+        </mat-checkbox>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="startTime">
+      <th mat-header-cell *matHeaderCellDef>Start</th>
+      <td mat-cell *matCellDef="let incident">
+        {{ incident.startTime | fmtDate }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="endTime">
+      <th mat-header-cell *matHeaderCellDef>End</th>
+      <td [title]="incident.incident_date" mat-cell *matCellDef="let incident">
+        {{ incident.endTime | fmtDate }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let incident">
+        {{ incident.name }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="numCalls">
+      <th mat-header-cell *matHeaderCellDef>Calls</th>
+      <td mat-cell *matCellDef="let incident" class="callCount">
+        {{ incident.callCount }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="edit">
+      <th mat-header-cell *matHeaderCellDef>Edit</th>
+      <td mat-cell *matCellDef="let incident">
+        <a routerLink="/incidents/{{ incident.id }}"
+          ><mat-icon>edit</mat-icon>
+        </a>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let myRowData; columns: columns"></tr>
+  </table>
+</div>
+<div class="pagFoot">
+  <mat-paginator
+    #paginator
+    class="paginator"
+    (page)="setPage($event)"
+    [length]="count"
+    showFirstLastButtons="true"
+    [pageSize]="curPage.pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    [pageIndex]="curPage.pageIndex"
+    aria-label="Select page"
+  >
+  </mat-paginator>
+</div>
+<ng-template #spinner>
+  <div class="spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+</ng-template>

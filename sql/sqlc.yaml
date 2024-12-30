@@ -37,6 +37,11 @@ sql:
               import: "dynatron.me/x/stillbox/internal/jsontypes"
               type: "Metadata"
             nullable: true
+          - column: "incidents.metadata"
+            go_type:
+              import: "dynatron.me/x/stillbox/internal/jsontypes"
+              type: "Metadata"
+            nullable: true
           - column: "pg_catalog.pg_tables.tablename"
             go_type: string
             nullable: false

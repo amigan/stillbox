@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS calls(
 ) PARTITION BY RANGE (call_date);
 
 CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector('english', transcript));
-CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(system, talkgroup, call_date);
+CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(call_date, talkgroup, system);
 
 CREATE TABLE swept_calls (
 	id UUID PRIMARY KEY,
@@ -142,8 +142,8 @@ CREATE TABLE IF NOT EXISTS incidents(
 	id UUID PRIMARY KEY,
 	name TEXT NOT NULL,
 	description TEXT,
-	start_time TIMESTAMP,
-	end_time TIMESTAMP,
+	start_time TIMESTAMPTZ,
+	end_time TIMESTAMPTZ,
 	location JSONB,
 	metadata JSONB
 );

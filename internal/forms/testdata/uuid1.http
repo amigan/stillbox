@@ -1,0 +1,22 @@
+POST /api/incident/8ff93b85-c604-11ef-a555-00e04c0122ba/calls HTTP/1.1
+Connection: Upgrade, HTTP2-Settings
+Content-Length: 403
+Host: xenon:3050
+HTTP2-Settings: AAEAAEAAAAIAAAAAAAMAAAAAAAQBAAAAAAUAAEAAAAYABgAA
+Upgrade: h2c
+Content-Type: multipart/form-data; boundary=--sdrtrunk-sdrtrunk-sdrtrunk
+User-Agent: sdrtrunk
+
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="add"
+
+[f25ef14b-c5f6-11ef-a555-00e04c0122ba,f25ef14b-c5f6-11ef-a555-06e04c0122ba]
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="notes"
+
+{"this":"note"}
+----sdrtrunk-sdrtrunk-sdrtrunk
+Content-Disposition: form-data; name="single"
+
+17cedf8e-c60b-11ef-a555-00e04c0122ba
+----sdrtrunk-sdrtrunk-sdrtrunk

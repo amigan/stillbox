@@ -62,7 +62,7 @@ func (c *Configuration) read() error {
 		})
 
 	if err != nil {
-		return fmt.Errorf("unmarshal err: %w", err)
+		return fmt.Errorf("config: %w", err)
 	}
 
 	return nil
