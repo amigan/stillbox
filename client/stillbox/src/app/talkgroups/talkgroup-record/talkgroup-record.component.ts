@@ -6,6 +6,7 @@ import {
   TalkgroupUpdate,
   IconMap,
   iconMapping,
+  TGID,
 } from '../../talkgroup';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { TalkgroupService } from '../talkgroups.service';
@@ -26,12 +27,20 @@ import {
   FormControl,
   FormsModule,
 } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
+import {
+  MAT_DIALOG_DATA,
+  MatDialog,
+  MatDialogActions,
+  MatDialogClose,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle,
+} from '@angular/material/dialog';
 
 @Component({
   selector: 'talkgroup-record',
@@ -46,11 +55,17 @@ import { MatIconModule } from '@angular/material/icon';
     MatChipsModule,
     MatIconModule,
     MatAutocompleteModule,
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogActions,
+    MatDialogClose,
   ],
   templateUrl: './talkgroup-record.component.html',
   styleUrl: './talkgroup-record.component.scss',
 })
 export class TalkgroupRecordComponent {
+  dialogRef = inject(MatDialogRef<TalkgroupRecordComponent>);
+  tgid = inject<TGID>(MAT_DIALOG_DATA);
   tg!: Talkgroup;
   iconMapping: IconMap = iconMapping;
   tgService: TalkgroupService = inject(TalkgroupService);
@@ -83,8 +98,6 @@ export class TalkgroupRecordComponent {
   subscriptions = new Subscription();
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
   ) {
     this._allTags = this.tgService.allTags().pipe(shareReplay());
   }
@@ -138,12 +151,9 @@ export class TalkgroupRecordComponent {
   }
 
   ngOnInit() {
-    const sysId = this.route.snapshot.paramMap.get('sys');
-    const tgId = this.route.snapshot.paramMap.get('tg');
-
     this.subscriptions.add(
       this.tgService
-        .getTalkgroup(Number(sysId), Number(tgId))
+        .getTalkgroup(Number(this.tgid.sys), Number(this.tgid.tg))
         .subscribe((data: Talkgroup) => {
           this.tg = data;
           this.form.controls['name'].setValue(this.tg.name);
@@ -168,7 +178,7 @@ export class TalkgroupRecordComponent {
     this.subscriptions.unsubscribe();
   }
 
-  submit() {
+  save() {
     let tgu: TalkgroupUpdate = <TalkgroupUpdate>{
       system_id: this.tg.system_id,
       tgid: this.tg.tgid,
@@ -208,15 +218,19 @@ export class TalkgroupRecordComponent {
         });
       }
     }
-    this.tgService
+    this.subscriptions.add(this.tgService
       .putTalkgroup(tgu)
       .pipe(
         catchError(() => {
           return of(null);
         }),
       )
-      .subscribe((event) => {
-        this.router.navigate(['/talkgroups/']);
-      });
+      .subscribe((newTG) => {
+        this.dialogRef.close(newTG);
+      }));
+  }
+
+  cancel() {
+   this.dialogRef.close();
   }
 }

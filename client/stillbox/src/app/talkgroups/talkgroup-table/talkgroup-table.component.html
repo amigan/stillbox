@@ -64,8 +64,8 @@
     </ng-container>
     <ng-container matColumnDef="edit">
       <th mat-header-cell *matHeaderCellDef>Edit</th>
-      <td mat-cell *matCellDef="let tg">
-        <a routerLink="/talkgroups/{{ tg.system?.id }}/{{ tg.tgid }}"
+      <td mat-cell *matCellDef="let tg; let i = index">
+        <a (click)="editTG(i, tg.system?.id, tg.tgid)"
           ><mat-icon>edit</mat-icon>
         </a>
       </td>

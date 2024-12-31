@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { TalkgroupService, TalkgroupsPaginated } from '../talkgroups.service';
-import { Talkgroup, iconMapping } from '../../talkgroup';
+import { TGID, Talkgroup, iconMapping } from '../../talkgroup';
 import { ActivatedRoute } from '@angular/router';
 import { RouterModule, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -27,6 +27,16 @@ import { MatChipsModule } from '@angular/material/chips';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Observable, Subscription } from 'rxjs';
+import {
+  MAT_DIALOG_DATA,
+  MatDialog,
+  MatDialogActions,
+  MatDialogClose,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle,
+} from '@angular/material/dialog';
+import { TalkgroupRecordComponent } from '../talkgroup-record/talkgroup-record.component';
 
 @Pipe({
   standalone: true,
@@ -59,7 +69,6 @@ export class SanitizeHtmlPipe implements PipeTransform {
   selector: 'talkgroup-table',
   imports: [
     RouterModule,
-    RouterLink,
     MatIconModule,
     CommonModule,
     IconifyPipe,
@@ -104,6 +113,7 @@ export class TalkgroupTableComponent {
   @Input() resetPage!: Observable<void>;
   @ViewChild('paginator') paginator!: MatPaginator;
   suppress = false;
+  dialog = inject(MatDialog);
 
   constructor(private route: ActivatedRoute) {}
 
@@ -155,5 +165,19 @@ export class TalkgroupTableComponent {
     this.isAllSelected()
       ? this.selection.clear()
       : this.dataSource.data.forEach((row) => this.selection.select(row));
+  }
+
+  editTG(idx: number, sys: number, tg: number) {
+    const tgid = <TGID>{sys: sys, tg: tg};
+    const dialogRef = this.dialog.open(TalkgroupRecordComponent, {
+      data: tgid,
+    });
+
+    dialogRef.afterClosed().subscribe((res) => 
+    {
+      if (res !== undefined) {
+        this.dataSource.data[idx] = res;
+      }
+    });
   }
 }

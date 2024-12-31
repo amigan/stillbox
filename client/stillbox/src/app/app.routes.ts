@@ -44,14 +44,6 @@ export const routes: Routes = [
         data: { title: 'Export Talkgroups' },
       },
       {
-        path: 'talkgroups/:sys/:tg',
-        loadComponent: () =>
-          import(
-            './talkgroups/talkgroup-record/talkgroup-record.component'
-          ).then((m) => m.TalkgroupRecordComponent),
-        data: { title: 'Edit Talkgroup' },
-      },
-      {
         path: 'calls',
         loadComponent: () =>
           import('./calls/calls.component').then((m) => m.CallsComponent),

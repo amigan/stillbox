@@ -1,5 +1,7 @@
+<h2 mat-dialog-title>Edit {{tgid.sys}}:{{tgid.tg}}</h2>
+<mat-dialog-content>
 <div class="tgRecord">
-  <form *ngIf="tg" [formGroup]="form" (ngSubmit)="submit()">
+  <form *ngIf="tg" [formGroup]="form" (ngSubmit)="save()">
     <div>
       <mat-form-field>
         <mat-label>Name</mat-label>
@@ -99,6 +101,10 @@
     <div class="alert">
       <alert-rule-builder [rules]="tg.alert_config" />
     </div>
-    <button class="sbButton" type="submit">Save</button>
   </form>
 </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button class="sbButton" type="button" (click)="cancel()">Cancel</button>
+    <button class="sbButton" [mat-dialog-close]="save()" cdk-focus-initial>Save</button>
+</mat-dialog-actions>
