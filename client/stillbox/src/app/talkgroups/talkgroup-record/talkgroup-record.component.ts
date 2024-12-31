@@ -17,7 +17,7 @@ import {
   MatAutocompleteActivatedEvent,
 } from '@angular/material/autocomplete';
 import { CommonModule } from '@angular/common';
-import { BehaviorSubject, catchError, of, Subscription } from 'rxjs';
+import { catchError, of, Subscription } from 'rxjs';
 import { shareReplay } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import {

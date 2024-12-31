@@ -1,1 +1,15 @@
-<p>incident works!</p>
+@let inc = inc$ | async;
+<mat-card class="incident" appearance="outlined">
+  <h1>{{ inc?.name }}</h1>
+  <div class="inc-heading">
+    <div class="field field-start field-label">Start</div>
+    <div class="field field-data field-start">
+      {{ inc?.startTime | fmtDate }}
+    </div>
+    <div class="field field-end field-label">End</div>
+    <div class="field field-data field-end">{{ inc?.endTime | fmtDate }}</div>
+  </div>
+  <div class="inc-description">
+    {{ inc?.description }}
+  </div>
+</mat-card>

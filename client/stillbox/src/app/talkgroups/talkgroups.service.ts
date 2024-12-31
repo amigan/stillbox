@@ -26,6 +26,7 @@ export interface TalkgroupsPaginated {
   providedIn: 'root',
 })
 export class TalkgroupService {
+  private readonly _getTalkgroup = new Map<string, ReplaySubject<Talkgroup>>();
   private tgs$: Observable<Talkgroup[]>;
   private tags$!: Observable<string[]>;
   private fetchAll = new BehaviorSubject<'fetch'>('fetch');
@@ -45,13 +46,19 @@ export class TalkgroupService {
   }
 
   getTalkgroups(): Observable<Talkgroup[]> {
-    return this.http.get<Talkgroup[]>('/api/talkgroup/');
+    return this.http.get<Talkgroup[]>('/api/talkgroup/').pipe(shareReplay());
   }
 
   getTalkgroup(sys: number, tg: number): Observable<Talkgroup> {
-    return this.tgs$.pipe(
-      switchMap((tgs) => tgs.filter(t => t.system_id === sys && t.tgid === tg))
-    );
+    const key = this.tgKey(sys, tg);
+    if (!this._getTalkgroup.get(key)) {
+      return this.tgs$.pipe(
+        switchMap((talkg) =>
+          talkg.filter((tgv) => tgv.tgid == tg && tgv.system_id == sys),
+        ),
+      );
+    }
+    return this._getTalkgroup.get(key)!;
   }
 
   putTalkgroup(tu: TalkgroupUpdate): Observable<Talkgroup> {

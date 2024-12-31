@@ -66,6 +66,14 @@ export const routes: Routes = [
         data: { title: 'Incidents' },
       },
       {
+        path: 'incidents/:id',
+        loadComponent: () =>
+          import('./incidents/incident/incident.component').then(
+            (m) => m.IncidentComponent,
+          ),
+        data: { title: 'View Incident' },
+      },
+      {
         path: 'alerts',
         loadComponent: () =>
           import('./alerts/alerts.component').then((m) => m.AlertsComponent),

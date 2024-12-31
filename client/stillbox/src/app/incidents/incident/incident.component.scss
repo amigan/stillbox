@@ -1,0 +1,32 @@
+.incident {
+  margin: 50px 50px 50px 50px;
+  padding: 50px 50px 50px 50px;
+  display: flex;
+  flex-flow: column;
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.inc-heading,
+.inc-description {
+  display: flex;
+  flex-flow: row wrap;
+  flex: 1 1;
+}
+
+.inc-heading,
+.inc-description {
+  margin-bottom: 30px;
+}
+
+.field {
+  flex: 1 1;
+}
+
+.field-label {
+  font-weight: bolder;
+}
+.field-label::after {
+  content: ":";
+}

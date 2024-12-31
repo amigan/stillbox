@@ -47,4 +47,8 @@ export class IncidentsService {
   updateIncident(id: string, inp: IncidentRecord): Observable<IncidentRecord> {
     return this.http.patch<IncidentRecord>('/api/incident/' + id, inp);
   }
+
+  getIncident(id: string): Observable<IncidentRecord> {
+    return this.http.get<IncidentRecord>('/api/incident/' + id);
+  }
 }
