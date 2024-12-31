@@ -28,7 +28,7 @@
         />
       </mat-form-field>
     </div>
-    <div>
+    <div class="twoRow">
       <mat-form-field>
         <mat-label>Frequency</mat-label
         ><input
@@ -38,8 +38,6 @@
           formControlName="frequency"
         />
       </mat-form-field>
-    </div>
-    <div>
       <mat-form-field>
         <mat-label>Weight</mat-label
         ><input matInput name="weight" type="text" formControlName="weight" />
@@ -95,12 +93,10 @@
         </mat-autocomplete>
       </mat-form-field>
     </div>
-    <div>
-      <mat-label>Alert</mat-label>
-      <mat-checkbox name="alert" formControlName="alert" />
+    <div class="alert">
+      <mat-checkbox name="alert" formControlName="alert">Alert</mat-checkbox>
     </div>
-    <div>
-      Rules:
+    <div class="alert">
       <alert-rule-builder [rules]="tg.alert_config" />
     </div>
     <button class="sbButton" type="submit">Save</button>
