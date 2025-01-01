@@ -168,15 +168,15 @@ export class TalkgroupTableComponent {
   }
 
   editTG(idx: number, sys: number, tg: number) {
-    const tgid = <TGID>{sys: sys, tg: tg};
+    const tgid = <TGID>{ sys: sys, tg: tg };
     const dialogRef = this.dialog.open(TalkgroupRecordComponent, {
       data: tgid,
     });
 
-    dialogRef.afterClosed().subscribe((res) => 
-    {
+    dialogRef.afterClosed().subscribe((res) => {
       if (res !== undefined) {
         this.dataSource.data[idx] = res;
+        this.dataSource.data = this.dataSource.data;
       }
     });
   }

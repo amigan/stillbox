@@ -64,7 +64,7 @@ export class TalkgroupService {
   putTalkgroup(tu: TalkgroupUpdate): Observable<Talkgroup> {
     let tgid = this.tgKey(tu.system_id, tu.tgid);
 
-    this.http
+    return this.http
       .put<Talkgroup>(`/api/talkgroup/${tu.system_id}/${tu.tgid}`, tu)
       .pipe(
         switchMap((tg) => {
@@ -78,8 +78,6 @@ export class TalkgroupService {
           return tObs;
         }),
       );
-
-    return this._getTalkgroup.get(tgid)!;
   }
 
   putTalkgroups(

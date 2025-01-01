@@ -1,6 +1,6 @@
 import { Component, computed, inject, ViewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, tap } from 'rxjs/operators';
 import {
   Talkgroup,
   TalkgroupUpdate,
@@ -34,13 +34,14 @@ import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import {
   MAT_DIALOG_DATA,
-  MatDialog,
   MatDialogActions,
-  MatDialogClose,
   MatDialogContent,
   MatDialogRef,
   MatDialogTitle,
 } from '@angular/material/dialog';
+import { BrowserModule } from '@angular/platform-browser';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'talkgroup-record',
@@ -58,7 +59,8 @@ import {
     MatDialogTitle,
     MatDialogContent,
     MatDialogActions,
-    MatDialogClose,
+    MatProgressSpinnerModule,
+    MatButtonModule,
   ],
   templateUrl: './talkgroup-record.component.html',
   styleUrl: './talkgroup-record.component.scss',
@@ -66,6 +68,7 @@ import {
 export class TalkgroupRecordComponent {
   dialogRef = inject(MatDialogRef<TalkgroupRecordComponent>);
   tgid = inject<TGID>(MAT_DIALOG_DATA);
+  tg$!: Observable<Talkgroup>;
   tg!: Talkgroup;
   iconMapping: IconMap = iconMapping;
   tgService: TalkgroupService = inject(TalkgroupService);
@@ -97,8 +100,7 @@ export class TalkgroupRecordComponent {
   active: string | null = null;
   subscriptions = new Subscription();
 
-  constructor(
-  ) {
+  constructor() {
     this._allTags = this.tgService.allTags().pipe(shareReplay());
   }
 
@@ -151,6 +153,16 @@ export class TalkgroupRecordComponent {
   }
 
   ngOnInit() {
+    this.tg$ = this.tgService
+      .getTalkgroup(Number(this.tgid.sys), Number(this.tgid.tg))
+      .pipe(
+        tap((tg) => {
+          this.form.patchValue(tg);
+          this.form.controls['tagInput'].setValue('');
+          this.form.controls['tagsControl'].setValue(this.tg?.tags ?? []);
+        }),
+      );
+    /*
     this.subscriptions.add(
       this.tgService
         .getTalkgroup(Number(this.tgid.sys), Number(this.tgid.tg))
@@ -166,7 +178,7 @@ export class TalkgroupRecordComponent {
           this.form.controls['tagInput'].setValue('');
           this.form.controls['tagsControl'].setValue(this.tg?.tags ?? []);
         }),
-    );
+    ); */
     this.subscriptions.add(
       this._allTags.subscribe((event) => {
         this.allTags = event;
@@ -180,9 +192,8 @@ export class TalkgroupRecordComponent {
 
   save() {
     let tgu: TalkgroupUpdate = <TalkgroupUpdate>{
-      system_id: this.tg.system_id,
-      tgid: this.tg.tgid,
-      id: this.tg.id,
+      system_id: this.tgid.sys,
+      tgid: this.tgid.tg,
     };
     if (this.form.controls['name'].dirty) {
       tgu.name = this.form.controls['name'].value;
@@ -218,19 +229,21 @@ export class TalkgroupRecordComponent {
         });
       }
     }
-    this.subscriptions.add(this.tgService
-      .putTalkgroup(tgu)
-      .pipe(
-        catchError(() => {
-          return of(null);
+    this.subscriptions.add(
+      this.tgService
+        .putTalkgroup(tgu)
+        .pipe(
+          catchError(() => {
+            return of(null);
+          }),
+        )
+        .subscribe((newTG) => {
+          this.dialogRef.close(newTG);
         }),
-      )
-      .subscribe((newTG) => {
-        this.dialogRef.close(newTG);
-      }));
+    );
   }
 
   cancel() {
-   this.dialogRef.close();
+    this.dialogRef.close();
   }
 }
