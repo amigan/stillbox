@@ -222,7 +222,8 @@ body {
   width: 100px;
 }
 
-input {
+input,
+textarea {
   caret-color: var(--color-dark-fg) !important;
 }
 

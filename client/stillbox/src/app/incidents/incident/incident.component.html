@@ -1,6 +1,9 @@
 @let inc = inc$ | async;
 <mat-card class="incident" appearance="outlined">
-  <h1>{{ inc?.name }}</h1>
+  <div class="cardHdr">
+    <h1>{{ inc?.name }}</h1>
+    <a (click)="editIncident(incID)"><mat-icon>edit</mat-icon></a>
+  </div>
   <div class="inc-heading">
     <div class="field field-start field-label">Start</div>
     <div class="field field-data field-start">

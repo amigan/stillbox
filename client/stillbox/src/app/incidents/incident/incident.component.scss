@@ -8,16 +8,14 @@
   margin-right: auto;
 }
 
-.inc-heading,
-.inc-description {
+.inc-heading {
   display: flex;
-  flex-flow: row wrap;
-  flex: 1 1;
+  margin-bottom: 20px;
 }
 
-.inc-heading,
-.inc-description {
-  margin-bottom: 30px;
+.cardHdr {
+  display: flex;
+  flex-flow: row wrap;
 }
 
 .field {
@@ -29,4 +27,30 @@
 }
 .field-label::after {
   content: ":";
+}
+
+.cardHdr h1 {
+  flex: 1 1;
+}
+
+.cardHdr a {
+  flex: 0 0;
+  justify-content: flex-end;
+  align-content: center;
+  cursor: pointer;
+}
+
+form mat-form-field {
+  width: 60rem;
+  flex: 0 0;
+  display: flex;
+}
+
+.incRecord {
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
 }
