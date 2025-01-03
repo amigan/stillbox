@@ -162,23 +162,7 @@ export class TalkgroupRecordComponent {
           this.form.controls['tagsControl'].setValue(this.tg?.tags ?? []);
         }),
       );
-    /*
-    this.subscriptions.add(
-      this.tgService
-        .getTalkgroup(Number(this.tgid.sys), Number(this.tgid.tg))
-        .subscribe((data: Talkgroup) => {
-          this.tg = data;
-          this.form.controls['name'].setValue(this.tg.name);
-          this.form.controls['alpha_tag'].setValue(this.tg.alpha_tag);
-          this.form.controls['tg_group'].setValue(this.tg.tg_group);
-          this.form.controls['frequency'].setValue(this.tg.frequency);
-          this.form.controls['alert'].setValue(this.tg.alert);
-          this.form.controls['weight'].setValue(this.tg.weight);
-          this.form.controls['icon'].setValue(this.tg?.metadata?.icon ?? '');
-          this.form.controls['tagInput'].setValue('');
-          this.form.controls['tagsControl'].setValue(this.tg?.tags ?? []);
-        }),
-    ); */
+
     this.subscriptions.add(
       this._allTags.subscribe((event) => {
         this.allTags = event;
