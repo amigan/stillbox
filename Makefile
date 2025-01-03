@@ -14,8 +14,13 @@ buildpprof:
 client/stillbox/dist:
 	cd client/stillbox && npm install && ng build -c production
 
-web:
-	cd client/stillbox && npm install && ng build -c production
+web: web-install web-build
+
+web-build:
+	cd client/stillbox && ng build -c production
+
+web-install:
+	cd client/stillbox && npm install
 
 clean:
 	rm -rf client/calls/ client/stillbox/dist/ client/stillbox/node_modules/
