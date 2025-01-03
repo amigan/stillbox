@@ -3,9 +3,14 @@
   padding: 50px 50px 50px 50px;
   display: flex;
   flex-flow: column;
-  width: 50%;
   margin-left: auto;
   margin-right: auto;
+}
+
+@media not screen and (max-width: 768px) {
+  .incident {
+    width: 75%;
+  }
 }
 
 .inc-heading {
@@ -20,6 +25,7 @@
 
 .field {
   flex: 1 1;
+  width: 5rem;
 }
 
 .field-label {
