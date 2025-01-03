@@ -29,6 +29,7 @@ import { MatInputModule } from '@angular/material/input';
 import { debounceTime } from 'rxjs/operators';
 import { ToolbarContextService } from '../navigation/toolbar-context.service';
 import { MatSelectModule } from '@angular/material/select';
+import { CallPlayerComponent } from './player/call-player/call-player.component';
 
 @Pipe({
   name: 'grabDate',
@@ -139,6 +140,7 @@ const reqPageSize = 200;
     CommonModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    CallPlayerComponent,
   ],
   templateUrl: './calls.component.html',
   styleUrl: './calls.component.scss',
@@ -241,13 +243,6 @@ export class CallsComponent {
     now.setDate(new Date().getDate() - 7);
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     return now.toISOString().slice(0, 16);
-  }
-
-  playAudio(ev: Event, call: CallRecord) {
-    let au = new Audio();
-    au.src = this.callsSvc.callAudioURL(call.id);
-    au.load();
-    au.play();
   }
 
   setPage(p: PageEvent, force?: boolean) {

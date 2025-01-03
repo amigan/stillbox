@@ -109,9 +109,7 @@
     <ng-container matColumnDef="play">
       <th mat-header-cell *matHeaderCellDef></th>
       <td mat-cell *matCellDef="let call">
-        <a class="playButton" (click)="playAudio($event, call)"
-          ><mat-icon>play_arrow</mat-icon></a
-        >
+        <call-player></call-player>
       </td>
     </ng-container>
     <ng-container matColumnDef="download">
