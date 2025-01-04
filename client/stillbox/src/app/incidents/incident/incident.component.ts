@@ -1,7 +1,7 @@
 import { Component, computed, inject, ViewChild } from '@angular/core';
 import { map, tap } from 'rxjs/operators';
-import { CommonModule, DatePipe } from '@angular/common';
-import { Subject, Subscription } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { Observable } from 'rxjs';
 import {
   ReactiveFormsModule,
@@ -15,9 +15,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { IncidentsService } from '../incidents.service';
-import { IncidentRecord } from '../../incidents';
+import { IncidentCall, IncidentRecord } from '../../incidents';
 import { MatCardModule } from '@angular/material/card';
-import { FmtDatePipe } from '../incidents.component';
 import {
   MAT_DIALOG_DATA,
   MatDialog,
@@ -28,6 +27,18 @@ import {
 } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
+import { CallRecord } from '../../calls';
+import { SelectionModel } from '@angular/cdk/collections';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import {
+  FixedPointPipe,
+  TalkgroupPipe,
+  TimePipe,
+  DatePipe,
+  DownloadURLPipe,
+} from '../../calls/calls.component';
+import { CallPlayerComponent } from '../../calls/player/call-player/call-player.component';
+import { FmtDatePipe } from '../incidents.component';
 
 @Component({
   selector: 'app-incident-editor',
@@ -87,7 +98,14 @@ export class IncidentEditDialogComponent {
     MatCheckboxModule,
     MatIconModule,
     MatCardModule,
+    FixedPointPipe,
+    TimePipe,
+    DatePipe,
+    TalkgroupPipe,
+    DownloadURLPipe,
+    CallPlayerComponent,
     FmtDatePipe,
+    MatTableModule,
   ],
   templateUrl: './incident.component.html',
   styleUrl: './incident.component.scss',
@@ -98,6 +116,19 @@ export class IncidentComponent {
   subscriptions: Subscription = new Subscription();
   dialog = inject(MatDialog);
   incID!: string;
+  columns = [
+    'select',
+    'play',
+    'download',
+    'date',
+    'time',
+    'system',
+    'group',
+    'talkgroup',
+    'duration',
+  ];
+  callsResult = new MatTableDataSource<IncidentCall>();
+  selection = new SelectionModel<IncidentCall>(true, []);
 
   constructor(
     private route: ActivatedRoute,
@@ -109,7 +140,17 @@ export class IncidentComponent {
   ngOnInit() {
     this.incID = this.route.snapshot.paramMap.get('id')!;
     this.inc$ = this.incPrime.pipe(map((inc) => inc));
-    this.incSvc.getIncident(this.incID).subscribe(this.incPrime);
+    this.incSvc
+      .getIncident(this.incID)
+      .pipe(
+        tap((inc) => {
+          if (inc.calls) {
+            console.log(inc.calls);
+            this.callsResult.data = inc.calls;
+          }
+        }),
+      )
+      .subscribe(this.incPrime);
   }
 
   editIncident(incID: string) {
@@ -126,5 +167,17 @@ export class IncidentComponent {
 
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
+  }
+
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.callsResult.data.length;
+    return numSelected === numRows;
+  }
+
+  masterToggle() {
+    this.isAllSelected()
+      ? this.selection.clear()
+      : this.callsResult.data.forEach((row) => this.selection.select(row));
   }
 }
