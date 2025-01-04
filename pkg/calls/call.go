@@ -42,18 +42,18 @@ type CallAudio struct {
 }
 
 type Call struct {
-	ID             uuid.UUID    `json:"-"`
+	ID             uuid.UUID    `json:"id"`
 	Audio          []byte       `json:"audio,omitempty" filenameField:"AudioName"`
 	AudioName      string       `json:"audioName,omitempty"`
 	AudioType      string       `json:"audioType,omitempty"`
-	Duration       CallDuration `json:"-"`
+	Duration       CallDuration `json:"duration,omitempty"`
 	DateTime       time.Time    `json:"dateTime,omitempty"`
 	Frequencies    []int        `json:"frequencies,omitempty"`
 	Frequency      int          `json:"frequency,omitempty"`
 	Patches        []int        `json:"patches,omitempty"`
 	Source         int          `json:"source,omitempty"`
 	System         int          `json:"system,omitempty"`
-	Submitter      *auth.UserID `json:"-,omitempty"`
+	Submitter      *auth.UserID `json:"submitter,omitempty"`
 	SystemLabel    string       `json:"systemLabel,omitempty"`
 	Talkgroup      int          `json:"talkgroup,omitempty"`
 	TalkgroupGroup *string      `json:"talkgroupGroup,omitempty"`

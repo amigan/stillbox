@@ -147,7 +147,6 @@ WITH to_sweep AS (
 	WHERE call_id IN (SELECT id FROM to_sweep)
 `
 
-// This is used to sweep calls that are part of an incident prior to pruning a partition.
 func (q *Queries) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
 	result, err := q.db.Exec(ctx, cleanupSweptCalls, rangeStart, rangeEnd)
 	if err != nil {
@@ -366,6 +365,7 @@ WITH to_sweep AS (
 ) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_url, frequency, frequencies, patches, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
 `
 
+// This is used to sweep calls that are part of an incident prior to pruning a partition.
 func (q *Queries) SweepCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
 	result, err := q.db.Exec(ctx, sweepCalls, rangeStart, rangeEnd)
 	if err != nil {
