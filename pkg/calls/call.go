@@ -1,6 +1,7 @@
 package calls
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -27,6 +28,10 @@ func (d CallDuration) MsInt32Ptr() *int32 {
 
 	i := int32(time.Duration(d).Milliseconds())
 	return &i
+}
+
+func (d CallDuration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.Duration().Milliseconds())
 }
 
 func (d CallDuration) Seconds() int32 {
