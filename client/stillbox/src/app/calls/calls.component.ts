@@ -30,6 +30,7 @@ import { debounceTime } from 'rxjs/operators';
 import { ToolbarContextService } from '../navigation/toolbar-context.service';
 import { MatSelectModule } from '@angular/material/select';
 import { CallPlayerComponent } from './player/call-player/call-player.component';
+import {MatMenuModule} from '@angular/material/menu';
 
 @Pipe({
   name: 'grabDate',
@@ -141,6 +142,7 @@ const reqPageSize = 200;
     MatProgressSpinnerModule,
     MatSelectModule,
     CallPlayerComponent,
+    MatMenuModule,
   ],
   templateUrl: './calls.component.html',
   styleUrl: './calls.component.scss',

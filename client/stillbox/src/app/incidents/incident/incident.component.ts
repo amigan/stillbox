@@ -40,6 +40,11 @@ import {
 import { CallPlayerComponent } from '../../calls/player/call-player/call-player.component';
 import { FmtDatePipe } from '../incidents.component';
 
+export interface EditDialogData {
+  incID: string;
+  new: boolean;
+}
+
 @Component({
   selector: 'app-incident-editor',
   imports: [
@@ -61,7 +66,8 @@ import { FmtDatePipe } from '../incidents.component';
 })
 export class IncidentEditDialogComponent {
   dialogRef = inject(MatDialogRef<IncidentEditDialogComponent>);
-  incID = inject<string>(MAT_DIALOG_DATA);
+  data = inject<EditDialogData>(MAT_DIALOG_DATA);
+  title = this.data.new ? 'New Incident' : 'Edit Incident';
   inc$!: Observable<IncidentRecord>;
   form = new FormGroup({
     name: new FormControl(''),
@@ -73,14 +79,36 @@ export class IncidentEditDialogComponent {
   constructor(private incSvc: IncidentsService) {}
 
   ngOnInit() {
-    this.inc$ = this.incSvc.getIncident(this.incID).pipe(
-      tap((inc) => {
-        this.form.patchValue(inc);
-      }),
-    );
+    if (!this.data.new) {
+      this.inc$ = this.incSvc.getIncident(this.data.incID).pipe(
+        tap((inc) => {
+         this.form.patchValue(inc, {
+          onlySelf: false,
+          emitEvent: false,
+         }
+         );
+         this.form.markAsPristine();
+        }),
+      );
+   }
   }
 
-  save() {}
+  save() {
+    console.log(this.form.value);
+    this.incSvc.updateIncident(this.data.incID, <IncidentRecord>{
+      name: this.form.controls['name'].dirty ? this.form.controls['name'].value : null,
+      startTime: this.form.controls['start'].dirty ? this.form.controls['start'].value : null,
+      endTime: this.form.controls['end'].dirty ? this.form.controls['end'].value : null,
+      description: this.form.controls['description'].dirty ? this.form.controls['description'].value : null,
+    }).subscribe({
+      next: (ok) => {
+        this.dialogRef.close(ok);
+      },
+      error: (er) => {
+        alert(er);
+      },
+    });
+  }
 
   cancel() {
     this.dialogRef.close();
@@ -145,7 +173,6 @@ export class IncidentComponent {
       .pipe(
         tap((inc) => {
           if (inc.calls) {
-            console.log(inc.calls);
             this.callsResult.data = inc.calls;
           }
         }),
@@ -155,7 +182,10 @@ export class IncidentComponent {
 
   editIncident(incID: string) {
     const dialogRef = this.dialog.open(IncidentEditDialogComponent, {
-      data: incID,
+      data: <EditDialogData>{
+        incID: incID,
+        new: false,
+      },
     });
 
     dialogRef.afterClosed().subscribe((res) => {
