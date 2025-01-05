@@ -94,7 +94,22 @@ CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 ;
 
 -- name: GetIncidentCalls :many
-SELECT ic.call_id, ic.call_date, ic.notes, c.*
+SELECT
+	ic.call_id,
+	ic.call_date,
+	c.duration,
+	c.system system_id,
+	c.talkgroup tgid,
+	ic.notes,
+	c.submitter,
+	c.audio_name,
+	c.audio_type,
+	c.audio_url,
+	c.frequency,
+	c.frequencies,
+	c.patches,
+	c.source,
+	c.transcript
 FROM incidents_calls ic, LATERAL (
 	SELECT 
 	ca.submitter,

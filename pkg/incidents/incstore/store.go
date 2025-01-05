@@ -240,9 +240,9 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 				Frequency:   v.Frequency,
 				Patches:     v.Patches,
 				Source:      v.Source,
-				System:      v.System,
+				System:      v.SystemID,
 				Submitter:   sub,
-				Talkgroup:   v.Talkgroup,
+				Talkgroup:   v.TGID,
 			},
 			Notes: v.Notes,
 		})
