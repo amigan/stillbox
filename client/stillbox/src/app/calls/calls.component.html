@@ -83,12 +83,15 @@
       <button class="sbButton" (click)="refresh()">
         <mat-icon>refresh</mat-icon>
       </button>
-      <button [ngClass]="{ sbButton: true, hidden: !selection.hasValue() }" [matMenuTriggerFor]="callMenu">
+      <button
+        [ngClass]="{ sbButton: true, hidden: !selection.hasValue() }"
+        [matMenuTriggerFor]="callMenu"
+      >
         <mat-icon>playlist_add</mat-icon>
       </button>
       <mat-menu #callMenu="matMenu">
-       <button mat-menu-item>Add to new incident...</button> 
-       <button mat-menu-item>Add to existing incident...</button> 
+        <button mat-menu-item>Add to new incident...</button>
+        <button mat-menu-item>Add to existing incident...</button>
       </mat-menu>
     </div>
   </form>

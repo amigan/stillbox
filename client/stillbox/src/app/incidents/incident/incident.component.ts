@@ -1,7 +1,14 @@
 import { Component, computed, inject, ViewChild } from '@angular/core';
 import { map, take, tap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import {
+  BehaviorSubject,
+  forkJoin,
+  merge,
+  Subject,
+  Subscription,
+  zip,
+} from 'rxjs';
 import { Observable } from 'rxjs';
 import {
   ReactiveFormsModule,
@@ -82,26 +89,36 @@ export class IncidentEditDialogComponent {
     if (!this.data.new) {
       this.inc$ = this.incSvc.getIncident(this.data.incID).pipe(
         tap((inc) => {
-         this.form.patchValue(inc);
+          this.form.patchValue(inc);
         }),
       );
-   }
+    }
   }
 
   save() {
-    this.incSvc.updateIncident(this.data.incID, <IncidentRecord>{
-      name: this.form.controls['name'].dirty ? this.form.controls['name'].value : null,
-      startTime: this.form.controls['start'].dirty ? this.form.controls['start'].value : null,
-      endTime: this.form.controls['end'].dirty ? this.form.controls['end'].value : null,
-      description: this.form.controls['description'].dirty ? this.form.controls['description'].value : null,
-    }).subscribe({
-      next: (ok) => {
-        this.dialogRef.close(ok);
-      },
-      error: (er) => {
-        alert(er);
-      },
-    });
+    this.incSvc
+      .updateIncident(this.data.incID, <IncidentRecord>{
+        name: this.form.controls['name'].dirty
+          ? this.form.controls['name'].value
+          : null,
+        startTime: this.form.controls['start'].dirty
+          ? this.form.controls['start'].value
+          : null,
+        endTime: this.form.controls['end'].dirty
+          ? this.form.controls['end'].value
+          : null,
+        description: this.form.controls['description'].dirty
+          ? this.form.controls['description'].value
+          : null,
+      })
+      .subscribe({
+        next: (ok) => {
+          this.dialogRef.close(ok);
+        },
+        error: (er) => {
+          alert(er);
+        },
+      });
   }
 
   cancel() {
@@ -133,7 +150,7 @@ export class IncidentEditDialogComponent {
   styleUrl: './incident.component.scss',
 })
 export class IncidentComponent {
-  incPrime = new Subject<IncidentRecord>();
+  incPrime = new BehaviorSubject<IncidentRecord>(<IncidentRecord>{});
   inc$!: Observable<IncidentRecord>;
   subscriptions: Subscription = new Subscription();
   dialog = inject(MatDialog);
@@ -161,16 +178,13 @@ export class IncidentComponent {
 
   ngOnInit() {
     this.incID = this.route.snapshot.paramMap.get('id')!;
-    this.inc$ = this.incPrime.pipe();
-    this.incSvc
-      .getIncident(this.incID)
-      .pipe(
-        tap((inc) => {
-          if (inc.calls) {
-            this.callsResult.data = inc.calls;
-          }
-        }),
-      ).subscribe(this.incPrime);
+    this.inc$ = merge(this.incSvc.getIncident(this.incID), this.incPrime).pipe(
+      tap((inc) => {
+        if (inc.calls) {
+          this.callsResult.data = inc.calls;
+        }
+      }),
+    );
   }
 
   editIncident(incID: string) {
@@ -181,12 +195,7 @@ export class IncidentComponent {
       },
     });
 
-    dialogRef.afterClosed().subscribe((res) => {
-      if (res !== undefined) {
-        console.log(res);
-        this.incPrime.next(res);
-      }
-    });
+    dialogRef.afterClosed().subscribe(this.incPrime);
   }
 
   ngOnDestroy() {
