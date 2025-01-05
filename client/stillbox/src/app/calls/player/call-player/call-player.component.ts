@@ -31,7 +31,6 @@ export class CallPlayerComponent {
     });
     this.playing = true;
     this.au.src = this.callsSvc.callAudioURL(this.call.id);
-    console.log(this.au.src);
     this.au.load();
     this.au.play().then(null, (reason) => {
       this.playing = false;
