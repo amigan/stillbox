@@ -1,5 +1,5 @@
 import { Component, computed, inject, ViewChild } from '@angular/core';
-import { map, tap } from 'rxjs/operators';
+import { map, take, tap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { Observable } from 'rxjs';
@@ -82,19 +82,13 @@ export class IncidentEditDialogComponent {
     if (!this.data.new) {
       this.inc$ = this.incSvc.getIncident(this.data.incID).pipe(
         tap((inc) => {
-         this.form.patchValue(inc, {
-          onlySelf: false,
-          emitEvent: false,
-         }
-         );
-         this.form.markAsPristine();
+         this.form.patchValue(inc);
         }),
       );
    }
   }
 
   save() {
-    console.log(this.form.value);
     this.incSvc.updateIncident(this.data.incID, <IncidentRecord>{
       name: this.form.controls['name'].dirty ? this.form.controls['name'].value : null,
       startTime: this.form.controls['start'].dirty ? this.form.controls['start'].value : null,
@@ -167,7 +161,7 @@ export class IncidentComponent {
 
   ngOnInit() {
     this.incID = this.route.snapshot.paramMap.get('id')!;
-    this.inc$ = this.incPrime.pipe(map((inc) => inc));
+    this.inc$ = this.incPrime.pipe();
     this.incSvc
       .getIncident(this.incID)
       .pipe(
@@ -176,8 +170,7 @@ export class IncidentComponent {
             this.callsResult.data = inc.calls;
           }
         }),
-      )
-      .subscribe(this.incPrime);
+      ).subscribe(this.incPrime);
   }
 
   editIncident(incID: string) {
@@ -190,6 +183,7 @@ export class IncidentComponent {
 
     dialogRef.afterClosed().subscribe((res) => {
       if (res !== undefined) {
+        console.log(res);
         this.incPrime.next(res);
       }
     });
