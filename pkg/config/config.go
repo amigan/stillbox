@@ -30,8 +30,9 @@ type Config struct {
 }
 
 type Auth struct {
-	JWTSecret     string          `yaml:"jwtsecret"`
-	AllowInsecure map[string]bool `yaml:"allowInsecureFor"`
+	JWTSecret                string          `yaml:"jwtsecret"`
+	AllowInsecure            map[string]bool `yaml:"allowInsecureFor"`
+	SameSiteNoneWhenInsecure bool            `yaml:"sameSiteNoneForInsecure"`
 }
 
 type CORS struct {
