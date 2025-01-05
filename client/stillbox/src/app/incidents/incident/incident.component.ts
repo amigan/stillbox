@@ -1,13 +1,10 @@
-import { Component, computed, inject, ViewChild } from '@angular/core';
-import { map, take, tap } from 'rxjs/operators';
+import { Component, inject } from '@angular/core';
+import { tap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import {
   BehaviorSubject,
-  forkJoin,
   merge,
-  Subject,
   Subscription,
-  zip,
 } from 'rxjs';
 import { Observable } from 'rxjs';
 import {
@@ -34,7 +31,6 @@ import {
 } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
-import { CallRecord } from '../../calls';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import {
