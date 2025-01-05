@@ -1,11 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { tap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
-import {
-  BehaviorSubject,
-  merge,
-  Subscription,
-} from 'rxjs';
+import { BehaviorSubject, merge, Subscription } from 'rxjs';
 import { Observable } from 'rxjs';
 import {
   ReactiveFormsModule,
@@ -88,33 +84,40 @@ export class IncidentEditDialogComponent {
           this.form.patchValue(inc);
         }),
       );
+    } else {
+      this.inc$ = new BehaviorSubject(<IncidentRecord>{});
     }
   }
 
   save() {
-    this.incSvc
-      .updateIncident(this.data.incID, <IncidentRecord>{
-        name: this.form.controls['name'].dirty
-          ? this.form.controls['name'].value
-          : null,
-        startTime: this.form.controls['start'].dirty
-          ? this.form.controls['start'].value
-          : null,
-        endTime: this.form.controls['end'].dirty
-          ? this.form.controls['end'].value
-          : null,
-        description: this.form.controls['description'].dirty
-          ? this.form.controls['description'].value
-          : null,
-      })
-      .subscribe({
-        next: (ok) => {
-          this.dialogRef.close(ok);
-        },
-        error: (er) => {
-          alert(er);
-        },
-      });
+    let resObs: Observable<IncidentRecord>;
+    let ir: IncidentRecord = <IncidentRecord>{
+      name: this.form.controls['name'].dirty
+        ? this.form.controls['name'].value
+        : null,
+      startTime: this.form.controls['start'].dirty
+        ? this.form.controls['start'].value
+        : null,
+      endTime: this.form.controls['end'].dirty
+        ? this.form.controls['end'].value
+        : null,
+      description: this.form.controls['description'].dirty
+        ? this.form.controls['description'].value
+        : null,
+    };
+    if (this.data.new) {
+      resObs = this.incSvc.createIncident(ir);
+    } else {
+      resObs = this.incSvc.updateIncident(this.data.incID, ir);
+    }
+    resObs.subscribe({
+      next: (ok) => {
+        this.dialogRef.close(ok);
+      },
+      error: (er) => {
+        alert(er);
+      },
+    });
   }
 
   cancel() {
