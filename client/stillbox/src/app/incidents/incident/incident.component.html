@@ -2,7 +2,17 @@
 <mat-card class="incident" appearance="outlined">
   <div class="cardHdr">
     <h1>{{ inc?.name }}</h1>
-    <a (click)="editIncident(incID)"><mat-icon>edit</mat-icon></a>
+    <button mat-icon-button (click)="editIncident(incID)">
+      <mat-icon>edit</mat-icon>
+    </button>
+    <button mat-icon-button [matMenuTriggerFor]="moreMenu">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #moreMenu="matMenu">
+      <button class="deleteItem" mat-menu-item (click)="deleteIncident(incID)">
+        Delete
+      </button>
+    </mat-menu>
   </div>
   <div class="inc-heading">
     <div class="field field-start field-label">Start</div>

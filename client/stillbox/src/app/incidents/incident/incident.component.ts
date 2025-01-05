@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { tap } from 'rxjs/operators';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { BehaviorSubject, merge, Subscription } from 'rxjs';
 import { Observable } from 'rxjs';
 import {
@@ -38,6 +38,7 @@ import {
 } from '../../calls/calls.component';
 import { CallPlayerComponent } from '../../calls/player/call-player/call-player.component';
 import { FmtDatePipe } from '../incidents.component';
+import { MatMenuModule } from '@angular/material/menu';
 
 export interface EditDialogData {
   incID: string;
@@ -144,6 +145,7 @@ export class IncidentEditDialogComponent {
     CallPlayerComponent,
     FmtDatePipe,
     MatTableModule,
+    MatMenuModule,
   ],
   templateUrl: './incident.component.html',
   styleUrl: './incident.component.scss',
@@ -171,6 +173,7 @@ export class IncidentComponent {
   constructor(
     private route: ActivatedRoute,
     private incSvc: IncidentsService,
+    private location: Location,
   ) {}
 
   saveIncName(ev: Event) {}
@@ -195,6 +198,19 @@ export class IncidentComponent {
     });
 
     dialogRef.afterClosed().subscribe(this.incPrime);
+  }
+
+  deleteIncident(incID: string) {
+    if (confirm('Are you sure you want to delete this incident?')) {
+      this.incSvc.deleteIncident(incID).subscribe({
+        next: () => {
+          this.location.back();
+        },
+        error: (err) => {
+          alert(err);
+        },
+      });
+    }
   }
 
   ngOnDestroy() {

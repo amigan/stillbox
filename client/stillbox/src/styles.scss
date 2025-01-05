@@ -6,6 +6,7 @@
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
 // Be sure that you only ever include this mixin once!
+@include mat.core();
 @include mat.elevation-classes();
 @include mat.app-background();
 
@@ -236,4 +237,9 @@ textarea {
   margin-top: 40px;
   margin-bottom: 40px;
   justify-content: center;
+}
+
+.mat-mdc-menu-item.deleteItem {
+  color: white;
+  background-color: red;
 }

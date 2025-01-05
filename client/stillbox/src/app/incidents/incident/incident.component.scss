@@ -21,6 +21,7 @@
 .cardHdr {
   display: flex;
   flex-flow: row wrap;
+  margin-bottom: 24px;
 }
 
 .field {
@@ -37,6 +38,7 @@
 
 .cardHdr h1 {
   flex: 1 1;
+  margin: 0;
 }
 
 .cardHdr a {
