@@ -89,6 +89,13 @@ export class Talkgroup {
   iconMap(icon: string): string {
     return iconMapping[icon]!;
   }
+
+  tgTuple(): TGID {
+    return <TGID>{
+      sys: this.system_id,
+      tg: this.tgid,
+    };
+  }
 }
 
 export interface TalkgroupUI extends Talkgroup {

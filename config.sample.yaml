@@ -27,6 +27,9 @@ auth:
   # this allows the JWT cookie to be served over plain HTTP only for these Host: header values
   allowInsecureFor:
     "localhost": true
+  # this instead changes the meaning of allowInsecureFor to the cookie being marked
+  # Secure, but SameSite will be set to None
+  sameSiteNoneForInsecure: false
 listen: ':3050'
 public: true
 log:

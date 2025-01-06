@@ -132,7 +132,22 @@ func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (Incident, erro
 }
 
 const getIncidentCalls = `-- name: GetIncidentCalls :many
-SELECT ic.call_id, ic.call_date, ic.notes, c.submitter, c.system, c.talkgroup, c.audio_name, c.duration, c.audio_type, c.audio_url, c.frequency, c.frequencies, c.patches, c.source, c.transcript
+SELECT
+	ic.call_id,
+	ic.call_date,
+	c.duration,
+	c.system system_id,
+	c.talkgroup tgid,
+	ic.notes,
+	c.submitter,
+	c.audio_name,
+	c.audio_type,
+	c.audio_url,
+	c.frequency,
+	c.frequencies,
+	c.patches,
+	c.source,
+	c.transcript
 FROM incidents_calls ic, LATERAL (
 	SELECT 
 	ca.submitter,
@@ -170,12 +185,12 @@ WHERE ic.incident_id = $1
 type GetIncidentCallsRow struct {
 	CallID      uuid.UUID          `json:"call_id"`
 	CallDate    pgtype.Timestamptz `json:"call_date"`
+	Duration    *int32             `json:"duration"`
+	SystemID    int                `json:"system_id"`
+	TGID        int                `json:"tgid"`
 	Notes       []byte             `json:"notes"`
 	Submitter   *int32             `json:"submitter"`
-	System      int                `json:"system"`
-	Talkgroup   int                `json:"talkgroup"`
 	AudioName   *string            `json:"audio_name"`
-	Duration    *int32             `json:"duration"`
 	AudioType   *string            `json:"audio_type"`
 	AudioUrl    *string            `json:"audio_url"`
 	Frequency   int                `json:"frequency"`
@@ -197,12 +212,12 @@ func (q *Queries) GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetInci
 		if err := rows.Scan(
 			&i.CallID,
 			&i.CallDate,
+			&i.Duration,
+			&i.SystemID,
+			&i.TGID,
 			&i.Notes,
 			&i.Submitter,
-			&i.System,
-			&i.Talkgroup,
 			&i.AudioName,
-			&i.Duration,
 			&i.AudioType,
 			&i.AudioUrl,
 			&i.Frequency,

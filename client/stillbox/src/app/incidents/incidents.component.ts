@@ -34,12 +34,17 @@ import { ToolbarContextService } from '../navigation/toolbar-context.service';
   standalone: true,
   pure: true,
 })
-export class DatePipe implements PipeTransform {
-  transform(ts: string, args?: any): string {
+export class FmtDatePipe implements PipeTransform {
+  transform(ts: string | Date | null | undefined, args?: any): string {
     if (!ts) {
       return '\u2014';
     }
-    const timestamp = new Date(ts);
+    let timestamp: Date;
+    if (ts instanceof Date) {
+      timestamp = ts;
+    } else {
+      timestamp = new Date(ts);
+    }
     return (
       timestamp.getMonth() +
       1 +
@@ -61,7 +66,7 @@ const reqPageSize = 200;
   selector: 'app-incidents',
   imports: [
     MatIconModule,
-    DatePipe,
+    FmtDatePipe,
     MatPaginatorModule,
     MatTableModule,
     AsyncPipe,

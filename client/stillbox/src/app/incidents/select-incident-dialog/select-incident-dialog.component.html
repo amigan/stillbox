@@ -1,0 +1,23 @@
+<h2 mat-dialog-title>Select Incident</h2>
+<mat-dialog-content>
+  <mat-form-field>
+    <input
+      #searchBox
+      matInput
+      name="search"
+      (input)="search(searchBox.value)"
+    />
+  </mat-form-field>
+  <div class="selList">
+    <mat-selection-list #incs [(ngModel)]="sel" multiple="false">
+      @let incidents = incs$ | async;
+      @for (inc of incidents; track inc) {
+        <mat-list-option [value]="inc.id">{{ inc.name }}</mat-list-option>
+      }
+    </mat-selection-list>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-button (click)="save()" cdkFocusInitial>Select</button>
+</mat-dialog-actions>

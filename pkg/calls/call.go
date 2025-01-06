@@ -1,6 +1,7 @@
 package calls
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -29,6 +30,10 @@ func (d CallDuration) MsInt32Ptr() *int32 {
 	return &i
 }
 
+func (d CallDuration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.Duration().Milliseconds())
+}
+
 func (d CallDuration) Seconds() int32 {
 	return int32(time.Duration(d).Seconds())
 }
@@ -41,24 +46,29 @@ type CallAudio struct {
 	AudioBlob []byte         `json:"audioBlob"`
 }
 
+// The tags here are snake_case for compatibility with sqlc generated
+// struct tags in ListCallsPRow. This allows the heavier-weight calls
+// queries/endpoints to render DB output directly to the wire without
+// further transformation. relayOut exists for compatibility with http
+// source CallUploadRequest as used in the relay sink.
 type Call struct {
-	ID             uuid.UUID    `json:"-"`
-	Audio          []byte       `json:"audio,omitempty" filenameField:"AudioName"`
-	AudioName      string       `json:"audioName,omitempty"`
-	AudioType      string       `json:"audioType,omitempty"`
-	Duration       CallDuration `json:"-"`
-	DateTime       time.Time    `json:"dateTime,omitempty"`
-	Frequencies    []int        `json:"frequencies,omitempty"`
-	Frequency      int          `json:"frequency,omitempty"`
-	Patches        []int        `json:"patches,omitempty"`
-	Source         int          `json:"source,omitempty"`
-	System         int          `json:"system,omitempty"`
-	Submitter      *auth.UserID `json:"-,omitempty"`
-	SystemLabel    string       `json:"systemLabel,omitempty"`
-	Talkgroup      int          `json:"talkgroup,omitempty"`
-	TalkgroupGroup *string      `json:"talkgroupGroup,omitempty"`
-	TalkgroupLabel *string      `json:"talkgroupLabel,omitempty"`
-	TGAlphaTag     *string      `json:"talkgroupTag,omitempty"`
+	ID             uuid.UUID    `json:"id" relayOut:"id"`
+	Audio          []byte       `json:"audio,omitempty" relayOut:"audio,omitempty" filenameField:"AudioName"`
+	AudioName      string       `json:"audioName,omitempty" relayOut:"audioName,omitempty"`
+	AudioType      string       `json:"audioType,omitempty" relayOut:"audioType,omitempty"`
+	Duration       CallDuration `json:"duration,omitempty" relayOut:"duration,omitempty"`
+	DateTime       time.Time    `json:"call_date,omitempty" relayOut:"dateTime,omitempty"`
+	Frequencies    []int        `json:"frequencies,omitempty" relayOut:"frequencies,omitempty"`
+	Frequency      int          `json:"frequency,omitempty" relayOut:"frequency,omitempty"`
+	Patches        []int        `json:"patches,omitempty" relayOut:"patches,omitempty"`
+	Source         int          `json:"source,omitempty" relayOut:"source,omitempty"`
+	System         int          `json:"system_id,omitempty" relayOut:"system,omitempty"`
+	Submitter      *auth.UserID `json:"submitter,omitempty" relayOut:"submitter,omitempty"`
+	SystemLabel    string       `json:"system_name,omitempty" relayOut:"systemLabel,omitempty"`
+	Talkgroup      int          `json:"tgid,omitempty" relayOut:"talkgroup,omitempty"`
+	TalkgroupGroup *string      `json:"talkgroupGroup,omitempty" relayOut:"talkgroupGroup,omitempty"`
+	TalkgroupLabel *string      `json:"talkgroupLabel,omitempty" relayOut:"talkgroupLabel,omitempty"`
+	TGAlphaTag     *string      `json:"tg_name,omitempty" relayOut:"talkgroupTag,omitempty"`
 
 	shouldStore bool `json:"-"`
 }

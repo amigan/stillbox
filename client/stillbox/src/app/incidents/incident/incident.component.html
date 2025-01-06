@@ -1,1 +1,98 @@
-<p>incident works!</p>
+@let inc = inc$ | async;
+<mat-card class="incident" appearance="outlined">
+  <div class="cardHdr">
+    <h1>{{ inc?.name }}</h1>
+    <button mat-icon-button (click)="editIncident(incID)">
+      <mat-icon>edit</mat-icon>
+    </button>
+    <button mat-icon-button [matMenuTriggerFor]="moreMenu">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #moreMenu="matMenu">
+      <button class="deleteItem" mat-menu-item (click)="deleteIncident(incID)">
+        Delete
+      </button>
+    </mat-menu>
+  </div>
+  <div class="inc-heading">
+    <div class="field field-start field-label">Start</div>
+    <div class="field field-data field-start">
+      {{ inc?.startTime | fmtDate }}
+    </div>
+    <div class="field field-end field-label">End</div>
+    <div class="field field-data field-end">{{ inc?.endTime | fmtDate }}</div>
+  </div>
+  <div class="inc-description">
+    {{ inc?.description }}
+  </div>
+  <table class="callsTable" mat-table [dataSource]="callsResult">
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox
+          (change)="$event ? masterToggle() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+        >
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+        >
+        </mat-checkbox>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="play">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let call">
+        <call-player [call]="call"></call-player>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="download">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let call">
+        <a [href]="call | audioDownloadURL"><mat-icon>download</mat-icon></a>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="date">
+      <th mat-header-cell *matHeaderCellDef>Date</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call.call_date | grabDate }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="time">
+      <th mat-header-cell *matHeaderCellDef>Time</th>
+      <td [title]="call.call_date" mat-cell *matCellDef="let call">
+        {{ call.call_date | time }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="system">
+      <th mat-header-cell *matHeaderCellDef>System</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call | talkgroup: "system" | async }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="group">
+      <th mat-header-cell *matHeaderCellDef>Group</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call | talkgroup: "group" | async }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="talkgroup">
+      <th mat-header-cell *matHeaderCellDef>Talkgroup</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call | talkgroup: "alpha" | async }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="duration">
+      <th mat-header-cell *matHeaderCellDef class="durationHdr">Duration</th>
+      <td mat-cell *matCellDef="let call" class="duration">
+        {{ call.duration | fixedPoint: 1000 : 2 }}s
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let myRowData; columns: columns"></tr>
+  </table>
+</mat-card>

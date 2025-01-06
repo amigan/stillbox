@@ -46,7 +46,7 @@ export class TalkgroupService {
   }
 
   getTalkgroups(): Observable<Talkgroup[]> {
-    return this.http.get<Talkgroup[]>('/api/talkgroup/');
+    return this.http.get<Talkgroup[]>('/api/talkgroup/').pipe(shareReplay());
   }
 
   getTalkgroup(sys: number, tg: number): Observable<Talkgroup> {
@@ -64,7 +64,7 @@ export class TalkgroupService {
   putTalkgroup(tu: TalkgroupUpdate): Observable<Talkgroup> {
     let tgid = this.tgKey(tu.system_id, tu.tgid);
 
-    this.http
+    return this.http
       .put<Talkgroup>(`/api/talkgroup/${tu.system_id}/${tu.tgid}`, tu)
       .pipe(
         switchMap((tg) => {
@@ -78,8 +78,6 @@ export class TalkgroupService {
           return tObs;
         }),
       );
-
-    return this._getTalkgroup.get(tgid)!;
   }
 
   putTalkgroups(

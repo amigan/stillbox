@@ -81,7 +81,7 @@ func (s *Relay) Call(ctx context.Context, call *calls.Call) error {
 	var buf bytes.Buffer
 	body := multipart.NewWriter(&buf)
 
-	err := forms.Marshal(call, body, forms.WithTag("json"))
+	err := forms.Marshal(call, body, forms.WithTag("relayOut"))
 	if err != nil {
 		return fmt.Errorf("relay form parse: %w", err)
 	}

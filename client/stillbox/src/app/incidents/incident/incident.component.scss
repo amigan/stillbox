@@ -1,0 +1,64 @@
+.incident {
+  margin: 50px 50px 50px 50px;
+  padding: 50px 50px 50px 50px;
+  display: flex;
+  flex-flow: column;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media not screen and (max-width: 768px) {
+  .incident {
+    width: 75%;
+  }
+}
+
+.inc-heading {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.cardHdr {
+  display: flex;
+  flex-flow: row wrap;
+  margin-bottom: 24px;
+}
+
+.field {
+  flex: 1 1;
+  width: 5rem;
+}
+
+.field-label {
+  font-weight: bolder;
+}
+.field-label::after {
+  content: ":";
+}
+
+.cardHdr h1 {
+  flex: 1 1;
+  margin: 0;
+}
+
+.cardHdr a {
+  flex: 0 0;
+  justify-content: flex-end;
+  align-content: center;
+  cursor: pointer;
+}
+
+form mat-form-field {
+  width: 60rem;
+  flex: 0 0;
+  display: flex;
+}
+
+.incRecord {
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+}

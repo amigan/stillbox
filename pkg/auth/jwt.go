@@ -145,6 +145,16 @@ func (a *Auth) allowInsecureCookie(r *http.Request) bool {
 	return has && v
 }
 
+func (a *Auth) setInsecureCookie(cookie *http.Cookie) {
+	if a.cfg.SameSiteNoneWhenInsecure {
+		cookie.Secure = true
+		cookie.SameSite = http.SameSiteNoneMode
+	} else {
+		cookie.Secure = false
+		cookie.SameSite = http.SameSiteLaxMode
+	}
+}
+
 func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	jwToken, _, err := jwtauth.FromContext(r.Context())
 	if err != nil {
@@ -174,8 +184,7 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if a.allowInsecureCookie(r) {
-		cookie.Secure = false
-		cookie.SameSite = http.SameSiteLaxMode
+		a.setInsecureCookie(cookie)
 	}
 
 	if cookie.Secure {
@@ -236,8 +245,7 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 
 	cookie.Domain = r.Host
 	if a.allowInsecureCookie(r) {
-		cookie.Secure = false
-		cookie.SameSite = http.SameSiteLaxMode
+		a.setInsecureCookie(cookie)
 	}
 
 	http.SetCookie(w, cookie)
@@ -263,8 +271,8 @@ func (a *Auth) routeLogout(w http.ResponseWriter, r *http.Request) {
 
 	cookie.Domain = r.Host
 	if a.allowInsecureCookie(r) {
-		cookie.Secure = false
-		cookie.SameSite = http.SameSiteLaxMode
+		cookie.Secure = true
+		cookie.SameSite = http.SameSiteNoneMode
 	}
 
 	http.SetCookie(w, cookie)

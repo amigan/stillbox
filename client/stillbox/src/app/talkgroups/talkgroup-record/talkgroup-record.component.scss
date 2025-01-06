@@ -1,9 +1,24 @@
-mat-form-field {
+form div {
   width: 30rem;
+  flex: 0 0 30rem;
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+mat-form-field,
+.alert,
+alert-rule-builder {
+  width: 30rem;
+  margin-right: 5px;
+  margin-left: 5px;
 }
 
 .tgRecord {
   display: flex;
+  flex-flow: column;
+  width: 31rem;
   justify-content: center;
   margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
 }

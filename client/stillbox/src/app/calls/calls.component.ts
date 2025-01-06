@@ -1,4 +1,10 @@
-import { Component, Pipe, PipeTransform, ViewChild } from '@angular/core';
+import {
+  Component,
+  inject,
+  Pipe,
+  PipeTransform,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
@@ -29,6 +35,19 @@ import { MatInputModule } from '@angular/material/input';
 import { debounceTime } from 'rxjs/operators';
 import { ToolbarContextService } from '../navigation/toolbar-context.service';
 import { MatSelectModule } from '@angular/material/select';
+import { CallPlayerComponent } from './player/call-player/call-player.component';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog } from '@angular/material/dialog';
+import {
+  EditDialogData,
+  IncidentEditDialogComponent,
+} from '../incidents/incident/incident.component';
+import {
+  CallIncidentParams,
+  IncidentsService,
+} from '../incidents/incidents.service';
+import { IncidentRecord } from '../incidents';
+import { SelectIncidentDialogComponent } from '../incidents/select-incident-dialog/select-incident-dialog.component';
 
 @Pipe({
   name: 'grabDate',
@@ -139,6 +158,8 @@ const reqPageSize = 200;
     CommonModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    CallPlayerComponent,
+    MatMenuModule,
   ],
   templateUrl: './calls.component.html',
   styleUrl: './calls.component.scss',
@@ -147,6 +168,7 @@ export class CallsComponent {
   callsResult = new BehaviorSubject(new Array<CallRecord>(0));
   @ViewChild('paginator') paginator!: MatPaginator;
   count = 0;
+  dialog = inject(MatDialog);
   page = 0;
   perPage = 25;
   pageSizeOptions = [25, 50, 75, 100, 200];
@@ -189,6 +211,7 @@ export class CallsComponent {
     private prefsSvc: PrefsService,
     public tcSvc: ToolbarContextService,
     public tgSvc: TalkgroupService,
+    public incSvc: IncidentsService,
   ) {
     this.tcSvc.showFilterButton();
   }
@@ -241,13 +264,6 @@ export class CallsComponent {
     now.setDate(new Date().getDate() - 7);
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     return now.toISOString().slice(0, 16);
-  }
-
-  playAudio(ev: Event, call: CallRecord) {
-    let au = new Audio();
-    au.src = this.callsSvc.callAudioURL(call.id);
-    au.load();
-    au.play();
   }
 
   setPage(p: PageEvent, force?: boolean) {
@@ -342,5 +358,49 @@ export class CallsComponent {
     this.form.reset();
     this.form.controls['start'].setValue(this.lTime(new Date()));
     this.form.controls['duration'].setValue(0);
+  }
+
+  addToNewInc(ev: Event) {
+    const dialogRef = this.dialog.open(IncidentEditDialogComponent, {
+      data: <EditDialogData>{
+        incID: '',
+        new: true,
+      },
+    });
+    dialogRef.afterClosed().subscribe((res: IncidentRecord) => {
+      this.incSvc
+        .addRemoveCalls(res.id, <CallIncidentParams>{
+          add: this.selection.selected.map((s) => s.id),
+        })
+        .subscribe({
+          next: () => {
+            this.selection.clear();
+          },
+          error: (err) => {
+            alert(err);
+          },
+        });
+    });
+  }
+
+  addToExistingInc(ev: Event) {
+    const dialogRef = this.dialog.open(SelectIncidentDialogComponent);
+    dialogRef.afterClosed().subscribe((res: string) => {
+      if (!res) {
+        return;
+      }
+      this.incSvc
+        .addRemoveCalls(res, <CallIncidentParams>{
+          add: this.selection.selected.map((s) => s.id),
+        })
+        .subscribe({
+          next: () => {
+            this.selection.clear();
+          },
+          error: (err) => {
+            alert(err);
+          },
+        });
+    });
   }
 }
