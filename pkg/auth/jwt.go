@@ -225,6 +225,10 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if a.rl.RespondOnLimit(w, r, creds.Username) {
+		return
+	}
+
 	if creds.Username == "" || creds.Password == "" {
 		http.Error(w, "blank credentials", http.StatusBadRequest)
 		return

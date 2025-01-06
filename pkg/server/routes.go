@@ -10,10 +10,7 @@ import (
 	"dynatron.me/x/stillbox/client"
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/config"
-	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/go-chi/render"
 )
@@ -29,8 +26,7 @@ func (s *Server) setupRoutes() {
 	}
 
 	r := s.r
-	r.Use(middleware.WithValue(database.DBCtxKey, s.db))
-	r.Use(middleware.WithValue(tgstore.StoreCtxKey, s.tgs))
+	r.Use(s.WithCtxStores())
 
 	s.installPprof()
 
@@ -47,8 +43,13 @@ func (s *Server) setupRoutes() {
 		s.rateLimit(r)
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		// public routes
-		s.auth.PublicRoutes(r)
 		s.sources.PublicRoutes(r)
+	})
+
+	r.Group(func(r chi.Router) {
+		// auth routes get rate-limited heavily, but not using middleware
+		r.Use(render.SetContentType(render.ContentTypeJSON))
+		s.auth.PublicRoutes(r)
 	})
 
 	r.Group(func(r chi.Router) {
@@ -61,11 +62,23 @@ func (s *Server) setupRoutes() {
 	})
 }
 
+// WithCtxStores is a middleware that installs all stores in the request context.
+func (s *Server) WithCtxStores() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			r = r.WithContext(s.addStoresTo(r.Context()))
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
 func (s *Server) rateLimit(r chi.Router) {
 	if s.conf.RateLimit.Verify() {
 		r.Use(rateLimiter(&s.conf.RateLimit))
 	}
 }
+
 func rateLimiter(cfg *config.RateLimit) func(http.Handler) http.Handler {
 	return httprate.LimitByRealIP(cfg.Requests, cfg.Over)
 }

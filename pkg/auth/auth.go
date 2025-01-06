@@ -3,11 +3,13 @@ package auth
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	_ "embed"
 
 	"dynatron.me/x/stillbox/pkg/config"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
 )
 
@@ -30,6 +32,7 @@ type Authenticator interface {
 }
 
 type Auth struct {
+	rl  *httprate.RateLimiter
 	jwt *jwtauth.JWTAuth
 	cfg config.Auth
 }
@@ -37,6 +40,7 @@ type Auth struct {
 // NewAuthenticator creates a new Authenticator with the provided config.
 func NewAuthenticator(cfg config.Auth) *Auth {
 	a := &Auth{
+		rl:  httprate.NewRateLimiter(5, time.Minute),
 		cfg: cfg,
 	}
 	a.initJWT()
