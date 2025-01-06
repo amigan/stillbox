@@ -47,6 +47,7 @@ import {
   IncidentsService,
 } from '../incidents/incidents.service';
 import { IncidentRecord } from '../incidents';
+import { SelectIncidentDialogComponent } from '../incidents/select-incident-dialog/select-incident-dialog.component';
 
 @Pipe({
   name: 'grabDate',
@@ -382,5 +383,24 @@ export class CallsComponent {
     });
   }
 
-  addToExistingInc(ev: Event) {}
+  addToExistingInc(ev: Event) {
+    const dialogRef = this.dialog.open(SelectIncidentDialogComponent);
+    dialogRef.afterClosed().subscribe((res: string) => {
+      if (!res) {
+        return;
+      }
+      this.incSvc
+        .addRemoveCalls(res, <CallIncidentParams>{
+          add: this.selection.selected.map((s) => s.id),
+        })
+        .subscribe({
+          next: () => {
+            this.selection.clear();
+          },
+          error: (err) => {
+            alert(err);
+          },
+        });
+    });
+  }
 }
