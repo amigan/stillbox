@@ -10,7 +10,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (time of rule.times; track $index) {
+          @for (time of rule | ruleProc; track $index) {
             <tr>
               <td>
                 {{ time.time }}

@@ -15,11 +15,20 @@ export class AlertTime {
 }
 
 export class AlertRule {
-  times: AlertTime[];
+  times: string[];
+  timesProc: AlertTime[];
   mult: number;
 
-  constructor(times: AlertTime[], mult: number) {
+  constructor(times: string[], mult: number) {
     this.times = times;
+    this.timesProc = <AlertTime[]>[];
+    times.forEach((tm) => {
+      let sr = tm.split('+');
+      this.timesProc.push(<AlertTime>{
+        time: sr[0],
+        duration: sr[1],
+      });
+    });
     this.mult = mult;
   }
 }
