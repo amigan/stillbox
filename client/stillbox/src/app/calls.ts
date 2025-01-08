@@ -4,6 +4,5 @@ export interface CallRecord {
   duration: number;
   system_id: number;
   tgid: number;
-  system_name: string;
-  tg_name: string;
+  incidents: number; // in incident
 }

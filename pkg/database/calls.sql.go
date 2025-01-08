@@ -255,13 +255,13 @@ SELECT
 c.id,
 c.call_date,
 c.duration,
-tgs.system_id,
-tgs.tgid,
-sys.name system_name,
-tgs.name tg_name
+c.system system_id,
+c.talkgroup tgid,
+COUNT(ic.incident_id) incidents
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
 JOIN systems sys ON sys.id = tgs.system_id
+LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
 WHERE
 CASE WHEN $1::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date >= $1 ELSE TRUE END AND
@@ -279,6 +279,7 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 (CASE WHEN $6::NUMERIC IS NOT NULL THEN (
 		c.duration > $6
 	) ELSE TRUE END)
+GROUP BY c.id, c.call_date
 ORDER BY
 CASE WHEN $7::TEXT = 'asc' THEN c.call_date END ASC,
 CASE WHEN $7 = 'desc' THEN c.call_date END DESC
@@ -299,13 +300,12 @@ type ListCallsPParams struct {
 }
 
 type ListCallsPRow struct {
-	ID         uuid.UUID          `json:"id"`
-	CallDate   pgtype.Timestamptz `json:"call_date"`
-	Duration   *int32             `json:"duration"`
-	SystemID   int32              `json:"system_id"`
-	TGID       int32              `json:"tgid"`
-	SystemName string             `json:"system_name"`
-	TGName     *string            `json:"tg_name"`
+	ID        uuid.UUID          `json:"id"`
+	CallDate  pgtype.Timestamptz `json:"call_date"`
+	Duration  *int32             `json:"duration"`
+	SystemID  int                `json:"system_id"`
+	TGID      int                `json:"tgid"`
+	Incidents int64              `json:"incidents"`
 }
 
 func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error) {
@@ -333,8 +333,7 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 			&i.Duration,
 			&i.SystemID,
 			&i.TGID,
-			&i.SystemName,
-			&i.TGName,
+			&i.Incidents,
 		); err != nil {
 			return nil, err
 		}

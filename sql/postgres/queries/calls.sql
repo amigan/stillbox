@@ -101,13 +101,13 @@ SELECT
 c.id,
 c.call_date,
 c.duration,
-tgs.system_id,
-tgs.tgid,
-sys.name system_name,
-tgs.name tg_name
+c.system system_id,
+c.talkgroup tgid,
+COUNT(ic.incident_id) incidents
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
 JOIN systems sys ON sys.id = tgs.system_id
+LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
 WHERE
 CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date >= @start ELSE TRUE END AND
@@ -125,6 +125,7 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 (CASE WHEN sqlc.narg('longer_than')::NUMERIC IS NOT NULL THEN (
 		c.duration > @longer_than
 	) ELSE TRUE END)
+GROUP BY c.id, c.call_date
 ORDER BY
 CASE WHEN @direction::TEXT = 'asc' THEN c.call_date END ASC,
 CASE WHEN @direction = 'desc' THEN c.call_date END DESC
