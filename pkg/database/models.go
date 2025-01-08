@@ -117,7 +117,7 @@ type Talkgroup struct {
 	Metadata    jsontypes.Metadata `json:"metadata,omitempty"`
 	Tags        []string           `json:"tags,omitempty"`
 	Alert       bool               `json:"alert,omitempty"`
-	AlertConfig rules.AlertRules   `json:"alert_config,omitempty"`
+	AlertRules rules.AlertRules   `json:"alert_rules,omitempty"`
 	Weight      float32            `json:"weight,omitempty"`
 	Learned     bool               `json:"learned,omitempty"`
 	Ignored     bool               `json:"ignored,omitempty"`
@@ -137,7 +137,7 @@ type TalkgroupVersion struct {
 	Metadata    []byte             `json:"metadata,omitempty"`
 	Tags        []string           `json:"tags,omitempty"`
 	Alert       *bool              `json:"alert,omitempty"`
-	AlertConfig []byte             `json:"alert_config,omitempty"`
+	AlertRules []byte             `json:"alert_rules,omitempty"`
 	Weight      *float32           `json:"weight,omitempty"`
 	Learned     *bool              `json:"learned,omitempty"`
 	Ignored     *bool              `json:"ignored,omitempty"`

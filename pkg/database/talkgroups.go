@@ -52,7 +52,7 @@ func (t *TGTuples) Append(sys, tg uint32) {
 // Below queries are here because sqlc refuses to parse unnest(x, y)
 
 const getTalkgroupsWithLearnedBySysTGID = `SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, sys.id, sys.name, tg.learned, tg.ignored
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, sys.id, sys.name, tg.learned, tg.ignored
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg);`
@@ -82,7 +82,7 @@ func (q *Queries) GetTalkgroupsWithLearnedBySysTGID(ctx context.Context, ids TGT
 			&i.Talkgroup.Metadata,
 			&i.Talkgroup.Tags,
 			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertConfig,
+			&i.Talkgroup.AlertRules,
 			&i.Talkgroup.Weight,
 			&i.System.ID,
 			&i.System.Name,
@@ -99,7 +99,7 @@ func (q *Queries) GetTalkgroupsWithLearnedBySysTGID(ctx context.Context, ids TGT
 	return items, nil
 }
 
-const getTalkgroupsBySysTGID = `SELECT tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name FROM talkgroups tg
+const getTalkgroupsBySysTGID = `SELECT tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg)
 WHERE tg.learned IS NOT TRUE;`
@@ -124,7 +124,7 @@ func (q *Queries) GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuples) ([]G
 			&i.Talkgroup.Metadata,
 			&i.Talkgroup.Tags,
 			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertConfig,
+			&i.Talkgroup.AlertRules,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
 			&i.Talkgroup.Ignored,

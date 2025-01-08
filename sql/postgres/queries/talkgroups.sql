@@ -137,7 +137,7 @@ SET
 	metadata = COALESCE(sqlc.narg('metadata'), metadata),
 	tags = COALESCE(sqlc.narg('tags'), tags),
 	alert = COALESCE(sqlc.narg('alert'), alert),
-	alert_config = COALESCE(sqlc.narg('alert_config'), alert_config),
+	alert_rules = COALESCE(sqlc.narg('alert_rules'), alert_rules),
 	weight = COALESCE(sqlc.narg('weight'), weight),
 	learned = COALESCE(sqlc.narg('learned'), learned)
 WHERE id = sqlc.narg('id') OR (system_id = sqlc.narg('system_id') AND tgid = sqlc.narg('tgid'))
@@ -145,7 +145,7 @@ RETURNING *;
 
 -- name: UpsertTalkgroup :batchone
 INSERT INTO talkgroups AS tg (
-	system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
+	system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_rules, weight, learned
 ) VALUES (
 	@system_id,
 	@tgid,
@@ -156,7 +156,7 @@ INSERT INTO talkgroups AS tg (
 	sqlc.narg('metadata'),
 	COALESCE(sqlc.narg('tags'), '{}'::text[])::text[],
 	COALESCE(sqlc.narg('alert'), TRUE),
-	sqlc.narg('alert_config'),
+	sqlc.narg('alert_rules'),
 	COALESCE(sqlc.narg('weight'), 1.0)::numeric,
 	COALESCE(sqlc.narg('learned'), FALSE)::boolean
 )
@@ -169,7 +169,7 @@ SET
 	metadata = COALESCE(sqlc.narg('metadata'), tg.metadata),
 	tags = COALESCE(sqlc.narg('tags'), tg.tags),
 	alert = COALESCE(sqlc.narg('alert'), tg.alert),
-	alert_config = COALESCE(sqlc.narg('alert_config'), tg.alert_config),
+	alert_rules = COALESCE(sqlc.narg('alert_rules'), tg.alert_rules),
 	weight = COALESCE(sqlc.narg('weight'), tg.weight),
 	learned = COALESCE(sqlc.narg('learned'), tg.learned)
 RETURNING *;
@@ -185,7 +185,7 @@ INSERT INTO talkgroup_versions(time, created_by,
 	metadata,
 	tags,
 	alert,
-	alert_config,
+	alert_rules,
 	weight,
 	learned
 ) SELECT NOW(), @submitter,
@@ -198,7 +198,7 @@ INSERT INTO talkgroup_versions(time, created_by,
 	tg.metadata,
 	tg.tags,
 	tg.alert,
-	tg.alert_config,
+	tg.alert_rules,
 	tg.weight,
 	tg.learned
 FROM talkgroups tg WHERE tg.system_id = @system_id AND tg.tgid = @tgid;
@@ -231,7 +231,7 @@ INSERT INTO talkgroups(
 	metadata,
 	tags,
 	alert,
-	alert_config,
+	alert_rules,
 	weight,
 	learned,
 	ignored
@@ -246,7 +246,7 @@ SELECT
 	metadata,
 	tags,
 	alert,
-	alert_config,
+	alert_rules,
 	weight,
 	learned,
 	ignored
@@ -257,7 +257,7 @@ FROM talkgroup_versions tgv ON CONFLICT (system_id, tgid) DO UPDATE SET
 	metadata = excluded.metadata,
 	tags = excluded.tags,
 	alert = excluded.alert,
-	alert_config = excluded.alert_config,
+	alert_rules = excluded.alert_rules,
 	weight = excluded.weight,
 	learned = excluded.learner,
 	ignored = excluded.ignored
