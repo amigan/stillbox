@@ -61,7 +61,7 @@ export class Talkgroup {
   tags!: string[];
   alert!: boolean;
   system?: System;
-  alert_config!: AlertRule[];
+  alert_rules!: AlertRule[];
   weight!: number;
   learned?: boolean;
   icon?: string;
@@ -77,7 +77,7 @@ export class Talkgroup {
     metadata: Metadata | null,
     tags: string[],
     alert: boolean,
-    alert_config: AlertRule[],
+    alert_rules: AlertRule[],
     weight: number,
     system?: System,
     learned?: boolean,
@@ -113,6 +113,6 @@ export interface TalkgroupUpdate {
   metadata: Object | null;
   tags: string[] | null;
   alert: boolean | null;
-  alert_config: AlertRule[] | null;
+  alert_rules: AlertRule[] | null;
   weight: number | null;
 }

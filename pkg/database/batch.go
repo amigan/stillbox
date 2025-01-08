@@ -30,7 +30,7 @@ INSERT INTO talkgroup_versions(time, created_by,
 	metadata,
 	tags,
 	alert,
-	alert_config,
+	alert_rules,
 	weight,
 	learned
 ) SELECT NOW(), $1,
@@ -43,7 +43,7 @@ INSERT INTO talkgroup_versions(time, created_by,
 	tg.metadata,
 	tg.tags,
 	tg.alert,
-	tg.alert_config,
+	tg.alert_rules,
 	tg.weight,
 	tg.learned
 FROM talkgroups tg WHERE tg.system_id = $2 AND tg.tgid = $3
@@ -98,7 +98,7 @@ func (b *StoreTGVersionBatchResults) Close() error {
 
 const upsertTalkgroup = `-- name: UpsertTalkgroup :batchone
 INSERT INTO talkgroups AS tg (
-	system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned
+	system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_rules, weight, learned
 ) VALUES (
 	$1,
 	$2,
@@ -122,10 +122,10 @@ SET
 	metadata = COALESCE($7, tg.metadata),
 	tags = COALESCE($8, tg.tags),
 	alert = COALESCE($9, tg.alert),
-	alert_config = COALESCE($10, tg.alert_config),
+	alert_rules = COALESCE($10, tg.alert_rules),
 	weight = COALESCE($11, tg.weight),
 	learned = COALESCE($12, tg.learned)
-RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned, ignored
+RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_rules, weight, learned, ignored
 `
 
 type UpsertTalkgroupBatchResults struct {
@@ -135,18 +135,18 @@ type UpsertTalkgroupBatchResults struct {
 }
 
 type UpsertTalkgroupParams struct {
-	SystemID    int32              `json:"system_id"`
-	TGID        int32              `json:"tgid"`
-	Name        *string            `json:"name"`
-	AlphaTag    *string            `json:"alpha_tag"`
-	TGGroup     *string            `json:"tg_group"`
-	Frequency   *int32             `json:"frequency"`
-	Metadata    jsontypes.Metadata `json:"metadata"`
-	Tags        []string           `json:"tags"`
-	Alert       interface{}        `json:"alert"`
-	AlertConfig rules.AlertRules   `json:"alert_config"`
-	Weight      pgtype.Numeric     `json:"weight"`
-	Learned     *bool              `json:"learned"`
+	SystemID   int32              `json:"system_id"`
+	TGID       int32              `json:"tgid"`
+	Name       *string            `json:"name"`
+	AlphaTag   *string            `json:"alpha_tag"`
+	TGGroup    *string            `json:"tg_group"`
+	Frequency  *int32             `json:"frequency"`
+	Metadata   jsontypes.Metadata `json:"metadata"`
+	Tags       []string           `json:"tags"`
+	Alert      interface{}        `json:"alert"`
+	AlertRules rules.AlertRules   `json:"alert_rules"`
+	Weight     pgtype.Numeric     `json:"weight"`
+	Learned    *bool              `json:"learned"`
 }
 
 func (q *Queries) UpsertTalkgroup(ctx context.Context, arg []UpsertTalkgroupParams) *UpsertTalkgroupBatchResults {
@@ -162,7 +162,7 @@ func (q *Queries) UpsertTalkgroup(ctx context.Context, arg []UpsertTalkgroupPara
 			a.Metadata,
 			a.Tags,
 			a.Alert,
-			a.AlertConfig,
+			a.AlertRules,
 			a.Weight,
 			a.Learned,
 		}
@@ -194,7 +194,7 @@ func (b *UpsertTalkgroupBatchResults) QueryRow(f func(int, Talkgroup, error)) {
 			&i.Metadata,
 			&i.Tags,
 			&i.Alert,
-			&i.AlertConfig,
+			&i.AlertRules,
 			&i.Weight,
 			&i.Learned,
 			&i.Ignored,

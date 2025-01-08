@@ -414,7 +414,7 @@ func (t *cache) Weight(ctx context.Context, id tgsp.ID, tm time.Time) float64 {
 
 	m := float64(tg.Weight)
 
-	m *= tg.AlertConfig.Apply(tm)
+	m *= tg.AlertRules.Apply(tm)
 
 	return float64(m)
 }

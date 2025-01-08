@@ -107,40 +107,40 @@ type System struct {
 }
 
 type Talkgroup struct {
-	ID          int                `json:"id,omitempty"`
-	SystemID    int32              `json:"system_id,omitempty"`
-	TGID        int32              `json:"tgid,omitempty"`
-	Name        *string            `json:"name,omitempty"`
-	AlphaTag    *string            `json:"alpha_tag,omitempty"`
-	TGGroup     *string            `json:"tg_group,omitempty"`
-	Frequency   *int32             `json:"frequency,omitempty"`
-	Metadata    jsontypes.Metadata `json:"metadata,omitempty"`
-	Tags        []string           `json:"tags,omitempty"`
-	Alert       bool               `json:"alert,omitempty"`
-	AlertConfig rules.AlertRules   `json:"alert_config,omitempty"`
-	Weight      float32            `json:"weight,omitempty"`
-	Learned     bool               `json:"learned,omitempty"`
-	Ignored     bool               `json:"ignored,omitempty"`
+	ID         int                `json:"id,omitempty"`
+	SystemID   int32              `json:"system_id,omitempty"`
+	TGID       int32              `json:"tgid,omitempty"`
+	Name       *string            `json:"name,omitempty"`
+	AlphaTag   *string            `json:"alpha_tag,omitempty"`
+	TGGroup    *string            `json:"tg_group,omitempty"`
+	Frequency  *int32             `json:"frequency,omitempty"`
+	Metadata   jsontypes.Metadata `json:"metadata,omitempty"`
+	Tags       []string           `json:"tags,omitempty"`
+	Alert      bool               `json:"alert,omitempty"`
+	AlertRules rules.AlertRules   `json:"alert_rules,omitempty"`
+	Weight     float32            `json:"weight,omitempty"`
+	Learned    bool               `json:"learned,omitempty"`
+	Ignored    bool               `json:"ignored,omitempty"`
 }
 
 type TalkgroupVersion struct {
-	ID          int                `json:"id,omitempty"`
-	Time        pgtype.Timestamptz `json:"time,omitempty"`
-	CreatedBy   *int32             `json:"created_by,omitempty"`
-	Deleted     *bool              `json:"deleted,omitempty"`
-	SystemID    *int32             `json:"system_id,omitempty"`
-	TGID        *int32             `json:"tgid,omitempty"`
-	Name        *string            `json:"name,omitempty"`
-	AlphaTag    *string            `json:"alpha_tag,omitempty"`
-	TGGroup     *string            `json:"tg_group,omitempty"`
-	Frequency   *int32             `json:"frequency,omitempty"`
-	Metadata    []byte             `json:"metadata,omitempty"`
-	Tags        []string           `json:"tags,omitempty"`
-	Alert       *bool              `json:"alert,omitempty"`
-	AlertConfig []byte             `json:"alert_config,omitempty"`
-	Weight      *float32           `json:"weight,omitempty"`
-	Learned     *bool              `json:"learned,omitempty"`
-	Ignored     *bool              `json:"ignored,omitempty"`
+	ID         int                `json:"id,omitempty"`
+	Time       pgtype.Timestamptz `json:"time,omitempty"`
+	CreatedBy  *int32             `json:"created_by,omitempty"`
+	Deleted    *bool              `json:"deleted,omitempty"`
+	SystemID   *int32             `json:"system_id,omitempty"`
+	TGID       *int32             `json:"tgid,omitempty"`
+	Name       *string            `json:"name,omitempty"`
+	AlphaTag   *string            `json:"alpha_tag,omitempty"`
+	TGGroup    *string            `json:"tg_group,omitempty"`
+	Frequency  *int32             `json:"frequency,omitempty"`
+	Metadata   []byte             `json:"metadata,omitempty"`
+	Tags       []string           `json:"tags,omitempty"`
+	Alert      *bool              `json:"alert,omitempty"`
+	AlertRules []byte             `json:"alert_rules,omitempty"`
+	Weight     *float32           `json:"weight,omitempty"`
+	Learned    *bool              `json:"learned,omitempty"`
+	Ignored    *bool              `json:"ignored,omitempty"`
 }
 
 type User struct {

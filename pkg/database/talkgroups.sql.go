@@ -27,7 +27,7 @@ INSERT INTO talkgroups(
 	$3,
 	$4,
 	$5
-) RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned, ignored
+) RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_rules, weight, learned, ignored
 `
 
 type AddLearnedTalkgroupParams struct {
@@ -58,7 +58,7 @@ func (q *Queries) AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgro
 		&i.Metadata,
 		&i.Tags,
 		&i.Alert,
-		&i.AlertConfig,
+		&i.AlertRules,
 		&i.Weight,
 		&i.Learned,
 		&i.Ignored,
@@ -129,7 +129,7 @@ func (q *Queries) GetSystemName(ctx context.Context, systemID int) (string, erro
 }
 
 const getTalkgroup = `-- name: GetTalkgroup :one
-SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_config, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
+SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_rules, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
 WHERE (system_id, tgid) = ($1, $2)
 `
 
@@ -151,7 +151,7 @@ func (q *Queries) GetTalkgroup(ctx context.Context, systemID int32, tGID int32) 
 		&i.Talkgroup.Metadata,
 		&i.Talkgroup.Tags,
 		&i.Talkgroup.Alert,
-		&i.Talkgroup.AlertConfig,
+		&i.Talkgroup.AlertRules,
 		&i.Talkgroup.Weight,
 		&i.Talkgroup.Learned,
 		&i.Talkgroup.Ignored,
@@ -205,7 +205,7 @@ func (q *Queries) GetTalkgroupTags(ctx context.Context, systemID int32, tGID int
 
 const getTalkgroupWithLearned = `-- name: GetTalkgroupWithLearned :one
 SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE (tg.system_id, tg.tgid) = ($1, $2)
@@ -230,7 +230,7 @@ func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int32, t
 		&i.Talkgroup.Metadata,
 		&i.Talkgroup.Tags,
 		&i.Talkgroup.Alert,
-		&i.Talkgroup.AlertConfig,
+		&i.Talkgroup.AlertRules,
 		&i.Talkgroup.Weight,
 		&i.Talkgroup.Learned,
 		&i.Talkgroup.Ignored,
@@ -241,7 +241,7 @@ func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int32, t
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
-SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_config, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
+SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_rules, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
 WHERE tags && ARRAY[$1]
 `
 
@@ -269,7 +269,7 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 			&i.Talkgroup.Metadata,
 			&i.Talkgroup.Tags,
 			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertConfig,
+			&i.Talkgroup.AlertRules,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
 			&i.Talkgroup.Ignored,
@@ -285,7 +285,7 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 }
 
 const getTalkgroupsWithAnyTags = `-- name: GetTalkgroupsWithAnyTags :many
-SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_config, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
+SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_rules, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
 WHERE tags @> ARRAY[$1]
 `
 
@@ -313,7 +313,7 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 			&i.Talkgroup.Metadata,
 			&i.Talkgroup.Tags,
 			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertConfig,
+			&i.Talkgroup.AlertRules,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
 			&i.Talkgroup.Ignored,
@@ -330,7 +330,7 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 
 const getTalkgroupsWithLearned = `-- name: GetTalkgroupsWithLearned :many
 SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE ignored IS NOT TRUE
@@ -361,7 +361,7 @@ func (q *Queries) GetTalkgroupsWithLearned(ctx context.Context) ([]GetTalkgroups
 			&i.Talkgroup.Metadata,
 			&i.Talkgroup.Tags,
 			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertConfig,
+			&i.Talkgroup.AlertRules,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
 			&i.Talkgroup.Ignored,
@@ -380,7 +380,7 @@ func (q *Queries) GetTalkgroupsWithLearned(ctx context.Context) ([]GetTalkgroups
 
 const getTalkgroupsWithLearnedBySystem = `-- name: GetTalkgroupsWithLearnedBySystem :many
 SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE tg.system_id = $1
@@ -411,7 +411,7 @@ func (q *Queries) GetTalkgroupsWithLearnedBySystem(ctx context.Context, system i
 			&i.Talkgroup.Metadata,
 			&i.Talkgroup.Tags,
 			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertConfig,
+			&i.Talkgroup.AlertRules,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
 			&i.Talkgroup.Ignored,
@@ -448,7 +448,7 @@ func (q *Queries) GetTalkgroupsWithLearnedBySystemCount(ctx context.Context, sys
 
 const getTalkgroupsWithLearnedBySystemP = `-- name: GetTalkgroupsWithLearnedBySystemP :many
 SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE tg.system_id = $1 AND
@@ -512,7 +512,7 @@ func (q *Queries) GetTalkgroupsWithLearnedBySystemP(ctx context.Context, arg Get
 			&i.Talkgroup.Metadata,
 			&i.Talkgroup.Tags,
 			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertConfig,
+			&i.Talkgroup.AlertRules,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
 			&i.Talkgroup.Ignored,
@@ -549,7 +549,7 @@ func (q *Queries) GetTalkgroupsWithLearnedCount(ctx context.Context, filter *str
 
 const getTalkgroupsWithLearnedP = `-- name: GetTalkgroupsWithLearnedP :many
 SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_config, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE ignored IS NOT TRUE AND
@@ -611,7 +611,7 @@ func (q *Queries) GetTalkgroupsWithLearnedP(ctx context.Context, arg GetTalkgrou
 			&i.Talkgroup.Metadata,
 			&i.Talkgroup.Tags,
 			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertConfig,
+			&i.Talkgroup.AlertRules,
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
 			&i.Talkgroup.Ignored,
@@ -639,7 +639,7 @@ INSERT INTO talkgroups(
 	metadata,
 	tags,
 	alert,
-	alert_config,
+	alert_rules,
 	weight,
 	learned,
 	ignored
@@ -654,7 +654,7 @@ SELECT
 	metadata,
 	tags,
 	alert,
-	alert_config,
+	alert_rules,
 	weight,
 	learned,
 	ignored
@@ -665,12 +665,12 @@ FROM talkgroup_versions tgv ON CONFLICT (system_id, tgid) DO UPDATE SET
 	metadata = excluded.metadata,
 	tags = excluded.tags,
 	alert = excluded.alert,
-	alert_config = excluded.alert_config,
+	alert_rules = excluded.alert_rules,
 	weight = excluded.weight,
 	learned = excluded.learner,
 	ignored = excluded.ignored
 WHERE tgv.id = ANY($1)
-RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned, ignored
+RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_rules, weight, learned, ignored
 `
 
 func (q *Queries) RestoreTalkgroupVersion(ctx context.Context, versionIds int) (Talkgroup, error) {
@@ -687,7 +687,7 @@ func (q *Queries) RestoreTalkgroupVersion(ctx context.Context, versionIds int) (
 		&i.Metadata,
 		&i.Tags,
 		&i.Alert,
-		&i.AlertConfig,
+		&i.AlertRules,
 		&i.Weight,
 		&i.Learned,
 		&i.Ignored,
@@ -730,27 +730,27 @@ SET
 	metadata = COALESCE($5, metadata),
 	tags = COALESCE($6, tags),
 	alert = COALESCE($7, alert),
-	alert_config = COALESCE($8, alert_config),
+	alert_rules = COALESCE($8, alert_rules),
 	weight = COALESCE($9, weight),
 	learned = COALESCE($10, learned)
 WHERE id = $11 OR (system_id = $12 AND tgid = $13)
-RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_config, weight, learned, ignored
+RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, tags, alert, alert_rules, weight, learned, ignored
 `
 
 type UpdateTalkgroupParams struct {
-	Name        *string            `json:"name"`
-	AlphaTag    *string            `json:"alpha_tag"`
-	TGGroup     *string            `json:"tg_group"`
-	Frequency   *int32             `json:"frequency"`
-	Metadata    jsontypes.Metadata `json:"metadata"`
-	Tags        []string           `json:"tags"`
-	Alert       *bool              `json:"alert"`
-	AlertConfig rules.AlertRules   `json:"alert_config"`
-	Weight      *float32           `json:"weight"`
-	Learned     *bool              `json:"learned"`
-	ID          *int32             `json:"id"`
-	SystemID    *int32             `json:"system_id"`
-	TGID        *int32             `json:"tgid"`
+	Name       *string            `json:"name"`
+	AlphaTag   *string            `json:"alpha_tag"`
+	TGGroup    *string            `json:"tg_group"`
+	Frequency  *int32             `json:"frequency"`
+	Metadata   jsontypes.Metadata `json:"metadata"`
+	Tags       []string           `json:"tags"`
+	Alert      *bool              `json:"alert"`
+	AlertRules rules.AlertRules   `json:"alert_rules"`
+	Weight     *float32           `json:"weight"`
+	Learned    *bool              `json:"learned"`
+	ID         *int32             `json:"id"`
+	SystemID   *int32             `json:"system_id"`
+	TGID       *int32             `json:"tgid"`
 }
 
 func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error) {
@@ -762,7 +762,7 @@ func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams
 		arg.Metadata,
 		arg.Tags,
 		arg.Alert,
-		arg.AlertConfig,
+		arg.AlertRules,
 		arg.Weight,
 		arg.Learned,
 		arg.ID,
@@ -781,7 +781,7 @@ func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams
 		&i.Metadata,
 		&i.Tags,
 		&i.Alert,
-		&i.AlertConfig,
+		&i.AlertRules,
 		&i.Weight,
 		&i.Learned,
 		&i.Ignored,
