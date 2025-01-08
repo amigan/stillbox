@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	metadata JSONB,
 	tags TEXT[] NOT NULL DEFAULT '{}',
 	alert BOOLEAN NOT NULL DEFAULT 'true',
-	alert_config JSONB,
+	alert_rules JSONB,
 	weight REAL NOT NULL DEFAULT 1.0,
 	learned BOOLEAN NOT NULL DEFAULT FALSE,
 	ignored BOOLEAN NOT NULL DEFAULT FALSE,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS talkgroup_versions(
 	metadata JSONB,
 	tags TEXT[],
 	alert BOOLEAN,
-	alert_config JSONB,
+	alert_rules JSONB,
 	weight REAL,
 	learned BOOLEAN,
 	ignored BOOLEAN

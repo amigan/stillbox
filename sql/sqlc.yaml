@@ -27,7 +27,7 @@ sql:
             go_type: "time.Time"
           - db_type: "pg_catalog.text"
             go_type: "string"
-          - column: "talkgroups.alert_config"
+          - column: "talkgroups.alert_rules"
             go_type:
               import: "dynatron.me/x/stillbox/pkg/alerting/rules"
               type: "AlertRules"

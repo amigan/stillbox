@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAlertConfig(t *testing.T) {
+func TestAlertRules(t *testing.T) {
 	parseTests := []struct {
 		name      string
 		tg        talkgroups.ID
