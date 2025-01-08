@@ -255,8 +255,8 @@ SELECT
 c.id,
 c.call_date,
 c.duration,
-c.system,
-c.talkgroup,
+c.system system_id,
+c.talkgroup tgid,
 COUNT(ic.incident_id) incidents
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
@@ -303,8 +303,8 @@ type ListCallsPRow struct {
 	ID        uuid.UUID          `json:"id"`
 	CallDate  pgtype.Timestamptz `json:"call_date"`
 	Duration  *int32             `json:"duration"`
-	System    int                `json:"system"`
-	Talkgroup int                `json:"talkgroup"`
+	SystemID  int                `json:"system_id"`
+	TGID      int                `json:"tgid"`
 	Incidents int64              `json:"incidents"`
 }
 
@@ -331,8 +331,8 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 			&i.ID,
 			&i.CallDate,
 			&i.Duration,
-			&i.System,
-			&i.Talkgroup,
+			&i.SystemID,
+			&i.TGID,
 			&i.Incidents,
 		); err != nil {
 			return nil, err

@@ -101,8 +101,8 @@ SELECT
 c.id,
 c.call_date,
 c.duration,
-c.system,
-c.talkgroup,
+c.system system_id,
+c.talkgroup tgid,
 COUNT(ic.incident_id) incidents
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
