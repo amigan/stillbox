@@ -245,6 +245,7 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
+		MaxAge:   60 * 60 * 24 * 30, // one month
 	}
 
 	cookie.Domain = r.Host
