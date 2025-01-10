@@ -394,7 +394,7 @@ export class CallsComponent {
           add: this.selection.selected.map((s, i, a) => {
             s.incidents++;
             return s.id;
-        }),
+          }),
         })
         .subscribe({
           next: () => {
