@@ -1,7 +1,7 @@
 @let inc = inc$ | async;
 <mat-card class="incident" appearance="outlined">
   <div class="cardHdr">
-    <h1>{{ inc?.name }} <a [href]="'/incident/'+incID+'.m3u'"><mat-icon>playlist_play</mat-icon></a></h1>
+    <h1>{{ inc?.name }} <a [href]="'/api/incident/'+incID+'.m3u'"><mat-icon>playlist_play</mat-icon></a></h1>
     <button mat-icon-button (click)="editIncident(incID)">
       <mat-icon>edit</mat-icon>
     </button>
