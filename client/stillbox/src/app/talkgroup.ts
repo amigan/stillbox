@@ -15,12 +15,19 @@ export class AlertTime {
 }
 
 export class AlertRule {
-  times: AlertTime[];
-  mult: number;
+  times!: string[];
+  mult!: number;
 
-  constructor(times: AlertTime[], mult: number) {
-    this.times = times;
-    this.mult = mult;
+  public getTimes(): AlertTime[] {
+    let timesProc = <AlertTime[]>[];
+    this.times.forEach((tm) => {
+      let sr = tm.split('+');
+      timesProc.push(<AlertTime>{
+        time: sr[0],
+        duration: sr[1],
+      });
+    });
+    return timesProc;
   }
 }
 
@@ -84,6 +91,10 @@ export class Talkgroup {
     icon?: string,
   ) {
     this.iconSvg = this.iconMap(this.metadata?.icon!);
+    this.alert_rules = this.alert_rules.map((x) =>
+      Object.assign(new AlertRule(), x),
+    );
+    console.log(this.alert_rules);
   }
 
   iconMap(icon: string): string {

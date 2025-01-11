@@ -202,7 +202,7 @@ func (ia *incidentsAPI) getCallsM3U(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var b bytes.Buffer
+	b := new(bytes.Buffer)
 
 	callUrl := common.PtrTo(*ia.baseURL)
 
@@ -220,7 +220,7 @@ func (ia *incidentsAPI) getCallsM3U(w http.ResponseWriter, r *http.Request) {
 
 		callUrl.Path = "/api/call/" + c.ID.String()
 
-		fmt.Fprintf(w, "#EXTINF:%d,%s%s (%s)\n%s\n\n",
+		fmt.Fprintf(b, "#EXTINF:%d,%s%s (%s)\n%s\n\n",
 			c.Duration.Seconds(),
 			tg.StringTag(true),
 			from,

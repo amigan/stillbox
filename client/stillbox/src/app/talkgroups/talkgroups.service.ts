@@ -33,7 +33,10 @@ export class TalkgroupService {
   private subscriptions = new Subscription();
   constructor(private http: HttpClient) {
     this.tgs$ = this.fetchAll.pipe(switchMap(() => this.getTalkgroups()));
-    this.tags$ = this.fetchAll.pipe(switchMap(() => this.getAllTags()));
+    this.tags$ = this.fetchAll.pipe(
+      switchMap(() => this.getAllTags()),
+      shareReplay(),
+    );
     this.fillTgMap();
   }
 
@@ -52,11 +55,8 @@ export class TalkgroupService {
   getTalkgroup(sys: number, tg: number): Observable<Talkgroup> {
     const key = this.tgKey(sys, tg);
     if (!this._getTalkgroup.get(key)) {
-      return this.tgs$.pipe(
-        switchMap((talkg) =>
-          talkg.filter((tgv) => tgv.tgid == tg && tgv.system_id == sys),
-        ),
-      );
+      let rs = new ReplaySubject<Talkgroup>();
+      this._getTalkgroup.set(key, rs);
     }
     return this._getTalkgroup.get(key)!;
   }

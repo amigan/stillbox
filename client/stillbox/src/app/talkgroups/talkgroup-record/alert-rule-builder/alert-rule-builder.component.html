@@ -1,30 +1,21 @@
 <div class="container flex">
   @for (rule of rules; track $index) {
-    <div class="">
-      <table class="table">
-        <thead>
-          <tr>
-            <td>Start</td>
-            <td>Duration</td>
-            <td></td>
-          </tr>
-        </thead>
-        <tbody>
-          @for (time of rule.times; track $index) {
-            <tr>
-              <td>
-                {{ time.time }}
-              </td>
-              <td>
-                {{ time.duration }}
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td><em>No times</em></td>
-            </tr>
-          }
-        </tbody>
+    <div class="rule">
+      <table mat-table [dataSource]="rule | ruleTimes">
+        <ng-container matColumnDef="time">
+          <th mat-header-cell *matHeaderCellDef>Time</th>
+          <td mat-cell *matCellDef="let time">{{ time.time }}</td>
+        </ng-container>
+        <ng-container matColumnDef="duration">
+          <th mat-header-cell *matHeaderCellDef>Duration</th>
+          <td mat-cell *matCellDef="let time">{{ time.duration }}</td>
+        </ng-container>
+        <ng-container matColumnDef="multiplier">
+          <th mat-header-cell *matHeaderCellDef>Multiplier</th>
+          <td mat-cell *matCellDef="let time">{{ rule.mult }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
       </table>
     </div>
   } @empty {
