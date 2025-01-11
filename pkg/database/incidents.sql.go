@@ -180,6 +180,7 @@ FROM incidents_calls ic, LATERAL (
 	FROM swept_calls sc WHERE sc.id = ic.swept_call_id
 ) c
 WHERE ic.incident_id = $1
+ORDER BY ic.call_date ASC
 `
 
 type GetIncidentCallsRow struct {

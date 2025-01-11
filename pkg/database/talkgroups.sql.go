@@ -738,19 +738,19 @@ RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, t
 `
 
 type UpdateTalkgroupParams struct {
-	Name        *string            `json:"name"`
-	AlphaTag    *string            `json:"alpha_tag"`
-	TGGroup     *string            `json:"tg_group"`
-	Frequency   *int32             `json:"frequency"`
-	Metadata    jsontypes.Metadata `json:"metadata"`
-	Tags        []string           `json:"tags"`
-	Alert       *bool              `json:"alert"`
+	Name       *string            `json:"name"`
+	AlphaTag   *string            `json:"alpha_tag"`
+	TGGroup    *string            `json:"tg_group"`
+	Frequency  *int32             `json:"frequency"`
+	Metadata   jsontypes.Metadata `json:"metadata"`
+	Tags       []string           `json:"tags"`
+	Alert      *bool              `json:"alert"`
 	AlertRules rules.AlertRules   `json:"alert_rules"`
-	Weight      *float32           `json:"weight"`
-	Learned     *bool              `json:"learned"`
-	ID          *int32             `json:"id"`
-	SystemID    *int32             `json:"system_id"`
-	TGID        *int32             `json:"tgid"`
+	Weight     *float32           `json:"weight"`
+	Learned    *bool              `json:"learned"`
+	ID         *int32             `json:"id"`
+	SystemID   *int32             `json:"system_id"`
+	TGID       *int32             `json:"tgid"`
 }
 
 func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error) {

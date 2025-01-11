@@ -141,7 +141,8 @@ FROM incidents_calls ic, LATERAL (
 	sc.transcript
 	FROM swept_calls sc WHERE sc.id = ic.swept_call_id
 ) c
-WHERE ic.incident_id = @id;
+WHERE ic.incident_id = @id
+ORDER BY ic.call_date ASC;
 
 -- name: GetIncident :one
 SELECT

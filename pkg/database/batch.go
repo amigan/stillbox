@@ -135,18 +135,18 @@ type UpsertTalkgroupBatchResults struct {
 }
 
 type UpsertTalkgroupParams struct {
-	SystemID    int32              `json:"system_id"`
-	TGID        int32              `json:"tgid"`
-	Name        *string            `json:"name"`
-	AlphaTag    *string            `json:"alpha_tag"`
-	TGGroup     *string            `json:"tg_group"`
-	Frequency   *int32             `json:"frequency"`
-	Metadata    jsontypes.Metadata `json:"metadata"`
-	Tags        []string           `json:"tags"`
-	Alert       interface{}        `json:"alert"`
+	SystemID   int32              `json:"system_id"`
+	TGID       int32              `json:"tgid"`
+	Name       *string            `json:"name"`
+	AlphaTag   *string            `json:"alpha_tag"`
+	TGGroup    *string            `json:"tg_group"`
+	Frequency  *int32             `json:"frequency"`
+	Metadata   jsontypes.Metadata `json:"metadata"`
+	Tags       []string           `json:"tags"`
+	Alert      interface{}        `json:"alert"`
 	AlertRules rules.AlertRules   `json:"alert_rules"`
-	Weight      pgtype.Numeric     `json:"weight"`
-	Learned     *bool              `json:"learned"`
+	Weight     pgtype.Numeric     `json:"weight"`
+	Learned    *bool              `json:"learned"`
 }
 
 func (q *Queries) UpsertTalkgroup(ctx context.Context, arg []UpsertTalkgroupParams) *UpsertTalkgroupBatchResults {
