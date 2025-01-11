@@ -158,9 +158,10 @@ export class TalkgroupRecordComponent {
       .getTalkgroup(Number(this.tgid.sys), Number(this.tgid.tg))
       .pipe(
         tap((tg) => {
-          tg.alert_rules = tg.alert_rules.map((x) =>
-            Object.assign(new AlertRule(), x),
-          );
+          console.log('tap run');
+          tg.alert_rules = tg.alert_rules
+            ? tg.alert_rules.map((x) => Object.assign(new AlertRule(), x))
+            : [];
           this.form.patchValue(tg);
           this.form.controls['tagInput'].setValue('');
           this.form.controls['tagsControl'].setValue(this.tg?.tags ?? []);
