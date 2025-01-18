@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
-	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/rbac"
 	tgsp "dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
@@ -176,7 +177,7 @@ func CtxWithStore(ctx context.Context, s Store) context.Context {
 func FromCtx(ctx context.Context) Store {
 	s, ok := ctx.Value(StoreCtxKey).(Store)
 	if !ok {
-		return NewCache()
+		panic("no tg store in context")
 	}
 
 	return s
@@ -201,19 +202,23 @@ type cache struct {
 	sync.RWMutex
 	tgs     tgMap
 	systems map[int]string
+	db      database.Store
 }
 
 // NewCache returns a new cache Store.
-func NewCache() *cache {
+func NewCache(db database.Store) *cache {
 	tgc := &cache{
 		tgs:     make(tgMap),
 		systems: make(map[int]string),
+		db:      db,
 	}
 
 	return tgc
 }
 
 func (t *cache) Hint(ctx context.Context, tgs []tgsp.ID) error {
+	// since this doesn't actually return data, we can skip rbac checks.
+	// This is only called by system services anyway.
 	if len(tgs) < 1 {
 		return nil
 	}
@@ -322,11 +327,15 @@ func addToRowList[T rowType](t *cache, tgRecords []T) []*tgsp.Talkgroup {
 }
 
 func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.Talkgroup, error) {
-	db := database.FromCtx(ctx)
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceTalkgroup), rbac.WithActions(rbac.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
+	db := t.db
 
 	r := make([]*tgsp.Talkgroup, 0, len(tgs))
 	opt := sOpt(opts)
-	var err error
 	if tgs != nil {
 		toGet := make(tgsp.IDs, 0, len(tgs))
 		for _, id := range tgs {
@@ -394,7 +403,8 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 }
 
 func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
-	tgRecords, err := database.FromCtx(ctx).GetTalkgroupsWithLearnedBySysTGID(ctx, tgs)
+	// No need for RBAC checks since this merely primes the cache and returns nothing.
+	tgRecords, err := t.db.GetTalkgroupsWithLearnedBySysTGID(ctx, tgs)
 	if err != nil {
 		return err
 	}
@@ -420,9 +430,13 @@ func (t *cache) Weight(ctx context.Context, id tgsp.ID, tm time.Time) float64 {
 }
 
 func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...Option) ([]*tgsp.Talkgroup, error) {
-	db := database.FromCtx(ctx)
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceTalkgroup), rbac.WithActions(rbac.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
+	db := t.db
 	opt := sOpt(opts)
-	var err error
 	if opt.pagination != nil {
 		sortDir, err := opt.pagination.SortDir()
 		if err != nil {
@@ -472,13 +486,18 @@ func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...Option) ([]
 }
 
 func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceTalkgroup), rbac.WithActions(rbac.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
 	rec, has := t.get(tg)
 
 	if has {
 		return rec, nil
 	}
 
-	record, err := database.FromCtx(ctx).GetTalkgroupWithLearned(ctx, int32(tg.System), int32(tg.Talkgroup))
+	record, err := t.db.GetTalkgroupWithLearned(ctx, int32(tg.System), int32(tg.Talkgroup))
 	switch err {
 	case nil:
 	case pgx.ErrNoRows:
@@ -494,12 +513,17 @@ func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
 }
 
 func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) {
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceTalkgroup), rbac.WithActions(rbac.ActionRead))
+	if err != nil {
+		return "", false
+	}
+
 	t.RLock()
 	n, has := t.systems[id]
 	t.RUnlock()
 
 	if !has {
-		sys, err := database.FromCtx(ctx).GetSystemName(ctx, id)
+		sys, err := t.db.GetSystemName(ctx, id)
 		if err != nil {
 			return "", false
 		}
@@ -515,20 +539,26 @@ func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) 
 }
 
 func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*tgsp.Talkgroup, error) {
+	user, err := users.UserCheck(ctx, new(tgsp.Talkgroup), "update")
+	if err != nil {
+		return nil, err
+	}
+
 	sysName, has := t.SystemName(ctx, int(*input.SystemID))
 	if !has {
 		return nil, ErrNoSuchSystem
 	}
-	db := database.FromCtx(ctx)
+
+	db := t.db
 	var tg database.Talkgroup
-	err := db.InTx(ctx, func(db database.Store) error {
+	err = db.InTx(ctx, func(db database.Store) error {
 		var oerr error
 		tg, oerr = db.UpdateTalkgroup(ctx, input)
 		if oerr != nil {
 			return oerr
 		}
 		versionBatch := db.StoreTGVersion(ctx, []database.StoreTGVersionParams{{
-			Submitter: auth.UIDFrom(ctx),
+			Submitter: user.ID.Int32Ptr(),
 			TGID:      *input.TGID,
 		}})
 		defer versionBatch.Close()
@@ -557,12 +587,17 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 }
 
 func (t *cache) DeleteSystem(ctx context.Context, id int) error {
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceTalkgroup), rbac.WithActions(rbac.ActionDelete))
+	if err != nil {
+		return err
+	}
+
 	t.Lock()
 	defer t.Unlock()
 
 	t.invalidate()
 
-	err := database.FromCtx(ctx).DeleteSystem(ctx, id)
+	err = t.db.DeleteSystem(ctx, id)
 	switch {
 	case err == nil:
 		return nil
@@ -574,11 +609,21 @@ func (t *cache) DeleteSystem(ctx context.Context, id int) error {
 }
 
 func (t *cache) DeleteTG(ctx context.Context, id tgsp.ID) error {
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceTalkgroup), rbac.WithActions(rbac.ActionDelete))
+	if err != nil {
+		return err
+	}
+
 	t.Lock()
 	defer t.Unlock()
 
-	err := database.FromCtx(ctx).InTx(ctx, func(db database.Store) error {
-		err := db.StoreDeletedTGVersion(ctx, common.PtrTo(int32(id.System)), common.PtrTo(int32(id.Talkgroup)), auth.UIDFrom(ctx))
+	user, err := users.UserCheck(ctx, new(tgsp.Talkgroup), "update")
+	if err != nil {
+		return err
+	}
+
+	err = t.db.InTx(ctx, func(db database.Store) error {
+		err := db.StoreDeletedTGVersion(ctx, common.PtrTo(int32(id.System)), common.PtrTo(int32(id.Talkgroup)), user.ID.Int32Ptr())
 		if err != nil {
 			return err
 		}
@@ -600,7 +645,12 @@ func (t *cache) DeleteTG(ctx context.Context, id tgsp.ID) error {
 }
 
 func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, error) {
-	db := database.FromCtx(ctx)
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceTalkgroup), rbac.WithActions(rbac.ActionCreate, rbac.ActionUpdate))
+	if err != nil {
+		return nil, err
+	}
+
+	db := t.db
 
 	sys, has := t.SystemName(ctx, c.System)
 	if !has {
@@ -633,7 +683,12 @@ func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, er
 }
 
 func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*tgsp.Talkgroup, error) {
-	db := database.FromCtx(ctx)
+	user, err := users.UserCheck(ctx, new(tgsp.Talkgroup), "create+update")
+	if err != nil {
+		return nil, err
+	}
+
+	db := t.db
 	sysName, hasSys := t.SystemName(ctx, system)
 	if !hasSys {
 		return nil, ErrNoSuchSystem
@@ -645,7 +700,7 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 
 	tgs := make([]*tgsp.Talkgroup, 0, len(input))
 
-	err := db.InTx(ctx, func(db database.Store) error {
+	err = db.InTx(ctx, func(db database.Store) error {
 		versionParams := make([]database.StoreTGVersionParams, 0, len(input))
 		for i := range input {
 			// normalize tags
@@ -670,7 +725,7 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 			versionParams = append(versionParams, database.StoreTGVersionParams{
 				SystemID:  int32(system),
 				TGID:      r.TGID,
-				Submitter: auth.UIDFrom(ctx),
+				Submitter: user.ID.Int32Ptr(),
 			})
 			tgs = append(tgs, &tgsp.Talkgroup{
 				Talkgroup: r,
@@ -709,14 +764,24 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 }
 
 func (t *cache) CreateSystem(ctx context.Context, id int, name string) error {
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceTalkgroup), rbac.WithActions(rbac.ActionCreate))
+	if err != nil {
+		return err
+	}
+
 	t.Lock()
 	defer t.Unlock()
 
 	t.addSysNoLock(id, name)
 
-	return database.FromCtx(ctx).CreateSystem(ctx, id, name)
+	return t.db.CreateSystem(ctx, id, name)
 }
 
 func (t *cache) Tags(ctx context.Context) ([]string, error) {
-	return database.FromCtx(ctx).GetAllTalkgroupTags(ctx)
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceTalkgroup), rbac.WithActions(rbac.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
+	return t.db.GetAllTalkgroupTags(ctx)
 }

@@ -3,22 +3,40 @@ package users
 import (
 	"context"
 
+	"dynatron.me/x/stillbox/internal/cache"
 	"dynatron.me/x/stillbox/pkg/database"
 )
 
 type Store interface {
+	// GetUser gets a user by UID.
+	GetUser(ctx context.Context, username string) (*User, error)
+
 	// UserPrefs gets the preferences for the specified user and app name.
-	UserPrefs(ctx context.Context, uid int32, appName string) ([]byte, error)
+	UserPrefs(ctx context.Context, username string, appName string) ([]byte, error)
 
 	// SetUserPrefs sets the preferences for the specified user and app name.
-	SetUserPrefs(ctx context.Context, uid int32, appName string, prefs []byte) error
+	SetUserPrefs(ctx context.Context, username string, appName string, prefs []byte) error
+
+	// Invalidate clears the user cache.
+	Invalidate()
+
+	// UpdateUser updates a user's record
+	UpdateUser(ctx context.Context, username string, user UserUpdate) error
+
+	// GetUserByAPIKey gets a user by API key.
+	GetAPIKey(ctx context.Context, key string) (database.GetAPIKeyRow, error)
 }
 
-type store struct {
+type postgresStore struct {
+	cache.Cache[string, *User]
+	db database.Store
 }
 
-func NewStore() *store {
-	return new(store)
+func NewStore(db database.Store) *postgresStore {
+	return &postgresStore{
+		Cache: cache.New[string, *User](),
+		db:    db,
+	}
 }
 
 type storeCtxKey string
@@ -32,16 +50,56 @@ func CtxWithStore(ctx context.Context, s Store) context.Context {
 func FromCtx(ctx context.Context) Store {
 	s, ok := ctx.Value(StoreCtxKey).(Store)
 	if !ok {
-		return NewStore()
+		panic("no users store in context")
 	}
 
 	return s
 }
 
-func (s *store) UserPrefs(ctx context.Context, uid int32, appName string) ([]byte, error) {
-	db := database.FromCtx(ctx)
+func (s *postgresStore) Invalidate() {
+	s.Clear()
+}
 
-	prefs, err := db.GetAppPrefs(ctx, appName, int(uid))
+type UserUpdate struct {
+	Email   *string `json:"email"`
+	IsAdmin *bool   `json:"isAdmin"`
+}
+
+func (s *postgresStore) UpdateUser(ctx context.Context, username string, user UserUpdate) error {
+	dbu, err := s.db.UpdateUser(ctx, username, user.Email, user.IsAdmin)
+	if err != nil {
+		return err
+	}
+
+	s.Set(username, fromDBUser(dbu))
+
+	return nil
+}
+
+func (s *postgresStore) GetUser(ctx context.Context, username string) (*User, error) {
+	u, has := s.Get(username)
+	if has {
+		return u, nil
+	}
+
+	dbu, err := s.db.GetUserByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+
+	u = fromDBUser(dbu)
+	s.Set(username, u)
+
+	return u, nil
+}
+
+func (s *postgresStore) UserPrefs(ctx context.Context, username string, appName string) ([]byte, error) {
+	u, err := s.GetUser(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+
+	prefs, err := s.db.GetAppPrefs(ctx, appName, int(u.ID))
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +107,15 @@ func (s *store) UserPrefs(ctx context.Context, uid int32, appName string) ([]byt
 	return []byte(prefs), err
 }
 
-func (s *store) SetUserPrefs(ctx context.Context, uid int32, appName string, prefs []byte) error {
-	db := database.FromCtx(ctx)
+func (s *postgresStore) SetUserPrefs(ctx context.Context, username string, appName string, prefs []byte) error {
+	u, err := s.GetUser(ctx, username)
+	if err != nil {
+		return err
+	}
 
-	return db.SetAppPrefs(ctx, appName, prefs, int(uid))
+	return s.db.SetAppPrefs(ctx, appName, prefs, int(u.ID))
+}
+
+func (s *postgresStore) GetAPIKey(ctx context.Context, b64hash string) (database.GetAPIKeyRow, error) {
+	return s.db.GetAPIKey(ctx, b64hash)
 }

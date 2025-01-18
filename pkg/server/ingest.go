@@ -7,5 +7,6 @@ import (
 )
 
 func (s *Server) Ingest(ctx context.Context, call *calls.Call) error {
-	return s.sinks.EmitCall(context.Background(), call)
+	ctx = context.WithoutCancel(ctx)
+	return s.sinks.EmitCall(ctx, call)
 }

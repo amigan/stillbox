@@ -4,17 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/rs/zerolog/log"
 )
 
@@ -44,21 +46,16 @@ type jwtAuth interface {
 
 type claims map[string]interface{}
 
-func UIDFrom(ctx context.Context) *int32 {
+// UsernameFrom gets the username (just the subject from token) from ctx.
+func UsernameFrom(ctx context.Context) *string {
 	tok, _, err := jwtauth.FromContext(ctx)
 	if err != nil {
 		return nil
 	}
 
-	uidStr := tok.Subject()
-	uidInt, err := strconv.Atoi(uidStr)
-	if err != nil {
-		return nil
-	}
+	username := tok.Subject()
 
-	uid := int32(uidInt)
-
-	return &uid
+	return &username
 }
 
 func (a *Auth) Authenticated(r *http.Request) (claims, bool) {
@@ -88,7 +85,38 @@ func TokenFromCookie(r *http.Request) string {
 }
 
 func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
-	return jwtauth.Authenticator(a.jwt)
+	return func(next http.Handler) http.Handler {
+		hfn := func(w http.ResponseWriter, r *http.Request) {
+			token, _, err := jwtauth.FromContext(r.Context())
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+
+			if token != nil && jwt.Validate(token, a.jwt.ValidateOptions()...) == nil {
+				ctx := r.Context()
+				username := token.Subject()
+
+				sub, err := users.FromCtx(ctx).GetUser(ctx, username)
+				if err != nil {
+					http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+					return
+				}
+
+				ctx = rbac.CtxWithSubject(ctx, sub)
+
+				next.ServeHTTP(w, r.WithContext(ctx))
+
+				return
+			}
+
+			// Token is authenticated, pass it through
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(hfn)
+	}
+
 }
 
 func (a *Auth) initJWT() {
@@ -124,12 +152,12 @@ func (a *Auth) Login(ctx context.Context, username, password string) (token stri
 		}
 	}
 
-	return a.newToken(found.ID), nil
+	return a.newToken(found.Username), nil
 }
 
-func (a *Auth) newToken(uid int) string {
+func (a *Auth) newToken(username string) string {
 	claims := claims{
-		"sub": strconv.Itoa(int(uid)),
+		"sub": username,
 	}
 	jwtauth.SetExpiryIn(claims, time.Hour*24*30) // one month
 	_, tokenString, err := a.jwt.Encode(claims)
@@ -161,19 +189,14 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid token", http.StatusBadRequest)
 		return
 	}
-	existingSubjectUID := jwToken.Subject()
-	if existingSubjectUID == "" {
+
+	existingSubjectUsername := jwToken.Subject()
+	if existingSubjectUsername == "" {
 		http.Error(w, "Invalid token", http.StatusBadRequest)
 		return
 	}
-	uid, err := strconv.Atoi(existingSubjectUID)
-	if err != nil {
-		log.Error().Str("sub", existingSubjectUID).Err(err).Msg("atoi uid for token refresh")
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
 
-	tok := a.newToken(uid)
+	tok := a.newToken(existingSubjectUsername)
 
 	cookie := &http.Cookie{
 		Name:     CookieName,

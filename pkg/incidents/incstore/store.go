@@ -6,10 +6,11 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
-	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/incidents"
+	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
@@ -72,6 +73,11 @@ func NewStore() Store {
 }
 
 func (s *store) CreateIncident(ctx context.Context, inc incidents.Incident) (*incidents.Incident, error) {
+	user, err := users.UserCheck(ctx, new(incidents.Incident), "create")
+	if err != nil {
+		return nil, err
+	}
+
 	db := database.FromCtx(ctx)
 	var dbInc database.Incident
 
@@ -81,6 +87,7 @@ func (s *store) CreateIncident(ctx context.Context, inc incidents.Incident) (*in
 		var err error
 		dbInc, err = db.CreateIncident(ctx, database.CreateIncidentParams{
 			ID:          id,
+			Owner:       user.ID.Int(),
 			Name:        inc.Name,
 			Description: inc.Description,
 			StartTime:   inc.StartTime.PGTypeTSTZ(),
@@ -125,6 +132,16 @@ func (s *store) CreateIncident(ctx context.Context, inc incidents.Incident) (*in
 }
 
 func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID, addCallIDs []uuid.UUID, notes []byte, removeCallIDs []uuid.UUID) error {
+	inc, err := s.getIncidentOwner(ctx, incidentID)
+	if err != nil {
+		return err
+	}
+
+	_, err = rbac.Check(ctx, &inc, rbac.WithActions(rbac.ActionUpdate))
+	if err != nil {
+		return err
+	}
+
 	return database.FromCtx(ctx).InTx(ctx, func(db database.Store) error {
 		if len(addCallIDs) > 0 {
 			var noteAr [][]byte
@@ -153,6 +170,10 @@ func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID
 }
 
 func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []Incident, totalCount int, err error) {
+	_, err = rbac.Check(ctx, new(incidents.Incident), rbac.WithActions(rbac.ActionRead))
+	if err != nil {
+		return nil, 0, err
+	}
 	db := database.FromCtx(ctx)
 
 	offset, perPage := p.Pagination.OffsetPerPage(100)
@@ -196,6 +217,7 @@ func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []Incide
 func fromDBIncident(id uuid.UUID, d database.Incident) incidents.Incident {
 	return incidents.Incident{
 		ID:          id,
+		Owner:       users.UserID(d.Owner),
 		Name:        d.Name,
 		Description: d.Description,
 		StartTime:   jsontypes.TimePtrFromTSTZ(d.StartTime),
@@ -214,6 +236,7 @@ func fromDBListInPRow(id uuid.UUID, d database.ListIncidentsPRow) Incident {
 	return Incident{
 		Incident: incidents.Incident{
 			ID:          id,
+			Owner:       users.UserID(d.Owner),
 			Name:        d.Name,
 			Description: d.Description,
 			StartTime:   jsontypes.TimePtrFromTSTZ(d.StartTime),
@@ -228,7 +251,7 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 	r := make([]incidents.IncidentCall, 0, len(d))
 	for _, v := range d {
 		dur := calls.CallDuration(time.Duration(common.ZeroIfNil(v.Duration)) * time.Millisecond)
-		sub := common.PtrTo(auth.UserID(common.ZeroIfNil(v.Submitter)))
+		sub := common.PtrTo(users.UserID(common.ZeroIfNil(v.Submitter)))
 		r = append(r, incidents.IncidentCall{
 			Call: calls.Call{
 				ID:          v.CallID,
@@ -252,6 +275,11 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 }
 
 func (s *store) Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error) {
+	_, err := rbac.Check(ctx, new(incidents.Incident), rbac.WithActions(rbac.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
 	var r incidents.Incident
 	txErr := database.FromCtx(ctx).InTx(ctx, func(db database.Store) error {
 		inc, err := db.GetIncident(ctx, id)
@@ -298,6 +326,16 @@ func (uip UpdateIncidentParams) toDBUIP(id uuid.UUID) database.UpdateIncidentPar
 }
 
 func (s *store) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncidentParams) (*incidents.Incident, error) {
+	ckinc, err := s.getIncidentOwner(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = rbac.Check(ctx, &ckinc, rbac.WithActions(rbac.ActionUpdate))
+	if err != nil {
+		return nil, err
+	}
+
 	db := database.FromCtx(ctx)
 
 	dbInc, err := db.UpdateIncident(ctx, p.toDBUIP(id))
@@ -311,9 +349,24 @@ func (s *store) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncide
 }
 
 func (s *store) DeleteIncident(ctx context.Context, id uuid.UUID) error {
+	inc, err := s.getIncidentOwner(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	_, err = rbac.Check(ctx, &inc, rbac.WithActions(rbac.ActionDelete))
+	if err != nil {
+		return err
+	}
+
 	return database.FromCtx(ctx).DeleteIncident(ctx, id)
 }
 
 func (s *store) UpdateNotes(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID, notes []byte) error {
 	return database.FromCtx(ctx).UpdateCallIncidentNotes(ctx, notes, incidentID, callID)
+}
+
+func (s *store) getIncidentOwner(ctx context.Context, id uuid.UUID) (incidents.Incident, error) {
+	owner, err := database.FromCtx(ctx).GetIncidentOwner(ctx, id)
+	return incidents.Incident{ID: id, Owner: users.UserID(owner)}, err
 }

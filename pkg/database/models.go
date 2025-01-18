@@ -58,6 +58,7 @@ type Call struct {
 type Incident struct {
 	ID          uuid.UUID          `json:"id,omitempty"`
 	Name        string             `json:"name,omitempty"`
+	Owner       int                `json:"owner,omitempty"`
 	Description *string            `json:"description,omitempty"`
 	StartTime   pgtype.Timestamptz `json:"start_time,omitempty"`
 	EndTime     pgtype.Timestamptz `json:"end_time,omitempty"`
@@ -78,6 +79,14 @@ type Setting struct {
 	Name      string `json:"name,omitempty"`
 	UpdatedBy *int32 `json:"updated_by,omitempty"`
 	Value     []byte `json:"value,omitempty"`
+}
+
+type Share struct {
+	ID         string             `json:"id,omitempty"`
+	EntityType string             `json:"entity_type,omitempty"`
+	EntityID   uuid.UUID          `json:"entity_id,omitempty"`
+	Owner      int                `json:"owner,omitempty"`
+	Expiration pgtype.Timestamptz `json:"expiration,omitempty"`
 }
 
 type SweptCall struct {

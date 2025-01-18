@@ -9,6 +9,8 @@ import (
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -70,7 +72,7 @@ func (car *CallUploadRequest) mimeType() string {
 	return ""
 }
 
-func (car *CallUploadRequest) ToCall(submitter auth.UserID) (*calls.Call, error) {
+func (car *CallUploadRequest) ToCall(submitter users.UserID) (*calls.Call, error) {
 	return calls.Make(&calls.Call{
 		Submitter:      &submitter,
 		System:         car.System,
@@ -98,7 +100,13 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	submitter, err := h.auth.CheckAPIKey(ctx, r.Form.Get("key"))
+	submitterSub, err := h.auth.CheckAPIKey(ctx, r.Form.Get("key"))
+	if err != nil {
+		auth.ErrorResponse(w, err)
+		return
+	}
+
+	submitter, err := users.FromSubject(submitterSub)
 	if err != nil {
 		auth.ErrorResponse(w, err)
 		return
@@ -117,20 +125,22 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	call, err := cur.ToCall(*submitter)
+	call, err := cur.ToCall(submitter.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("toCall failed")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.ing.Ingest(ctx, call)
+	err = h.ing.Ingest(rbac.CtxWithSubject(ctx, submitterSub), call)
 	if err != nil {
-		log.Error().Err(err).Msg("ingest failed")
-		http.Error(w, "Call ingest failed.", http.StatusInternalServerError)
+		if rbac.ErrAccessDenied(err) != nil {
+			log.Error().Err(err).Msg("ingest failed")
+			http.Error(w, "Call ingest failed.", http.StatusForbidden)
+		}
 		return
 	}
 
-	log.Info().Int("system", cur.System).Int("tgid", cur.Talkgroup).Str("duration", call.Duration.Duration().String()).Msg("ingested")
+	log.Info().Int("system", cur.System).Int("tgid", cur.Talkgroup).Str("duration", call.Duration.Duration().String()).Str("sub", submitter.Username).Msg("ingested")
 
 	written, err := w.Write([]byte("Call imported successfully."))
 	if err != nil {

@@ -7,28 +7,28 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/rbac"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
 type apiKeyAuth interface {
-	// CheckAPIKey validates the provided key and returns the API owner's UserID.
+	// CheckAPIKey validates the provided key and returns the API owner's users.UserID.
 	// An error is returned if validation fails for any reason.
-	CheckAPIKey(ctx context.Context, key string) (*UserID, error)
+	CheckAPIKey(ctx context.Context, key string) (rbac.Subject, error)
 }
 
-func (a *Auth) CheckAPIKey(ctx context.Context, key string) (*UserID, error) {
+func (a *Auth) CheckAPIKey(ctx context.Context, key string) (rbac.Subject, error) {
 	keyUuid, err := uuid.Parse(key)
 	if err != nil {
 		log.Error().Str("apikey", key).Msg("cannot parse key")
 		return nil, ErrBadRequest
 	}
 
-	db := database.FromCtx(ctx)
 	hash := sha256.Sum256([]byte(keyUuid.String()))
 	b64hash := base64.StdEncoding.EncodeToString(hash[:])
-	apik, err := db.GetAPIKey(ctx, b64hash)
+	apik, err := a.ust.GetAPIKey(ctx, b64hash)
 	if err != nil {
 		if database.IsNoRows(err) {
 			log.Error().Str("apikey", keyUuid.String()).Msg("no such key")
@@ -44,7 +44,5 @@ func (a *Auth) CheckAPIKey(ctx context.Context, key string) (*UserID, error) {
 		return nil, ErrUnauthorized
 	}
 
-	owner := UserID(apik.Owner)
-
-	return &owner, nil
+	return a.ust.GetUser(ctx, apik.Username)
 }

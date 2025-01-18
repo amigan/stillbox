@@ -155,6 +155,15 @@ func (q *Queries) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Times
 	return result.RowsAffected(), nil
 }
 
+const deleteCall = `-- name: DeleteCall :exec
+DELETE FROM calls WHERE id = $1
+`
+
+func (q *Queries) DeleteCall(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteCall, id)
+	return err
+}
+
 const getCallAudioByID = `-- name: GetCallAudioByID :one
 SELECT
 	c.call_date,
@@ -190,6 +199,17 @@ func (q *Queries) GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAu
 		&i.AudioBlob,
 	)
 	return i, err
+}
+
+const getCallSubmitter = `-- name: GetCallSubmitter :one
+SELECT submitter FROM calls WHERE id = $1
+`
+
+func (q *Queries) GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, error) {
+	row := q.db.QueryRow(ctx, getCallSubmitter, id)
+	var submitter *int32
+	err := row.Scan(&submitter)
+	return submitter, err
 }
 
 const getDatabaseSize = `-- name: GetDatabaseSize :one

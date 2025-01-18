@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"
@@ -37,6 +38,7 @@ func (a *api) Subrouter() http.Handler {
 	r.Mount("/call", new(callsAPI).Subrouter())
 	r.Mount("/user", new(usersAPI).Subrouter())
 	r.Mount("/incident", newIncidentsAPI(&a.baseURL).Subrouter())
+	r.Mount("/share", newShareHandler(&a.baseURL).Subrouter())
 
 	return r
 }
@@ -79,6 +81,14 @@ func unauthErrText(err error) render.Renderer {
 		Err:   err,
 		Code:  http.StatusUnauthorized,
 		Error: "Unauthorized: " + err.Error(),
+	}
+}
+
+func forbiddenErrText(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusForbidden,
+		Error: "Forbidden: " + err.Error(),
 	}
 }
 
@@ -127,9 +137,10 @@ var statusMapping = map[error]errResponder{
 	ErrTGIDMismatch:           badRequestErrText,
 	ErrSysMismatch:            badRequestErrText,
 	tgstore.ErrReference:      constraintErrText,
-	ErrBadUID:                 unauthErrText,
+	rbac.ErrBadSubject:        unauthErrText,
 	ErrBadAppName:             unauthErrText,
 	common.ErrPageOutOfRange:  badRequestErrText,
+	rbac.ErrNotAuthorized:     unauthErrText,
 }
 
 func autoError(err error) render.Renderer {
@@ -142,6 +153,10 @@ func autoError(err error) render.Renderer {
 		if errors.Is(err, e) {
 			return c(err)
 		}
+	}
+
+	if rbac.ErrAccessDenied(err) != nil {
+		return forbiddenErrText(err)
 	}
 
 	return internalError(err)

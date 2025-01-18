@@ -1,14 +1,10 @@
 -- name: GetUserByID :one
 SELECT * FROM users
-WHERE id = $1 LIMIT 1;
+WHERE id = $1;
 
 -- name: GetUserByUsername :one
 SELECT * FROM users
-WHERE username = $1 LIMIT 1;
-
--- name: GetUserByUID :one
-SELECT * FROM users
-WHERE id = $1 LIMIT 1;
+WHERE username = $1;
 
 -- name: GetUsers :many
 SELECT * FROM users;
@@ -28,6 +24,14 @@ DELETE FROM users WHERE username = $1;
 -- name: UpdatePassword :exec
 UPDATE users SET password = $2 WHERE username = $1;
 
+-- name: UpdateUser :one
+UPDATE users SET
+	email = COALESCE(sqlc.narg('email'), email),
+	is_admin = COALESCE(sqlc.narg('is_admin'), is_admin)
+WHERE
+	username = $1
+RETURNING *;
+
 -- name: CreateAPIKey :one
 INSERT INTO api_keys(
 	owner,
@@ -42,7 +46,17 @@ RETURNING *;
 DELETE FROM api_keys WHERE api_key = $1;
 
 -- name: GetAPIKey :one
-SELECT * FROM api_keys WHERE api_key = $1;
+SELECT
+	a.id,
+	a.owner,
+	a.created_at,
+	a.expires,
+	a.disabled,
+	a.api_key,
+	u.username
+FROM api_keys a
+JOIN users u ON (a.owner = u.id)
+WHERE api_key = $1;
 
 -- name: GetAppPrefs :one
 SELECT (prefs->>(@app_name::TEXT))::JSONB FROM users WHERE id = @uid;

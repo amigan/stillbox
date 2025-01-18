@@ -47,9 +47,11 @@ func (s *Server) setupRoutes() {
 	})
 
 	r.Group(func(r chi.Router) {
-		// auth routes get rate-limited heavily, but not using middleware
+		// auth/share routes get rate-limited heavily, but not using middleware
+		s.rateLimit(r)
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		s.auth.PublicRoutes(r)
+		//	r.Mount("/share", s.share.ShareRouter(s.rest))
 	})
 
 	r.Group(func(r chi.Router) {
@@ -66,7 +68,7 @@ func (s *Server) setupRoutes() {
 func (s *Server) WithCtxStores() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			r = r.WithContext(s.addStoresTo(r.Context()))
+			r = r.WithContext(s.fillCtx(r.Context()))
 			next.ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fn)

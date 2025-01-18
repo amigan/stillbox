@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -91,12 +92,32 @@ func (q *Queries) DeleteUser(ctx context.Context, username string) error {
 }
 
 const getAPIKey = `-- name: GetAPIKey :one
-SELECT id, owner, created_at, expires, disabled, api_key FROM api_keys WHERE api_key = $1
+SELECT
+	a.id,
+	a.owner,
+	a.created_at,
+	a.expires,
+	a.disabled,
+	a.api_key,
+	u.username
+FROM api_keys a
+JOIN users u ON (a.owner = u.id)
+WHERE api_key = $1
 `
 
-func (q *Queries) GetAPIKey(ctx context.Context, apiKey string) (ApiKey, error) {
+type GetAPIKeyRow struct {
+	ID        int              `json:"id"`
+	Owner     int              `json:"owner"`
+	CreatedAt time.Time        `json:"created_at"`
+	Expires   pgtype.Timestamp `json:"expires"`
+	Disabled  *bool            `json:"disabled"`
+	ApiKey    string           `json:"api_key"`
+	Username  string           `json:"username"`
+}
+
+func (q *Queries) GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, error) {
 	row := q.db.QueryRow(ctx, getAPIKey, apiKey)
-	var i ApiKey
+	var i GetAPIKeyRow
 	err := row.Scan(
 		&i.ID,
 		&i.Owner,
@@ -104,6 +125,7 @@ func (q *Queries) GetAPIKey(ctx context.Context, apiKey string) (ApiKey, error) 
 		&i.Expires,
 		&i.Disabled,
 		&i.ApiKey,
+		&i.Username,
 	)
 	return i, err
 }
@@ -121,7 +143,7 @@ func (q *Queries) GetAppPrefs(ctx context.Context, appName string, uid int) ([]b
 
 const getUserByID = `-- name: GetUserByID :one
 SELECT id, username, password, email, is_admin, prefs FROM users
-WHERE id = $1 LIMIT 1
+WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id int) (User, error) {
@@ -138,28 +160,9 @@ func (q *Queries) GetUserByID(ctx context.Context, id int) (User, error) {
 	return i, err
 }
 
-const getUserByUID = `-- name: GetUserByUID :one
-SELECT id, username, password, email, is_admin, prefs FROM users
-WHERE id = $1 LIMIT 1
-`
-
-func (q *Queries) GetUserByUID(ctx context.Context, id int) (User, error) {
-	row := q.db.QueryRow(ctx, getUserByUID, id)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.Password,
-		&i.Email,
-		&i.IsAdmin,
-		&i.Prefs,
-	)
-	return i, err
-}
-
 const getUserByUsername = `-- name: GetUserByUsername :one
 SELECT id, username, password, email, is_admin, prefs FROM users
-WHERE username = $1 LIMIT 1
+WHERE username = $1
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
@@ -223,4 +226,27 @@ UPDATE users SET password = $2 WHERE username = $1
 func (q *Queries) UpdatePassword(ctx context.Context, username string, password string) error {
 	_, err := q.db.Exec(ctx, updatePassword, username, password)
 	return err
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users SET
+	email = COALESCE($2, email),
+	is_admin = COALESCE($3, is_admin)
+WHERE
+	username = $1
+RETURNING id, username, password, email, is_admin, prefs
+`
+
+func (q *Queries) UpdateUser(ctx context.Context, username string, email *string, isAdmin *bool) (User, error) {
+	row := q.db.QueryRow(ctx, updateUser, username, email, isAdmin)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.IsAdmin,
+		&i.Prefs,
+	)
+	return i, err
 }

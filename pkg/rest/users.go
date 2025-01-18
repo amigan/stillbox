@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	"dynatron.me/x/stillbox/pkg/auth"
+	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/go-chi/chi/v5"
 )
 
 var (
-	ErrBadUID     = errors.New("bad UID in token")
 	ErrBadAppName = errors.New("bad app name")
 )
 
@@ -32,10 +32,10 @@ func (ua *usersAPI) Subrouter() http.Handler {
 func (ua *usersAPI) getPrefs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	uid := auth.UIDFrom(ctx)
+	username := auth.UsernameFrom(ctx)
 
-	if uid == nil {
-		wErr(w, r, autoError(ErrBadUID))
+	if username == nil {
+		wErr(w, r, autoError(rbac.ErrBadSubject))
 		return
 	}
 
@@ -55,7 +55,7 @@ func (ua *usersAPI) getPrefs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	us := users.FromCtx(ctx)
-	prefs, err := us.UserPrefs(ctx, *uid, *p.AppName)
+	prefs, err := us.UserPrefs(ctx, *username, *p.AppName)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
@@ -67,10 +67,10 @@ func (ua *usersAPI) getPrefs(w http.ResponseWriter, r *http.Request) {
 func (ua *usersAPI) putPrefs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	uid := auth.UIDFrom(ctx)
+	username := auth.UsernameFrom(ctx)
 
-	if uid == nil {
-		wErr(w, r, autoError(ErrBadUID))
+	if username == nil {
+		wErr(w, r, autoError(rbac.ErrBadSubject))
 		return
 	}
 
@@ -102,7 +102,7 @@ func (ua *usersAPI) putPrefs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	us := users.FromCtx(ctx)
-	err = us.SetUserPrefs(ctx, *uid, *p.AppName, prefs)
+	err = us.SetUserPrefs(ctx, *username, *p.AppName, prefs)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return

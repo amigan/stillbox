@@ -12,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/internal/trending"
 	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
@@ -59,8 +60,9 @@ func (s *Simulation) stepClock(t time.Time) {
 
 // Simulate begins the simulation using the DB handle from ctx. It returns final scores.
 func (s *Simulation) Simulate(ctx context.Context) (trending.Scores[talkgroups.ID], error) {
+	db := database.FromCtx(ctx)
 	now := time.Now()
-	tgc := tgstore.NewCache()
+	tgc := tgstore.NewCache(db)
 
 	s.Enable = true
 	s.alerter = New(s.Alerting, tgc, WithClock(&s.clock)).(*alerter)

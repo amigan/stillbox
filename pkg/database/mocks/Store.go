@@ -502,6 +502,53 @@ func (_c *Store_CreatePartition_Call) RunAndReturn(run func(context.Context, str
 	return _c
 }
 
+// CreateShare provides a mock function with given fields: ctx, arg
+func (_m *Store) CreateShare(ctx context.Context, arg database.CreateShareParams) error {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateShare")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, database.CreateShareParams) error); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_CreateShare_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateShare'
+type Store_CreateShare_Call struct {
+	*mock.Call
+}
+
+// CreateShare is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.CreateShareParams
+func (_e *Store_Expecter) CreateShare(ctx interface{}, arg interface{}) *Store_CreateShare_Call {
+	return &Store_CreateShare_Call{Call: _e.mock.On("CreateShare", ctx, arg)}
+}
+
+func (_c *Store_CreateShare_Call) Run(run func(ctx context.Context, arg database.CreateShareParams)) *Store_CreateShare_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(database.CreateShareParams))
+	})
+	return _c
+}
+
+func (_c *Store_CreateShare_Call) Return(_a0 error) *Store_CreateShare_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_CreateShare_Call) RunAndReturn(run func(context.Context, database.CreateShareParams) error) *Store_CreateShare_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateSystem provides a mock function with given fields: ctx, iD, name
 func (_m *Store) CreateSystem(ctx context.Context, iD int, name string) error {
 	ret := _m.Called(ctx, iD, name)
@@ -748,6 +795,53 @@ func (_c *Store_DeleteAPIKey_Call) RunAndReturn(run func(context.Context, string
 	return _c
 }
 
+// DeleteCall provides a mock function with given fields: ctx, id
+func (_m *Store) DeleteCall(ctx context.Context, id uuid.UUID) error {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteCall")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_DeleteCall_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteCall'
+type Store_DeleteCall_Call struct {
+	*mock.Call
+}
+
+// DeleteCall is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *Store_Expecter) DeleteCall(ctx interface{}, id interface{}) *Store_DeleteCall_Call {
+	return &Store_DeleteCall_Call{Call: _e.mock.On("DeleteCall", ctx, id)}
+}
+
+func (_c *Store_DeleteCall_Call) Run(run func(ctx context.Context, id uuid.UUID)) *Store_DeleteCall_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *Store_DeleteCall_Call) Return(_a0 error) *Store_DeleteCall_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_DeleteCall_Call) RunAndReturn(run func(context.Context, uuid.UUID) error) *Store_DeleteCall_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteIncident provides a mock function with given fields: ctx, id
 func (_m *Store) DeleteIncident(ctx context.Context, id uuid.UUID) error {
 	ret := _m.Called(ctx, id)
@@ -791,6 +885,53 @@ func (_c *Store_DeleteIncident_Call) Return(_a0 error) *Store_DeleteIncident_Cal
 }
 
 func (_c *Store_DeleteIncident_Call) RunAndReturn(run func(context.Context, uuid.UUID) error) *Store_DeleteIncident_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteShare provides a mock function with given fields: ctx, id
+func (_m *Store) DeleteShare(ctx context.Context, id string) error {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteShare")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_DeleteShare_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteShare'
+type Store_DeleteShare_Call struct {
+	*mock.Call
+}
+
+// DeleteShare is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id string
+func (_e *Store_Expecter) DeleteShare(ctx interface{}, id interface{}) *Store_DeleteShare_Call {
+	return &Store_DeleteShare_Call{Call: _e.mock.On("DeleteShare", ctx, id)}
+}
+
+func (_c *Store_DeleteShare_Call) Run(run func(ctx context.Context, id string)) *Store_DeleteShare_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Store_DeleteShare_Call) Return(_a0 error) *Store_DeleteShare_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_DeleteShare_Call) RunAndReturn(run func(context.Context, string) error) *Store_DeleteShare_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1033,22 +1174,22 @@ func (_c *Store_DropPartition_Call) RunAndReturn(run func(context.Context, strin
 }
 
 // GetAPIKey provides a mock function with given fields: ctx, apiKey
-func (_m *Store) GetAPIKey(ctx context.Context, apiKey string) (database.ApiKey, error) {
+func (_m *Store) GetAPIKey(ctx context.Context, apiKey string) (database.GetAPIKeyRow, error) {
 	ret := _m.Called(ctx, apiKey)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetAPIKey")
 	}
 
-	var r0 database.ApiKey
+	var r0 database.GetAPIKeyRow
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (database.ApiKey, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (database.GetAPIKeyRow, error)); ok {
 		return rf(ctx, apiKey)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) database.ApiKey); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) database.GetAPIKeyRow); ok {
 		r0 = rf(ctx, apiKey)
 	} else {
-		r0 = ret.Get(0).(database.ApiKey)
+		r0 = ret.Get(0).(database.GetAPIKeyRow)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
@@ -1079,12 +1220,12 @@ func (_c *Store_GetAPIKey_Call) Run(run func(ctx context.Context, apiKey string)
 	return _c
 }
 
-func (_c *Store_GetAPIKey_Call) Return(_a0 database.ApiKey, _a1 error) *Store_GetAPIKey_Call {
+func (_c *Store_GetAPIKey_Call) Return(_a0 database.GetAPIKeyRow, _a1 error) *Store_GetAPIKey_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Store_GetAPIKey_Call) RunAndReturn(run func(context.Context, string) (database.ApiKey, error)) *Store_GetAPIKey_Call {
+func (_c *Store_GetAPIKey_Call) RunAndReturn(run func(context.Context, string) (database.GetAPIKeyRow, error)) *Store_GetAPIKey_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1264,6 +1405,65 @@ func (_c *Store_GetCallAudioByID_Call) RunAndReturn(run func(context.Context, uu
 	return _c
 }
 
+// GetCallSubmitter provides a mock function with given fields: ctx, id
+func (_m *Store) GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCallSubmitter")
+	}
+
+	var r0 *int32
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (*int32, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) *int32); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*int32)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetCallSubmitter_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCallSubmitter'
+type Store_GetCallSubmitter_Call struct {
+	*mock.Call
+}
+
+// GetCallSubmitter is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *Store_Expecter) GetCallSubmitter(ctx interface{}, id interface{}) *Store_GetCallSubmitter_Call {
+	return &Store_GetCallSubmitter_Call{Call: _e.mock.On("GetCallSubmitter", ctx, id)}
+}
+
+func (_c *Store_GetCallSubmitter_Call) Run(run func(ctx context.Context, id uuid.UUID)) *Store_GetCallSubmitter_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *Store_GetCallSubmitter_Call) Return(_a0 *int32, _a1 error) *Store_GetCallSubmitter_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetCallSubmitter_Call) RunAndReturn(run func(context.Context, uuid.UUID) (*int32, error)) *Store_GetCallSubmitter_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetDatabaseSize provides a mock function with given fields: ctx
 func (_m *Store) GetDatabaseSize(ctx context.Context) (string, error) {
 	ret := _m.Called(ctx)
@@ -1432,6 +1632,120 @@ func (_c *Store_GetIncidentCalls_Call) Return(_a0 []database.GetIncidentCallsRow
 }
 
 func (_c *Store_GetIncidentCalls_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]database.GetIncidentCallsRow, error)) *Store_GetIncidentCalls_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetIncidentOwner provides a mock function with given fields: ctx, id
+func (_m *Store) GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetIncidentOwner")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (int, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetIncidentOwner_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetIncidentOwner'
+type Store_GetIncidentOwner_Call struct {
+	*mock.Call
+}
+
+// GetIncidentOwner is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *Store_Expecter) GetIncidentOwner(ctx interface{}, id interface{}) *Store_GetIncidentOwner_Call {
+	return &Store_GetIncidentOwner_Call{Call: _e.mock.On("GetIncidentOwner", ctx, id)}
+}
+
+func (_c *Store_GetIncidentOwner_Call) Run(run func(ctx context.Context, id uuid.UUID)) *Store_GetIncidentOwner_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *Store_GetIncidentOwner_Call) Return(_a0 int, _a1 error) *Store_GetIncidentOwner_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetIncidentOwner_Call) RunAndReturn(run func(context.Context, uuid.UUID) (int, error)) *Store_GetIncidentOwner_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetShare provides a mock function with given fields: ctx, id
+func (_m *Store) GetShare(ctx context.Context, id string) (database.Share, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetShare")
+	}
+
+	var r0 database.Share
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (database.Share, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) database.Share); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(database.Share)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetShare_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetShare'
+type Store_GetShare_Call struct {
+	*mock.Call
+}
+
+// GetShare is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id string
+func (_e *Store_Expecter) GetShare(ctx interface{}, id interface{}) *Store_GetShare_Call {
+	return &Store_GetShare_Call{Call: _e.mock.On("GetShare", ctx, id)}
+}
+
+func (_c *Store_GetShare_Call) Run(run func(ctx context.Context, id string)) *Store_GetShare_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Store_GetShare_Call) Return(_a0 database.Share, _a1 error) *Store_GetShare_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetShare_Call) RunAndReturn(run func(context.Context, string) (database.Share, error)) *Store_GetShare_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2433,63 +2747,6 @@ func (_c *Store_GetUserByID_Call) RunAndReturn(run func(context.Context, int) (d
 	return _c
 }
 
-// GetUserByUID provides a mock function with given fields: ctx, id
-func (_m *Store) GetUserByUID(ctx context.Context, id int) (database.User, error) {
-	ret := _m.Called(ctx, id)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetUserByUID")
-	}
-
-	var r0 database.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int) (database.User, error)); ok {
-		return rf(ctx, id)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, int) database.User); ok {
-		r0 = rf(ctx, id)
-	} else {
-		r0 = ret.Get(0).(database.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = rf(ctx, id)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Store_GetUserByUID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUserByUID'
-type Store_GetUserByUID_Call struct {
-	*mock.Call
-}
-
-// GetUserByUID is a helper method to define mock.On call
-//   - ctx context.Context
-//   - id int
-func (_e *Store_Expecter) GetUserByUID(ctx interface{}, id interface{}) *Store_GetUserByUID_Call {
-	return &Store_GetUserByUID_Call{Call: _e.mock.On("GetUserByUID", ctx, id)}
-}
-
-func (_c *Store_GetUserByUID_Call) Run(run func(ctx context.Context, id int)) *Store_GetUserByUID_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int))
-	})
-	return _c
-}
-
-func (_c *Store_GetUserByUID_Call) Return(_a0 database.User, _a1 error) *Store_GetUserByUID_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *Store_GetUserByUID_Call) RunAndReturn(run func(context.Context, int) (database.User, error)) *Store_GetUserByUID_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // GetUserByUsername provides a mock function with given fields: ctx, username
 func (_m *Store) GetUserByUsername(ctx context.Context, username string) (database.User, error) {
 	ret := _m.Called(ctx, username)
@@ -2883,6 +3140,52 @@ func (_c *Store_ListIncidentsP_Call) Return(_a0 []database.ListIncidentsPRow, _a
 }
 
 func (_c *Store_ListIncidentsP_Call) RunAndReturn(run func(context.Context, database.ListIncidentsPParams) ([]database.ListIncidentsPRow, error)) *Store_ListIncidentsP_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// PruneShares provides a mock function with given fields: ctx
+func (_m *Store) PruneShares(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PruneShares")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_PruneShares_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PruneShares'
+type Store_PruneShares_Call struct {
+	*mock.Call
+}
+
+// PruneShares is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *Store_Expecter) PruneShares(ctx interface{}) *Store_PruneShares_Call {
+	return &Store_PruneShares_Call{Call: _e.mock.On("PruneShares", ctx)}
+}
+
+func (_c *Store_PruneShares_Call) Run(run func(ctx context.Context)) *Store_PruneShares_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *Store_PruneShares_Call) Return(_a0 error) *Store_PruneShares_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_PruneShares_Call) RunAndReturn(run func(context.Context) error) *Store_PruneShares_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -3501,6 +3804,65 @@ func (_c *Store_UpdateTalkgroup_Call) Return(_a0 database.Talkgroup, _a1 error) 
 }
 
 func (_c *Store_UpdateTalkgroup_Call) RunAndReturn(run func(context.Context, database.UpdateTalkgroupParams) (database.Talkgroup, error)) *Store_UpdateTalkgroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateUser provides a mock function with given fields: ctx, username, email, isAdmin
+func (_m *Store) UpdateUser(ctx context.Context, username string, email *string, isAdmin *bool) (database.User, error) {
+	ret := _m.Called(ctx, username, email, isAdmin)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateUser")
+	}
+
+	var r0 database.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, *string, *bool) (database.User, error)); ok {
+		return rf(ctx, username, email, isAdmin)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, *string, *bool) database.User); ok {
+		r0 = rf(ctx, username, email, isAdmin)
+	} else {
+		r0 = ret.Get(0).(database.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, *string, *bool) error); ok {
+		r1 = rf(ctx, username, email, isAdmin)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_UpdateUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateUser'
+type Store_UpdateUser_Call struct {
+	*mock.Call
+}
+
+// UpdateUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - username string
+//   - email *string
+//   - isAdmin *bool
+func (_e *Store_Expecter) UpdateUser(ctx interface{}, username interface{}, email interface{}, isAdmin interface{}) *Store_UpdateUser_Call {
+	return &Store_UpdateUser_Call{Call: _e.mock.On("UpdateUser", ctx, username, email, isAdmin)}
+}
+
+func (_c *Store_UpdateUser_Call) Run(run func(ctx context.Context, username string, email *string, isAdmin *bool)) *Store_UpdateUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(*string), args[3].(*bool))
+	})
+	return _c
+}
+
+func (_c *Store_UpdateUser_Call) Return(_a0 database.User, _a1 error) *Store_UpdateUser_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_UpdateUser_Call) RunAndReturn(run func(context.Context, string, *string, *bool) (database.User, error)) *Store_UpdateUser_Call {
 	_c.Call.Return(run)
 	return _c
 }

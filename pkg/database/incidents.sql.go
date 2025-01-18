@@ -44,6 +44,7 @@ const createIncident = `-- name: CreateIncident :one
 INSERT INTO incidents (
 	id,
 	name,
+	owner,
 	description,
 	start_time,
 	end_time,
@@ -56,14 +57,16 @@ INSERT INTO incidents (
 	$4,
 	$5,
 	$6,
-	$7
+	$7,
+	$8
 )
-RETURNING id, name, description, start_time, end_time, location, metadata
+RETURNING id, name, owner, description, start_time, end_time, location, metadata
 `
 
 type CreateIncidentParams struct {
 	ID          uuid.UUID          `json:"id"`
 	Name        string             `json:"name"`
+	Owner       int                `json:"owner"`
 	Description *string            `json:"description"`
 	StartTime   pgtype.Timestamptz `json:"start_time"`
 	EndTime     pgtype.Timestamptz `json:"end_time"`
@@ -75,6 +78,7 @@ func (q *Queries) CreateIncident(ctx context.Context, arg CreateIncidentParams) 
 	row := q.db.QueryRow(ctx, createIncident,
 		arg.ID,
 		arg.Name,
+		arg.Owner,
 		arg.Description,
 		arg.StartTime,
 		arg.EndTime,
@@ -85,6 +89,7 @@ func (q *Queries) CreateIncident(ctx context.Context, arg CreateIncidentParams) 
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Owner,
 		&i.Description,
 		&i.StartTime,
 		&i.EndTime,
@@ -107,6 +112,7 @@ const getIncident = `-- name: GetIncident :one
 SELECT
 	i.id,
 	i.name,
+	i.owner,
 	i.description,
 	i.start_time,
 	i.end_time,
@@ -122,6 +128,7 @@ func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (Incident, erro
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Owner,
 		&i.Description,
 		&i.StartTime,
 		&i.EndTime,
@@ -237,6 +244,17 @@ func (q *Queries) GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetInci
 	return items, nil
 }
 
+const getIncidentOwner = `-- name: GetIncidentOwner :one
+SELECT owner FROM incidents WHERE id = $1
+`
+
+func (q *Queries) GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error) {
+	row := q.db.QueryRow(ctx, getIncidentOwner, id)
+	var owner int
+	err := row.Scan(&owner)
+	return owner, err
+}
+
 const listIncidentsCount = `-- name: ListIncidentsCount :one
 SELECT COUNT(*)
 FROM incidents i
@@ -262,6 +280,7 @@ const listIncidentsP = `-- name: ListIncidentsP :many
 SELECT
 	i.id,
 	i.name,
+	i.owner,
 	i.description,
 	i.start_time,
 	i.end_time,
@@ -299,6 +318,7 @@ type ListIncidentsPParams struct {
 type ListIncidentsPRow struct {
 	ID          uuid.UUID          `json:"id"`
 	Name        string             `json:"name"`
+	Owner       int                `json:"owner"`
 	Description *string            `json:"description"`
 	StartTime   pgtype.Timestamptz `json:"start_time"`
 	EndTime     pgtype.Timestamptz `json:"end_time"`
@@ -326,6 +346,7 @@ func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) 
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Owner,
 			&i.Description,
 			&i.StartTime,
 			&i.EndTime,
@@ -375,7 +396,7 @@ SET
 	metadata = COALESCE($6, metadata)
 WHERE
 	id = $7
-RETURNING id, name, description, start_time, end_time, location, metadata
+RETURNING id, name, owner, description, start_time, end_time, location, metadata
 `
 
 type UpdateIncidentParams struct {
@@ -402,6 +423,7 @@ func (q *Queries) UpdateIncident(ctx context.Context, arg UpdateIncidentParams) 
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Owner,
 		&i.Description,
 		&i.StartTime,
 		&i.EndTime,

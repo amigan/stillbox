@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS users(
-	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1),
 	username VARCHAR (255) UNIQUE NOT NULL,
 	password TEXT NOT NULL,
 	email TEXT NOT NULL,
@@ -141,6 +141,7 @@ CREATE TABLE IF NOT EXISTS settings(
 CREATE TABLE IF NOT EXISTS incidents(
 	id UUID PRIMARY KEY,
 	name TEXT NOT NULL,
+	owner INTEGER NOT NULL,
 	description TEXT,
 	start_time TIMESTAMPTZ,
 	end_time TIMESTAMPTZ,
@@ -162,4 +163,12 @@ CREATE TABLE IF NOT EXISTS incidents_calls(
 	notes JSONB,
 	FOREIGN KEY (calls_tbl_id, call_date) REFERENCES calls(id, call_date),
 	PRIMARY KEY (incident_id, call_id)
+);
+
+CREATE TABLE IF NOT EXISTS shares(
+	id TEXT PRIMARY KEY,
+	entity_type TEXT NOT NULL,
+	entity_id UUID NOT NULL,
+	owner INTEGER NOT NULL REFERENCES users(id),
+	expiration TIMESTAMPTZ NULL
 );

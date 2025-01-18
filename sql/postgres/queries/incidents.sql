@@ -33,6 +33,7 @@ WHERE incident_id = @incident_id AND call_id = @call_id;
 INSERT INTO incidents (
 	id,
 	name,
+	owner,
 	description,
 	start_time,
 	end_time,
@@ -41,6 +42,7 @@ INSERT INTO incidents (
 ) VALUES (
 	@id,
 	@name,
+	@owner,
 	sqlc.narg('description'),
 	sqlc.narg('start_time'),
 	sqlc.narg('end_time'),
@@ -54,6 +56,7 @@ RETURNING *;
 SELECT
 	i.id,
 	i.name,
+	i.owner,
 	i.description,
 	i.start_time,
 	i.end_time,
@@ -148,6 +151,7 @@ ORDER BY ic.call_date ASC;
 SELECT
 	i.id,
 	i.name,
+	i.owner,
 	i.description,
 	i.start_time,
 	i.end_time,
@@ -171,3 +175,6 @@ RETURNING *;
 
 -- name: DeleteIncident :exec
 DELETE FROM incidents CASCADE WHERE id = @id;
+
+-- name: GetIncidentOwner :one
+SELECT owner FROM incidents WHERE id = @id;

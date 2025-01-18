@@ -1,4 +1,4 @@
-dir: '{{ replaceAll .InterfaceDirRelative "internal" "internal_" }}/mocks'
+dir: '{{.InterfaceDir}}/mocks'
 mockname: "{{.InterfaceName}}"
 outpkg: "mocks"
 filename: "{{.InterfaceName}}.go"
@@ -9,3 +9,7 @@ packages:
     interfaces:
       Store:
       DBTX:
+  dynatron.me/x/stillbox/pkg/rbac:
+    config:
+    interfaces:
+      RBAC:

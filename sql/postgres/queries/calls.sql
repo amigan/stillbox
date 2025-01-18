@@ -156,3 +156,9 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 		c.duration > @longer_than
 	) ELSE TRUE END)
 ;
+
+-- name: DeleteCall :exec
+DELETE FROM calls WHERE id = @id;
+
+-- name: GetCallSubmitter :one
+SELECT submitter FROM calls WHERE id = @id;

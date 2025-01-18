@@ -8,22 +8,12 @@ import (
 	_ "embed"
 
 	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
 )
-
-type UserID int
-
-func (u *UserID) Int32Ptr() *int32 {
-	if u == nil {
-		return nil
-	}
-
-	i := int32(*u)
-
-	return &i
-}
 
 // Authenticator performs API key and user JWT authentication.
 type Authenticator interface {
@@ -34,14 +24,16 @@ type Authenticator interface {
 type Auth struct {
 	rl  *httprate.RateLimiter
 	jwt *jwtauth.JWTAuth
+	ust users.Store
 	cfg config.Auth
 }
 
 // NewAuthenticator creates a new Authenticator with the provided config.
-func NewAuthenticator(cfg config.Auth) *Auth {
+func NewAuthenticator(cfg config.Auth, ust users.Store) *Auth {
 	a := &Auth{
 		rl:  httprate.NewRateLimiter(5, time.Minute),
 		cfg: cfg,
+		ust: ust,
 	}
 	a.initJWT()
 
@@ -63,7 +55,7 @@ var (
 // ErrorResponse writes the error and appropriate HTTP response code.
 func ErrorResponse(w http.ResponseWriter, err error) {
 	switch err {
-	case ErrLoginFailed, ErrUnauthorized:
+	case ErrLoginFailed, ErrUnauthorized, rbac.ErrBadSubject:
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 	case ErrBadRequest:
 		http.Error(w, err.Error(), http.StatusBadRequest)

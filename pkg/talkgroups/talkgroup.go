@@ -9,12 +9,17 @@ import (
 	"strings"
 
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/rbac"
 )
 
 type Talkgroup struct {
 	database.Talkgroup
 	System  database.System `json:"system"`
 	Learned bool            `json:"learned"`
+}
+
+func (t *Talkgroup) GetResourceName() string {
+	return rbac.ResourceTalkgroup
 }
 
 func (t Talkgroup) String() string {

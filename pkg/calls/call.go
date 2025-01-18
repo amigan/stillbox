@@ -7,9 +7,10 @@ import (
 
 	"dynatron.me/x/stillbox/internal/audio"
 	"dynatron.me/x/stillbox/internal/jsontypes"
-	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/pb"
+	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -52,25 +53,29 @@ type CallAudio struct {
 // further transformation. relayOut exists for compatibility with http
 // source CallUploadRequest as used in the relay sink.
 type Call struct {
-	ID             uuid.UUID    `json:"id" relayOut:"id"`
-	Audio          []byte       `json:"audio,omitempty" relayOut:"audio,omitempty" filenameField:"AudioName"`
-	AudioName      string       `json:"audioName,omitempty" relayOut:"audioName,omitempty"`
-	AudioType      string       `json:"audioType,omitempty" relayOut:"audioType,omitempty"`
-	Duration       CallDuration `json:"duration,omitempty" relayOut:"duration,omitempty"`
-	DateTime       time.Time    `json:"call_date,omitempty" relayOut:"dateTime,omitempty"`
-	Frequencies    []int        `json:"frequencies,omitempty" relayOut:"frequencies,omitempty"`
-	Frequency      int          `json:"frequency,omitempty" relayOut:"frequency,omitempty"`
-	Patches        []int        `json:"patches,omitempty" relayOut:"patches,omitempty"`
-	Source         int          `json:"source,omitempty" relayOut:"source,omitempty"`
-	System         int          `json:"system_id,omitempty" relayOut:"system,omitempty"`
-	Submitter      *auth.UserID `json:"submitter,omitempty" relayOut:"submitter,omitempty"`
-	SystemLabel    string       `json:"system_name,omitempty" relayOut:"systemLabel,omitempty"`
-	Talkgroup      int          `json:"tgid,omitempty" relayOut:"talkgroup,omitempty"`
-	TalkgroupGroup *string      `json:"talkgroupGroup,omitempty" relayOut:"talkgroupGroup,omitempty"`
-	TalkgroupLabel *string      `json:"talkgroupLabel,omitempty" relayOut:"talkgroupLabel,omitempty"`
-	TGAlphaTag     *string      `json:"tg_name,omitempty" relayOut:"talkgroupTag,omitempty"`
+	ID             uuid.UUID     `json:"id" relayOut:"id"`
+	Audio          []byte        `json:"audio,omitempty" relayOut:"audio,omitempty" filenameField:"AudioName"`
+	AudioName      string        `json:"audioName,omitempty" relayOut:"audioName,omitempty"`
+	AudioType      string        `json:"audioType,omitempty" relayOut:"audioType,omitempty"`
+	Duration       CallDuration  `json:"duration,omitempty" relayOut:"duration,omitempty"`
+	DateTime       time.Time     `json:"call_date,omitempty" relayOut:"dateTime,omitempty"`
+	Frequencies    []int         `json:"frequencies,omitempty" relayOut:"frequencies,omitempty"`
+	Frequency      int           `json:"frequency,omitempty" relayOut:"frequency,omitempty"`
+	Patches        []int         `json:"patches,omitempty" relayOut:"patches,omitempty"`
+	Source         int           `json:"source,omitempty" relayOut:"source,omitempty"`
+	System         int           `json:"system_id,omitempty" relayOut:"system,omitempty"`
+	Submitter      *users.UserID `json:"submitter,omitempty" relayOut:"submitter,omitempty"`
+	SystemLabel    string        `json:"system_name,omitempty" relayOut:"systemLabel,omitempty"`
+	Talkgroup      int           `json:"tgid,omitempty" relayOut:"talkgroup,omitempty"`
+	TalkgroupGroup *string       `json:"talkgroupGroup,omitempty" relayOut:"talkgroupGroup,omitempty"`
+	TalkgroupLabel *string       `json:"talkgroupLabel,omitempty" relayOut:"talkgroupLabel,omitempty"`
+	TGAlphaTag     *string       `json:"tg_name,omitempty" relayOut:"talkgroupTag,omitempty"`
 
 	shouldStore bool `json:"-"`
+}
+
+func (c *Call) GetResourceName() string {
+	return rbac.ResourceCall
 }
 
 func (c *Call) String() string {
