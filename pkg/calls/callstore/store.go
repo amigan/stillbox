@@ -3,6 +3,7 @@ package callstore
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
@@ -27,6 +28,9 @@ type Store interface {
 
 	// CallAudio returns a CallAudio struct
 	CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error)
+
+	// Call returns the call's metadata.
+	Call(ctx context.Context, id uuid.UUID) (*calls.Call, error)
 
 	// Calls gets paginated Calls.
 	Calls(ctx context.Context, p CallsParams) (calls []database.ListCallsPRow, totalCount int, err error)
@@ -136,6 +140,43 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, 
 		AudioName: dbCall.AudioName,
 		AudioType: dbCall.AudioType,
 		AudioBlob: dbCall.AudioBlob,
+	}, nil
+}
+
+func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceCall), rbac.WithActions(rbac.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
+	db := database.FromCtx(ctx)
+
+	c, err := db.GetCall(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	var sub *users.UserID
+	if c.Submitter != nil {
+		sub = common.PtrTo(users.UserID(*c.Submitter))
+	}
+
+	return &calls.Call{
+		ID:             c.ID,
+		Submitter:      sub,
+		System:         c.System,
+		Talkgroup:      c.Talkgroup,
+		DateTime:       c.CallDate.Time,
+		AudioName:      common.ZeroIfNil(c.AudioName),
+		AudioType:      common.ZeroIfNil(c.AudioType),
+		AudioURL:       c.AudioUrl,
+		Duration:       calls.CallDuration(time.Duration(common.ZeroIfNil(c.Duration)) * time.Millisecond),
+		Frequency:      c.Frequency,
+		Frequencies:    c.Frequencies,
+		Patches:        c.Patches,
+		TalkgroupLabel: c.TGLabel,
+		TalkgroupGroup: c.TGGroup,
+		TGAlphaTag:     c.TGAlphaTag,
 	}, nil
 }
 

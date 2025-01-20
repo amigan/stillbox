@@ -57,6 +57,7 @@ type Call struct {
 	Audio          []byte        `json:"audio,omitempty" relayOut:"audio,omitempty" filenameField:"AudioName"`
 	AudioName      string        `json:"audioName,omitempty" relayOut:"audioName,omitempty"`
 	AudioType      string        `json:"audioType,omitempty" relayOut:"audioType,omitempty"`
+	AudioURL       *string       `json:"audioURL,omitempty" relayOut:"audioURL,omitempty"`
 	Duration       CallDuration  `json:"duration,omitempty" relayOut:"duration,omitempty"`
 	DateTime       time.Time     `json:"call_date,omitempty" relayOut:"dateTime,omitempty"`
 	Frequencies    []int         `json:"frequencies,omitempty" relayOut:"frequencies,omitempty"`

@@ -29,13 +29,16 @@ const (
 	ActionCreate = "create"
 	ActionUpdate = "update"
 	ActionDelete = "delete"
+	ActionShare  = "share"
 
 	PresetUpdateOwn  = "updateOwn"
 	PresetDeleteOwn  = "deleteOwn"
 	PresetReadShared = "readShared"
+	PresetShareOwn   = "shareOwn"
 
 	PresetUpdateSubmitter = "updateSubmitter"
 	PresetDeleteSubmitter = "deleteSubmitter"
+	PresetShareSubmitter  = "shareSubmitter"
 )
 
 var (
@@ -98,12 +101,14 @@ var policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: ActionCreate},
 					&restrict.Permission{Preset: PresetUpdateOwn},
 					&restrict.Permission{Preset: PresetDeleteOwn},
+					&restrict.Permission{Preset: PresetShareOwn},
 				},
 				ResourceCall: {
 					&restrict.Permission{Action: ActionRead},
 					&restrict.Permission{Action: ActionCreate},
 					&restrict.Permission{Preset: PresetUpdateSubmitter},
 					&restrict.Permission{Preset: PresetDeleteSubmitter},
+					&restrict.Permission{Action: ActionShare},
 				},
 				ResourceTalkgroup: {
 					&restrict.Permission{Action: ActionRead},
@@ -149,10 +154,12 @@ var policy = &restrict.PolicyDefinition{
 				ResourceIncident: {
 					&restrict.Permission{Action: ActionUpdate},
 					&restrict.Permission{Action: ActionDelete},
+					&restrict.Permission{Action: ActionShare},
 				},
 				ResourceCall: {
 					&restrict.Permission{Action: ActionUpdate},
 					&restrict.Permission{Action: ActionDelete},
+					&restrict.Permission{Action: ActionShare},
 				},
 				ResourceTalkgroup: {
 					&restrict.Permission{Action: ActionUpdate},
@@ -207,6 +214,22 @@ var policy = &restrict.PolicyDefinition{
 				},
 			},
 		},
+		PresetShareOwn: &restrict.Permission{
+			Action: ActionShare,
+			Conditions: restrict.Conditions{
+				&restrict.EqualCondition{
+					ID: "isOwner",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Owner",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
 		PresetUpdateSubmitter: &restrict.Permission{
 			Action: ActionUpdate,
 			Conditions: restrict.Conditions{
@@ -225,6 +248,22 @@ var policy = &restrict.PolicyDefinition{
 		},
 		PresetDeleteSubmitter: &restrict.Permission{
 			Action: ActionDelete,
+			Conditions: restrict.Conditions{
+				&SubmitterEqualCondition{
+					ID: "isSubmitter",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Submitter",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetShareSubmitter: &restrict.Permission{
+			Action: ActionShare,
 			Conditions: restrict.Conditions{
 				&SubmitterEqualCondition{
 					ID: "isSubmitter",
@@ -334,18 +373,6 @@ func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOp
 	}
 
 	return sub, r.access.Authorize(req)
-}
-
-type ShareLinkGuest struct {
-	ShareID string
-}
-
-func (s *ShareLinkGuest) GetName() string {
-	return "SHARE:" + s.ShareID
-}
-
-func (s *ShareLinkGuest) GetRoles() []string {
-	return []string{RoleShareGuest}
 }
 
 type PublicSubject struct {

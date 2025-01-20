@@ -1,4 +1,4 @@
-package share
+package shares
 
 import (
 	"context"
@@ -13,17 +13,13 @@ const (
 )
 
 type Service interface {
-	ShareStore() Store
+	Shares
 
 	Go(ctx context.Context)
 }
 
 type service struct {
-	Store
-}
-
-func (s *service) ShareStore() Store {
-	return s.Store
+	postgresStore
 }
 
 func (s *service) Go(ctx context.Context) {
@@ -46,7 +42,5 @@ func (s *service) Go(ctx context.Context) {
 }
 
 func NewService() *service {
-	return &service{
-		Store: NewStore(),
-	}
+	return &service{}
 }

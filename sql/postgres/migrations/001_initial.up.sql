@@ -169,6 +169,7 @@ CREATE TABLE IF NOT EXISTS shares(
 	id TEXT PRIMARY KEY,
 	entity_type TEXT NOT NULL,
 	entity_id UUID NOT NULL,
+	entity_date TIMESTAMPTZ,
 	owner INTEGER NOT NULL REFERENCES users(id),
 	expiration TIMESTAMPTZ NULL
 );

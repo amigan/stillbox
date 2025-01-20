@@ -140,6 +140,74 @@ func TestRBAC(t *testing.T) {
 			action:    rbac.ActionDelete,
 			expectErr: errors.New(`access denied for Action: "delete" on Resource: "Call"`),
 		},
+		{
+			name: "user share call not submitter",
+			subject: &users.User{
+				ID: 2,
+			},
+			resource: &calls.Call{
+				Submitter: common.PtrTo(users.UserID(6)),
+			},
+			action:    rbac.ActionShare,
+			expectErr: nil,
+		},
+		{
+			name: "user share call admin",
+			subject: &users.User{
+				ID:      2,
+				IsAdmin: true,
+			},
+			resource: &calls.Call{
+				Submitter: common.PtrTo(users.UserID(6)),
+			},
+			action:    rbac.ActionShare,
+			expectErr: nil,
+		},
+		{
+			name: "user share call submitter",
+			subject: &users.User{
+				ID: 6,
+			},
+			resource: &calls.Call{
+				Submitter: common.PtrTo(users.UserID(6)),
+			},
+			action:    rbac.ActionShare,
+			expectErr: nil,
+		},
+		{
+			name: "user share incident not owner",
+			subject: &users.User{
+				ID: 2,
+			},
+			resource: &incidents.Incident{
+				Owner: users.UserID(6),
+			},
+			action:    rbac.ActionShare,
+			expectErr: errors.New(`access denied for Action: "share" on Resource: "Incident"`),
+		},
+		{
+			name: "user share incident admin",
+			subject: &users.User{
+				ID:      2,
+				IsAdmin: true,
+			},
+			resource: &incidents.Incident{
+				Owner: users.UserID(6),
+			},
+			action:    rbac.ActionShare,
+			expectErr: nil,
+		},
+		{
+			name: "user share incident owner",
+			subject: &users.User{
+				ID: 6,
+			},
+			resource: &incidents.Incident{
+				Owner: users.UserID(6),
+			},
+			action:    rbac.ActionShare,
+			expectErr: nil,
+		},
 	}
 
 	for _, tc := range tests {

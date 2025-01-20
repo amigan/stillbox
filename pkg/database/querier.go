@@ -32,6 +32,7 @@ type Querier interface {
 	GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, error)
 	GetAllTalkgroupTags(ctx context.Context) ([]string, error)
 	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
+	GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 	GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error)
 	GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, error)
 	GetDatabaseSize(ctx context.Context) (string, error)

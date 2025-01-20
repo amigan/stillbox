@@ -3,6 +3,7 @@ SELECT
 	id,
 	entity_type,
 	entity_id,
+	entity_date,
 	owner,
 	expiration
 FROM shares
@@ -13,9 +14,10 @@ INSERT INTO shares (
 	id,
 	entity_type,
 	entity_id,
+	entity_date,
 	owner,
 	expiration
-) VALUES (@id, @entity_type, @entity_id, @owner, sqlc.narg('expiration'));
+) VALUES (@id, @entity_type, @entity_id, sqlc.narg('entity_date'), @owner, sqlc.narg('expiration'));
 
 -- name: DeleteShare :exec
 DELETE FROM shares WHERE id = @id;

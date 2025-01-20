@@ -46,6 +46,9 @@ type Store interface {
 
 	// DeleteIncident deletes an incident.
 	DeleteIncident(ctx context.Context, id uuid.UUID) error
+
+	// Owner returns an incident with only the owner filled out.
+	Owner(ctx context.Context, id uuid.UUID) (incidents.Incident, error)
 }
 
 type store struct {
@@ -132,7 +135,7 @@ func (s *store) CreateIncident(ctx context.Context, inc incidents.Incident) (*in
 }
 
 func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID, addCallIDs []uuid.UUID, notes []byte, removeCallIDs []uuid.UUID) error {
-	inc, err := s.getIncidentOwner(ctx, incidentID)
+	inc, err := s.Owner(ctx, incidentID)
 	if err != nil {
 		return err
 	}
@@ -326,7 +329,7 @@ func (uip UpdateIncidentParams) toDBUIP(id uuid.UUID) database.UpdateIncidentPar
 }
 
 func (s *store) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncidentParams) (*incidents.Incident, error) {
-	ckinc, err := s.getIncidentOwner(ctx, id)
+	ckinc, err := s.Owner(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +352,7 @@ func (s *store) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncide
 }
 
 func (s *store) DeleteIncident(ctx context.Context, id uuid.UUID) error {
-	inc, err := s.getIncidentOwner(ctx, id)
+	inc, err := s.Owner(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -366,7 +369,7 @@ func (s *store) UpdateNotes(ctx context.Context, incidentID uuid.UUID, callID uu
 	return database.FromCtx(ctx).UpdateCallIncidentNotes(ctx, notes, incidentID, callID)
 }
 
-func (s *store) getIncidentOwner(ctx context.Context, id uuid.UUID) (incidents.Incident, error) {
+func (s *store) Owner(ctx context.Context, id uuid.UUID) (incidents.Incident, error) {
 	owner, err := database.FromCtx(ctx).GetIncidentOwner(ctx, id)
 	return incidents.Incident{ID: id, Owner: users.UserID(owner)}, err
 }

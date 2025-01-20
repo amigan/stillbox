@@ -7,6 +7,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"
@@ -21,24 +22,44 @@ type API interface {
 	Subrouter() http.Handler
 }
 
+type PublicAPI interface {
+	API
+	PublicRoutes(r chi.Router)
+}
+
 type api struct {
 	baseURL url.URL
+	share publicAPI
+}
+
+type publicAPI interface {
+	API
+	PublicRouter() http.Handler
 }
 
 func New(baseURL url.URL) *api {
-	s := &api{baseURL}
+	s := &api{
+		baseURL: baseURL,
+	}
 
 	return s
+}
+
+func (a *api) PublicRoutes(r chi.Router) {
+	r.Mount("/share", a.share.PublicRouter())
 }
 
 func (a *api) Subrouter() http.Handler {
 	r := chi.NewMux()
 
 	r.Mount("/talkgroup", new(talkgroupAPI).Subrouter())
-	r.Mount("/call", new(callsAPI).Subrouter())
 	r.Mount("/user", new(usersAPI).Subrouter())
+	r.Mount("/call", new(callsAPI).Subrouter())
 	r.Mount("/incident", newIncidentsAPI(&a.baseURL).Subrouter())
-	r.Mount("/share", newShareHandler(&a.baseURL).Subrouter())
+
+	a.share = newShareAPI(&a.baseURL, r)
+
+	r.Mount("/share", a.share.Subrouter())
 
 	return r
 }
@@ -141,6 +162,9 @@ var statusMapping = map[error]errResponder{
 	ErrBadAppName:             unauthErrText,
 	common.ErrPageOutOfRange:  badRequestErrText,
 	rbac.ErrNotAuthorized:     unauthErrText,
+	shares.ErrNoShare:         notFoundErrText,
+	ErrBadShare:               notFoundErrText,
+	shares.ErrBadType:         badRequestErrText,
 }
 
 func autoError(err error) render.Renderer {

@@ -51,7 +51,7 @@ func (s *Server) setupRoutes() {
 		s.rateLimit(r)
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		s.auth.PublicRoutes(r)
-		//	r.Mount("/share", s.share.ShareRouter(s.rest))
+		s.rest.PublicRoutes(r)
 	})
 
 	r.Group(func(r chi.Router) {
