@@ -22,16 +22,14 @@ type incidentsAPI struct {
 	baseURL *url.URL
 }
 
-func newIncidentsAPI(baseURL *url.URL) API {
+func newIncidentsAPI(baseURL *url.URL) ShareableAPI {
 	return &incidentsAPI{baseURL}
 }
 
 func (ia *incidentsAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	r.Get(`/{id:[a-f0-9-]+}`, ia.getIncident)
-	r.Get(`/{id:[a-f0-9-]+}.m3u`, ia.getCallsM3U)
-
+	ia.GETSubroutes(r)
 	r.Post(`/new`, ia.createIncident)
 	r.Post(`/`, ia.listIncidents)
 	r.Post(`/{id:[a-f0-9-]+}/calls`, ia.postCalls)
@@ -41,6 +39,11 @@ func (ia *incidentsAPI) Subrouter() http.Handler {
 	r.Delete(`/{id:[a-f0-9-]+}`, ia.deleteIncident)
 
 	return r
+}
+
+func (ia *incidentsAPI) GETSubroutes(r chi.Router) {
+	r.Get(`/{id:[a-f0-9-]+}`, ia.getIncident)
+	r.Get(`/{id:[a-f0-9-]+}.m3u`, ia.getCallsM3U)
 }
 
 func (ia *incidentsAPI) listIncidents(w http.ResponseWriter, r *http.Request) {

@@ -18,50 +18,62 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type APIRoot interface {
+	API
+	Shares() ShareAPI
+	ShareSubroutes(chi.Router)
+}
+
 type API interface {
 	Subrouter() http.Handler
 }
 
-type PublicAPI interface {
+type ShareableAPI interface {
 	API
-	PublicRoutes(r chi.Router)
+	GETSubroutes(chi.Router)
 }
 
 type api struct {
-	baseURL url.URL
-	share publicAPI
+	baseURL *url.URL
+	shares ShareAPI
+	tgs API
+	calls ShareableAPI
+	users API
+	incidents ShareableAPI
 }
 
-type publicAPI interface {
-	API
-	PublicRouter() http.Handler
+func (a *api) Shares() ShareAPI {
+	return a.shares
 }
 
 func New(baseURL url.URL) *api {
 	s := &api{
-		baseURL: baseURL,
+		baseURL: &baseURL,
+		shares: newShareAPI(&baseURL),
+		tgs: new(talkgroupAPI),
+		calls: new(callsAPI),
+		incidents: newIncidentsAPI(&baseURL),
+		users: new(usersAPI),
 	}
 
 	return s
 }
 
-func (a *api) PublicRoutes(r chi.Router) {
-	r.Mount("/share", a.share.PublicRouter())
-}
-
 func (a *api) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	r.Mount("/talkgroup", new(talkgroupAPI).Subrouter())
-	r.Mount("/user", new(usersAPI).Subrouter())
-	r.Mount("/call", new(callsAPI).Subrouter())
-	r.Mount("/incident", newIncidentsAPI(&a.baseURL).Subrouter())
-
-	a.share = newShareAPI(&a.baseURL, r)
-
-	r.Mount("/share", a.share.Subrouter())
+	r.Mount("/talkgroup", a.tgs.Subrouter())
+	r.Mount("/user", a.users.Subrouter())
+	r.Mount("/call", a.calls.Subrouter())
+	r.Mount("/incident", a.incidents.Subrouter())
+	r.Mount("/share", a.shares.Subrouter())
 
 	return r
+}
+
+func (a *api) ShareSubroutes(r chi.Router) {
+	r.Route("/calls", a.calls.GETSubroutes)
+	r.Route("/incidents", a.incidents.GETSubroutes)
 }
 
 type errResponse struct {

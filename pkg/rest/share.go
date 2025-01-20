@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/forms"
@@ -38,14 +39,36 @@ func (rt ShareRequestType) IsValid() bool {
 type ShareHandlers map[shares.EntityType]http.Handler
 type shareAPI struct {
 	baseURL *url.URL
-
-	router http.Handler
 }
 
-func newShareAPI(baseURL *url.URL, hand http.Handler) publicAPI {
+type ShareAPI interface {
+	API
+	ShareMiddleware() func(http.Handler) http.Handler
+}
+
+func newShareAPI(baseURL *url.URL) ShareAPI {
 	return &shareAPI{
 		baseURL: baseURL,
-		router:  hand,
+	}
+}
+
+func (a *shareAPI) ShareMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			if !strings.HasPrefix(r.URL.Path, "/share/") {
+				next.ServeHTTP(w, r)
+				return
+			}
+			nr, err := a.getShare(r)
+			if err != nil {
+				wErr(w, r, autoError(err))
+				return
+			}
+
+			next.ServeHTTP(w, nr)
+		}
+
+		return http.HandlerFunc(fn)
 	}
 }
 
@@ -58,14 +81,10 @@ func (sa *shareAPI) Subrouter() http.Handler {
 	return r
 }
 
-func (sa *shareAPI) PublicRouter() http.Handler {
-	r := chi.NewMux()
-
-	r.Get(`/{type}/{id:[A-Za-z0-9_-]{20,}}`, sa.getShare)
-	r.Get(`/{type}/{id:[A-Za-z0-9_-]{20,}}*`, sa.getShare)
-
-	return r
-}
+//func (sa *shareAPI) PublicRoutes(r chi.Router) http.Handler {
+//	r.Get(`/{type}/{id:[A-Za-z0-9_-]{20,}}`, sa.getShare)
+//	r.Get(`/{type}/{id:[A-Za-z0-9_-]{20,}}*`, sa.getShare)
+//}
 
 func (sa *shareAPI) createShare(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -91,28 +110,34 @@ func (sa *shareAPI) createShare(w http.ResponseWriter, r *http.Request) {
 func (sa *shareAPI) deleteShare(w http.ResponseWriter, r *http.Request) {
 }
 
-func (sa *shareAPI) getShare(w http.ResponseWriter, r *http.Request) {
+func (sa *shareAPI) getShare(r *http.Request) (*http.Request, error) {
 	ctx := r.Context()
 	shs := shares.FromCtx(ctx)
 
-	rType, id, err := shareParams(w, r)
+	params := struct {
+		Type string `param:"type"`
+		ID   string `param:"shareId"`
+	}{}
+
+	err := decodeParams(&params, r)
 	if err != nil {
-		return
+		return nil, err
 	}
 
+	rType := ShareRequestType(params.Type)
+	id := params.ID
+
 	if !rType.IsValid() {
-		wErr(w, r, autoError(ErrBadShare))
+		return nil, ErrBadShare
 	}
 
 	sh, err := shs.GetShare(ctx, id)
 	if err != nil {
-		wErr(w, r, autoError(err))
-		return
+		return nil, err
 	}
 
 	if sh.Expiration != nil && sh.Expiration.Time().Before(time.Now()) {
-		wErr(w, r, autoError(shares.ErrNoShare))
-		return
+		return nil, shares.ErrNoShare
 	}
 
 	ctx = rbac.CtxWithSubject(ctx, sh)
@@ -120,12 +145,12 @@ func (sa *shareAPI) getShare(w http.ResponseWriter, r *http.Request) {
 
 	switch rType {
 	case ShareRequestCall, ShareRequestIncident:
-		r.URL.Path = fmt.Sprintf("/%s/%s", rType, sh.EntityID.String())
+		r.URL.Path += fmt.Sprintf("/%s/%s", rType, sh.EntityID.String())
 	case ShareRequestIncidentM3U:
 		r.URL.Path = fmt.Sprintf("/incident/%s.m3u", sh.EntityID.String())
 	}
 
-	sa.router.ServeHTTP(w, r)
+	return r, nil
 }
 
 // idOnlyParam checks for a sole URL parameter, id, and writes an errorif this fails.

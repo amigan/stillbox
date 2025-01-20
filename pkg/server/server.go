@@ -45,7 +45,7 @@ type Server struct {
 	notifier  notify.Notifier
 	hup       chan os.Signal
 	tgs       tgstore.Store
-	rest      rest.PublicAPI
+	rest      rest.APIRoot
 	partman   partman.PartitionManager
 	users     users.Store
 	calls     callstore.Store

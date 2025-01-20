@@ -30,12 +30,15 @@ type callsAPI struct {
 func (ca *callsAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	r.Get(`/{call:[a-f0-9-]+}`, ca.getAudio)
-	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.getAudio)
-
+	ca.GETSubroutes(r)
 	r.Post(`/`, ca.listCalls)
 
 	return r
+}
+
+func (ca *callsAPI) GETSubroutes(r chi.Router) {
+	r.Get(`/{call:[a-f0-9-]+}`, ca.getAudio)
+	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.getAudio)
 }
 
 func (ca *callsAPI) getAudio(w http.ResponseWriter, r *http.Request) {
