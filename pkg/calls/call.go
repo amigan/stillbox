@@ -8,14 +8,13 @@ import (
 	"dynatron.me/x/stillbox/internal/audio"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/pb"
+	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
-
-const Resource = "call"
 
 type CallDuration time.Duration
 
@@ -77,7 +76,7 @@ type Call struct {
 }
 
 func (c *Call) GetResourceName() string {
-	return Resource
+	return rbac.ResourceCall
 }
 
 func (c *Call) String() string {

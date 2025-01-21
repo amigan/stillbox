@@ -6,19 +6,21 @@ import (
 	"fmt"
 	"reflect"
 
+	"dynatron.me/x/stillbox/pkg/database"
+
 	"github.com/el-mike/restrict/v2"
 	"github.com/google/uuid"
 )
 
 const (
 	SubmitterEqualConditionType = "SUBMITTER_EQUAL"
-	InMapConditionType = "IN_MAP"
+	InMapConditionType          = "IN_MAP"
 	CallInIncidentConditionType = "CALL_IN_INCIDENT"
 )
 
 type CallInIncidentCondition struct {
-	ID    string                    `json:"name,omitempty" yaml:"name,omitempty"`
-	Call *restrict.ValueDescriptor `json:"call" yaml:"call"`
+	ID       string                    `json:"name,omitempty" yaml:"name,omitempty"`
+	Call     *restrict.ValueDescriptor `json:"call" yaml:"call"`
 	Incident *restrict.ValueDescriptor `json:"incident" yaml:"incident"`
 }
 
@@ -52,8 +54,7 @@ func (c *CallInIncidentCondition) Check(r *restrict.AccessRequest) error {
 		return restrict.NewConditionNotSatisfiedError(c, r, errors.New("call ID is not UUID"))
 	}
 
-	incs := FromCtx(ctx)
-	inCall, err := incs.CallIn(ctx, incID, incID)
+	inCall, err := database.FromCtx(ctx).CallInIncident(ctx, incID, incID)
 	if err != nil {
 		return restrict.NewConditionNotSatisfiedError(c, r, err)
 	}
@@ -106,7 +107,7 @@ func SubmitterEqualConditionFactory() restrict.Condition {
 }
 
 type InMapCondition[K comparable, V any] struct {
-	ID    string                    `json:"name,omitempty" yaml:"name,omitempty"`
+	ID  string                    `json:"name,omitempty" yaml:"name,omitempty"`
 	Key *restrict.ValueDescriptor `json:"key" yaml:"key"`
 	Map *restrict.ValueDescriptor `json:"map" yaml:"map"`
 }

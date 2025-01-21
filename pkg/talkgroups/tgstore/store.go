@@ -327,7 +327,7 @@ func addToRowList[T rowType](t *cache, tgRecords []T) []*tgsp.Talkgroup {
 }
 
 func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.Talkgroup, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(tgsp.Resource), rbac.WithActions(rbac.ActionRead))
+	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceTalkgroup), rbac.WithActions(rbac.ActionRead))
 	if err != nil {
 		return nil, err
 	}

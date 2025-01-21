@@ -1,8 +1,6 @@
 package rbac
 
 import (
-	"dynatron.me/x/stillbox/pkg/incidents/incstore"
-
 	"github.com/el-mike/restrict/v2"
 )
 
@@ -13,9 +11,9 @@ const (
 	PresetReadSharedInMap = "readSharedInMap"
 	PresetShareOwn        = "shareOwn"
 
-	PresetUpdateSubmitter = "updateSubmitter"
-	PresetDeleteSubmitter = "deleteSubmitter"
-	PresetShareSubmitter  = "shareSubmitter"
+	PresetUpdateSubmitter      = "updateSubmitter"
+	PresetDeleteSubmitter      = "deleteSubmitter"
+	PresetShareSubmitter       = "shareSubmitter"
 	PresetReadInSharedIncident = "readInSharedIncident"
 )
 
@@ -226,7 +224,7 @@ var Policy = &restrict.PolicyDefinition{
 		PresetReadInSharedIncident: &restrict.Permission{
 			Action: ActionRead,
 			Conditions: restrict.Conditions{
-				&incstore.CallInIncidentCondition{
+				&CallInIncidentCondition{
 					ID: "callInIncident",
 					Call: &restrict.ValueDescriptor{
 						Source: restrict.ResourceField,

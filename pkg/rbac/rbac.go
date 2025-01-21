@@ -8,8 +8,6 @@ import (
 	"github.com/el-mike/restrict/v2/adapters"
 )
 
-
-
 var (
 	ErrBadSubject = errors.New("bad subject in token")
 )
@@ -123,7 +121,6 @@ func Check(ctx context.Context, res restrict.Resource, opts ...CheckOption) (Sub
 func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOption) (Subject, error) {
 	sub := SubjectFrom(ctx)
 	o := checkOptions{}
-
 
 	for _, opt := range opts {
 		opt(&o)

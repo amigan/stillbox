@@ -381,4 +381,3 @@ func (s *store) CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUID) (bool
 	db := database.FromCtx(ctx)
 	return db.CallInIncident(ctx, inc, call)
 }
-
