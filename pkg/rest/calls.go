@@ -30,22 +30,20 @@ type callsAPI struct {
 func (ca *callsAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	ca.GETSubroutes(r)
+	r.Get(`/{call:[a-f0-9-]+}`, ca.getAudioRoute)
+	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.getAudioRoute)
 	r.Post(`/`, ca.listCalls)
 
 	return r
 }
 
-func (ca *callsAPI) GETSubroutes(r chi.Router) {
-	r.Get(`/{call:[a-f0-9-]+}`, ca.getAudio)
-	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.getAudio)
+type getAudioParams struct {
+	CallID   *uuid.UUID `param:"call"`
+	Download *string    `param:"download"`
 }
 
-func (ca *callsAPI) getAudio(w http.ResponseWriter, r *http.Request) {
-	p := struct {
-		CallID   *uuid.UUID `param:"call"`
-		Download *string    `param:"download"`
-	}{}
+func (ca *callsAPI) getAudioRoute(w http.ResponseWriter, r *http.Request) {
+	p := getAudioParams{}
 
 	err := decodeParams(&p, r)
 	if err != nil {
@@ -53,6 +51,10 @@ func (ca *callsAPI) getAudio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ca.getAudio(p, w, r)
+}
+
+func (ca *callsAPI) getAudio(p getAudioParams, w http.ResponseWriter, r *http.Request) {
 	if p.CallID == nil {
 		wErr(w, r, badRequest(ErrNoCall))
 		return
@@ -97,6 +99,23 @@ func (ca *callsAPI) getAudio(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf(`%s; filename="%s"`, disposition, *call.AudioName))
 
 	_, _ = w.Write(call.AudioBlob)
+}
+
+func (ca *callsAPI) shareCallRoute(id uuid.UUID, w http.ResponseWriter, r *http.Request) {
+	p := getAudioParams{
+		CallID: &id,
+	}
+
+	ca.getAudio(p, w, r)
+}
+
+func (ca *callsAPI) shareCallDLRoute(id uuid.UUID, w http.ResponseWriter, r *http.Request) {
+	p := getAudioParams{
+		CallID:   &id,
+		Download: common.PtrTo("download"),
+	}
+
+	ca.getAudio(p, w, r)
 }
 
 func (ca *callsAPI) listCalls(w http.ResponseWriter, r *http.Request) {

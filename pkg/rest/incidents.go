@@ -22,14 +22,15 @@ type incidentsAPI struct {
 	baseURL *url.URL
 }
 
-func newIncidentsAPI(baseURL *url.URL) ShareableAPI {
+func newIncidentsAPI(baseURL *url.URL) *incidentsAPI {
 	return &incidentsAPI{baseURL}
 }
 
 func (ia *incidentsAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	ia.GETSubroutes(r)
+	r.Get(`/{id:[a-f0-9-]+}`, ia.getIncidentRoute)
+	r.Get(`/{id:[a-f0-9-]+}.m3u`, ia.getCallsM3URoute)
 	r.Post(`/new`, ia.createIncident)
 	r.Post(`/`, ia.listIncidents)
 	r.Post(`/{id:[a-f0-9-]+}/calls`, ia.postCalls)
@@ -39,11 +40,6 @@ func (ia *incidentsAPI) Subrouter() http.Handler {
 	r.Delete(`/{id:[a-f0-9-]+}`, ia.deleteIncident)
 
 	return r
-}
-
-func (ia *incidentsAPI) GETSubroutes(r chi.Router) {
-	r.Get(`/{id:[a-f0-9-]+}`, ia.getIncident)
-	r.Get(`/{id:[a-f0-9-]+}.m3u`, ia.getCallsM3U)
 }
 
 func (ia *incidentsAPI) listIncidents(w http.ResponseWriter, r *http.Request) {
@@ -91,15 +87,18 @@ func (ia *incidentsAPI) createIncident(w http.ResponseWriter, r *http.Request) {
 	respond(w, r, inc)
 }
 
-func (ia *incidentsAPI) getIncident(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	incs := incstore.FromCtx(ctx)
-
+func (ia *incidentsAPI) getIncidentRoute(w http.ResponseWriter, r *http.Request) {
 	id, err := idOnlyParam(w, r)
 	if err != nil {
 		return
 	}
 
+	ia.getIncident(id, w, r)
+}
+
+func (ia *incidentsAPI) getIncident(id uuid.UUID, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	incs := incstore.FromCtx(ctx)
 	inc, err := incs.Incident(ctx, id)
 	if err != nil {
 		wErr(w, r, autoError(err))
@@ -189,15 +188,19 @@ func (ia *incidentsAPI) postCalls(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (ia *incidentsAPI) getCallsM3U(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	incs := incstore.FromCtx(ctx)
-	tgst := tgstore.FromCtx(ctx)
-
+func (ia *incidentsAPI) getCallsM3URoute(w http.ResponseWriter, r *http.Request) {
 	id, err := idOnlyParam(w, r)
 	if err != nil {
 		return
 	}
+
+	ia.getCallsM3U(id, w, r)
+}
+
+func (ia *incidentsAPI) getCallsM3U(id uuid.UUID, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	incs := incstore.FromCtx(ctx)
+	tgst := tgstore.FromCtx(ctx)
 
 	inc, err := incs.Incident(ctx, id)
 	if err != nil {

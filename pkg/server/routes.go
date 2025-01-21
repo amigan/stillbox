@@ -31,7 +31,6 @@ func (s *Server) setupRoutes() {
 
 	s.installPprof()
 
-
 	r.Group(func(r chi.Router) {
 		// authenticated routes
 		r.Use(s.auth.VerifyMiddleware(), s.auth.AuthMiddleware())
@@ -39,11 +38,6 @@ func (s *Server) setupRoutes() {
 		s.auth.PrivateRoutes(r)
 		s.alerter.PrivateRoutes(r)
 		r.Mount("/api", s.rest.Subrouter())
-	})
-
-	r.Route("/share/{type}/{shareId:[A-Za-z0-9_-]{20,}}", func(r chi.Router) {
-		r.Use(s.rest.Shares().ShareMiddleware())
-		s.rest.ShareSubroutes(r)
 	})
 
 	r.Group(func(r chi.Router) {
@@ -58,6 +52,7 @@ func (s *Server) setupRoutes() {
 		s.rateLimit(r)
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		s.auth.PublicRoutes(r)
+		r.Mount("/share", s.rest.ShareRouter())
 	})
 
 	r.Group(func(r chi.Router) {
@@ -68,10 +63,6 @@ func (s *Server) setupRoutes() {
 
 		s.clientRoute(r, clientRoot)
 	})
-	chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
-	fmt.Printf("[%s]: '%s' has %d middlewares\n", method, route, len(middlewares))
-	return nil
-})
 }
 
 // WithCtxStores is a middleware that installs all stores in the request context.

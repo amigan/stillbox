@@ -278,7 +278,7 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 }
 
 func (s *store) Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error) {
-	_, err := rbac.Check(ctx, new(incidents.Incident), rbac.WithActions(rbac.ActionRead))
+	_, err := rbac.Check(ctx, &incidents.Incident{ID: id}, rbac.WithActions(rbac.ActionRead))
 	if err != nil {
 		return nil, err
 	}

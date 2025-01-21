@@ -123,7 +123,7 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
 }
 
 func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceCall), rbac.WithActions(rbac.ActionRead))
+	_, err := rbac.Check(ctx, &calls.Call{ID: id}, rbac.WithActions(rbac.ActionRead))
 	if err != nil {
 		return nil, err
 	}

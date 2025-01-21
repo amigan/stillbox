@@ -3,8 +3,6 @@ package rbac
 import (
 	"context"
 	"errors"
-	"fmt"
-	"reflect"
 
 	"github.com/el-mike/restrict/v2"
 	"github.com/el-mike/restrict/v2/adapters"
@@ -31,10 +29,11 @@ const (
 	ActionDelete = "delete"
 	ActionShare  = "share"
 
-	PresetUpdateOwn  = "updateOwn"
-	PresetDeleteOwn  = "deleteOwn"
-	PresetReadShared = "readShared"
-	PresetShareOwn   = "shareOwn"
+	PresetUpdateOwn       = "updateOwn"
+	PresetDeleteOwn       = "deleteOwn"
+	PresetReadShared      = "readShared"
+	PresetReadSharedInMap = "readSharedInMap"
+	PresetShareOwn        = "shareOwn"
 
 	PresetUpdateSubmitter = "updateSubmitter"
 	PresetDeleteSubmitter = "deleteSubmitter"
@@ -90,212 +89,6 @@ func CtxWithRBAC(ctx context.Context, rbac RBAC) context.Context {
 var (
 	ErrNotAuthorized = errors.New("not authorized")
 )
-
-var policy = &restrict.PolicyDefinition{
-	Roles: restrict.Roles{
-		RoleUser: {
-			Description: "An authenticated user",
-			Grants: restrict.GrantsMap{
-				ResourceIncident: {
-					&restrict.Permission{Action: ActionRead},
-					&restrict.Permission{Action: ActionCreate},
-					&restrict.Permission{Preset: PresetUpdateOwn},
-					&restrict.Permission{Preset: PresetDeleteOwn},
-					&restrict.Permission{Preset: PresetShareOwn},
-				},
-				ResourceCall: {
-					&restrict.Permission{Action: ActionRead},
-					&restrict.Permission{Action: ActionCreate},
-					&restrict.Permission{Preset: PresetUpdateSubmitter},
-					&restrict.Permission{Preset: PresetDeleteSubmitter},
-					&restrict.Permission{Action: ActionShare},
-				},
-				ResourceTalkgroup: {
-					&restrict.Permission{Action: ActionRead},
-				},
-				ResourceShare: {
-					&restrict.Permission{Action: ActionRead},
-					&restrict.Permission{Action: ActionCreate},
-					&restrict.Permission{Preset: PresetUpdateOwn},
-					&restrict.Permission{Preset: PresetDeleteOwn},
-				},
-			},
-		},
-		RoleSubmitter: {
-			Description: "A role that can submit calls",
-			Grants: restrict.GrantsMap{
-				ResourceCall: {
-					&restrict.Permission{Action: ActionCreate},
-				},
-				ResourceTalkgroup: {
-					// for learning TGs
-					&restrict.Permission{Action: ActionCreate},
-					&restrict.Permission{Action: ActionUpdate},
-				},
-			},
-		},
-		RoleShareGuest: {
-			Description: "Someone who has a valid share link",
-			Grants: restrict.GrantsMap{
-				ResourceCall: {
-					&restrict.Permission{Preset: PresetReadShared},
-				},
-				ResourceIncident: {
-					&restrict.Permission{Preset: PresetReadShared},
-				},
-				ResourceTalkgroup: {
-					&restrict.Permission{Action: ActionRead},
-				},
-			},
-		},
-		RoleAdmin: {
-			Parents: []string{RoleUser},
-			Grants: restrict.GrantsMap{
-				ResourceIncident: {
-					&restrict.Permission{Action: ActionUpdate},
-					&restrict.Permission{Action: ActionDelete},
-					&restrict.Permission{Action: ActionShare},
-				},
-				ResourceCall: {
-					&restrict.Permission{Action: ActionUpdate},
-					&restrict.Permission{Action: ActionDelete},
-					&restrict.Permission{Action: ActionShare},
-				},
-				ResourceTalkgroup: {
-					&restrict.Permission{Action: ActionUpdate},
-					&restrict.Permission{Action: ActionCreate},
-					&restrict.Permission{Action: ActionDelete},
-				},
-			},
-		},
-		RoleSystem: {
-			Parents: []string{RoleSystem},
-		},
-		RolePublic: {
-			/*
-				Grants: restrict.GrantsMap{
-					ResourceShare: {
-						&restrict.Permission{Action: ActionRead},
-					},
-				},
-			*/
-		},
-	},
-	PermissionPresets: restrict.PermissionPresets{
-		PresetUpdateOwn: &restrict.Permission{
-			Action: ActionUpdate,
-			Conditions: restrict.Conditions{
-				&restrict.EqualCondition{
-					ID: "isOwner",
-					Left: &restrict.ValueDescriptor{
-						Source: restrict.ResourceField,
-						Field:  "Owner",
-					},
-					Right: &restrict.ValueDescriptor{
-						Source: restrict.SubjectField,
-						Field:  "ID",
-					},
-				},
-			},
-		},
-		PresetDeleteOwn: &restrict.Permission{
-			Action: ActionDelete,
-			Conditions: restrict.Conditions{
-				&restrict.EqualCondition{
-					ID: "isOwner",
-					Left: &restrict.ValueDescriptor{
-						Source: restrict.ResourceField,
-						Field:  "Owner",
-					},
-					Right: &restrict.ValueDescriptor{
-						Source: restrict.SubjectField,
-						Field:  "ID",
-					},
-				},
-			},
-		},
-		PresetShareOwn: &restrict.Permission{
-			Action: ActionShare,
-			Conditions: restrict.Conditions{
-				&restrict.EqualCondition{
-					ID: "isOwner",
-					Left: &restrict.ValueDescriptor{
-						Source: restrict.ResourceField,
-						Field:  "Owner",
-					},
-					Right: &restrict.ValueDescriptor{
-						Source: restrict.SubjectField,
-						Field:  "ID",
-					},
-				},
-			},
-		},
-		PresetUpdateSubmitter: &restrict.Permission{
-			Action: ActionUpdate,
-			Conditions: restrict.Conditions{
-				&SubmitterEqualCondition{
-					ID: "isSubmitter",
-					Left: &restrict.ValueDescriptor{
-						Source: restrict.ResourceField,
-						Field:  "Submitter",
-					},
-					Right: &restrict.ValueDescriptor{
-						Source: restrict.SubjectField,
-						Field:  "ID",
-					},
-				},
-			},
-		},
-		PresetDeleteSubmitter: &restrict.Permission{
-			Action: ActionDelete,
-			Conditions: restrict.Conditions{
-				&SubmitterEqualCondition{
-					ID: "isSubmitter",
-					Left: &restrict.ValueDescriptor{
-						Source: restrict.ResourceField,
-						Field:  "Submitter",
-					},
-					Right: &restrict.ValueDescriptor{
-						Source: restrict.SubjectField,
-						Field:  "ID",
-					},
-				},
-			},
-		},
-		PresetShareSubmitter: &restrict.Permission{
-			Action: ActionShare,
-			Conditions: restrict.Conditions{
-				&SubmitterEqualCondition{
-					ID: "isSubmitter",
-					Left: &restrict.ValueDescriptor{
-						Source: restrict.ResourceField,
-						Field:  "Submitter",
-					},
-					Right: &restrict.ValueDescriptor{
-						Source: restrict.SubjectField,
-						Field:  "ID",
-					},
-				},
-			},
-		},
-		PresetReadShared: &restrict.Permission{
-			Action: ActionRead,
-			Conditions: restrict.Conditions{
-				&restrict.EqualCondition{
-					ID: "isOwner",
-					Left: &restrict.ValueDescriptor{
-						Source: restrict.ContextField,
-						Field:  "Owner",
-					},
-					Right: &restrict.ValueDescriptor{
-						Source: restrict.SubjectField,
-						Field:  "ID",
-					},
-				},
-			},
-		},
-	},
-}
 
 type checkOptions struct {
 	actions []string
@@ -397,52 +190,4 @@ func (s *SystemServiceSubject) GetName() string {
 
 func (s *SystemServiceSubject) GetRoles() []string {
 	return []string{RoleSystem}
-}
-
-const (
-	SubmitterEqualConditionType = "SUBMITTER_EQUAL"
-)
-
-type SubmitterEqualCondition struct {
-	ID    string                    `json:"name,omitempty" yaml:"name,omitempty"`
-	Left  *restrict.ValueDescriptor `json:"left" yaml:"left"`
-	Right *restrict.ValueDescriptor `json:"right" yaml:"right"`
-}
-
-func (s *SubmitterEqualCondition) Type() string {
-	return SubmitterEqualConditionType
-}
-
-func (c *SubmitterEqualCondition) Check(r *restrict.AccessRequest) error {
-	left, err := c.Left.GetValue(r)
-	if err != nil {
-		return err
-	}
-
-	right, err := c.Right.GetValue(r)
-	if err != nil {
-		return err
-	}
-
-	lVal := reflect.ValueOf(left)
-	rVal := reflect.ValueOf(right)
-
-	// deref Left. this is the difference between us and EqualCondition
-	for lVal.Kind() == reflect.Pointer {
-		lVal = lVal.Elem()
-	}
-
-	if !lVal.IsValid() || !reflect.DeepEqual(rVal.Interface(), lVal.Interface()) {
-		return restrict.NewConditionNotSatisfiedError(c, r, fmt.Errorf("values \"%v\" and \"%v\" are not equal", left, right))
-	}
-
-	return nil
-}
-
-func SubmitterEqualConditionFactory() restrict.Condition {
-	return new(SubmitterEqualCondition)
-}
-
-func init() {
-	restrict.RegisterConditionFactory(SubmitterEqualConditionType, SubmitterEqualConditionFactory)
 }

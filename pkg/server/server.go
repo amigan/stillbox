@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -144,6 +145,13 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 	srv.setupRoutes()
+
+	if os.Getenv("STILLBOX_DUMP_ROUTES") == "true" {
+		chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+			fmt.Printf("[%s]: '%s' has %d middlewares\n", method, route, len(middlewares))
+			return nil
+		})
+	}
 
 	return srv, nil
 }

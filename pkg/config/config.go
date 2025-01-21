@@ -16,17 +16,18 @@ type Configuration struct {
 }
 
 type Config struct {
-	BaseURL   jsontypes.URL `yaml:"baseURL"`
-	DB        DB            `yaml:"db"`
-	CORS      CORS          `yaml:"cors"`
-	Auth      Auth          `yaml:"auth"`
-	Alerting  Alerting      `yaml:"alerting"`
-	Log       []Logger      `yaml:"log"`
-	Listen    string        `yaml:"listen"`
-	Public    bool          `yaml:"public"`
-	RateLimit RateLimit     `yaml:"rateLimit"`
-	Notify    Notify        `yaml:"notify"`
-	Relay     []Relay       `yaml:"relay"`
+	BaseURL    jsontypes.URL `yaml:"baseURL"`
+	DumpRoutes bool          `yaml:"dumpRoutes"`
+	DB         DB            `yaml:"db"`
+	CORS       CORS          `yaml:"cors"`
+	Auth       Auth          `yaml:"auth"`
+	Alerting   Alerting      `yaml:"alerting"`
+	Log        []Logger      `yaml:"log"`
+	Listen     string        `yaml:"listen"`
+	Public     bool          `yaml:"public"`
+	RateLimit  RateLimit     `yaml:"rateLimit"`
+	Notify     Notify        `yaml:"notify"`
+	Relay      []Relay       `yaml:"relay"`
 }
 
 type Auth struct {

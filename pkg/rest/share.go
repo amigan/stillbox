@@ -2,10 +2,8 @@ package rest
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/forms"
@@ -13,6 +11,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/shares"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 var (
@@ -23,6 +22,7 @@ type ShareRequestType string
 
 const (
 	ShareRequestCall        ShareRequestType = "call"
+	ShareRequestCallDL      ShareRequestType = "callDL"
 	ShareRequestIncident    ShareRequestType = "incident"
 	ShareRequestIncidentM3U ShareRequestType = "m3u"
 )
@@ -36,39 +36,17 @@ func (rt ShareRequestType) IsValid() bool {
 	return false
 }
 
-type ShareHandlers map[shares.EntityType]http.Handler
+type HandlerFunc func(uuid.UUID, http.ResponseWriter, *http.Request)
+type ShareHandlers map[ShareRequestType]HandlerFunc
 type shareAPI struct {
 	baseURL *url.URL
+	shnd    ShareHandlers
 }
 
-type ShareAPI interface {
-	API
-	ShareMiddleware() func(http.Handler) http.Handler
-}
-
-func newShareAPI(baseURL *url.URL) ShareAPI {
+func newShareAPI(baseURL *url.URL, shnd ShareHandlers) *shareAPI {
 	return &shareAPI{
 		baseURL: baseURL,
-	}
-}
-
-func (a *shareAPI) ShareMiddleware() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			if !strings.HasPrefix(r.URL.Path, "/share/") {
-				next.ServeHTTP(w, r)
-				return
-			}
-			nr, err := a.getShare(r)
-			if err != nil {
-				wErr(w, r, autoError(err))
-				return
-			}
-
-			next.ServeHTTP(w, nr)
-		}
-
-		return http.HandlerFunc(fn)
+		shnd:    shnd,
 	}
 }
 
@@ -81,10 +59,12 @@ func (sa *shareAPI) Subrouter() http.Handler {
 	return r
 }
 
-//func (sa *shareAPI) PublicRoutes(r chi.Router) http.Handler {
-//	r.Get(`/{type}/{id:[A-Za-z0-9_-]{20,}}`, sa.getShare)
-//	r.Get(`/{type}/{id:[A-Za-z0-9_-]{20,}}*`, sa.getShare)
-//}
+func (sa *shareAPI) RootRouter() http.Handler {
+	r := chi.NewMux()
+
+	r.Get("/{type}/{shareId:[A-Za-z0-9_-]{20,}}", sa.routeShare)
+	return r
+}
 
 func (sa *shareAPI) createShare(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -107,10 +87,7 @@ func (sa *shareAPI) createShare(w http.ResponseWriter, r *http.Request) {
 	respond(w, r, sh)
 }
 
-func (sa *shareAPI) deleteShare(w http.ResponseWriter, r *http.Request) {
-}
-
-func (sa *shareAPI) getShare(r *http.Request) (*http.Request, error) {
+func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shs := shares.FromCtx(ctx)
 
@@ -121,50 +98,34 @@ func (sa *shareAPI) getShare(r *http.Request) (*http.Request, error) {
 
 	err := decodeParams(&params, r)
 	if err != nil {
-		return nil, err
+		wErr(w, r, autoError(err))
+		return
 	}
 
 	rType := ShareRequestType(params.Type)
 	id := params.ID
 
 	if !rType.IsValid() {
-		return nil, ErrBadShare
+		wErr(w, r, autoError(ErrBadShare))
+		return
 	}
 
 	sh, err := shs.GetShare(ctx, id)
 	if err != nil {
-		return nil, err
+		wErr(w, r, autoError(err))
+		return
 	}
 
 	if sh.Expiration != nil && sh.Expiration.Time().Before(time.Now()) {
-		return nil, shares.ErrNoShare
+		wErr(w, r, autoError(shares.ErrNoShare))
+		return
 	}
 
 	ctx = rbac.CtxWithSubject(ctx, sh)
 	r = r.WithContext(ctx)
 
-	switch rType {
-	case ShareRequestCall, ShareRequestIncident:
-		r.URL.Path += fmt.Sprintf("/%s/%s", rType, sh.EntityID.String())
-	case ShareRequestIncidentM3U:
-		r.URL.Path = fmt.Sprintf("/incident/%s.m3u", sh.EntityID.String())
-	}
-
-	return r, nil
+	sa.shnd[rType](sh.EntityID, w, r)
 }
 
-// idOnlyParam checks for a sole URL parameter, id, and writes an errorif this fails.
-func shareParams(w http.ResponseWriter, r *http.Request) (rType ShareRequestType, rID string, err error) {
-	params := struct {
-		Type string `param:"type"`
-		ID   string `param:"id"`
-	}{}
-
-	err = decodeParams(&params, r)
-	if err != nil {
-		wErr(w, r, badRequest(err))
-		return "", "", err
-	}
-
-	return ShareRequestType(params.Type), params.ID, nil
+func (sa *shareAPI) deleteShare(w http.ResponseWriter, r *http.Request) {
 }

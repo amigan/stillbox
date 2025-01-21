@@ -18,43 +18,44 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type APIRoot interface {
-	API
-	Shares() ShareAPI
-	ShareSubroutes(chi.Router)
-}
-
 type API interface {
 	Subrouter() http.Handler
 }
 
-type ShareableAPI interface {
+type APIRoot interface {
 	API
-	GETSubroutes(chi.Router)
+	ShareRouter() http.Handler
 }
 
 type api struct {
-	baseURL *url.URL
-	shares ShareAPI
-	tgs API
-	calls ShareableAPI
-	users API
-	incidents ShareableAPI
+	baseURL   *url.URL
+	shares    *shareAPI
+	tgs       *talkgroupAPI
+	calls     *callsAPI
+	users     *usersAPI
+	incidents *incidentsAPI
 }
 
-func (a *api) Shares() ShareAPI {
-	return a.shares
+func (a *api) ShareRouter() http.Handler {
+	return a.shares.RootRouter()
 }
 
 func New(baseURL url.URL) *api {
 	s := &api{
-		baseURL: &baseURL,
-		shares: newShareAPI(&baseURL),
-		tgs: new(talkgroupAPI),
-		calls: new(callsAPI),
+		baseURL:   &baseURL,
+		tgs:       new(talkgroupAPI),
+		calls:     new(callsAPI),
 		incidents: newIncidentsAPI(&baseURL),
-		users: new(usersAPI),
+		users:     new(usersAPI),
 	}
+	s.shares = newShareAPI(&baseURL,
+		ShareHandlers{
+			ShareRequestCall:        s.calls.shareCallRoute,
+			ShareRequestCallDL:      s.calls.shareCallDLRoute,
+			ShareRequestIncident:    s.incidents.getIncident,
+			ShareRequestIncidentM3U: s.incidents.getCallsM3U,
+		},
+	)
 
 	return s
 }
@@ -69,11 +70,6 @@ func (a *api) Subrouter() http.Handler {
 	r.Mount("/share", a.shares.Subrouter())
 
 	return r
-}
-
-func (a *api) ShareSubroutes(r chi.Router) {
-	r.Route("/calls", a.calls.GETSubroutes)
-	r.Route("/incidents", a.incidents.GETSubroutes)
 }
 
 type errResponse struct {
