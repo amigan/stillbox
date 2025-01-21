@@ -11,6 +11,7 @@ import (
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/shares"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -101,7 +102,7 @@ func (ca *callsAPI) getAudio(p getAudioParams, w http.ResponseWriter, r *http.Re
 	_, _ = w.Write(call.AudioBlob)
 }
 
-func (ca *callsAPI) shareCallRoute(id uuid.UUID, w http.ResponseWriter, r *http.Request) {
+func (ca *callsAPI) shareCallRoute(id uuid.UUID, _ *shares.Share, w http.ResponseWriter, r *http.Request) {
 	p := getAudioParams{
 		CallID: &id,
 	}
@@ -109,7 +110,7 @@ func (ca *callsAPI) shareCallRoute(id uuid.UUID, w http.ResponseWriter, r *http.
 	ca.getAudio(p, w, r)
 }
 
-func (ca *callsAPI) shareCallDLRoute(id uuid.UUID, w http.ResponseWriter, r *http.Request) {
+func (ca *callsAPI) shareCallDLRoute(id uuid.UUID, _ *shares.Share, w http.ResponseWriter, r *http.Request) {
 	p := getAudioParams{
 		CallID:   &id,
 		Download: common.PtrTo("download"),

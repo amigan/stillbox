@@ -139,7 +139,12 @@ func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOp
 		Context:  o.context,
 	}
 
-	return sub, r.access.Authorize(req)
+	err := r.access.Authorize(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return sub, nil
 }
 
 type PublicSubject struct {

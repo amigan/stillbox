@@ -54,7 +54,7 @@ func (c *CallInIncidentCondition) Check(r *restrict.AccessRequest) error {
 		return restrict.NewConditionNotSatisfiedError(c, r, errors.New("call ID is not UUID"))
 	}
 
-	inCall, err := database.FromCtx(ctx).CallInIncident(ctx, incID, incID)
+	inCall, err := database.FromCtx(ctx).CallInIncident(ctx, incID, callID)
 	if err != nil {
 		return restrict.NewConditionNotSatisfiedError(c, r, err)
 	}

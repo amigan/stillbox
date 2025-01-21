@@ -12,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/incidents"
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
+	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"
@@ -93,10 +94,10 @@ func (ia *incidentsAPI) getIncidentRoute(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	ia.getIncident(id, w, r)
+	ia.getIncident(id, nil, w, r)
 }
 
-func (ia *incidentsAPI) getIncident(id uuid.UUID, w http.ResponseWriter, r *http.Request) {
+func (ia *incidentsAPI) getIncident(id uuid.UUID, share *shares.Share, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	incs := incstore.FromCtx(ctx)
 	inc, err := incs.Incident(ctx, id)
@@ -194,10 +195,10 @@ func (ia *incidentsAPI) getCallsM3URoute(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	ia.getCallsM3U(id, w, r)
+	ia.getCallsM3U(id, nil, w, r)
 }
 
-func (ia *incidentsAPI) getCallsM3U(id uuid.UUID, w http.ResponseWriter, r *http.Request) {
+func (ia *incidentsAPI) getCallsM3U(id uuid.UUID, share *shares.Share, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	incs := incstore.FromCtx(ctx)
 	tgst := tgstore.FromCtx(ctx)
@@ -211,6 +212,10 @@ func (ia *incidentsAPI) getCallsM3U(id uuid.UUID, w http.ResponseWriter, r *http
 	b := new(bytes.Buffer)
 
 	callUrl := common.PtrTo(*ia.baseURL)
+	urlRoot := "/api/call"
+	if share != nil {
+		urlRoot = fmt.Sprintf("/share/%s/%s/call/", share.Type, share.ID)
+	}
 
 	b.WriteString("#EXTM3U\n\n")
 	for _, c := range inc.Calls {
@@ -224,7 +229,7 @@ func (ia *incidentsAPI) getCallsM3U(id uuid.UUID, w http.ResponseWriter, r *http
 			from = fmt.Sprintf(" from %d", c.Source)
 		}
 
-		callUrl.Path = "/api/call/" + c.ID.String()
+		callUrl.Path = urlRoot + c.ID.String()
 
 		fmt.Fprintf(b, "#EXTINF:%d,%s%s (%s)\n%s\n\n",
 			c.Duration.Seconds(),
