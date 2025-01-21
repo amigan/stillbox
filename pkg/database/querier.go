@@ -16,6 +16,7 @@ type Querier interface {
 	AddCall(ctx context.Context, arg AddCallParams) error
 	AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error)
 	AddToIncident(ctx context.Context, incidentID uuid.UUID, callIds []uuid.UUID, notes [][]byte) error
+	CallInIncident(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID) (bool, error)
 	CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error)

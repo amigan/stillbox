@@ -8,37 +8,7 @@ import (
 	"github.com/el-mike/restrict/v2/adapters"
 )
 
-const (
-	RoleUser       = "User"
-	RoleSubmitter  = "Submitter"
-	RoleAdmin      = "Admin"
-	RoleSystem     = "System"
-	RolePublic     = "Public"
-	RoleShareGuest = "ShareGuest"
 
-	ResourceCall      = "Call"
-	ResourceIncident  = "Incident"
-	ResourceTalkgroup = "Talkgroup"
-	ResourceAlert     = "Alert"
-	ResourceShare     = "Share"
-	ResourceAPIKey    = "APIKey"
-
-	ActionRead   = "read"
-	ActionCreate = "create"
-	ActionUpdate = "update"
-	ActionDelete = "delete"
-	ActionShare  = "share"
-
-	PresetUpdateOwn       = "updateOwn"
-	PresetDeleteOwn       = "deleteOwn"
-	PresetReadShared      = "readShared"
-	PresetReadSharedInMap = "readSharedInMap"
-	PresetShareOwn        = "shareOwn"
-
-	PresetUpdateSubmitter = "updateSubmitter"
-	PresetDeleteSubmitter = "deleteSubmitter"
-	PresetShareSubmitter  = "shareSubmitter"
-)
 
 var (
 	ErrBadSubject = errors.New("bad subject in token")
@@ -132,7 +102,7 @@ type rbac struct {
 }
 
 func New() (*rbac, error) {
-	adapter := adapters.NewInMemoryAdapter(policy)
+	adapter := adapters.NewInMemoryAdapter(Policy)
 	polMan, err := restrict.NewPolicyManager(adapter, true)
 	if err != nil {
 		return nil, err
@@ -154,9 +124,16 @@ func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOp
 	sub := SubjectFrom(ctx)
 	o := checkOptions{}
 
+
 	for _, opt := range opts {
 		opt(&o)
 	}
+
+	if o.context == nil {
+		o.context = make(restrict.Context)
+	}
+
+	o.context["ctx"] = ctx
 
 	req := &restrict.AccessRequest{
 		Subject:  sub,

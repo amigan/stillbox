@@ -9,7 +9,10 @@ import (
 	"strings"
 
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
+)
+
+const (
+	Resource = "Talkgroup"
 )
 
 type Talkgroup struct {
@@ -19,7 +22,7 @@ type Talkgroup struct {
 }
 
 func (t *Talkgroup) GetResourceName() string {
-	return rbac.ResourceTalkgroup
+	return Resource
 }
 
 func (t Talkgroup) String() string {

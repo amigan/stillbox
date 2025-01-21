@@ -1,10 +1,25 @@
 package rbac
 
 import (
+	"dynatron.me/x/stillbox/pkg/incidents/incstore"
+
 	"github.com/el-mike/restrict/v2"
 )
 
-var policy = &restrict.PolicyDefinition{
+const (
+	PresetUpdateOwn       = "updateOwn"
+	PresetDeleteOwn       = "deleteOwn"
+	PresetReadShared      = "readShared"
+	PresetReadSharedInMap = "readSharedInMap"
+	PresetShareOwn        = "shareOwn"
+
+	PresetUpdateSubmitter = "updateSubmitter"
+	PresetDeleteSubmitter = "deleteSubmitter"
+	PresetShareSubmitter  = "shareSubmitter"
+	PresetReadInSharedIncident = "readInSharedIncident"
+)
+
+var Policy = &restrict.PolicyDefinition{
 	Roles: restrict.Roles{
 		RoleUser: {
 			Description: "An authenticated user",
@@ -52,6 +67,7 @@ var policy = &restrict.PolicyDefinition{
 			Grants: restrict.GrantsMap{
 				ResourceCall: {
 					&restrict.Permission{Preset: PresetReadShared},
+					&restrict.Permission{Preset: PresetReadInSharedIncident},
 				},
 				ResourceIncident: {
 					&restrict.Permission{Preset: PresetReadShared},
@@ -201,6 +217,22 @@ var policy = &restrict.PolicyDefinition{
 						Field:  "ID",
 					},
 					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "EntityID",
+					},
+				},
+			},
+		},
+		PresetReadInSharedIncident: &restrict.Permission{
+			Action: ActionRead,
+			Conditions: restrict.Conditions{
+				&incstore.CallInIncidentCondition{
+					ID: "callInIncident",
+					Call: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "ID",
+					},
+					Incident: &restrict.ValueDescriptor{
 						Source: restrict.SubjectField,
 						Field:  "EntityID",
 					},

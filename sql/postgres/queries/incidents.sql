@@ -29,6 +29,13 @@ UPDATE incidents_Calls
 SET notes = @notes
 WHERE incident_id = @incident_id AND call_id = @call_id;
 
+-- name: CallInIncident :one
+SELECT EXISTS
+	(SELECT 1 FROM incidents_calls ic
+	WHERE
+	ic.incident_id = @incident_id AND
+	ic.call_id = @call_id);
+
 -- name: CreateIncident :one
 INSERT INTO incidents (
 	id,

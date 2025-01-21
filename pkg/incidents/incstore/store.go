@@ -49,6 +49,9 @@ type Store interface {
 
 	// Owner returns an incident with only the owner filled out.
 	Owner(ctx context.Context, id uuid.UUID) (incidents.Incident, error)
+
+	// CallIn returns whether an incident is in an call
+	CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUID) (bool, error)
 }
 
 type store struct {
@@ -373,3 +376,9 @@ func (s *store) Owner(ctx context.Context, id uuid.UUID) (incidents.Incident, er
 	owner, err := database.FromCtx(ctx).GetIncidentOwner(ctx, id)
 	return incidents.Incident{ID: id, Owner: users.UserID(owner)}, err
 }
+
+func (s *store) CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUID) (bool, error) {
+	db := database.FromCtx(ctx)
+	return db.CallInIncident(ctx, inc, call)
+}
+

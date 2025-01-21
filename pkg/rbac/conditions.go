@@ -9,7 +9,7 @@ import (
 
 const (
 	SubmitterEqualConditionType = "SUBMITTER_EQUAL"
-	InMapConditionType          = "IN_MAP"
+	InMapConditionType = "IN_MAP"
 )
 
 type SubmitterEqualCondition struct {
@@ -53,7 +53,7 @@ func SubmitterEqualConditionFactory() restrict.Condition {
 }
 
 type InMapCondition[K comparable, V any] struct {
-	ID  string                    `json:"name,omitempty" yaml:"name,omitempty"`
+	ID    string                    `json:"name,omitempty" yaml:"name,omitempty"`
 	Key *restrict.ValueDescriptor `json:"key" yaml:"key"`
 	Map *restrict.ValueDescriptor `json:"map" yaml:"map"`
 }
@@ -77,12 +77,9 @@ func (c *InMapCondition[K, V]) Check(r *restrict.AccessRequest) error {
 		return err
 	}
 
-	keyVal := reflect.ValueOf(cKey)
-	mapVal := reflect.ValueOf(cMap)
+	key := cKey.(K)
 
-	key := keyVal.Interface().(K)
-
-	if _, in := mapVal.Interface().(map[K]V)[key]; !in {
+	if _, in := cMap.(map[K]V)[key]; !in {
 		return restrict.NewConditionNotSatisfiedError(c, r, fmt.Errorf("key '%v' not in map", key))
 	}
 
