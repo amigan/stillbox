@@ -17,6 +17,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/policy"
 	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/sinks"
@@ -80,7 +81,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	tgCache := tgstore.NewCache(db)
 	api := rest.New(cfg.BaseURL.URL())
 
-	rbacSvc, err := rbac.New()
+	rbacSvc, err := rbac.New(policy.Policy)
 	if err != nil {
 		return nil, err
 	}

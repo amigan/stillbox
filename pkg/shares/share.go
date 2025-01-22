@@ -10,6 +10,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/google/uuid"
@@ -57,11 +58,11 @@ func (s *Share) GetName() string {
 }
 
 func (s *Share) GetRoles() []string {
-	return []string{rbac.RoleShareGuest}
+	return []string{entities.RoleShareGuest}
 }
 
 func (s *Share) GetResourceName() string {
-	return rbac.ResourceShare
+	return entities.ResourceShare
 }
 
 type CreateShareParams struct {
@@ -88,7 +89,7 @@ func (s *service) checkEntity(ctx context.Context, sh *CreateShareParams) (*time
 		if err != nil {
 			return nil, err
 		}
-		_, err = rbac.Check(ctx, &i, rbac.WithActions(rbac.ActionShare))
+		_, err = rbac.Check(ctx, &i, rbac.WithActions(entities.ActionShare))
 		if err != nil {
 			return nil, err
 		}

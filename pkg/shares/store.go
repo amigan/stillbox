@@ -7,6 +7,7 @@ import (
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/jackc/pgx/v5"
 )
@@ -79,7 +80,7 @@ func (s *postgresStore) Create(ctx context.Context, share *Share) error {
 }
 
 func (s *postgresStore) Delete(ctx context.Context, id string) error {
-	_, err := rbac.Check(ctx, new(Share), rbac.WithActions(rbac.ActionDelete))
+	_, err := rbac.Check(ctx, new(Share), rbac.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}

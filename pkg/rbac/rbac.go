@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
+
 	"github.com/el-mike/restrict/v2"
 	"github.com/el-mike/restrict/v2/adapters"
 )
@@ -12,29 +14,12 @@ var (
 	ErrBadSubject = errors.New("bad subject in token")
 )
 
-type subjectContextKey string
-
-const SubjectCtxKey subjectContextKey = "sub"
-
-func CtxWithSubject(ctx context.Context, sub Subject) context.Context {
-	return context.WithValue(ctx, SubjectCtxKey, sub)
-}
-
 func ErrAccessDenied(err error) *restrict.AccessDeniedError {
 	if accessErr, ok := err.(*restrict.AccessDeniedError); ok {
 		return accessErr
 	}
 
 	return nil
-}
-
-func SubjectFrom(ctx context.Context) Subject {
-	sub, ok := ctx.Value(SubjectCtxKey).(Subject)
-	if ok {
-		return sub
-	}
-
-	return new(PublicSubject)
 }
 
 type rbacCtxKey string
@@ -81,17 +66,8 @@ func UseResource(rsc string) restrict.Resource {
 	return restrict.UseResource(rsc)
 }
 
-type Subject interface {
-	restrict.Subject
-	GetName() string
-}
-
-type Resource interface {
-	restrict.Resource
-}
-
 type RBAC interface {
-	Check(ctx context.Context, res restrict.Resource, opts ...CheckOption) (Subject, error)
+	Check(ctx context.Context, res restrict.Resource, opts ...CheckOption) (entities.Subject, error)
 }
 
 type rbac struct {
@@ -99,8 +75,8 @@ type rbac struct {
 	access *restrict.AccessManager
 }
 
-func New() (*rbac, error) {
-	adapter := adapters.NewInMemoryAdapter(Policy)
+func New(pol *restrict.PolicyDefinition) (*rbac, error) {
+	adapter := adapters.NewInMemoryAdapter(pol)
 	polMan, err := restrict.NewPolicyManager(adapter, true)
 	if err != nil {
 		return nil, err
@@ -114,12 +90,12 @@ func New() (*rbac, error) {
 }
 
 // Check is a convenience function to pull the RBAC instance out of ctx and Check.
-func Check(ctx context.Context, res restrict.Resource, opts ...CheckOption) (Subject, error) {
+func Check(ctx context.Context, res restrict.Resource, opts ...CheckOption) (entities.Subject, error) {
 	return FromCtx(ctx).Check(ctx, res, opts...)
 }
 
-func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOption) (Subject, error) {
-	sub := SubjectFrom(ctx)
+func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOption) (entities.Subject, error) {
+	sub := entities.SubjectFrom(ctx)
 	o := checkOptions{}
 
 	for _, opt := range opts {
@@ -139,34 +115,5 @@ func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOp
 		Context:  o.context,
 	}
 
-	err := r.access.Authorize(req)
-	if err != nil {
-		return nil, err
-	}
-
-	return sub, nil
-}
-
-type PublicSubject struct {
-	RemoteAddr string
-}
-
-func (s *PublicSubject) GetName() string {
-	return "PUBLIC:" + s.RemoteAddr
-}
-
-func (s *PublicSubject) GetRoles() []string {
-	return []string{RolePublic}
-}
-
-type SystemServiceSubject struct {
-	Name string
-}
-
-func (s *SystemServiceSubject) GetName() string {
-	return "SYSTEM:" + s.Name
-}
-
-func (s *SystemServiceSubject) GetRoles() []string {
-	return []string{RoleSystem}
+	return sub, r.access.Authorize(req)
 }

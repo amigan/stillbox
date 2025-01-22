@@ -1,4 +1,4 @@
-package rbac
+package policy
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/incidents/incstore"
 
 	"github.com/el-mike/restrict/v2"
 	"github.com/google/uuid"
@@ -54,7 +54,7 @@ func (c *CallInIncidentCondition) Check(r *restrict.AccessRequest) error {
 		return restrict.NewConditionNotSatisfiedError(c, r, errors.New("call ID is not UUID"))
 	}
 
-	inCall, err := database.FromCtx(ctx).CallInIncident(ctx, incID, callID)
+	inCall, err := incstore.FromCtx(ctx).CallIn(ctx, incID, callID)
 	if err != nil {
 		return restrict.NewConditionNotSatisfiedError(c, r, err)
 	}

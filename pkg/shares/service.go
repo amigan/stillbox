@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,7 +23,7 @@ type service struct {
 }
 
 func (s *service) Go(ctx context.Context) {
-	ctx = rbac.CtxWithSubject(ctx, &rbac.SystemServiceSubject{Name: "share"})
+	ctx = entities.CtxWithSubject(ctx, &entities.SystemServiceSubject{Name: "share"})
 
 	tick := time.NewTicker(PruneInterval)
 

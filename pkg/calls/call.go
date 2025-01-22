@@ -8,7 +8,7 @@ import (
 	"dynatron.me/x/stillbox/internal/audio"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/pb"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
 
@@ -76,7 +76,7 @@ type Call struct {
 }
 
 func (c *Call) GetResourceName() string {
-	return rbac.ResourceCall
+	return entities.ResourceCall
 }
 
 func (c *Call) String() string {

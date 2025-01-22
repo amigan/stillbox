@@ -10,6 +10,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
@@ -131,7 +132,7 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.ing.Ingest(rbac.CtxWithSubject(ctx, submitterSub), call)
+	err = h.ing.Ingest(entities.CtxWithSubject(ctx, submitterSub), call)
 	if err != nil {
 		if rbac.ErrAccessDenied(err) != nil {
 			log.Error().Err(err).Msg("ingest failed")

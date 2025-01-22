@@ -122,6 +122,7 @@ func (f *TalkgroupFilter) compile(ctx context.Context) error {
 
 	if f.hasTags() { // don't bother with DB if no tags
 		db := database.FromCtx(ctx)
+		// TODO: change this to use tgstore, and make sure the context is no longer a system subject (see nexus.Go)
 		tagTGs, err := db.GetTalkgroupIDsByTags(ctx, f.TalkgroupTagsAny, f.TalkgroupTagsAll, f.TalkgroupTagsNot)
 		if err != nil {
 			return err

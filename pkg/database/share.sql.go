@@ -53,6 +53,40 @@ func (q *Queries) DeleteShare(ctx context.Context, id string) error {
 	return err
 }
 
+const getIncidentTalkgroups = `-- name: GetIncidentTalkgroups :many
+SELECT DISTINCT
+	c.system,
+	c.talkgroup
+FROM incidents_calls ic 
+JOIN calls c ON (c.id = ic.call_id AND c.call_date = ic.call_date) 
+WHERE ic.incident_id = $1
+`
+
+type GetIncidentTalkgroupsRow struct {
+	System    int `json:"system"`
+	Talkgroup int `json:"talkgroup"`
+}
+
+func (q *Queries) GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error) {
+	rows, err := q.db.Query(ctx, getIncidentTalkgroups, incidentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetIncidentTalkgroupsRow
+	for rows.Next() {
+		var i GetIncidentTalkgroupsRow
+		if err := rows.Scan(&i.System, &i.Talkgroup); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getShare = `-- name: GetShare :one
 SELECT
 	id,

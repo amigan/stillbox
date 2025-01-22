@@ -13,7 +13,7 @@ import (
 	"dynatron.me/x/stillbox/internal/isoweek"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -135,7 +135,7 @@ func New(db database.Store, cfg config.Partition) (*partman, error) {
 var _ PartitionManager = (*partman)(nil)
 
 func (pm *partman) Go(ctx context.Context) {
-	ctx = rbac.CtxWithSubject(ctx, &rbac.SystemServiceSubject{Name: "partman"})
+	ctx = entities.CtxWithSubject(ctx, &entities.SystemServiceSubject{Name: "partman"})
 	tick := time.NewTicker(CheckInterval)
 
 	select {

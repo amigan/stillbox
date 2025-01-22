@@ -10,6 +10,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/incidents"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -143,7 +144,7 @@ func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID
 		return err
 	}
 
-	_, err = rbac.Check(ctx, &inc, rbac.WithActions(rbac.ActionUpdate))
+	_, err = rbac.Check(ctx, &inc, rbac.WithActions(entities.ActionUpdate))
 	if err != nil {
 		return err
 	}
@@ -176,7 +177,7 @@ func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID
 }
 
 func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []Incident, totalCount int, err error) {
-	_, err = rbac.Check(ctx, new(incidents.Incident), rbac.WithActions(rbac.ActionRead))
+	_, err = rbac.Check(ctx, new(incidents.Incident), rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -281,7 +282,7 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 }
 
 func (s *store) Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error) {
-	_, err := rbac.Check(ctx, &incidents.Incident{ID: id}, rbac.WithActions(rbac.ActionRead))
+	_, err := rbac.Check(ctx, &incidents.Incident{ID: id}, rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -337,7 +338,7 @@ func (s *store) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncide
 		return nil, err
 	}
 
-	_, err = rbac.Check(ctx, &ckinc, rbac.WithActions(rbac.ActionUpdate))
+	_, err = rbac.Check(ctx, &ckinc, rbac.WithActions(entities.ActionUpdate))
 	if err != nil {
 		return nil, err
 	}
@@ -360,7 +361,7 @@ func (s *store) DeleteIncident(ctx context.Context, id uuid.UUID) error {
 		return err
 	}
 
-	_, err = rbac.Check(ctx, &inc, rbac.WithActions(rbac.ActionDelete))
+	_, err = rbac.Check(ctx, &inc, rbac.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}

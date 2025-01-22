@@ -11,6 +11,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/users"
 
@@ -85,7 +86,7 @@ func toAddCallParams(call *calls.Call) database.AddCallParams {
 }
 
 func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
-	_, err := rbac.Check(ctx, call, rbac.WithActions(rbac.ActionCreate))
+	_, err := rbac.Check(ctx, call, rbac.WithActions(entities.ActionCreate))
 	if err != nil {
 		return err
 	}
@@ -123,7 +124,7 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
 }
 
 func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {
-	_, err := rbac.Check(ctx, &calls.Call{ID: id}, rbac.WithActions(rbac.ActionRead))
+	_, err := rbac.Check(ctx, &calls.Call{ID: id}, rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +145,7 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, 
 }
 
 func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceCall), rbac.WithActions(rbac.ActionRead))
+	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceCall), rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +194,7 @@ type CallsParams struct {
 }
 
 func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
-	_, err = rbac.Check(ctx, rbac.UseResource(rbac.ResourceCall), rbac.WithActions(rbac.ActionRead))
+	_, err = rbac.Check(ctx, rbac.UseResource(entities.ResourceCall), rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -256,7 +257,7 @@ func (s *store) Delete(ctx context.Context, id uuid.UUID) error {
 		return err
 	}
 
-	_, err = rbac.Check(ctx, &callOwn, rbac.WithActions(rbac.ActionDelete))
+	_, err = rbac.Check(ctx, &callOwn, rbac.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}

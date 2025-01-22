@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/forms"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/shares"
 
 	"github.com/go-chi/chi/v5"
@@ -133,7 +133,7 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx = rbac.CtxWithSubject(ctx, sh)
+	ctx = entities.CtxWithSubject(ctx, sh)
 	r = r.WithContext(ctx)
 
 	if params.SubType != nil {

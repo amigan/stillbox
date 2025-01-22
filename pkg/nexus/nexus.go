@@ -6,7 +6,7 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/pb"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 
 	"github.com/rs/zerolog/log"
 )
@@ -39,7 +39,7 @@ func New() *Nexus {
 }
 
 func (n *Nexus) Go(ctx context.Context) {
-	ctx = rbac.CtxWithSubject(ctx, &rbac.SystemServiceSubject{Name: "nexus"})
+	ctx = entities.CtxWithSubject(ctx, &entities.SystemServiceSubject{Name: "nexus"})
 	for {
 		select {
 		case call, ok := <-n.callCh:

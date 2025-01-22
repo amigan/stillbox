@@ -5,7 +5,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/calls"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/google/uuid"
 )
@@ -23,7 +23,7 @@ type Incident struct {
 }
 
 func (inc *Incident) GetResourceName() string {
-	return rbac.ResourceIncident
+	return entities.ResourceIncident
 }
 
 type IncidentCall struct {

@@ -1,6 +1,8 @@
-package rbac
+package policy
 
 import (
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
+
 	"github.com/el-mike/restrict/v2"
 )
 
@@ -19,90 +21,90 @@ const (
 
 var Policy = &restrict.PolicyDefinition{
 	Roles: restrict.Roles{
-		RoleUser: {
+		entities.RoleUser: {
 			Description: "An authenticated user",
 			Grants: restrict.GrantsMap{
-				ResourceIncident: {
-					&restrict.Permission{Action: ActionRead},
-					&restrict.Permission{Action: ActionCreate},
+				entities.ResourceIncident: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Preset: PresetUpdateOwn},
 					&restrict.Permission{Preset: PresetDeleteOwn},
 					&restrict.Permission{Preset: PresetShareOwn},
 				},
-				ResourceCall: {
-					&restrict.Permission{Action: ActionRead},
-					&restrict.Permission{Action: ActionCreate},
+				entities.ResourceCall: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Preset: PresetUpdateSubmitter},
 					&restrict.Permission{Preset: PresetDeleteSubmitter},
-					&restrict.Permission{Action: ActionShare},
+					&restrict.Permission{Action: entities.ActionShare},
 				},
-				ResourceTalkgroup: {
-					&restrict.Permission{Action: ActionRead},
+				entities.ResourceTalkgroup: {
+					&restrict.Permission{Action: entities.ActionRead},
 				},
-				ResourceShare: {
-					&restrict.Permission{Action: ActionRead},
-					&restrict.Permission{Action: ActionCreate},
+				entities.ResourceShare: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Preset: PresetUpdateOwn},
 					&restrict.Permission{Preset: PresetDeleteOwn},
 				},
 			},
 		},
-		RoleSubmitter: {
+		entities.RoleSubmitter: {
 			Description: "A role that can submit calls",
 			Grants: restrict.GrantsMap{
-				ResourceCall: {
-					&restrict.Permission{Action: ActionCreate},
+				entities.ResourceCall: {
+					&restrict.Permission{Action: entities.ActionCreate},
 				},
-				ResourceTalkgroup: {
+				entities.ResourceTalkgroup: {
 					// for learning TGs
-					&restrict.Permission{Action: ActionCreate},
-					&restrict.Permission{Action: ActionUpdate},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionUpdate},
 				},
 			},
 		},
-		RoleShareGuest: {
+		entities.RoleShareGuest: {
 			Description: "Someone who has a valid share link",
 			Grants: restrict.GrantsMap{
-				ResourceCall: {
+				entities.ResourceCall: {
 					&restrict.Permission{Preset: PresetReadShared},
 					&restrict.Permission{Preset: PresetReadInSharedIncident},
 				},
-				ResourceIncident: {
+				entities.ResourceIncident: {
 					&restrict.Permission{Preset: PresetReadShared},
 				},
-				ResourceTalkgroup: {
-					&restrict.Permission{Action: ActionRead},
+				entities.ResourceTalkgroup: {
+					&restrict.Permission{Action: entities.ActionRead},
 				},
 			},
 		},
-		RoleAdmin: {
-			Parents: []string{RoleUser},
+		entities.RoleAdmin: {
+			Parents: []string{entities.RoleUser},
 			Grants: restrict.GrantsMap{
-				ResourceIncident: {
-					&restrict.Permission{Action: ActionUpdate},
-					&restrict.Permission{Action: ActionDelete},
-					&restrict.Permission{Action: ActionShare},
+				entities.ResourceIncident: {
+					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionDelete},
+					&restrict.Permission{Action: entities.ActionShare},
 				},
-				ResourceCall: {
-					&restrict.Permission{Action: ActionUpdate},
-					&restrict.Permission{Action: ActionDelete},
-					&restrict.Permission{Action: ActionShare},
+				entities.ResourceCall: {
+					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionDelete},
+					&restrict.Permission{Action: entities.ActionShare},
 				},
-				ResourceTalkgroup: {
-					&restrict.Permission{Action: ActionUpdate},
-					&restrict.Permission{Action: ActionCreate},
-					&restrict.Permission{Action: ActionDelete},
+				entities.ResourceTalkgroup: {
+					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionDelete},
 				},
 			},
 		},
-		RoleSystem: {
-			Parents: []string{RoleSystem},
+		entities.RoleSystem: {
+			Parents: []string{entities.RoleSystem},
 		},
-		RolePublic: {
+		entities.RolePublic: {
 			/*
 				Grants: restrict.GrantsMap{
-					ResourceShare: {
-						&restrict.Permission{Action: ActionRead},
+					entities.ResourceShare: {
+						&restrict.Permission{Action: entities.ActionRead},
 					},
 				},
 			*/
@@ -110,7 +112,7 @@ var Policy = &restrict.PolicyDefinition{
 	},
 	PermissionPresets: restrict.PermissionPresets{
 		PresetUpdateOwn: &restrict.Permission{
-			Action: ActionUpdate,
+			Action: entities.ActionUpdate,
 			Conditions: restrict.Conditions{
 				&restrict.EqualCondition{
 					ID: "isOwner",
@@ -126,7 +128,7 @@ var Policy = &restrict.PolicyDefinition{
 			},
 		},
 		PresetDeleteOwn: &restrict.Permission{
-			Action: ActionDelete,
+			Action: entities.ActionDelete,
 			Conditions: restrict.Conditions{
 				&restrict.EqualCondition{
 					ID: "isOwner",
@@ -142,7 +144,7 @@ var Policy = &restrict.PolicyDefinition{
 			},
 		},
 		PresetShareOwn: &restrict.Permission{
-			Action: ActionShare,
+			Action: entities.ActionShare,
 			Conditions: restrict.Conditions{
 				&restrict.EqualCondition{
 					ID: "isOwner",
@@ -158,7 +160,7 @@ var Policy = &restrict.PolicyDefinition{
 			},
 		},
 		PresetUpdateSubmitter: &restrict.Permission{
-			Action: ActionUpdate,
+			Action: entities.ActionUpdate,
 			Conditions: restrict.Conditions{
 				&SubmitterEqualCondition{
 					ID: "isSubmitter",
@@ -174,7 +176,7 @@ var Policy = &restrict.PolicyDefinition{
 			},
 		},
 		PresetDeleteSubmitter: &restrict.Permission{
-			Action: ActionDelete,
+			Action: entities.ActionDelete,
 			Conditions: restrict.Conditions{
 				&SubmitterEqualCondition{
 					ID: "isSubmitter",
@@ -190,7 +192,7 @@ var Policy = &restrict.PolicyDefinition{
 			},
 		},
 		PresetShareSubmitter: &restrict.Permission{
-			Action: ActionShare,
+			Action: entities.ActionShare,
 			Conditions: restrict.Conditions{
 				&SubmitterEqualCondition{
 					ID: "isSubmitter",
@@ -206,7 +208,7 @@ var Policy = &restrict.PolicyDefinition{
 			},
 		},
 		PresetReadShared: &restrict.Permission{
-			Action: ActionRead,
+			Action: entities.ActionRead,
 			Conditions: restrict.Conditions{
 				&restrict.EqualCondition{
 					ID: "isOwner",
@@ -222,7 +224,7 @@ var Policy = &restrict.PolicyDefinition{
 			},
 		},
 		PresetReadInSharedIncident: &restrict.Permission{
-			Action: ActionRead,
+			Action: entities.ActionRead,
 			Conditions: restrict.Conditions{
 				&CallInIncidentCondition{
 					ID: "callInIncident",

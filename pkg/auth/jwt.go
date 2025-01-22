@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/go-chi/chi/v5"
@@ -104,7 +104,7 @@ func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
 					return
 				}
 
-				ctx = rbac.CtxWithSubject(ctx, sub)
+				ctx = entities.CtxWithSubject(ctx, sub)
 
 				next.ServeHTTP(w, r.WithContext(ctx))
 

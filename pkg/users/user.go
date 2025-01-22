@@ -7,6 +7,7 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 )
 
 type UserID int
@@ -30,11 +31,11 @@ func (u UserID) IsValid() bool {
 }
 
 func From(ctx context.Context) (*User, error) {
-	sub := rbac.SubjectFrom(ctx)
+	sub := entities.SubjectFrom(ctx)
 	return FromSubject(sub)
 }
 
-func UserCheck(ctx context.Context, rsc rbac.Resource, actions string) (*User, error) {
+func UserCheck(ctx context.Context, rsc entities.Resource, actions string) (*User, error) {
 	acts := strings.Split(actions, "+")
 	subj, err := rbac.FromCtx(ctx).Check(ctx, rsc, rbac.WithActions(acts...))
 	if err != nil {
@@ -44,7 +45,7 @@ func UserCheck(ctx context.Context, rsc rbac.Resource, actions string) (*User, e
 	return FromSubject(subj)
 }
 
-func FromSubject(sub rbac.Subject) (*User, error) {
+func FromSubject(sub entities.Subject) (*User, error) {
 	if sub == nil {
 		return nil, rbac.ErrBadSubject
 	}
@@ -73,10 +74,10 @@ func (u *User) GetName() string {
 func (u *User) GetRoles() []string {
 	r := make([]string, 1, 2)
 
-	r[0] = rbac.RoleUser
+	r[0] = entities.RoleUser
 
 	if u.IsAdmin {
-		r = append(r, rbac.RoleAdmin)
+		r = append(r, entities.RoleAdmin)
 	}
 
 	return r
