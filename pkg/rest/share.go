@@ -25,11 +25,13 @@ const (
 	ShareRequestCallDL      ShareRequestType = "callDL"
 	ShareRequestIncident    ShareRequestType = "incident"
 	ShareRequestIncidentM3U ShareRequestType = "m3u"
+	ShareRequestTalkgroups  ShareRequestType = "talkgroups"
 )
 
 func (rt ShareRequestType) IsValid() bool {
 	switch rt {
-	case ShareRequestCall, ShareRequestCallDL, ShareRequestIncident, ShareRequestIncidentM3U:
+	case ShareRequestCall, ShareRequestCallDL, ShareRequestIncident,
+		ShareRequestIncidentM3U, ShareRequestTalkgroups:
 		return true
 	}
 
@@ -38,14 +40,17 @@ func (rt ShareRequestType) IsValid() bool {
 
 func (rt ShareRequestType) IsValidSubtype() bool {
 	switch rt {
-	case ShareRequestCall, ShareRequestCallDL:
+	case ShareRequestCall, ShareRequestCallDL, ShareRequestTalkgroups:
 		return true
 	}
 
 	return false
 }
 
-type HandlerFunc func(id uuid.UUID, share *shares.Share, w http.ResponseWriter, r *http.Request)
+type ID interface {
+}
+
+type HandlerFunc func(id ID, share *shares.Share, w http.ResponseWriter, r *http.Request)
 type ShareHandlers map[ShareRequestType]HandlerFunc
 type shareAPI struct {
 	baseURL *url.URL
@@ -71,8 +76,8 @@ func (sa *shareAPI) Subrouter() http.Handler {
 func (sa *shareAPI) RootRouter() http.Handler {
 	r := chi.NewMux()
 
-	r.Get("/{type}/{shareId:[A-Za-z0-9_-]{20,}}", sa.routeShare)
-	r.Get("/{type}/{shareId:[A-Za-z0-9_-]{20,}}/{subType}/{subID}", sa.routeShare)
+	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}", sa.routeShare)
+	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}/{subID}", sa.routeShare)
 	return r
 }
 
@@ -102,10 +107,9 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 	shs := shares.FromCtx(ctx)
 
 	params := struct {
-		Type    string  `param:"type"`
-		ID      string  `param:"shareId"`
-		SubType *string `param:"subType"`
-		SubID   *string `param:"subID"`
+		Type  string  `param:"type"`
+		ID    string  `param:"shareId"`
+		SubID *string `param:"subID"`
 	}{}
 
 	err := decodeParams(&params, r)
@@ -136,15 +140,11 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 	ctx = entities.CtxWithSubject(ctx, sh)
 	r = r.WithContext(ctx)
 
-	if params.SubType != nil {
+	switch rType {
+	case ShareRequestTalkgroups:
+		sa.shnd[rType](nil, sh, w, r)
+	case ShareRequestCall, ShareRequestCallDL:
 		if params.SubID == nil {
-			// probably can't happen
-			wErr(w, r, autoError(ErrBadShare))
-			return
-		}
-
-		subT := ShareRequestType(*params.SubType)
-		if !subT.IsValidSubtype() {
 			wErr(w, r, autoError(ErrBadShare))
 			return
 		}
@@ -154,12 +154,10 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 			wErr(w, r, badRequest(err))
 			return
 		}
-
-		sa.shnd[subT](subIDU, sh, w, r)
-		return
+		sa.shnd[rType](subIDU, sh, w, r)
+	case ShareRequestIncident, ShareRequestIncidentM3U:
+		sa.shnd[rType](sh.EntityID, sh, w, r)
 	}
-
-	sa.shnd[rType](sh.EntityID, sh, w, r)
 }
 
 func (sa *shareAPI) deleteShare(w http.ResponseWriter, r *http.Request) {

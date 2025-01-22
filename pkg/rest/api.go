@@ -54,6 +54,7 @@ func New(baseURL url.URL) *api {
 			ShareRequestCallDL:      s.calls.shareCallDLRoute,
 			ShareRequestIncident:    s.incidents.getIncident,
 			ShareRequestIncidentM3U: s.incidents.getCallsM3U,
+			ShareRequestTalkgroups:  s.tgs.getTGsShareRoute,
 		},
 	)
 

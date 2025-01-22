@@ -97,10 +97,10 @@ func (ia *incidentsAPI) getIncidentRoute(w http.ResponseWriter, r *http.Request)
 	ia.getIncident(id, nil, w, r)
 }
 
-func (ia *incidentsAPI) getIncident(id uuid.UUID, share *shares.Share, w http.ResponseWriter, r *http.Request) {
+func (ia *incidentsAPI) getIncident(id ID, share *shares.Share, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	incs := incstore.FromCtx(ctx)
-	inc, err := incs.Incident(ctx, id)
+	inc, err := incs.Incident(ctx, id.(uuid.UUID))
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
@@ -198,12 +198,12 @@ func (ia *incidentsAPI) getCallsM3URoute(w http.ResponseWriter, r *http.Request)
 	ia.getCallsM3U(id, nil, w, r)
 }
 
-func (ia *incidentsAPI) getCallsM3U(id uuid.UUID, share *shares.Share, w http.ResponseWriter, r *http.Request) {
+func (ia *incidentsAPI) getCallsM3U(id ID, share *shares.Share, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	incs := incstore.FromCtx(ctx)
 	tgst := tgstore.FromCtx(ctx)
 
-	inc, err := incs.Incident(ctx, id)
+	inc, err := incs.Incident(ctx, id.(uuid.UUID))
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
@@ -214,7 +214,7 @@ func (ia *incidentsAPI) getCallsM3U(id uuid.UUID, share *shares.Share, w http.Re
 	callUrl := common.PtrTo(*ia.baseURL)
 	urlRoot := "/api/call"
 	if share != nil {
-		urlRoot = fmt.Sprintf("/share/%s/%s/call/", share.Type, share.ID)
+		urlRoot = fmt.Sprintf("/share/%s/call/", share.ID)
 	}
 
 	b.WriteString("#EXTM3U\n\n")

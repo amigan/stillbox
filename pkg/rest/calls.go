@@ -102,17 +102,17 @@ func (ca *callsAPI) getAudio(p getAudioParams, w http.ResponseWriter, r *http.Re
 	_, _ = w.Write(call.AudioBlob)
 }
 
-func (ca *callsAPI) shareCallRoute(id uuid.UUID, _ *shares.Share, w http.ResponseWriter, r *http.Request) {
+func (ca *callsAPI) shareCallRoute(id ID, _ *shares.Share, w http.ResponseWriter, r *http.Request) {
 	p := getAudioParams{
-		CallID: &id,
+		CallID: common.PtrTo(id.(uuid.UUID)),
 	}
 
 	ca.getAudio(p, w, r)
 }
 
-func (ca *callsAPI) shareCallDLRoute(id uuid.UUID, _ *shares.Share, w http.ResponseWriter, r *http.Request) {
+func (ca *callsAPI) shareCallDLRoute(id ID, _ *shares.Share, w http.ResponseWriter, r *http.Request) {
 	p := getAudioParams{
-		CallID:   &id,
+		CallID:   common.PtrTo(id.(uuid.UUID)),
 		Download: common.PtrTo("download"),
 	}
 

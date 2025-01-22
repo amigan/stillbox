@@ -11,6 +11,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/incidents"
 	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -53,9 +54,12 @@ type Store interface {
 
 	// CallIn returns whether an incident is in an call
 	CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUID) (bool, error)
+
+	// TGsIn returns the talkgroups referenced by an incident as a map, primary for rbac use.
+	TGsIn(ctx context.Context, inc uuid.UUID) (talkgroups.PresenceMap, error)
 }
 
-type store struct {
+type postgresStore struct {
 }
 
 type storeCtxKey string
@@ -76,10 +80,10 @@ func FromCtx(ctx context.Context) Store {
 }
 
 func NewStore() Store {
-	return &store{}
+	return &postgresStore{}
 }
 
-func (s *store) CreateIncident(ctx context.Context, inc incidents.Incident) (*incidents.Incident, error) {
+func (s *postgresStore) CreateIncident(ctx context.Context, inc incidents.Incident) (*incidents.Incident, error) {
 	user, err := users.UserCheck(ctx, new(incidents.Incident), "create")
 	if err != nil {
 		return nil, err
@@ -138,7 +142,7 @@ func (s *store) CreateIncident(ctx context.Context, inc incidents.Incident) (*in
 	return &inc, nil
 }
 
-func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID, addCallIDs []uuid.UUID, notes []byte, removeCallIDs []uuid.UUID) error {
+func (s *postgresStore) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID, addCallIDs []uuid.UUID, notes []byte, removeCallIDs []uuid.UUID) error {
 	inc, err := s.Owner(ctx, incidentID)
 	if err != nil {
 		return err
@@ -176,7 +180,7 @@ func (s *store) AddRemoveIncidentCalls(ctx context.Context, incidentID uuid.UUID
 	}, pgx.TxOptions{})
 }
 
-func (s *store) Incidents(ctx context.Context, p IncidentsParams) (incs []Incident, totalCount int, err error) {
+func (s *postgresStore) Incidents(ctx context.Context, p IncidentsParams) (incs []Incident, totalCount int, err error) {
 	_, err = rbac.Check(ctx, new(incidents.Incident), rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, 0, err
@@ -281,7 +285,7 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 	return r
 }
 
-func (s *store) Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error) {
+func (s *postgresStore) Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error) {
 	_, err := rbac.Check(ctx, &incidents.Incident{ID: id}, rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
@@ -332,7 +336,7 @@ func (uip UpdateIncidentParams) toDBUIP(id uuid.UUID) database.UpdateIncidentPar
 	}
 }
 
-func (s *store) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncidentParams) (*incidents.Incident, error) {
+func (s *postgresStore) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncidentParams) (*incidents.Incident, error) {
 	ckinc, err := s.Owner(ctx, id)
 	if err != nil {
 		return nil, err
@@ -355,7 +359,7 @@ func (s *store) UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncide
 	return &inc, nil
 }
 
-func (s *store) DeleteIncident(ctx context.Context, id uuid.UUID) error {
+func (s *postgresStore) DeleteIncident(ctx context.Context, id uuid.UUID) error {
 	inc, err := s.Owner(ctx, id)
 	if err != nil {
 		return err
@@ -369,16 +373,39 @@ func (s *store) DeleteIncident(ctx context.Context, id uuid.UUID) error {
 	return database.FromCtx(ctx).DeleteIncident(ctx, id)
 }
 
-func (s *store) UpdateNotes(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID, notes []byte) error {
+func (s *postgresStore) UpdateNotes(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID, notes []byte) error {
 	return database.FromCtx(ctx).UpdateCallIncidentNotes(ctx, notes, incidentID, callID)
 }
 
-func (s *store) Owner(ctx context.Context, id uuid.UUID) (incidents.Incident, error) {
+func (s *postgresStore) Owner(ctx context.Context, id uuid.UUID) (incidents.Incident, error) {
 	owner, err := database.FromCtx(ctx).GetIncidentOwner(ctx, id)
 	return incidents.Incident{ID: id, Owner: users.UserID(owner)}, err
 }
 
-func (s *store) CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUID) (bool, error) {
+func (s *postgresStore) CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUID) (bool, error) {
 	db := database.FromCtx(ctx)
 	return db.CallInIncident(ctx, inc, call)
+}
+
+func (s *postgresStore) TGsIn(ctx context.Context, id uuid.UUID) (talkgroups.PresenceMap, error) {
+	_, err := rbac.Check(ctx, &incidents.Incident{ID: id}, rbac.WithActions(entities.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
+	db := database.FromCtx(ctx)
+	tgs, err := db.GetIncidentTalkgroups(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	m := make(talkgroups.PresenceMap, len(tgs))
+	for _, t := range tgs {
+		m.Put(talkgroups.ID{
+			System:    uint32(t.System),
+			Talkgroup: uint32(t.Talkgroup),
+		})
+	}
+
+	return m, nil
 }

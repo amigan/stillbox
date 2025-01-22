@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
+	"dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"github.com/el-mike/restrict/v2"
 	"github.com/google/uuid"
@@ -16,7 +17,57 @@ const (
 	SubmitterEqualConditionType = "SUBMITTER_EQUAL"
 	InMapConditionType          = "IN_MAP"
 	CallInIncidentConditionType = "CALL_IN_INCIDENT"
+	TGInIncidentConditionType   = "TG_IN_INCIDENT"
 )
+
+type TGInIncidentCondition struct {
+	ID       string                    `json:"name,omitempty" yaml:"name,omitempty"`
+	TG       *restrict.ValueDescriptor `json:"tg" yaml:"tg"`
+	Incident *restrict.ValueDescriptor `json:"incident" yaml:"incident"`
+}
+
+func (*TGInIncidentCondition) Type() string {
+	return TGInIncidentConditionType
+}
+
+func (c *TGInIncidentCondition) Check(r *restrict.AccessRequest) error {
+	tgVID, err := c.TG.GetValue(r)
+	if err != nil {
+		return err
+	}
+
+	incVID, err := c.Incident.GetValue(r)
+	if err != nil {
+		return err
+	}
+
+	ctx, hasCtx := r.Context["ctx"].(context.Context)
+	if !hasCtx {
+		return restrict.NewConditionNotSatisfiedError(c, r, fmt.Errorf("no context provided"))
+	}
+
+	incID, isUUID := incVID.(uuid.UUID)
+	if !isUUID {
+		return restrict.NewConditionNotSatisfiedError(c, r, errors.New("incident ID is not UUID"))
+	}
+
+	tgID, isTGID := tgVID.(talkgroups.ID)
+	if !isTGID {
+		return restrict.NewConditionNotSatisfiedError(c, r, errors.New("tg ID is not TGID"))
+	}
+
+	// XXX: this should instead come from the access request context, for better reuse upstream
+	tgm, err := incstore.FromCtx(ctx).TGsIn(ctx, incID)
+	if err != nil {
+		return restrict.NewConditionNotSatisfiedError(c, r, err)
+	}
+
+	if !tgm.Has(tgID) {
+		return restrict.NewConditionNotSatisfiedError(c, r, fmt.Errorf(`tg "%v" not in incident "%v"`, tgID, incID))
+	}
+
+	return nil
+}
 
 type CallInIncidentCondition struct {
 	ID       string                    `json:"name,omitempty" yaml:"name,omitempty"`
@@ -60,7 +111,7 @@ func (c *CallInIncidentCondition) Check(r *restrict.AccessRequest) error {
 	}
 
 	if !inCall {
-		return restrict.NewConditionNotSatisfiedError(c, r, fmt.Errorf(`incident "%v" not in call "%v"`, incID, callID))
+		return restrict.NewConditionNotSatisfiedError(c, r, fmt.Errorf(`call "%v" not in incident "%v"`, callID, incID))
 	}
 
 	return nil

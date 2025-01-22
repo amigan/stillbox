@@ -24,11 +24,3 @@ DELETE FROM shares WHERE id = @id;
 
 -- name: PruneShares :exec
 DELETE FROM shares WHERE expiration < NOW();
-
--- name: GetIncidentTalkgroups :many
-SELECT DISTINCT
-	c.system,
-	c.talkgroup
-FROM incidents_calls ic 
-JOIN calls c ON (c.id = ic.call_id AND c.call_date = ic.call_date) 
-WHERE ic.incident_id = @incident_id;

@@ -7,6 +7,8 @@ import (
 
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/incidents/incstore"
+	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
@@ -157,6 +159,30 @@ func (tga *talkgroupAPI) postPaginated(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond(w, r, res)
+}
+
+func (tga *talkgroupAPI) getTGsShareRoute(_ ID, share *shares.Share, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	tgs := tgstore.FromCtx(ctx)
+
+	tgIDs, err := incstore.FromCtx(ctx).TGsIn(ctx, share.EntityID)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	idSl := make(talkgroups.IDs, 0, len(tgIDs))
+	for id := range tgIDs {
+		idSl = append(idSl, id)
+	}
+
+	tgRes, err := tgs.TGs(ctx, idSl)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, tgRes)
 }
 
 func (tga *talkgroupAPI) put(w http.ResponseWriter, r *http.Request) {
