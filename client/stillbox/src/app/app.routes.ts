@@ -9,6 +9,11 @@ export const routes: Routes = [
       import('./login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 's/:id',
+    loadComponent: () =>
+      import('./share/share.component').then((m) => m.ShareComponent),
+  },
+  {
     path: '',
     canActivateChild: [AuthGuard],
     children: [
