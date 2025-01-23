@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/shares"
@@ -76,6 +77,7 @@ func (sa *shareAPI) Subrouter() http.Handler {
 func (sa *shareAPI) RootRouter() http.Handler {
 	r := chi.NewMux()
 
+	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}", sa.routeShare)
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}", sa.routeShare)
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}/{subID}", sa.routeShare)
 	return r
@@ -107,8 +109,8 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 	shs := shares.FromCtx(ctx)
 
 	params := struct {
-		Type  string  `param:"type"`
 		ID    string  `param:"shareId"`
+		Type  *string `param:"type"`
 		SubID *string `param:"subID"`
 	}{}
 
@@ -118,17 +120,28 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rType := ShareRequestType(params.Type)
 	id := params.ID
-
-	if !rType.IsValid() {
-		wErr(w, r, autoError(ErrBadShare))
-		return
-	}
-
 	sh, err := shs.GetShare(ctx, id)
 	if err != nil {
 		wErr(w, r, autoError(err))
+		return
+	}
+
+	var rType ShareRequestType
+	if params.Type != nil {
+		rType = ShareRequestType(*params.Type)
+	} else {
+		switch sh.Type {
+		case shares.EntityCall:
+			rType = ShareRequestCall
+			params.SubID = common.PtrTo(sh.EntityID.String())
+		case shares.EntityIncident:
+			rType = ShareRequestIncident
+		}
+	}
+
+	if !rType.IsValid() {
+		wErr(w, r, autoError(ErrBadShare))
 		return
 	}
 
