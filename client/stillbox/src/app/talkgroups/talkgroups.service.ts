@@ -33,10 +33,7 @@ export class TalkgroupService {
   private subscriptions = new Subscription();
   constructor(private http: HttpClient) {
     this.tgs$ = this.fetchAll.pipe(switchMap(() => this.getTalkgroups()));
-    this.tags$ = this.fetchAll.pipe(
-      switchMap(() => this.getAllTags()),
-      shareReplay(),
-    );
+    this.tags$ = this.fetchAll.pipe(switchMap(() => this.getAllTags()), shareReplay());
     this.fillTgMap();
   }
 

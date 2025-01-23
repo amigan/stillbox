@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Sanitizer } from '@angular/core';
 import { tap } from 'rxjs/operators';
 import { CommonModule, Location } from '@angular/common';
 import { BehaviorSubject, merge, Subscription } from 'rxjs';

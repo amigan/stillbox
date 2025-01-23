@@ -91,10 +91,6 @@ export class Talkgroup {
     icon?: string,
   ) {
     this.iconSvg = this.iconMap(this.metadata?.icon!);
-    this.alert_rules = this.alert_rules.map((x) =>
-      Object.assign(new AlertRule(), x),
-    );
-    console.log(this.alert_rules);
   }
 
   iconMap(icon: string): string {
