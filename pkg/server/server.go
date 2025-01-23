@@ -148,7 +148,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	srv.setupRoutes()
 
 	if os.Getenv("STILLBOX_DUMP_ROUTES") == "true" {
-		chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		_ = chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 			fmt.Printf("[%s]: '%s' has %d middlewares\n", method, route, len(middlewares))
 			return nil
 		})

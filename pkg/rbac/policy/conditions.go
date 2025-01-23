@@ -192,5 +192,5 @@ func (c *InMapCondition[K, V]) Check(r *restrict.AccessRequest) error {
 }
 
 func init() {
-	restrict.RegisterConditionFactory(SubmitterEqualConditionType, SubmitterEqualConditionFactory)
+	_ = restrict.RegisterConditionFactory(SubmitterEqualConditionType, SubmitterEqualConditionFactory)
 }
