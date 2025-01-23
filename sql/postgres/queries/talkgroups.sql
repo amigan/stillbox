@@ -281,3 +281,11 @@ INSERT INTO systems(id, name) VALUES(@id, @name);
 
 -- name: DeleteSystem :exec
 DELETE FROM systems WHERE id = @id;
+
+-- name: GetIncidentTalkgroups :many
+SELECT DISTINCT
+	c.system,
+	c.talkgroup
+FROM incidents_calls ic 
+JOIN calls c ON (c.id = ic.call_id AND c.call_date = ic.call_date) 
+WHERE ic.incident_id = @incident_id;

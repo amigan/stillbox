@@ -16,6 +16,7 @@ type Querier interface {
 	AddCall(ctx context.Context, arg AddCallParams) error
 	AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error)
 	AddToIncident(ctx context.Context, incidentID uuid.UUID, callIds []uuid.UUID, notes [][]byte) error
+	CallInIncident(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID) (bool, error)
 	CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)
 	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error)
@@ -32,12 +33,14 @@ type Querier interface {
 	GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, error)
 	GetAllTalkgroupTags(ctx context.Context) ([]string, error)
 	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
+	GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 	GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error)
 	GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, error)
 	GetDatabaseSize(ctx context.Context) (string, error)
 	GetIncident(ctx context.Context, id uuid.UUID) (Incident, error)
 	GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetIncidentCallsRow, error)
 	GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error)
+	GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error)
 	GetShare(ctx context.Context, id string) (Share, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
 	GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error)

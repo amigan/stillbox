@@ -7,6 +7,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"
@@ -21,12 +22,41 @@ type API interface {
 	Subrouter() http.Handler
 }
 
+type APIRoot interface {
+	API
+	ShareRouter() http.Handler
+}
+
 type api struct {
-	baseURL url.URL
+	baseURL   *url.URL
+	shares    *shareAPI
+	tgs       *talkgroupAPI
+	calls     *callsAPI
+	users     *usersAPI
+	incidents *incidentsAPI
+}
+
+func (a *api) ShareRouter() http.Handler {
+	return a.shares.RootRouter()
 }
 
 func New(baseURL url.URL) *api {
-	s := &api{baseURL}
+	s := &api{
+		baseURL:   &baseURL,
+		tgs:       new(talkgroupAPI),
+		calls:     new(callsAPI),
+		incidents: newIncidentsAPI(&baseURL),
+		users:     new(usersAPI),
+	}
+	s.shares = newShareAPI(&baseURL,
+		ShareHandlers{
+			ShareRequestCall:        s.calls.shareCallRoute,
+			ShareRequestCallDL:      s.calls.shareCallDLRoute,
+			ShareRequestIncident:    s.incidents.getIncident,
+			ShareRequestIncidentM3U: s.incidents.getCallsM3U,
+			ShareRequestTalkgroups:  s.tgs.getTGsShareRoute,
+		},
+	)
 
 	return s
 }
@@ -34,11 +64,11 @@ func New(baseURL url.URL) *api {
 func (a *api) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	r.Mount("/talkgroup", new(talkgroupAPI).Subrouter())
-	r.Mount("/call", new(callsAPI).Subrouter())
-	r.Mount("/user", new(usersAPI).Subrouter())
-	r.Mount("/incident", newIncidentsAPI(&a.baseURL).Subrouter())
-	r.Mount("/share", newShareHandler(&a.baseURL).Subrouter())
+	r.Mount("/talkgroup", a.tgs.Subrouter())
+	r.Mount("/user", a.users.Subrouter())
+	r.Mount("/call", a.calls.Subrouter())
+	r.Mount("/incident", a.incidents.Subrouter())
+	r.Mount("/share", a.shares.Subrouter())
 
 	return r
 }
@@ -141,6 +171,9 @@ var statusMapping = map[error]errResponder{
 	ErrBadAppName:             unauthErrText,
 	common.ErrPageOutOfRange:  badRequestErrText,
 	rbac.ErrNotAuthorized:     unauthErrText,
+	shares.ErrNoShare:         notFoundErrText,
+	ErrBadShare:               notFoundErrText,
+	shares.ErrBadType:         badRequestErrText,
 }
 
 func autoError(err error) render.Renderer {

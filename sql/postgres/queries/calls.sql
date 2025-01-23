@@ -162,3 +162,24 @@ DELETE FROM calls WHERE id = @id;
 
 -- name: GetCallSubmitter :one
 SELECT submitter FROM calls WHERE id = @id;
+
+-- name: GetCall :one
+SELECT
+	id,
+	submitter,
+	system,
+	talkgroup,
+	call_date,
+	audio_name,
+	audio_type,
+	audio_url,
+	duration,
+	frequency,
+	frequencies,
+	patches,
+	tg_label,
+	tg_alpha_tag,
+	tg_group,
+	source
+FROM calls
+WHERE id = @id;

@@ -5,8 +5,10 @@ package mocks
 import (
 	context "context"
 
-	rbac "dynatron.me/x/stillbox/pkg/rbac"
+	entities "dynatron.me/x/stillbox/pkg/rbac/entities"
 	mock "github.com/stretchr/testify/mock"
+
+	rbac "dynatron.me/x/stillbox/pkg/rbac"
 
 	restrict "github.com/el-mike/restrict/v2"
 )
@@ -25,7 +27,7 @@ func (_m *RBAC) EXPECT() *RBAC_Expecter {
 }
 
 // Check provides a mock function with given fields: ctx, res, opts
-func (_m *RBAC) Check(ctx context.Context, res restrict.Resource, opts ...rbac.CheckOption) (rbac.Subject, error) {
+func (_m *RBAC) Check(ctx context.Context, res restrict.Resource, opts ...rbac.CheckOption) (entities.Subject, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -39,16 +41,16 @@ func (_m *RBAC) Check(ctx context.Context, res restrict.Resource, opts ...rbac.C
 		panic("no return value specified for Check")
 	}
 
-	var r0 rbac.Subject
+	var r0 entities.Subject
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, restrict.Resource, ...rbac.CheckOption) (rbac.Subject, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, restrict.Resource, ...rbac.CheckOption) (entities.Subject, error)); ok {
 		return rf(ctx, res, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, restrict.Resource, ...rbac.CheckOption) rbac.Subject); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, restrict.Resource, ...rbac.CheckOption) entities.Subject); ok {
 		r0 = rf(ctx, res, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(rbac.Subject)
+			r0 = ret.Get(0).(entities.Subject)
 		}
 	}
 
@@ -88,12 +90,12 @@ func (_c *RBAC_Check_Call) Run(run func(ctx context.Context, res restrict.Resour
 	return _c
 }
 
-func (_c *RBAC_Check_Call) Return(_a0 rbac.Subject, _a1 error) *RBAC_Check_Call {
+func (_c *RBAC_Check_Call) Return(_a0 entities.Subject, _a1 error) *RBAC_Check_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *RBAC_Check_Call) RunAndReturn(run func(context.Context, restrict.Resource, ...rbac.CheckOption) (rbac.Subject, error)) *RBAC_Check_Call {
+func (_c *RBAC_Check_Call) RunAndReturn(run func(context.Context, restrict.Resource, ...rbac.CheckOption) (entities.Subject, error)) *RBAC_Check_Call {
 	_c.Call.Return(run)
 	return _c
 }

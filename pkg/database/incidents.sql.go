@@ -40,6 +40,21 @@ func (q *Queries) AddToIncident(ctx context.Context, incidentID uuid.UUID, callI
 	return err
 }
 
+const callInIncident = `-- name: CallInIncident :one
+SELECT EXISTS
+	(SELECT 1 FROM incidents_calls ic
+	WHERE
+	ic.incident_id = $1 AND
+	ic.call_id = $2)
+`
+
+func (q *Queries) CallInIncident(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, callInIncident, incidentID, callID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const createIncident = `-- name: CreateIncident :one
 INSERT INTO incidents (
 	id,

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -16,10 +16,10 @@ import (
 type apiKeyAuth interface {
 	// CheckAPIKey validates the provided key and returns the API owner's users.UserID.
 	// An error is returned if validation fails for any reason.
-	CheckAPIKey(ctx context.Context, key string) (rbac.Subject, error)
+	CheckAPIKey(ctx context.Context, key string) (entities.Subject, error)
 }
 
-func (a *Auth) CheckAPIKey(ctx context.Context, key string) (rbac.Subject, error) {
+func (a *Auth) CheckAPIKey(ctx context.Context, key string) (entities.Subject, error) {
 	keyUuid, err := uuid.Parse(key)
 	if err != nil {
 		log.Error().Str("apikey", key).Msg("cannot parse key")

@@ -1,0 +1,243 @@
+package policy
+
+import (
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
+
+	"github.com/el-mike/restrict/v2"
+)
+
+const (
+	PresetUpdateOwn       = "updateOwn"
+	PresetDeleteOwn       = "deleteOwn"
+	PresetReadShared      = "readShared"
+	PresetReadSharedInMap = "readSharedInMap"
+	PresetShareOwn        = "shareOwn"
+
+	PresetUpdateSubmitter      = "updateSubmitter"
+	PresetDeleteSubmitter      = "deleteSubmitter"
+	PresetShareSubmitter       = "shareSubmitter"
+	PresetReadInSharedIncident = "readInSharedIncident"
+)
+
+var Policy = &restrict.PolicyDefinition{
+	Roles: restrict.Roles{
+		entities.RoleUser: {
+			Description: "An authenticated user",
+			Grants: restrict.GrantsMap{
+				entities.ResourceIncident: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Preset: PresetUpdateOwn},
+					&restrict.Permission{Preset: PresetDeleteOwn},
+					&restrict.Permission{Preset: PresetShareOwn},
+				},
+				entities.ResourceCall: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Preset: PresetUpdateSubmitter},
+					&restrict.Permission{Preset: PresetDeleteSubmitter},
+					&restrict.Permission{Action: entities.ActionShare},
+				},
+				entities.ResourceTalkgroup: {
+					&restrict.Permission{Action: entities.ActionRead},
+				},
+				entities.ResourceShare: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Preset: PresetUpdateOwn},
+					&restrict.Permission{Preset: PresetDeleteOwn},
+				},
+			},
+		},
+		entities.RoleSubmitter: {
+			Description: "A role that can submit calls",
+			Grants: restrict.GrantsMap{
+				entities.ResourceCall: {
+					&restrict.Permission{Action: entities.ActionCreate},
+				},
+				entities.ResourceTalkgroup: {
+					// for learning TGs
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionUpdate},
+				},
+			},
+		},
+		entities.RoleShareGuest: {
+			Description: "Someone who has a valid share link",
+			Grants: restrict.GrantsMap{
+				entities.ResourceCall: {
+					&restrict.Permission{Preset: PresetReadShared},
+					&restrict.Permission{Preset: PresetReadInSharedIncident},
+				},
+				entities.ResourceIncident: {
+					&restrict.Permission{Preset: PresetReadShared},
+				},
+				entities.ResourceTalkgroup: {
+					&restrict.Permission{Action: entities.ActionRead},
+				},
+			},
+		},
+		entities.RoleAdmin: {
+			Parents: []string{entities.RoleUser},
+			Grants: restrict.GrantsMap{
+				entities.ResourceIncident: {
+					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionDelete},
+					&restrict.Permission{Action: entities.ActionShare},
+				},
+				entities.ResourceCall: {
+					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionDelete},
+					&restrict.Permission{Action: entities.ActionShare},
+				},
+				entities.ResourceTalkgroup: {
+					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionDelete},
+				},
+			},
+		},
+		entities.RoleSystem: {
+			Parents: []string{entities.RoleSystem},
+		},
+		entities.RolePublic: {
+			/*
+				Grants: restrict.GrantsMap{
+					entities.ResourceShare: {
+						&restrict.Permission{Action: entities.ActionRead},
+					},
+				},
+			*/
+		},
+	},
+	PermissionPresets: restrict.PermissionPresets{
+		PresetUpdateOwn: &restrict.Permission{
+			Action: entities.ActionUpdate,
+			Conditions: restrict.Conditions{
+				&restrict.EqualCondition{
+					ID: "isOwner",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Owner",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetDeleteOwn: &restrict.Permission{
+			Action: entities.ActionDelete,
+			Conditions: restrict.Conditions{
+				&restrict.EqualCondition{
+					ID: "isOwner",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Owner",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetShareOwn: &restrict.Permission{
+			Action: entities.ActionShare,
+			Conditions: restrict.Conditions{
+				&restrict.EqualCondition{
+					ID: "isOwner",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Owner",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetUpdateSubmitter: &restrict.Permission{
+			Action: entities.ActionUpdate,
+			Conditions: restrict.Conditions{
+				&SubmitterEqualCondition{
+					ID: "isSubmitter",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Submitter",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetDeleteSubmitter: &restrict.Permission{
+			Action: entities.ActionDelete,
+			Conditions: restrict.Conditions{
+				&SubmitterEqualCondition{
+					ID: "isSubmitter",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Submitter",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetShareSubmitter: &restrict.Permission{
+			Action: entities.ActionShare,
+			Conditions: restrict.Conditions{
+				&SubmitterEqualCondition{
+					ID: "isSubmitter",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Submitter",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetReadShared: &restrict.Permission{
+			Action: entities.ActionRead,
+			Conditions: restrict.Conditions{
+				&restrict.EqualCondition{
+					ID: "isOwner",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "ID",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "EntityID",
+					},
+				},
+			},
+		},
+		PresetReadInSharedIncident: &restrict.Permission{
+			Action: entities.ActionRead,
+			Conditions: restrict.Conditions{
+				&CallInIncidentCondition{
+					ID: "callInIncident",
+					Call: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "ID",
+					},
+					Incident: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "EntityID",
+					},
+				},
+			},
+		},
+	},
+}

@@ -14,7 +14,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/notify"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
@@ -124,7 +124,7 @@ func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerte
 
 // Go is the alerting loop. It does not start a goroutine.
 func (as *alerter) Go(ctx context.Context) {
-	ctx = rbac.CtxWithSubject(ctx, &rbac.SystemServiceSubject{Name: "alerter"})
+	ctx = entities.CtxWithSubject(ctx, &entities.SystemServiceSubject{Name: "alerter"})
 
 	err := as.startBackfill(ctx)
 	if err != nil {

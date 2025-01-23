@@ -10,6 +10,8 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/incidents"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/rbac/policy"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/el-mike/restrict/v2"
@@ -20,8 +22,8 @@ import (
 func TestRBAC(t *testing.T) {
 	tests := []struct {
 		name      string
-		subject   rbac.Subject
-		resource  rbac.Resource
+		subject   entities.Subject
+		resource  entities.Resource
 		action    string
 		expectErr error
 	}{
@@ -32,7 +34,7 @@ func TestRBAC(t *testing.T) {
 				IsAdmin: true,
 			},
 			resource:  &talkgroups.Talkgroup{},
-			action:    rbac.ActionUpdate,
+			action:    entities.ActionUpdate,
 			expectErr: nil,
 		},
 		{
@@ -45,7 +47,7 @@ func TestRBAC(t *testing.T) {
 				Name:  "test incident",
 				Owner: 4,
 			},
-			action:    rbac.ActionUpdate,
+			action:    entities.ActionUpdate,
 			expectErr: nil,
 		},
 		{
@@ -57,7 +59,7 @@ func TestRBAC(t *testing.T) {
 				Name:  "test incident",
 				Owner: 4,
 			},
-			action:    rbac.ActionUpdate,
+			action:    entities.ActionUpdate,
 			expectErr: errors.New(`access denied for Action: "update" on Resource: "Incident"`),
 		},
 		{
@@ -69,7 +71,7 @@ func TestRBAC(t *testing.T) {
 				Name:  "test incident",
 				Owner: 2,
 			},
-			action:    rbac.ActionUpdate,
+			action:    entities.ActionUpdate,
 			expectErr: nil,
 		},
 		{
@@ -81,7 +83,7 @@ func TestRBAC(t *testing.T) {
 				Name:  "test incident",
 				Owner: 6,
 			},
-			action:    rbac.ActionDelete,
+			action:    entities.ActionDelete,
 			expectErr: errors.New(`access denied for Action: "delete" on Resource: "Incident"`),
 		},
 		{
@@ -93,7 +95,7 @@ func TestRBAC(t *testing.T) {
 			resource: &calls.Call{
 				Submitter: common.PtrTo(users.UserID(4)),
 			},
-			action:    rbac.ActionUpdate,
+			action:    entities.ActionUpdate,
 			expectErr: nil,
 		},
 		{
@@ -104,7 +106,7 @@ func TestRBAC(t *testing.T) {
 			resource: &calls.Call{
 				Submitter: common.PtrTo(users.UserID(4)),
 			},
-			action:    rbac.ActionUpdate,
+			action:    entities.ActionUpdate,
 			expectErr: errors.New(`access denied for Action: "update" on Resource: "Call"`),
 		},
 		{
@@ -115,7 +117,7 @@ func TestRBAC(t *testing.T) {
 			resource: &calls.Call{
 				Submitter: common.PtrTo(users.UserID(2)),
 			},
-			action:    rbac.ActionUpdate,
+			action:    entities.ActionUpdate,
 			expectErr: nil,
 		},
 		{
@@ -126,7 +128,7 @@ func TestRBAC(t *testing.T) {
 			resource: &calls.Call{
 				Submitter: nil,
 			},
-			action:    rbac.ActionUpdate,
+			action:    entities.ActionUpdate,
 			expectErr: errors.New(`access denied for Action: "update" on Resource: "Call"`),
 		},
 		{
@@ -137,15 +139,83 @@ func TestRBAC(t *testing.T) {
 			resource: &calls.Call{
 				Submitter: common.PtrTo(users.UserID(6)),
 			},
-			action:    rbac.ActionDelete,
+			action:    entities.ActionDelete,
 			expectErr: errors.New(`access denied for Action: "delete" on Resource: "Call"`),
+		},
+		{
+			name: "user share call not submitter",
+			subject: &users.User{
+				ID: 2,
+			},
+			resource: &calls.Call{
+				Submitter: common.PtrTo(users.UserID(6)),
+			},
+			action:    entities.ActionShare,
+			expectErr: nil,
+		},
+		{
+			name: "user share call admin",
+			subject: &users.User{
+				ID:      2,
+				IsAdmin: true,
+			},
+			resource: &calls.Call{
+				Submitter: common.PtrTo(users.UserID(6)),
+			},
+			action:    entities.ActionShare,
+			expectErr: nil,
+		},
+		{
+			name: "user share call submitter",
+			subject: &users.User{
+				ID: 6,
+			},
+			resource: &calls.Call{
+				Submitter: common.PtrTo(users.UserID(6)),
+			},
+			action:    entities.ActionShare,
+			expectErr: nil,
+		},
+		{
+			name: "user share incident not owner",
+			subject: &users.User{
+				ID: 2,
+			},
+			resource: &incidents.Incident{
+				Owner: users.UserID(6),
+			},
+			action:    entities.ActionShare,
+			expectErr: errors.New(`access denied for Action: "share" on Resource: "Incident"`),
+		},
+		{
+			name: "user share incident admin",
+			subject: &users.User{
+				ID:      2,
+				IsAdmin: true,
+			},
+			resource: &incidents.Incident{
+				Owner: users.UserID(6),
+			},
+			action:    entities.ActionShare,
+			expectErr: nil,
+		},
+		{
+			name: "user share incident owner",
+			subject: &users.User{
+				ID: 6,
+			},
+			resource: &incidents.Incident{
+				Owner: users.UserID(6),
+			},
+			action:    entities.ActionShare,
+			expectErr: nil,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := rbac.CtxWithSubject(context.Background(), tc.subject)
-			rb, err := rbac.New()
+			ctx := entities.CtxWithSubject(context.Background(), tc.subject)
+			rb, err := rbac.New(policy.Policy)
 			require.NoError(t, err)
 			sub, err := rb.Check(ctx, tc.resource, rbac.WithActions(tc.action))
 			if tc.expectErr != nil {

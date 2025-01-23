@@ -3,6 +3,7 @@ package callstore
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
@@ -10,6 +11,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/users"
 
@@ -27,6 +29,9 @@ type Store interface {
 
 	// CallAudio returns a CallAudio struct
 	CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error)
+
+	// Call returns the call's metadata.
+	Call(ctx context.Context, id uuid.UUID) (*calls.Call, error)
 
 	// Calls gets paginated Calls.
 	Calls(ctx context.Context, p CallsParams) (calls []database.ListCallsPRow, totalCount int, err error)
@@ -81,7 +86,7 @@ func toAddCallParams(call *calls.Call) database.AddCallParams {
 }
 
 func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
-	_, err := rbac.Check(ctx, call, rbac.WithActions(rbac.ActionCreate))
+	_, err := rbac.Check(ctx, call, rbac.WithActions(entities.ActionCreate))
 	if err != nil {
 		return err
 	}
@@ -119,7 +124,7 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
 }
 
 func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(rbac.ResourceCall), rbac.WithActions(rbac.ActionRead))
+	_, err := rbac.Check(ctx, &calls.Call{ID: id}, rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -139,6 +144,43 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, 
 	}, nil
 }
 
+func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
+	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceCall), rbac.WithActions(entities.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
+	db := database.FromCtx(ctx)
+
+	c, err := db.GetCall(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	var sub *users.UserID
+	if c.Submitter != nil {
+		sub = common.PtrTo(users.UserID(*c.Submitter))
+	}
+
+	return &calls.Call{
+		ID:             c.ID,
+		Submitter:      sub,
+		System:         c.System,
+		Talkgroup:      c.Talkgroup,
+		DateTime:       c.CallDate.Time,
+		AudioName:      common.ZeroIfNil(c.AudioName),
+		AudioType:      common.ZeroIfNil(c.AudioType),
+		AudioURL:       c.AudioUrl,
+		Duration:       calls.CallDuration(time.Duration(common.ZeroIfNil(c.Duration)) * time.Millisecond),
+		Frequency:      c.Frequency,
+		Frequencies:    c.Frequencies,
+		Patches:        c.Patches,
+		TalkgroupLabel: c.TGLabel,
+		TalkgroupGroup: c.TGGroup,
+		TGAlphaTag:     c.TGAlphaTag,
+	}, nil
+}
+
 type CallsParams struct {
 	common.Pagination
 	Direction *common.SortDirection `json:"dir"`
@@ -152,7 +194,7 @@ type CallsParams struct {
 }
 
 func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
-	_, err = rbac.Check(ctx, rbac.UseResource(rbac.ResourceCall), rbac.WithActions(rbac.ActionRead))
+	_, err = rbac.Check(ctx, rbac.UseResource(entities.ResourceCall), rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -215,7 +257,7 @@ func (s *store) Delete(ctx context.Context, id uuid.UUID) error {
 		return err
 	}
 
-	_, err = rbac.Check(ctx, &callOwn, rbac.WithActions(rbac.ActionDelete))
+	_, err = rbac.Check(ctx, &callOwn, rbac.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}

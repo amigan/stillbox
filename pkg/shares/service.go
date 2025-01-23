@@ -1,10 +1,10 @@
-package share
+package shares
 
 import (
 	"context"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"github.com/rs/zerolog/log"
 )
 
@@ -13,21 +13,17 @@ const (
 )
 
 type Service interface {
-	ShareStore() Store
+	Shares
 
 	Go(ctx context.Context)
 }
 
 type service struct {
-	Store
-}
-
-func (s *service) ShareStore() Store {
-	return s.Store
+	postgresStore
 }
 
 func (s *service) Go(ctx context.Context) {
-	ctx = rbac.CtxWithSubject(ctx, &rbac.SystemServiceSubject{Name: "share"})
+	ctx = entities.CtxWithSubject(ctx, &entities.SystemServiceSubject{Name: "share"})
 
 	tick := time.NewTicker(PruneInterval)
 
@@ -46,7 +42,5 @@ func (s *service) Go(ctx context.Context) {
 }
 
 func NewService() *service {
-	return &service{
-		Store: NewStore(),
-	}
+	return &service{}
 }

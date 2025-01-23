@@ -278,6 +278,64 @@ func (_c *Store_BulkSetTalkgroupTags_Call) RunAndReturn(run func(context.Context
 	return _c
 }
 
+// CallInIncident provides a mock function with given fields: ctx, incidentID, callID
+func (_m *Store) CallInIncident(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID) (bool, error) {
+	ret := _m.Called(ctx, incidentID, callID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CallInIncident")
+	}
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) (bool, error)); ok {
+		return rf(ctx, incidentID, callID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) bool); ok {
+		r0 = rf(ctx, incidentID, callID)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r1 = rf(ctx, incidentID, callID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_CallInIncident_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CallInIncident'
+type Store_CallInIncident_Call struct {
+	*mock.Call
+}
+
+// CallInIncident is a helper method to define mock.On call
+//   - ctx context.Context
+//   - incidentID uuid.UUID
+//   - callID uuid.UUID
+func (_e *Store_Expecter) CallInIncident(ctx interface{}, incidentID interface{}, callID interface{}) *Store_CallInIncident_Call {
+	return &Store_CallInIncident_Call{Call: _e.mock.On("CallInIncident", ctx, incidentID, callID)}
+}
+
+func (_c *Store_CallInIncident_Call) Run(run func(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID)) *Store_CallInIncident_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *Store_CallInIncident_Call) Return(_a0 bool, _a1 error) *Store_CallInIncident_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_CallInIncident_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) (bool, error)) *Store_CallInIncident_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CleanupSweptCalls provides a mock function with given fields: ctx, rangeStart, rangeEnd
 func (_m *Store) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
 	ret := _m.Called(ctx, rangeStart, rangeEnd)
@@ -1348,6 +1406,63 @@ func (_c *Store_GetAppPrefs_Call) RunAndReturn(run func(context.Context, string,
 	return _c
 }
 
+// GetCall provides a mock function with given fields: ctx, id
+func (_m *Store) GetCall(ctx context.Context, id uuid.UUID) (database.GetCallRow, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCall")
+	}
+
+	var r0 database.GetCallRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (database.GetCallRow, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) database.GetCallRow); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(database.GetCallRow)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetCall_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCall'
+type Store_GetCall_Call struct {
+	*mock.Call
+}
+
+// GetCall is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *Store_Expecter) GetCall(ctx interface{}, id interface{}) *Store_GetCall_Call {
+	return &Store_GetCall_Call{Call: _e.mock.On("GetCall", ctx, id)}
+}
+
+func (_c *Store_GetCall_Call) Run(run func(ctx context.Context, id uuid.UUID)) *Store_GetCall_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *Store_GetCall_Call) Return(_a0 database.GetCallRow, _a1 error) *Store_GetCall_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetCall_Call) RunAndReturn(run func(context.Context, uuid.UUID) (database.GetCallRow, error)) *Store_GetCall_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetCallAudioByID provides a mock function with given fields: ctx, id
 func (_m *Store) GetCallAudioByID(ctx context.Context, id uuid.UUID) (database.GetCallAudioByIDRow, error) {
 	ret := _m.Called(ctx, id)
@@ -1689,6 +1804,65 @@ func (_c *Store_GetIncidentOwner_Call) Return(_a0 int, _a1 error) *Store_GetInci
 }
 
 func (_c *Store_GetIncidentOwner_Call) RunAndReturn(run func(context.Context, uuid.UUID) (int, error)) *Store_GetIncidentOwner_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetIncidentTalkgroups provides a mock function with given fields: ctx, incidentID
+func (_m *Store) GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]database.GetIncidentTalkgroupsRow, error) {
+	ret := _m.Called(ctx, incidentID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetIncidentTalkgroups")
+	}
+
+	var r0 []database.GetIncidentTalkgroupsRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) ([]database.GetIncidentTalkgroupsRow, error)); ok {
+		return rf(ctx, incidentID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) []database.GetIncidentTalkgroupsRow); ok {
+		r0 = rf(ctx, incidentID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetIncidentTalkgroupsRow)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, incidentID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetIncidentTalkgroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetIncidentTalkgroups'
+type Store_GetIncidentTalkgroups_Call struct {
+	*mock.Call
+}
+
+// GetIncidentTalkgroups is a helper method to define mock.On call
+//   - ctx context.Context
+//   - incidentID uuid.UUID
+func (_e *Store_Expecter) GetIncidentTalkgroups(ctx interface{}, incidentID interface{}) *Store_GetIncidentTalkgroups_Call {
+	return &Store_GetIncidentTalkgroups_Call{Call: _e.mock.On("GetIncidentTalkgroups", ctx, incidentID)}
+}
+
+func (_c *Store_GetIncidentTalkgroups_Call) Run(run func(ctx context.Context, incidentID uuid.UUID)) *Store_GetIncidentTalkgroups_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *Store_GetIncidentTalkgroups_Call) Return(_a0 []database.GetIncidentTalkgroupsRow, _a1 error) *Store_GetIncidentTalkgroups_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetIncidentTalkgroups_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]database.GetIncidentTalkgroupsRow, error)) *Store_GetIncidentTalkgroups_Call {
 	_c.Call.Return(run)
 	return _c
 }

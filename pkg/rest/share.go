@@ -1,231 +1,164 @@
 package rest
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"net/url"
+	"time"
 
-	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
-	"dynatron.me/x/stillbox/internal/jsontypes"
-	"dynatron.me/x/stillbox/pkg/incidents"
-	"dynatron.me/x/stillbox/pkg/incidents/incstore"
-	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/shares"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
+var (
+	ErrBadShare = errors.New("bad share request type")
+)
+
+type ShareRequestType string
+
+const (
+	ShareRequestCall        ShareRequestType = "call"
+	ShareRequestCallDL      ShareRequestType = "callDL"
+	ShareRequestIncident    ShareRequestType = "incident"
+	ShareRequestIncidentM3U ShareRequestType = "m3u"
+	ShareRequestTalkgroups  ShareRequestType = "talkgroups"
+)
+
+func (rt ShareRequestType) IsValid() bool {
+	switch rt {
+	case ShareRequestCall, ShareRequestCallDL, ShareRequestIncident,
+		ShareRequestIncidentM3U, ShareRequestTalkgroups:
+		return true
+	}
+
+	return false
+}
+
+func (rt ShareRequestType) IsValidSubtype() bool {
+	switch rt {
+	case ShareRequestCall, ShareRequestCallDL, ShareRequestTalkgroups:
+		return true
+	}
+
+	return false
+}
+
+type ID interface {
+}
+
+type HandlerFunc func(id ID, share *shares.Share, w http.ResponseWriter, r *http.Request)
+type ShareHandlers map[ShareRequestType]HandlerFunc
 type shareAPI struct {
 	baseURL *url.URL
+	shnd    ShareHandlers
 }
 
-func newShareHandler(baseURL *url.URL) API {
-	return &shareAPI{baseURL}
+func newShareAPI(baseURL *url.URL, shnd ShareHandlers) *shareAPI {
+	return &shareAPI{
+		baseURL: baseURL,
+		shnd:    shnd,
+	}
 }
 
-func (ia *shareAPI) Subrouter() http.Handler {
+func (sa *shareAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
-	//r.Get(`/{id:[A-Za-z0-9_-]{20,}}`, ia.getShare)
-	//r.Post('/create', ia.createShare)
-	//r.Delete(`/{id:[A-Za-z0-9_-]{20,}}`, ia.deleteShare)
-	//r.Get(`/`, ia.getShares)
+	r.Post(`/create`, sa.createShare)
+	r.Delete(`/{id:[A-Za-z0-9_-]{20,}}`, sa.deleteShare)
 
 	return r
 }
 
-func (ia *shareAPI) listIncidents(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	incs := incstore.FromCtx(ctx)
+func (sa *shareAPI) RootRouter() http.Handler {
+	r := chi.NewMux()
 
-	p := incstore.IncidentsParams{}
+	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}", sa.routeShare)
+	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}/{subID}", sa.routeShare)
+	return r
+}
+
+func (sa *shareAPI) createShare(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shs := shares.FromCtx(ctx)
+
+	p := shares.CreateShareParams{}
+
 	err := forms.Unmarshal(r, &p, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
 	if err != nil {
 		wErr(w, r, badRequest(err))
 		return
 	}
 
-	res := struct {
-		Incidents []incstore.Incident `json:"incidents"`
-		Count     int                 `json:"count"`
+	sh, err := shs.NewShare(ctx, p)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, sh)
+}
+
+func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shs := shares.FromCtx(ctx)
+
+	params := struct {
+		Type  string  `param:"type"`
+		ID    string  `param:"shareId"`
+		SubID *string `param:"subID"`
 	}{}
 
-	res.Incidents, res.Count, err = incs.Incidents(ctx, p)
+	err := decodeParams(&params, r)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
 	}
 
-	respond(w, r, res)
-}
+	rType := ShareRequestType(params.Type)
+	id := params.ID
 
-func (ia *shareAPI) createIncident(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	incs := incstore.FromCtx(ctx)
-
-	p := incidents.Incident{}
-	err := forms.Unmarshal(r, &p, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
-	if err != nil {
-		wErr(w, r, badRequest(err))
+	if !rType.IsValid() {
+		wErr(w, r, autoError(ErrBadShare))
 		return
 	}
 
-	inc, err := incs.CreateIncident(ctx, p)
+	sh, err := shs.GetShare(ctx, id)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
 	}
 
-	respond(w, r, inc)
-}
-
-func (ia *shareAPI) getIncident(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	incs := incstore.FromCtx(ctx)
-
-	id, err := idOnlyParam(w, r)
-	if err != nil {
+	if sh.Expiration != nil && sh.Expiration.Time().Before(time.Now()) {
+		wErr(w, r, autoError(shares.ErrNoShare))
 		return
 	}
 
-	inc, err := incs.Incident(ctx, id)
-	if err != nil {
-		wErr(w, r, autoError(err))
-		return
-	}
+	ctx = entities.CtxWithSubject(ctx, sh)
+	r = r.WithContext(ctx)
 
-	respond(w, r, inc)
-}
-
-func (ia *shareAPI) updateIncident(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	incs := incstore.FromCtx(ctx)
-
-	id, err := idOnlyParam(w, r)
-	if err != nil {
-		return
-	}
-
-	p := incstore.UpdateIncidentParams{}
-	err = forms.Unmarshal(r, &p, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
-	if err != nil {
-		wErr(w, r, badRequest(err))
-		return
-	}
-
-	inc, err := incs.UpdateIncident(ctx, id, p)
-	if err != nil {
-		wErr(w, r, autoError(err))
-		return
-	}
-
-	respond(w, r, inc)
-}
-
-func (ia *shareAPI) deleteIncident(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	incs := incstore.FromCtx(ctx)
-
-	urlParams := struct {
-		ID uuid.UUID `param:"id"`
-	}{}
-
-	err := decodeParams(&urlParams, r)
-	if err != nil {
-		wErr(w, r, badRequest(err))
-		return
-	}
-
-	err = incs.DeleteIncident(ctx, urlParams.ID)
-	if err != nil {
-		wErr(w, r, autoError(err))
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-type CallIncidentParams2 struct {
-	Add   jsontypes.UUIDs `json:"add"`
-	Notes json.RawMessage `json:"notes"`
-
-	Remove jsontypes.UUIDs `json:"remove"`
-}
-
-func (ia *shareAPI) postCalls(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	incs := incstore.FromCtx(ctx)
-
-	id, err := idOnlyParam(w, r)
-	if err != nil {
-		return
-	}
-
-	p := CallIncidentParams2{}
-	err = forms.Unmarshal(r, &p, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
-	if err != nil {
-		wErr(w, r, badRequest(err))
-		return
-	}
-
-	err = incs.AddRemoveIncidentCalls(ctx, id, p.Add.UUIDs(), p.Notes, p.Remove.UUIDs())
-	if err != nil {
-		wErr(w, r, autoError(err))
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-func (ia *shareAPI) getCallsM3U(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	incs := incstore.FromCtx(ctx)
-	tgst := tgstore.FromCtx(ctx)
-
-	id, err := idOnlyParam(w, r)
-	if err != nil {
-		return
-	}
-
-	inc, err := incs.Incident(ctx, id)
-	if err != nil {
-		wErr(w, r, autoError(err))
-		return
-	}
-
-	b := new(bytes.Buffer)
-
-	callUrl := common.PtrTo(*ia.baseURL)
-
-	b.WriteString("#EXTM3U\n\n")
-	for _, c := range inc.Calls {
-		tg, err := tgst.TG(ctx, c.TalkgroupTuple())
-		if err != nil {
-			wErr(w, r, autoError(err))
+	switch rType {
+	case ShareRequestTalkgroups:
+		sa.shnd[rType](nil, sh, w, r)
+	case ShareRequestCall, ShareRequestCallDL:
+		if params.SubID == nil {
+			wErr(w, r, autoError(ErrBadShare))
 			return
 		}
-		var from string
-		if c.Source != 0 {
-			from = fmt.Sprintf(" from %d", c.Source)
+
+		subIDU, err := uuid.Parse(*params.SubID)
+		if err != nil {
+			wErr(w, r, badRequest(err))
+			return
 		}
-
-		callUrl.Path = "/api/call/" + c.ID.String()
-
-		fmt.Fprintf(b, "#EXTINF:%d,%s%s (%s)\n%s\n\n",
-			c.Duration.Seconds(),
-			tg.StringTag(true),
-			from,
-			c.DateTime.Format("15:04 01/02"),
-			callUrl,
-		)
+		sa.shnd[rType](subIDU, sh, w, r)
+	case ShareRequestIncident, ShareRequestIncidentM3U:
+		sa.shnd[rType](sh.EntityID, sh, w, r)
 	}
+}
 
-	// Not a lot of agreement on which MIME type to use for non-HLS m3u,
-	// let's hope this is good enough
-	w.Header().Set("Content-Type", "audio/x-mpegurl")
-	w.WriteHeader(http.StatusOK)
-	_, _ = b.WriteTo(w)
+func (sa *shareAPI) deleteShare(w http.ResponseWriter, r *http.Request) {
 }

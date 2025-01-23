@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 )
 
 type Talkgroup struct {
@@ -19,7 +19,7 @@ type Talkgroup struct {
 }
 
 func (t *Talkgroup) GetResourceName() string {
-	return rbac.ResourceTalkgroup
+	return entities.ResourceTalkgroup
 }
 
 func (t Talkgroup) String() string {
@@ -39,6 +39,18 @@ type Metadata map[string]interface{}
 type ID struct {
 	System    uint32 `json:"sys"`
 	Talkgroup uint32 `json:"tg"`
+}
+
+type PresenceMap map[ID]struct{}
+
+func (t PresenceMap) Has(id ID) bool {
+	_, has := t[id]
+
+	return has
+}
+
+func (t PresenceMap) Put(id ID) {
+	t[id] = struct{}{}
 }
 
 var _ encoding.TextUnmarshaler = (*ID)(nil)

@@ -164,6 +164,71 @@ func (q *Queries) DeleteCall(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getCall = `-- name: GetCall :one
+SELECT
+	id,
+	submitter,
+	system,
+	talkgroup,
+	call_date,
+	audio_name,
+	audio_type,
+	audio_url,
+	duration,
+	frequency,
+	frequencies,
+	patches,
+	tg_label,
+	tg_alpha_tag,
+	tg_group,
+	source
+FROM calls
+WHERE id = $1
+`
+
+type GetCallRow struct {
+	ID          uuid.UUID          `json:"id"`
+	Submitter   *int32             `json:"submitter"`
+	System      int                `json:"system"`
+	Talkgroup   int                `json:"talkgroup"`
+	CallDate    pgtype.Timestamptz `json:"call_date"`
+	AudioName   *string            `json:"audio_name"`
+	AudioType   *string            `json:"audio_type"`
+	AudioUrl    *string            `json:"audio_url"`
+	Duration    *int32             `json:"duration"`
+	Frequency   int                `json:"frequency"`
+	Frequencies []int              `json:"frequencies"`
+	Patches     []int              `json:"patches"`
+	TGLabel     *string            `json:"tg_label"`
+	TGAlphaTag  *string            `json:"tg_alpha_tag"`
+	TGGroup     *string            `json:"tg_group"`
+	Source      int                `json:"source"`
+}
+
+func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error) {
+	row := q.db.QueryRow(ctx, getCall, id)
+	var i GetCallRow
+	err := row.Scan(
+		&i.ID,
+		&i.Submitter,
+		&i.System,
+		&i.Talkgroup,
+		&i.CallDate,
+		&i.AudioName,
+		&i.AudioType,
+		&i.AudioUrl,
+		&i.Duration,
+		&i.Frequency,
+		&i.Frequencies,
+		&i.Patches,
+		&i.TGLabel,
+		&i.TGAlphaTag,
+		&i.TGGroup,
+		&i.Source,
+	)
+	return i, err
+}
+
 const getCallAudioByID = `-- name: GetCallAudioByID :one
 SELECT
 	c.call_date,

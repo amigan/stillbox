@@ -17,15 +17,17 @@ INSERT INTO shares (
 	id,
 	entity_type,
 	entity_id,
+	entity_date,
 	owner,
 	expiration
-) VALUES ($1, $2, $3, $4, $5)
+) VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type CreateShareParams struct {
 	ID         string             `json:"id"`
 	EntityType string             `json:"entity_type"`
 	EntityID   uuid.UUID          `json:"entity_id"`
+	EntityDate pgtype.Timestamptz `json:"entity_date"`
 	Owner      int                `json:"owner"`
 	Expiration pgtype.Timestamptz `json:"expiration"`
 }
@@ -35,6 +37,7 @@ func (q *Queries) CreateShare(ctx context.Context, arg CreateShareParams) error 
 		arg.ID,
 		arg.EntityType,
 		arg.EntityID,
+		arg.EntityDate,
 		arg.Owner,
 		arg.Expiration,
 	)
@@ -55,6 +58,7 @@ SELECT
 	id,
 	entity_type,
 	entity_id,
+	entity_date,
 	owner,
 	expiration
 FROM shares
@@ -68,6 +72,7 @@ func (q *Queries) GetShare(ctx context.Context, id string) (Share, error) {
 		&i.ID,
 		&i.EntityType,
 		&i.EntityID,
+		&i.EntityDate,
 		&i.Owner,
 		&i.Expiration,
 	)

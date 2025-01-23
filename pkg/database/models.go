@@ -85,6 +85,7 @@ type Share struct {
 	ID         string             `json:"id,omitempty"`
 	EntityType string             `json:"entity_type,omitempty"`
 	EntityID   uuid.UUID          `json:"entity_id,omitempty"`
+	EntityDate pgtype.Timestamptz `json:"entity_date,omitempty"`
 	Owner      int                `json:"owner,omitempty"`
 	Expiration pgtype.Timestamptz `json:"expiration,omitempty"`
 }

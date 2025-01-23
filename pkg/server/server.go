@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -16,8 +17,9 @@ import (
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/policy"
 	"dynatron.me/x/stillbox/pkg/rest"
-	"dynatron.me/x/stillbox/pkg/share"
+	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/sources"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
@@ -45,12 +47,12 @@ type Server struct {
 	notifier  notify.Notifier
 	hup       chan os.Signal
 	tgs       tgstore.Store
-	rest      rest.API
+	rest      rest.APIRoot
 	partman   partman.PartitionManager
 	users     users.Store
 	calls     callstore.Store
 	incidents incstore.Store
-	share     share.Service
+	share     shares.Service
 	rbac      rbac.RBAC
 }
 
@@ -79,7 +81,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	tgCache := tgstore.NewCache(db)
 	api := rest.New(cfg.BaseURL.URL())
 
-	rbacSvc, err := rbac.New()
+	rbacSvc, err := rbac.New(policy.Policy)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +98,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		tgs:       tgCache,
 		sinks:     sinks.NewSinkManager(),
 		rest:      api,
-		share:     share.NewService(),
+		share:     shares.NewService(),
 		users:     ust,
 		calls:     callstore.NewStore(db),
 		incidents: incstore.NewStore(),
@@ -145,6 +147,13 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	}))
 	srv.setupRoutes()
 
+	if os.Getenv("STILLBOX_DUMP_ROUTES") == "true" {
+		_ = chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+			fmt.Printf("[%s]: '%s' has %d middlewares\n", method, route, len(middlewares))
+			return nil
+		})
+	}
+
 	return srv, nil
 }
 
@@ -154,7 +163,7 @@ func (s *Server) fillCtx(ctx context.Context) context.Context {
 	ctx = users.CtxWithStore(ctx, s.users)
 	ctx = callstore.CtxWithStore(ctx, s.calls)
 	ctx = incstore.CtxWithStore(ctx, s.incidents)
-	ctx = share.CtxWithStore(ctx, s.share.ShareStore())
+	ctx = shares.CtxWithStore(ctx, s.share)
 	ctx = rbac.CtxWithRBAC(ctx, s.rbac)
 
 	return ctx
