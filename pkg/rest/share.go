@@ -128,6 +128,7 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var rType ShareRequestType
+
 	if params.Type != nil {
 		rType = ShareRequestType(*params.Type)
 	} else {
@@ -138,6 +139,7 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 		case shares.EntityIncident:
 			rType = ShareRequestIncident
 		}
+		w.Header().Set("X-Share-Type", string(rType))
 	}
 
 	if !rType.IsValid() {
