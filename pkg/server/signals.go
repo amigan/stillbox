@@ -18,6 +18,7 @@ func (s *Server) huppers() []hupper {
 		s.logger,
 		s.auth,
 		s.tgs,
+		s.alerter,
 	}
 }
 
