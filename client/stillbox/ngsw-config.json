@@ -34,6 +34,9 @@
     "!/**/****",
     "!/**/****/**",
     "!/tgstats",
-    "!/tgstats/**"
+    "!/tgstats/**",
+    "!/api/**",
+    "!/share/**",
+    "!/testnotify"
   ]
 }

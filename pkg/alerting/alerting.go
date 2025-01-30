@@ -166,7 +166,12 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 	for _, s := range as.scores {
 		origScore := s.Score
 		tgr, err := as.tgCache.TG(ctx, s.ID)
-		if err != nil || !tgr.Talkgroup.Alert {
+		if err != nil {
+			log.Error().Err(err).Msg("alerting eval tg get")
+			continue
+		}
+
+		if!tgr.Talkgroup.Alert {
 			continue
 		}
 

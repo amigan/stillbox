@@ -81,16 +81,25 @@ var Policy = &restrict.PolicyDefinition{
 			Parents: []string{entities.RoleUser},
 			Grants: restrict.GrantsMap{
 				entities.ResourceIncident: {
+					&restrict.Permission{Action: entities.ActionRead},
 					&restrict.Permission{Action: entities.ActionUpdate},
 					&restrict.Permission{Action: entities.ActionDelete},
 					&restrict.Permission{Action: entities.ActionShare},
 				},
 				entities.ResourceCall: {
+					&restrict.Permission{Action: entities.ActionRead},
 					&restrict.Permission{Action: entities.ActionUpdate},
 					&restrict.Permission{Action: entities.ActionDelete},
 					&restrict.Permission{Action: entities.ActionShare},
 				},
 				entities.ResourceTalkgroup: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionDelete},
+				},
+				entities.ResourceShare: {
+					&restrict.Permission{Action: entities.ActionRead},
 					&restrict.Permission{Action: entities.ActionUpdate},
 					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Action: entities.ActionDelete},
@@ -98,7 +107,7 @@ var Policy = &restrict.PolicyDefinition{
 			},
 		},
 		entities.RoleSystem: {
-			Parents: []string{entities.RoleSystem},
+			Parents: []string{entities.RoleAdmin},
 		},
 		entities.RolePublic: {
 			/*
