@@ -78,6 +78,7 @@ var Policy = &restrict.PolicyDefinition{
 			},
 		},
 		entities.RoleAdmin: {
+			Description: "A superuser",
 			Parents: []string{entities.RoleUser},
 			Grants: restrict.GrantsMap{
 				entities.ResourceIncident: {
@@ -107,6 +108,7 @@ var Policy = &restrict.PolicyDefinition{
 			},
 		},
 		entities.RoleSystem: {
+			Description: "A system service",
 			Parents: []string{entities.RoleAdmin},
 		},
 		entities.RolePublic: {
