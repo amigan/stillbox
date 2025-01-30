@@ -15,11 +15,11 @@ type Incident struct {
 	ID          uuid.UUID          `json:"id"`
 	Owner       users.UserID       `json:"owner"`
 	Name        string             `json:"name"`
-	Description *string            `json:"description"`
-	StartTime   *jsontypes.Time    `json:"startTime"`
-	EndTime     *jsontypes.Time    `json:"endTime"`
-	Location    jsontypes.Location `json:"location"`
-	Metadata    jsontypes.Metadata `json:"metadata"`
+	Description *string            `json:"description,omitempty"`
+	StartTime   *jsontypes.Time    `json:"startTime,omitempty"`
+	EndTime     *jsontypes.Time    `json:"endTime,omitempty"`
+	Location    jsontypes.Location `json:"location,omitempty"`
+	Metadata    jsontypes.Metadata `json:"metadata,omitempty"`
 	Calls       []IncidentCall     `json:"calls"`
 }
 
@@ -34,5 +34,5 @@ func (inc *Incident) PlaylistFilename() string {
 
 type IncidentCall struct {
 	calls.Call
-	Notes json.RawMessage `json:"notes"`
+	Notes json.RawMessage `json:"notes,omitempty"`
 }
