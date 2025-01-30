@@ -213,9 +213,12 @@ func (ia *incidentsAPI) getCallsM3U(id ID, share *shares.Share, w http.ResponseW
 
 	callUrl := common.PtrTo(*ia.baseURL)
 	urlRoot := "/api/call"
+	filename := inc.PlaylistFilename()
 	if share != nil {
 		urlRoot = fmt.Sprintf("/share/%s/call/", share.ID)
+		filename += "_" + share.ID
 	}
+	filename += ".m3u"
 
 	b.WriteString("#EXTM3U\n\n")
 	for _, c := range inc.Calls {
@@ -243,6 +246,7 @@ func (ia *incidentsAPI) getCallsM3U(id ID, share *shares.Share, w http.ResponseW
 	// Not a lot of agreement on which MIME type to use for non-HLS m3u,
 	// let's hope this is good enough
 	w.Header().Set("Content-Type", "audio/x-mpegurl")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	w.WriteHeader(http.StatusOK)
 	_, _ = b.WriteTo(w)
 }

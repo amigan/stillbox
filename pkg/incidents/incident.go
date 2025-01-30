@@ -2,6 +2,7 @@ package incidents
 
 import (
 	"encoding/json"
+	"strings"
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/calls"
@@ -24,6 +25,11 @@ type Incident struct {
 
 func (inc *Incident) GetResourceName() string {
 	return entities.ResourceIncident
+}
+
+func (inc *Incident) PlaylistFilename() string {
+	rep := strings.NewReplacer(" ", "_", "/", "_", ":", "_")
+	return rep.Replace(strings.ToLower(inc.Name))
 }
 
 type IncidentCall struct {
