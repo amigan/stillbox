@@ -79,6 +79,7 @@ func (sa *shareAPI) RootRouter() http.Handler {
 
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}", sa.routeShare)
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}", sa.routeShare)
+	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}.{type}", sa.routeShare)
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}/{subID}", sa.routeShare)
 	return r
 }
