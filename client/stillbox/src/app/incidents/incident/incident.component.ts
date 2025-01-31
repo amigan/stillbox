@@ -1,5 +1,5 @@
-import { Component, inject, Sanitizer } from '@angular/core';
-import { tap } from 'rxjs/operators';
+import { Component, inject, Input, input, Sanitizer } from '@angular/core';
+import { switchMap, tap } from 'rxjs/operators';
 import { CommonModule, Location } from '@angular/common';
 import { BehaviorSubject, merge, Subscription } from 'rxjs';
 import { Observable } from 'rxjs';
@@ -39,6 +39,8 @@ import {
 import { CallPlayerComponent } from '../../calls/player/call-player/call-player.component';
 import { FmtDatePipe } from '../incidents.component';
 import { MatMenuModule } from '@angular/material/menu';
+import { Share } from '../../share/share.service';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 export interface EditDialogData {
   incID: string;
@@ -153,6 +155,7 @@ export class IncidentEditDialogComponent {
 export class IncidentComponent {
   incPrime = new BehaviorSubject<IncidentRecord>(<IncidentRecord>{});
   inc$!: Observable<IncidentRecord>;
+  @Input() incident?: Share;
   subscriptions: Subscription = new Subscription();
   dialog = inject(MatDialog);
   incID!: string;
@@ -179,8 +182,18 @@ export class IncidentComponent {
   saveIncName(ev: Event) {}
 
   ngOnInit() {
-    this.incID = this.route.snapshot.paramMap.get('id')!;
-    this.inc$ = merge(this.incSvc.getIncident(this.incID), this.incPrime).pipe(
+    let incOb: Observable<IncidentRecord>;
+    if (this.route.component === this.constructor) { // loaded by route
+      this.incID = this.route.snapshot.paramMap.get('id')!;
+      incOb = this.incSvc.getIncident(this.incID);
+    } else {
+      if (!this.incident) {
+        return;
+      }
+      this.incID = (this.incident.share as IncidentRecord).id;
+      incOb = new BehaviorSubject(this.incident.share as IncidentRecord);
+    }
+    this.inc$ = merge(incOb, this.incPrime).pipe(
       tap((inc) => {
         if (inc.calls) {
           this.callsResult.data = inc.calls;

@@ -3,7 +3,11 @@ import { Injectable } from '@angular/core';
 import { map, Observable, switchMap } from 'rxjs';
 import { IncidentRecord } from '../incidents';
 
-type Share = IncidentRecord | ArrayBuffer;
+type ShareType = IncidentRecord | ArrayBuffer;
+export interface Share {
+  shareType: string;
+  share: ShareType;
+}
 @Injectable({
   providedIn: 'root'
 })
@@ -14,14 +18,14 @@ export class ShareService {
   ) { }
 
   getShare(id: string): Observable<Share|null> {
-    return this.http.get<Share>(`/share/${id}`, {observe: 'response'}).pipe(
+    return this.http.get<ShareType>(`/share/${id}`, {observe: 'response'}).pipe(
         map((res) => {
           let typ = res.headers.get('X-Share-Type');
           switch(typ) {
             case 'call':
-              return (res.body as ArrayBuffer);
+              return <Share>{shareType: typ, share: (res.body as ArrayBuffer)};
             case 'incident':
-              return (res.body as IncidentRecord);
+              return <Share>{shareType: typ, share: (res.body as IncidentRecord)};
           }
           return null;
         })
