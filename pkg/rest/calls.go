@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"mime"
@@ -11,7 +12,6 @@ import (
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/shares"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -102,7 +102,12 @@ func (ca *callsAPI) getAudio(p getAudioParams, w http.ResponseWriter, r *http.Re
 	_, _ = w.Write(call.AudioBlob)
 }
 
-func (ca *callsAPI) shareCallRoute(id ID, _ *shares.Share, w http.ResponseWriter, r *http.Request) {
+func (ca *callsAPI) getCallInfo(ctx context.Context, id ID) (SharedItem, error) {
+	cs := callstore.FromCtx(ctx)
+	return cs.Call(ctx, id.(uuid.UUID))
+}
+
+func (ca *callsAPI) shareCallRoute(id ID, w http.ResponseWriter, r *http.Request) {
 	p := getAudioParams{
 		CallID: common.PtrTo(id.(uuid.UUID)),
 	}
@@ -110,7 +115,7 @@ func (ca *callsAPI) shareCallRoute(id ID, _ *shares.Share, w http.ResponseWriter
 	ca.getAudio(p, w, r)
 }
 
-func (ca *callsAPI) shareCallDLRoute(id ID, _ *shares.Share, w http.ResponseWriter, r *http.Request) {
+func (ca *callsAPI) shareCallDLRoute(id ID, w http.ResponseWriter, r *http.Request) {
 	p := getAudioParams{
 		CallID:   common.PtrTo(id.(uuid.UUID)),
 		Download: common.PtrTo("download"),

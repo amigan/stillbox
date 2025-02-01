@@ -185,7 +185,7 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 			continue
 		}
 
-		if!tgr.Talkgroup.Alert {
+		if !tgr.Talkgroup.Alert {
 			continue
 		}
 
@@ -395,4 +395,4 @@ func (*noopAlerter) SinkType() string                            { return "noopA
 func (*noopAlerter) Call(_ context.Context, _ *calls.Call) error { return nil }
 func (*noopAlerter) Go(_ context.Context)                        {}
 func (*noopAlerter) Enabled() bool                               { return false }
-func (*noopAlerter) HUP(_ *config.Config) { }
+func (*noopAlerter) HUP(_ *config.Config)                        {}

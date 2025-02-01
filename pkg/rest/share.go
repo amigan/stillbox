@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/url"
@@ -23,6 +24,7 @@ type ShareRequestType string
 
 const (
 	ShareRequestCall        ShareRequestType = "call"
+	ShareRequestCallInfo    ShareRequestType = "callinfo"
 	ShareRequestCallDL      ShareRequestType = "callDL"
 	ShareRequestIncident    ShareRequestType = "incident"
 	ShareRequestIncidentM3U ShareRequestType = "m3u"
@@ -31,17 +33,8 @@ const (
 
 func (rt ShareRequestType) IsValid() bool {
 	switch rt {
-	case ShareRequestCall, ShareRequestCallDL, ShareRequestIncident,
+	case ShareRequestCall, ShareRequestCallInfo, ShareRequestCallDL, ShareRequestIncident,
 		ShareRequestIncidentM3U, ShareRequestTalkgroups:
-		return true
-	}
-
-	return false
-}
-
-func (rt ShareRequestType) IsValidSubtype() bool {
-	switch rt {
-	case ShareRequestCall, ShareRequestCallDL, ShareRequestTalkgroups:
 		return true
 	}
 
@@ -51,11 +44,54 @@ func (rt ShareRequestType) IsValidSubtype() bool {
 type ID interface {
 }
 
-type HandlerFunc func(id ID, share *shares.Share, w http.ResponseWriter, r *http.Request)
-type ShareHandlers map[ShareRequestType]HandlerFunc
+type ShareHandlerFunc func(id ID, w http.ResponseWriter, r *http.Request)
+type ShareHandlers map[ShareRequestType]ShareHandlerFunc
 type shareAPI struct {
 	baseURL *url.URL
 	shnd    ShareHandlers
+}
+
+type EntityFunc func(ctx context.Context, id ID) (SharedItem, error)
+type SharedItem interface {
+}
+
+type shareResponse struct {
+	ID   ID                `json:"id"`
+	Type shares.EntityType `json:"type"`
+	Item SharedItem        `json:"item,omitempty"`
+}
+
+func ShareFrom(ctx context.Context) *shares.Share {
+	if share, hasShare := entities.SubjectFrom(ctx).(*shares.Share); hasShare {
+		return share
+	}
+
+	return nil
+}
+
+func respondShareHandler(ie EntityFunc) ShareHandlerFunc {
+	return func(id ID, w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		share := ShareFrom(ctx)
+		if share == nil {
+			wErr(w, r, autoError(ErrBadShare))
+			return
+		}
+
+		res, err := ie(r.Context(), id)
+		if err != nil {
+			wErr(w, r, autoError(err))
+			return
+		}
+
+		sRes := shareResponse{
+			ID:   id,
+			Type: share.Type,
+			Item: res,
+		}
+
+		respond(w, r, sRes)
+	}
 }
 
 func newShareAPI(baseURL *url.URL, shnd ShareHandlers) *shareAPI {
@@ -135,12 +171,11 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 	} else {
 		switch sh.Type {
 		case shares.EntityCall:
-			rType = ShareRequestCall
+			rType = ShareRequestCallInfo
 			params.SubID = common.PtrTo(sh.EntityID.String())
 		case shares.EntityIncident:
 			rType = ShareRequestIncident
 		}
-		w.Header().Set("X-Share-Type", string(rType))
 	}
 
 	if !rType.IsValid() {
@@ -158,21 +193,22 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 
 	switch rType {
 	case ShareRequestTalkgroups:
-		sa.shnd[rType](nil, sh, w, r)
-	case ShareRequestCall, ShareRequestCallDL:
-		if params.SubID == nil {
-			wErr(w, r, autoError(ErrBadShare))
-			return
+		sa.shnd[rType](nil, w, r)
+	case ShareRequestCall, ShareRequestCallInfo, ShareRequestCallDL:
+		var subIDU uuid.UUID
+		if params.SubID != nil {
+			subIDU, err = uuid.Parse(*params.SubID)
+			if err != nil {
+				wErr(w, r, badRequest(err))
+				return
+			}
+		} else {
+			subIDU = sh.EntityID
 		}
 
-		subIDU, err := uuid.Parse(*params.SubID)
-		if err != nil {
-			wErr(w, r, badRequest(err))
-			return
-		}
-		sa.shnd[rType](subIDU, sh, w, r)
+		sa.shnd[rType](subIDU, w, r)
 	case ShareRequestIncident, ShareRequestIncidentM3U:
-		sa.shnd[rType](sh.EntityID, sh, w, r)
+		sa.shnd[rType](sh.EntityID, w, r)
 	}
 }
 

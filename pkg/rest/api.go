@@ -51,8 +51,9 @@ func New(baseURL url.URL) *api {
 	s.shares = newShareAPI(&baseURL,
 		ShareHandlers{
 			ShareRequestCall:        s.calls.shareCallRoute,
+			ShareRequestCallInfo:    respondShareHandler(s.calls.getCallInfo),
 			ShareRequestCallDL:      s.calls.shareCallDLRoute,
-			ShareRequestIncident:    s.incidents.getIncident,
+			ShareRequestIncident:    respondShareHandler(s.incidents.getIncident),
 			ShareRequestIncidentM3U: s.incidents.getCallsM3U,
 			ShareRequestTalkgroups:  s.tgs.getTGsShareRoute,
 		},

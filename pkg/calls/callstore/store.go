@@ -145,7 +145,7 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, 
 }
 
 func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceCall), rbac.WithActions(entities.ActionRead))
+	_, err := rbac.Check(ctx, &calls.Call{ID: id}, rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
