@@ -9,26 +9,28 @@ export interface Share {
   share: ShareType;
 }
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ShareService {
+  constructor(private http: HttpClient) {}
 
-  constructor(
-    private http: HttpClient,
-  ) { }
-
-  getShare(id: string): Observable<Share|null> {
-    return this.http.get<ShareType>(`/share/${id}`, {observe: 'response'}).pipe(
+  getShare(id: string): Observable<Share | null> {
+    return this.http
+      .get<ShareType>(`/share/${id}`, { observe: 'response' })
+      .pipe(
         map((res) => {
           let typ = res.headers.get('X-Share-Type');
-          switch(typ) {
+          switch (typ) {
             case 'call':
-              return <Share>{shareType: typ, share: (res.body as ArrayBuffer)};
+              return <Share>{ shareType: typ, share: res.body as ArrayBuffer };
             case 'incident':
-              return <Share>{shareType: typ, share: (res.body as IncidentRecord)};
+              return <Share>{
+                shareType: typ,
+                share: res.body as IncidentRecord,
+              };
           }
           return null;
-        })
+        }),
       );
   }
 }

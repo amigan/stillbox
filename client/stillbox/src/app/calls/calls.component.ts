@@ -1,10 +1,4 @@
-import {
-  Component,
-  inject,
-  Pipe,
-  PipeTransform,
-  ViewChild,
-} from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
@@ -17,13 +11,20 @@ import { PrefsService } from '../prefs/prefs.service';
 import { MatIconModule } from '@angular/material/icon';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
-import { CallsListParams, CallsService } from './calls.service';
+import { BehaviorSubject, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import {
+  CallsListParams,
+  CallsService,
+  DatePipe,
+  DownloadURLPipe,
+  FixedPointPipe,
+  TalkgroupPipe,
+  TimePipe,
+} from './calls.service';
 import { CallRecord } from '../calls';
 
 import { TalkgroupService } from '../talkgroups/talkgroups.service';
-import { Talkgroup } from '../talkgroup';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {
   FormControl,
@@ -49,94 +50,6 @@ import {
 import { IncidentRecord } from '../incidents';
 import { SelectIncidentDialogComponent } from '../incidents/select-incident-dialog/select-incident-dialog.component';
 
-@Pipe({
-  name: 'grabDate',
-  standalone: true,
-  pure: true,
-})
-export class DatePipe implements PipeTransform {
-  transform(ts: string, args?: any): string {
-    const timestamp = new Date(ts);
-    return timestamp.getMonth() + 1 + '/' + timestamp.getDate();
-  }
-}
-
-@Pipe({
-  name: 'time',
-  standalone: true,
-  pure: true,
-})
-export class TimePipe implements PipeTransform {
-  transform(ts: string, args?: any): string {
-    const timestamp = new Date(ts);
-    return timestamp.toLocaleTimeString(navigator.language, {
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23',
-    });
-  }
-}
-
-@Pipe({
-  name: 'talkgroup',
-  standalone: true,
-  pure: true,
-})
-export class TalkgroupPipe implements PipeTransform {
-  constructor(private tgService: TalkgroupService) {}
-
-  transform(call: CallRecord, field: string): Observable<string> {
-    return this.tgService.getTalkgroup(call.system_id, call.tgid).pipe(
-      map((tg: Talkgroup) => {
-        switch (field) {
-          case 'alpha': {
-            return tg.alpha_tag ?? call.tgid;
-            break;
-          }
-          case 'group': {
-            return tg.tg_group ?? '\u2014';
-            break;
-          }
-          case 'system': {
-            return tg.system?.name ?? tg.system_id.toString();
-          }
-          default: {
-            return tg.name ?? '\u2014';
-            break;
-          }
-        }
-      }),
-    );
-  }
-}
-
-@Pipe({
-  name: 'fixedPoint',
-  standalone: true,
-  pure: true,
-})
-export class FixedPointPipe implements PipeTransform {
-  constructor() {}
-
-  transform(quant: number, divisor: number, places: number): string {
-    const seconds = quant / divisor;
-    return seconds.toFixed(places);
-  }
-}
-
-@Pipe({
-  name: 'audioDownloadURL',
-  standalone: true,
-  pure: true,
-})
-export class DownloadURLPipe implements PipeTransform {
-  constructor(private callsSvc: CallsService) {}
-
-  transform(call: CallRecord, args?: any): string {
-    return this.callsSvc.callAudioDownloadURL(call.id);
-  }
-}
-
 const reqPageSize = 200;
 @Component({
   selector: 'app-calls',
@@ -144,8 +57,8 @@ const reqPageSize = 200;
     MatIconModule,
     FixedPointPipe,
     TalkgroupPipe,
-    DatePipe,
     TimePipe,
+    DatePipe,
     MatPaginatorModule,
     MatTableModule,
     AsyncPipe,

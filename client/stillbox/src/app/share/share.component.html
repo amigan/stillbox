@@ -1,10 +1,6 @@
 @let sh = share | async;
 @if (sh == null) {
-
-} @else if (sh.shareType == 'incident') {
-    <app-incident [incident]="sh"></app-incident>
-} @else if (sh.shareType == 'call') {
-
-} @else {
-
-}
+} @else if (sh.shareType == "incident") {
+  <app-incident [incident]="sh"></app-incident>
+} @else if (sh.shareType == "call") {
+} @else {}

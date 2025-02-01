@@ -5,19 +5,15 @@ import { Observable, Subscription, switchMap } from 'rxjs';
 import { IncidentComponent } from '../incidents/incident/incident.component';
 import { AsyncPipe } from '@angular/common';
 
-
 @Component({
   selector: 'app-share',
-  imports: [
-    AsyncPipe,
-    IncidentComponent,
-  ],
+  imports: [AsyncPipe, IncidentComponent],
   templateUrl: './share.component.html',
-  styleUrl: './share.component.scss'
+  styleUrl: './share.component.scss',
 })
 export class ShareComponent {
   shareID!: string;
-  share!: Observable<Share|null>;
+  share!: Observable<Share | null>;
   constructor(
     private route: ActivatedRoute,
     private shareSvc: ShareService,

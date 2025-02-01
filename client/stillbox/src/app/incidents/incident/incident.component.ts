@@ -35,7 +35,7 @@ import {
   TimePipe,
   DatePipe,
   DownloadURLPipe,
-} from '../../calls/calls.component';
+} from '../../calls/calls.service';
 import { CallPlayerComponent } from '../../calls/player/call-player/call-player.component';
 import { FmtDatePipe } from '../incidents.component';
 import { MatMenuModule } from '@angular/material/menu';
@@ -183,7 +183,8 @@ export class IncidentComponent {
 
   ngOnInit() {
     let incOb: Observable<IncidentRecord>;
-    if (this.route.component === this.constructor) { // loaded by route
+    if (this.route.component === this.constructor) {
+      // loaded by route
       this.incID = this.route.snapshot.paramMap.get('id')!;
       incOb = this.incSvc.getIncident(this.incID);
     } else {
