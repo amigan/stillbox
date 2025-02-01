@@ -1,7 +1,7 @@
-import { Component, inject, Input, input, Sanitizer } from '@angular/core';
-import { switchMap, tap } from 'rxjs/operators';
+import { Component, inject, Input } from '@angular/core';
+import { tap } from 'rxjs/operators';
 import { CommonModule, Location } from '@angular/common';
-import { BehaviorSubject, merge, Subscription } from 'rxjs';
+import { BehaviorSubject, merge, Subject, Subscription } from 'rxjs';
 import { Observable } from 'rxjs';
 import {
   ReactiveFormsModule,
@@ -40,7 +40,6 @@ import { CallPlayerComponent } from '../../calls/player/call-player/call-player.
 import { FmtDatePipe } from '../incidents.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { Share } from '../../share/share.service';
-import { toObservable } from '@angular/core/rxjs-interop';
 
 export interface EditDialogData {
   incID: string;
@@ -153,7 +152,7 @@ export class IncidentEditDialogComponent {
   styleUrl: './incident.component.scss',
 })
 export class IncidentComponent {
-  incPrime = new BehaviorSubject<IncidentRecord>(<IncidentRecord>{});
+  incPrime = new Subject<IncidentRecord>();
   inc$!: Observable<IncidentRecord>;
   @Input() incident?: Share;
   subscriptions: Subscription = new Subscription();
@@ -196,7 +195,7 @@ export class IncidentComponent {
     }
     this.inc$ = merge(incOb, this.incPrime).pipe(
       tap((inc) => {
-        if (inc.calls) {
+        if (inc && inc.calls) {
           this.callsResult.data = inc.calls;
         }
       }),
