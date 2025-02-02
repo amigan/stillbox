@@ -68,9 +68,9 @@ type SharedItem interface {
 }
 
 type shareResponse struct {
-	ID   ID                `json:"id"`
-	Type shares.EntityType `json:"type"`
-	Item SharedItem        `json:"item,omitempty"`
+	ID         ID                `json:"id"`
+	Type       shares.EntityType `json:"type"`
+	SharedItem SharedItem        `json:"sharedItem,omitempty"`
 }
 
 func ShareFrom(ctx context.Context) *shares.Share {
@@ -97,9 +97,9 @@ func respondShareHandler(ie EntityFunc) ShareHandlerFunc {
 		}
 
 		sRes := shareResponse{
-			ID:   id,
-			Type: share.Type,
-			Item: res,
+			ID:         id,
+			Type:       share.Type,
+			SharedItem: res,
 		}
 
 		respond(w, r, sRes)
