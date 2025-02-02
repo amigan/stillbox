@@ -34,12 +34,12 @@ const (
 // shareHandlers returns a ShareHandlers map from the api.
 func (s *api) shareHandlers() ShareHandlers {
 	return ShareHandlers{
-			ShareRequestCall:        s.calls.shareCallRoute,
-			ShareRequestCallInfo:    respondShareHandler(s.calls.getCallInfo),
-			ShareRequestCallDL:      s.calls.shareCallDLRoute,
-			ShareRequestIncident:    respondShareHandler(s.incidents.getIncident),
-			ShareRequestIncidentM3U: s.incidents.getCallsM3U,
-			ShareRequestTalkgroups:  s.tgs.getTGsShareRoute,
+		ShareRequestCall:        s.calls.shareCallRoute,
+		ShareRequestCallInfo:    respondShareHandler(s.calls.getCallInfo),
+		ShareRequestCallDL:      s.calls.shareCallDLRoute,
+		ShareRequestIncident:    respondShareHandler(s.incidents.getIncident),
+		ShareRequestIncidentM3U: s.incidents.getCallsM3U,
+		ShareRequestTalkgroups:  s.tgs.getTGsShareRoute,
 	}
 }
 
@@ -105,7 +105,6 @@ func respondShareHandler(ie EntityFunc) ShareHandlerFunc {
 		respond(w, r, sRes)
 	}
 }
-
 
 func newShareAPI(baseURL *url.URL, shnd ShareHandlers) *shareAPI {
 	return &shareAPI{

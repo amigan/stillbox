@@ -85,7 +85,7 @@ func (s *postgresStore) Delete(ctx context.Context, id string) error {
 		return err
 	}
 
-	_, err  = rbac.Check(ctx, sh, rbac.WithActions(entities.ActionDelete))
+	_, err = rbac.Check(ctx, sh, rbac.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}
