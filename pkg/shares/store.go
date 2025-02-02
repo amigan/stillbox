@@ -80,7 +80,12 @@ func (s *postgresStore) Create(ctx context.Context, share *Share) error {
 }
 
 func (s *postgresStore) Delete(ctx context.Context, id string) error {
-	_, err := rbac.Check(ctx, new(Share), rbac.WithActions(entities.ActionDelete))
+	sh, err := s.GetShare(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	_, err  = rbac.Check(ctx, sh, rbac.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}

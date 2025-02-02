@@ -213,4 +213,24 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 }
 
 func (sa *shareAPI) deleteShare(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shs := shares.FromCtx(ctx)
+
+	p := struct {
+		ID string `param:"id"`
+	}{}
+
+	err := decodeParams(&p, r)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	err = shs.Delete(ctx, p.ID)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
