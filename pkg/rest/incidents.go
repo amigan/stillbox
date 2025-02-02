@@ -235,11 +235,12 @@ func (ia *incidentsAPI) getCallsM3U(id ID, w http.ResponseWriter, r *http.Reques
 
 		callUrl.Path = urlRoot + c.ID.String()
 
-		fmt.Fprintf(b, "#EXTINF:%d,%s%s (%s)\n%s\n\n",
+		fmt.Fprintf(b, "#EXTINF:%d,%s%s (%s @ %s)\n%s\n\n",
 			c.Duration.Seconds(),
 			tg.StringTag(true),
 			from,
-			c.DateTime.Format("15:04 01/02"),
+			c.Duration.ColonFormat(),
+			c.DateTime.Format("15:04:05 01/02"),
 			callUrl,
 		)
 	}

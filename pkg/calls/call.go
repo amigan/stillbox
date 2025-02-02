@@ -22,6 +22,13 @@ func (d CallDuration) Duration() time.Duration {
 	return time.Duration(d)
 }
 
+func (d CallDuration) ColonFormat() string {
+	dur := d.Duration().Round(time.Second)
+	m := dur / time.Minute
+	s := dur / time.Second
+	return fmt.Sprintf("%d:%02d", m, s)
+}
+
 func (d CallDuration) MsInt32Ptr() *int32 {
 	if time.Duration(d) == 0 {
 		return nil
