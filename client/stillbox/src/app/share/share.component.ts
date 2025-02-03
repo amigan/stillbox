@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { Share, ShareService } from './share.service';
+import { ShareService } from './share.service';
+import { Share } from '../shares';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, Subscription, switchMap } from 'rxjs';
 import { IncidentComponent } from '../incidents/incident/incident.component';

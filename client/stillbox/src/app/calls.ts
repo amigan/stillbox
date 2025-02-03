@@ -1,6 +1,7 @@
 export interface CallRecord {
   id: string;
   call_date: Date;
+  audioURL: string | null;
   duration: number;
   system_id: number;
   tgid: number;

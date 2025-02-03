@@ -39,7 +39,7 @@ import {
 import { CallPlayerComponent } from '../../calls/player/call-player/call-player.component';
 import { FmtDatePipe } from '../incidents.component';
 import { MatMenuModule } from '@angular/material/menu';
-import { Share } from '../../share/share.service';
+import { Share } from '../../shares';
 
 export interface EditDialogData {
   incID: string;
@@ -190,8 +190,8 @@ export class IncidentComponent {
       if (!this.incident) {
         return;
       }
-      this.incID = (this.incident.share as IncidentRecord).id;
-      incOb = new BehaviorSubject(this.incident.share as IncidentRecord);
+      this.incID = (this.incident.sharedItem as IncidentRecord).id;
+      incOb = new BehaviorSubject(this.incident.sharedItem as IncidentRecord);
     }
     this.inc$ = merge(incOb, this.incPrime).pipe(
       tap((inc) => {

@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import {
   BehaviorSubject,
-  concatMap,
   Observable,
   ReplaySubject,
   shareReplay,
@@ -32,7 +31,10 @@ export class TalkgroupService {
   private fetchAll = new BehaviorSubject<'fetch'>('fetch');
   private subscriptions = new Subscription();
   constructor(private http: HttpClient) {
-    this.tgs$ = this.fetchAll.pipe(switchMap(() => this.getTalkgroups()));
+    this.tgs$ = this.fetchAll.pipe(
+      switchMap(() => this.getTalkgroups()),
+      shareReplay(),
+    );
     this.tags$ = this.fetchAll.pipe(
       switchMap(() => this.getAllTags()),
       shareReplay(),
@@ -45,11 +47,11 @@ export class TalkgroupService {
   }
 
   getAllTags(): Observable<string[]> {
-    return this.http.get<string[]>('/api/talkgroup/tags').pipe(shareReplay());
+    return this.http.get<string[]>('/api/talkgroup/tags');
   }
 
   getTalkgroups(): Observable<Talkgroup[]> {
-    return this.http.get<Talkgroup[]>('/api/talkgroup/').pipe(shareReplay());
+    return this.http.get<Talkgroup[]>('/api/talkgroup/');
   }
 
   getTalkgroup(sys: number, tg: number): Observable<Talkgroup> {

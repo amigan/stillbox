@@ -1,9 +1,9 @@
 @let sh = share | async;
 @if (sh == null) {
-    <h1 class="error">Share invalid!</h1>
-} @else if (sh.shareType == "incident") {
+  <h1 class="error">Share invalid!</h1>
+} @else if (sh.type == "incident") {
   <app-incident [incident]="sh"></app-incident>
-} @else if (sh.shareType == "call") {
+} @else if (sh.type == "call") {
 } @else {
-    <h1 class="error">Share type {{sh.shareType}} unknown</h1>
+  <h1 class="error">Share type {{ sh.type }} unknown</h1>
 }

@@ -2,35 +2,39 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable, switchMap } from 'rxjs';
 import { IncidentRecord } from '../incidents';
+import { CallRecord } from '../calls';
+import { Share, ShareType } from '../shares';
 
-type ShareType = IncidentRecord | ArrayBuffer;
-export interface Share {
-  shareType: string;
-  share: ShareType;
-}
 @Injectable({
   providedIn: 'root',
 })
 export class ShareService {
   constructor(private http: HttpClient) {}
 
-  getShare(id: string): Observable<Share | null> {
-    return this.http
-      .get<ShareType>(`/share/${id}`, { observe: 'response' })
-      .pipe(
-        map((res) => {
-          let typ = res.headers.get('X-Share-Type');
-          switch (typ) {
-            case 'call':
-              return <Share>{ shareType: typ, share: res.body as ArrayBuffer };
-            case 'incident':
-              return <Share>{
-                shareType: typ,
-                share: res.body as IncidentRecord,
-              };
-          }
-          return null;
-        }),
-      );
+  getShare(id: string): Observable<Share> {
+    return this.http.get<Share>(`/share/${id}`);
+  }
+
+  getSharedItem(s: Observable<Share>): Observable<ShareType> {
+    return s.pipe(
+      map((res) => {
+        switch (res.type) {
+          case 'call':
+            return <CallRecord>res.sharedItem;
+          case 'incident':
+            return <IncidentRecord>res.sharedItem;
+        }
+
+        return null;
+      }),
+    );
+  }
+
+  getCallAudio(s: Observable<CallRecord>): Observable<ArrayBuffer> {
+    return s.pipe(
+      switchMap((res) => {
+        return this.http.get<ArrayBuffer>(res.audioURL!);
+      }),
+    );
   }
 }
