@@ -5,6 +5,7 @@ import { CallRecord } from '../calls';
 import { environment } from '.././../environments/environment';
 import { TalkgroupService } from '../talkgroups/talkgroups.service';
 import { Talkgroup } from '../talkgroup';
+import { Share } from '../shares';
 
 @Pipe({
   name: 'grabDate',
@@ -42,7 +43,7 @@ export class TimePipe implements PipeTransform {
 export class TalkgroupPipe implements PipeTransform {
   constructor(private tgService: TalkgroupService) {}
 
-  transform(call: CallRecord, field: string): Observable<string> {
+  transform(call: CallRecord, field: string, share: Share|null = null): Observable<string> {
     return this.tgService.getTalkgroup(call.system_id, call.tgid).pipe(
       map((tg: Talkgroup) => {
         switch (field) {
