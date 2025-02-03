@@ -35,9 +35,9 @@ const (
 func (s *api) shareHandlers() ShareHandlers {
 	return ShareHandlers{
 		ShareRequestCall:        s.calls.shareCallRoute,
-		ShareRequestCallInfo:    respondShareHandler(s.calls.getCallInfo),
+		ShareRequestCallInfo:    s.respondShareHandler(s.calls.getCallInfo),
 		ShareRequestCallDL:      s.calls.shareCallDLRoute,
-		ShareRequestIncident:    respondShareHandler(s.incidents.getIncident),
+		ShareRequestIncident:    s.respondShareHandler(s.incidents.getIncident),
 		ShareRequestIncidentM3U: s.incidents.getCallsM3U,
 		ShareRequestTalkgroups:  s.tgs.getTGsShareRoute,
 	}
@@ -65,6 +65,7 @@ type shareAPI struct {
 
 type EntityFunc func(ctx context.Context, id ID) (SharedItem, error)
 type SharedItem interface {
+	SetShareURL(baseURL url.URL, shareID string)
 }
 
 type shareResponse struct {
@@ -81,7 +82,7 @@ func ShareFrom(ctx context.Context) *shares.Share {
 	return nil
 }
 
-func respondShareHandler(ie EntityFunc) ShareHandlerFunc {
+func (s *api) respondShareHandler(ie EntityFunc) ShareHandlerFunc {
 	return func(id ID, w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		share := ShareFrom(ctx)
@@ -101,6 +102,8 @@ func respondShareHandler(ie EntityFunc) ShareHandlerFunc {
 			Type:       share.Type,
 			SharedItem: res,
 		}
+
+		sRes.SharedItem.SetShareURL(*s.baseURL, share.ID)
 
 		respond(w, r, sRes)
 	}

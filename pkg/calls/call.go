@@ -3,9 +3,11 @@ package calls
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/audio"
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
@@ -92,6 +94,11 @@ func (c *Call) String() string {
 
 func (c *Call) ShouldStore() bool {
 	return c.shouldStore
+}
+
+func (c *Call) SetShareURL(baseURL url.URL, shareID string) {
+	baseURL.Path = fmt.Sprintf("/share/%s/call", shareID)
+	c.AudioURL = common.PtrTo(baseURL.String())
 }
 
 func Make(call *Call, dontStore bool) (*Call, error) {

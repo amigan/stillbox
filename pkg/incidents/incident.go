@@ -2,8 +2,11 @@ package incidents
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/url"
 	"strings"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
@@ -21,6 +24,13 @@ type Incident struct {
 	Location    jsontypes.Location `json:"location,omitempty"`
 	Metadata    jsontypes.Metadata `json:"metadata,omitempty"`
 	Calls       []IncidentCall     `json:"calls"`
+}
+
+func (inc *Incident) SetShareURL(bu url.URL, shareID string) {
+	bu.Path = fmt.Sprintf("/share/%s/call/", shareID)
+	for i := range inc.Calls {
+		inc.Calls[i].AudioURL = common.PtrTo(bu.String() + inc.Calls[i].ID.String())
+	}
 }
 
 func (inc *Incident) GetResourceName() string {
