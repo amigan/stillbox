@@ -97,6 +97,10 @@ func (c *Call) ShouldStore() bool {
 }
 
 func (c *Call) SetShareURL(baseURL url.URL, shareID string) {
+	if c.AudioURL != nil {
+		return
+	}
+
 	baseURL.Path = fmt.Sprintf("/share/%s/call", shareID)
 	c.AudioURL = common.PtrTo(baseURL.String())
 }

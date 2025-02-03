@@ -29,6 +29,9 @@ type Incident struct {
 func (inc *Incident) SetShareURL(bu url.URL, shareID string) {
 	bu.Path = fmt.Sprintf("/share/%s/call/", shareID)
 	for i := range inc.Calls {
+		if inc.Calls[i].AudioURL != nil {
+			continue
+		}
 		inc.Calls[i].AudioURL = common.PtrTo(bu.String() + inc.Calls[i].ID.String())
 	}
 }

@@ -74,6 +74,7 @@ func toAddCallParams(call *calls.Call) database.AddCallParams {
 		AudioName:   common.NilIfZero(call.AudioName),
 		AudioBlob:   call.Audio,
 		AudioType:   common.NilIfZero(call.AudioType),
+		AudioUrl:    call.AudioURL,
 		Duration:    call.Duration.MsInt32Ptr(),
 		Frequency:   call.Frequency,
 		Frequencies: call.Frequencies,
