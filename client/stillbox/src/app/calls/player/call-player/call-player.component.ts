@@ -30,7 +30,11 @@ export class CallPlayerComponent {
       this.playSub.unsubscribe();
     });
     this.playing = true;
-    this.au.src = this.callsSvc.callAudioURL(this.call.id);
+    if (this.call.audioURL != null) {
+      this.au.src = this.call.audioURL;
+    } else {
+      this.au.src = this.callsSvc.callAudioURL(this.call.id);
+    }
     this.au.load();
     this.au.play().then(null, (reason) => {
       this.playing = false;
