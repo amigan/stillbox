@@ -211,7 +211,7 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cookie.Secure {
-		cookie.Domain = r.Host
+		cookie.Domain = strings.Split(r.Host, ":")[0]
 	}
 	http.SetCookie(w, cookie)
 
@@ -271,7 +271,7 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   60 * 60 * 24 * 30, // one month
 	}
 
-	cookie.Domain = r.Host
+	cookie.Domain = strings.Split(r.Host, ":")[0]
 	if a.allowInsecureCookie(r) {
 		a.setInsecureCookie(cookie)
 	}
@@ -297,7 +297,7 @@ func (a *Auth) routeLogout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	}
 
-	cookie.Domain = r.Host
+	cookie.Domain = strings.Split(r.Host, ":")[0]
 	if a.allowInsecureCookie(r) {
 		cookie.Secure = true
 		cookie.SameSite = http.SameSiteNoneMode
