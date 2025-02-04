@@ -112,13 +112,11 @@ var Policy = &restrict.PolicyDefinition{
 			Parents:     []string{entities.RoleAdmin},
 		},
 		entities.RolePublic: {
-			/*
-				Grants: restrict.GrantsMap{
-					entities.ResourceShare: {
-						&restrict.Permission{Action: entities.ActionRead},
-					},
+			Grants: restrict.GrantsMap{
+				entities.ResourceShare: {
+					&restrict.Permission{Action: entities.ActionRead},
 				},
-			*/
+			},
 		},
 	},
 	PermissionPresets: restrict.PermissionPresets{

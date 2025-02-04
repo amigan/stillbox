@@ -48,6 +48,11 @@ func recToShare(share database.Share) *Share {
 }
 
 func (s *postgresStore) GetShare(ctx context.Context, id string) (*Share, error) {
+	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceShare), rbac.WithActions(entities.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
 	db := database.FromCtx(ctx)
 	rec, err := db.GetShare(ctx, id)
 	switch err {
