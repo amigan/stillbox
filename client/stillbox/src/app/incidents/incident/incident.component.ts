@@ -9,7 +9,7 @@ import {
   FormControl,
   FormsModule,
 } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -40,6 +40,7 @@ import { CallPlayerComponent } from '../../calls/player/call-player/call-player.
 import { FmtDatePipe } from '../incidents.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { Share } from '../../shares';
+import { ShareService } from '../../share/share.service';
 
 export interface EditDialogData {
   incID: string;
@@ -152,6 +153,7 @@ export class IncidentEditDialogComponent {
   styleUrl: './incident.component.scss',
 })
 export class IncidentComponent {
+  inShare = false;
   incPrime = new Subject<IncidentRecord>();
   inc$!: Observable<IncidentRecord>;
   @Input() share?: Share;
@@ -174,6 +176,7 @@ export class IncidentComponent {
 
   constructor(
     private route: ActivatedRoute,
+    private shareSvc: ShareService,
     private incSvc: IncidentsService,
     private location: Location,
   ) {}
@@ -181,6 +184,7 @@ export class IncidentComponent {
   saveIncName(ev: Event) {}
 
   ngOnInit() {
+    this.inShare = this.shareSvc.isInShare();
     let incOb: Observable<IncidentRecord>;
     if (this.route.component === this.constructor) {
       // loaded by route
