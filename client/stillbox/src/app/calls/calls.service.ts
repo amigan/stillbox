@@ -21,7 +21,7 @@ import {
   pure: true,
 })
 export class DatePipe implements PipeTransform {
-  transform(ts: string, args?: any): string {
+  transform(ts: string | Date, args?: any): string {
     const timestamp = new Date(ts);
     return timestamp.getMonth() + 1 + '/' + timestamp.getDate();
   }
@@ -33,11 +33,12 @@ export class DatePipe implements PipeTransform {
   pure: true,
 })
 export class TimePipe implements PipeTransform {
-  transform(ts: string, args?: any): string {
+  transform(ts: string | Date, haveSecond: boolean = false): string {
     const timestamp = new Date(ts);
     return timestamp.toLocaleTimeString(navigator.language, {
       hour: '2-digit',
       minute: '2-digit',
+      second: haveSecond ? '2-digit' : undefined,
       hourCycle: 'h23',
     });
   }

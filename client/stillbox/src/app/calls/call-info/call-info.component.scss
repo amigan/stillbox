@@ -1,0 +1,63 @@
+.callInfo {
+  margin: 0px 50px 50px 50px;
+  padding: 50px 50px 50px 50px;
+  display: flex;
+  flex-flow: column;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.call-heading {
+  display: flex;
+  margin-bottom: 20px;
+  flex: 0 0;
+  flex-wrap: wrap;
+}
+
+.cardHdr {
+  display: flex;
+  flex-flow: row wrap;
+  margin-bottom: 24px;
+}
+
+.field {
+  flex: 1 0;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.field-label {
+  font-weight: bolder;
+  flex-grow: 0;
+  padding-right: 5px;
+}
+.field-label::after {
+  content: ":";
+}
+
+.cardHdr h1 {
+  flex: 1 1;
+  margin: 0;
+}
+
+.cardHdr a {
+  flex: 0 0;
+  justify-content: flex-end;
+  align-content: center;
+  cursor: pointer;
+}
+
+form mat-form-field {
+  width: 60rem;
+  flex: 0 0;
+  display: flex;
+}
+
+.callRecord {
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+}

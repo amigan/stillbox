@@ -1,7 +1,15 @@
 <mat-card class="callInfo" appearance="outlined">
-  <div class="inc-heading">
-    <div class="field field-label">Time</div>
-    <div class="field field-data">{{ call.call_date }}</div>
+  <div class="cardHdr">
+    <h1>
+      {{ call | talkgroup: "alpha" | async }} &#64;
+      {{ call.call_date | grabDate }} {{ call.call_date | time: true }}
+    </h1>
+  </div>
+  <div class="call-heading">
+    <div class="field field-label">Talkgroup</div>
+    <div class="field field-data">{{ call | talkgroup: "name" | async }}</div>
+    <div class="field field-label">Group</div>
+    <div class="field field-data">{{ call | talkgroup: "group" | async }}</div>
   </div>
   <audio controls [src]="call.audioURL! | safe: 'resourceUrl'"></audio>
 </mat-card>
