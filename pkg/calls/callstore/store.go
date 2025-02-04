@@ -179,6 +179,7 @@ func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 		TalkgroupLabel: c.TGLabel,
 		TalkgroupGroup: c.TGGroup,
 		TGAlphaTag:     c.TGAlphaTag,
+		Transcript:     c.Transcript,
 	}, nil
 }
 

@@ -180,6 +180,7 @@ SELECT
 	tg_label,
 	tg_alpha_tag,
 	tg_group,
-	source
+	source,
+	transcript
 FROM calls
 WHERE id = @id;

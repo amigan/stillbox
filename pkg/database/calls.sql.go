@@ -181,7 +181,8 @@ SELECT
 	tg_label,
 	tg_alpha_tag,
 	tg_group,
-	source
+	source,
+	transcript
 FROM calls
 WHERE id = $1
 `
@@ -203,6 +204,7 @@ type GetCallRow struct {
 	TGAlphaTag  *string            `json:"tg_alpha_tag"`
 	TGGroup     *string            `json:"tg_group"`
 	Source      int                `json:"source"`
+	Transcript  *string            `json:"transcript"`
 }
 
 func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error) {
@@ -225,6 +227,7 @@ func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 		&i.TGAlphaTag,
 		&i.TGGroup,
 		&i.Source,
+		&i.Transcript,
 	)
 	return i, err
 }

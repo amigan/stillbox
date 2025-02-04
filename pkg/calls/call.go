@@ -80,6 +80,7 @@ type Call struct {
 	TalkgroupGroup *string       `json:"talkgroupGroup,omitempty" relayOut:"talkgroupGroup,omitempty"`
 	TalkgroupLabel *string       `json:"talkgroupLabel,omitempty" relayOut:"talkgroupLabel,omitempty"`
 	TGAlphaTag     *string       `json:"tg_name,omitempty" relayOut:"talkgroupTag,omitempty"`
+	Transcript     *string       `json:"transcript" relayOut:"transcript,omitempty"`
 
 	shouldStore bool `json:"-"`
 }
