@@ -1,9 +1,17 @@
 @let sh = share | async;
-@if (sh == null) {
-  <h1 class="error">Share invalid!</h1>
-} @else if (sh.type == "incident") {
-  <app-incident [incident]="sh"></app-incident>
-} @else if (sh.type == "call") {
-} @else {
-  <h1 class="error">Share type {{ sh.type }} unknown</h1>
+@switch (sh?.type) {
+  @case ("incident") {
+    <app-incident [share]="sh!"></app-incident>
+  }
+  @case ("call") {
+    <app-call-info [share]="sh!" player="true"></app-call-info>
+  }
+  @case (null) {
+    <div class="spinner">
+      <mat-spinner></mat-spinner>
+    </div>
+  }
+  @default {
+    <h1 class="error">Share type {{ sh?.type }} unknown</h1>
+  }
 }

@@ -6,6 +6,14 @@ import { environment } from '.././../environments/environment';
 import { TalkgroupService } from '../talkgroups/talkgroups.service';
 import { Talkgroup } from '../talkgroup';
 import { Share } from '../shares';
+import {
+  DomSanitizer,
+  SafeHtml,
+  SafeResourceUrl,
+  SafeScript,
+  SafeStyle,
+  SafeUrl,
+} from '@angular/platform-browser';
 
 @Pipe({
   name: 'grabDate',
@@ -43,7 +51,11 @@ export class TimePipe implements PipeTransform {
 export class TalkgroupPipe implements PipeTransform {
   constructor(private tgService: TalkgroupService) {}
 
-  transform(call: CallRecord, field: string, share: Share|null = null): Observable<string> {
+  transform(
+    call: CallRecord,
+    field: string,
+    share: Share | null = null,
+  ): Observable<string> {
     return this.tgService.getTalkgroup(call.system_id, call.tgid).pipe(
       map((tg: Talkgroup) => {
         switch (field) {
@@ -79,6 +91,50 @@ export class FixedPointPipe implements PipeTransform {
   transform(quant: number, divisor: number, places: number): string {
     const seconds = quant / divisor;
     return seconds.toFixed(places);
+  }
+}
+
+/**
+ * Sanitize HTML
+ */
+@Pipe({
+  name: 'safe',
+})
+export class SafePipe implements PipeTransform {
+  /**
+   * Pipe Constructor
+   *
+   * @param _sanitizer: DomSanitezer
+   */
+  // tslint:disable-next-line
+  constructor(protected _sanitizer: DomSanitizer) {}
+
+  /**
+   * Transform
+   *
+   * @param value: string
+   * @param type: string
+   */
+  transform(
+    value: string,
+    type: string,
+  ): SafeHtml | SafeStyle | SafeScript | SafeUrl | SafeResourceUrl {
+    switch (type) {
+      case 'html':
+        return this._sanitizer.bypassSecurityTrustHtml(value);
+      case 'style':
+        return this._sanitizer.bypassSecurityTrustStyle(value);
+      case 'script':
+        return this._sanitizer.bypassSecurityTrustScript(value);
+      case 'url':
+        return this._sanitizer.bypassSecurityTrustUrl(value);
+      case 'resourceUrl':
+        let res = this._sanitizer.bypassSecurityTrustResourceUrl(value);
+        console.log(res);
+        return res;
+      default:
+        return this._sanitizer.bypassSecurityTrustHtml(value);
+    }
   }
 }
 

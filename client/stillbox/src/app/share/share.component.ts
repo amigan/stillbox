@@ -5,16 +5,23 @@ import { ActivatedRoute } from '@angular/router';
 import { Observable, Subscription, switchMap } from 'rxjs';
 import { IncidentComponent } from '../incidents/incident/incident.component';
 import { AsyncPipe } from '@angular/common';
+import { CallInfoComponent } from '../calls/call-info/call-info.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-share',
-  imports: [AsyncPipe, IncidentComponent],
+  imports: [
+    AsyncPipe,
+    IncidentComponent,
+    CallInfoComponent,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './share.component.html',
   styleUrl: './share.component.scss',
 })
 export class ShareComponent {
   shareID!: string;
-  share!: Observable<Share | null>;
+  share!: Observable<Share>;
   constructor(
     private route: ActivatedRoute,
     private shareSvc: ShareService,

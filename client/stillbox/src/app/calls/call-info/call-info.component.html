@@ -1,0 +1,7 @@
+<mat-card class="callInfo" appearance="outlined">
+  <div class="inc-heading">
+    <div class="field field-label">Time</div>
+    <div class="field field-data">{{ call.call_date }}</div>
+  </div>
+  <audio controls [src]="call.audioURL! | safe: 'resourceUrl'"></audio>
+</mat-card>

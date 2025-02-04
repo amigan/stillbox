@@ -9,6 +9,7 @@ import {
   switchMap,
 } from 'rxjs';
 import { Talkgroup, TalkgroupUpdate, TGID } from '../talkgroup';
+import { Share } from '../shares';
 
 export interface Pagination {
   page: number;
@@ -54,7 +55,11 @@ export class TalkgroupService {
     return this.http.get<Talkgroup[]>('/api/talkgroup/');
   }
 
-  getTalkgroup(sys: number, tg: number): Observable<Talkgroup> {
+  getTalkgroup(
+    sys: number,
+    tg: number,
+    share: Share | null = null,
+  ): Observable<Talkgroup> {
     const key = this.tgKey(sys, tg);
     if (!this._getTalkgroup.get(key)) {
       let rs = new ReplaySubject<Talkgroup>();

@@ -154,7 +154,7 @@ export class IncidentEditDialogComponent {
 export class IncidentComponent {
   incPrime = new Subject<IncidentRecord>();
   inc$!: Observable<IncidentRecord>;
-  @Input() incident?: Share;
+  @Input() share?: Share;
   subscriptions: Subscription = new Subscription();
   dialog = inject(MatDialog);
   incID!: string;
@@ -187,11 +187,11 @@ export class IncidentComponent {
       this.incID = this.route.snapshot.paramMap.get('id')!;
       incOb = this.incSvc.getIncident(this.incID);
     } else {
-      if (!this.incident) {
+      if (!this.share) {
         return;
       }
-      this.incID = (this.incident.sharedItem as IncidentRecord).id;
-      incOb = new BehaviorSubject(this.incident.sharedItem as IncidentRecord);
+      this.incID = (this.share.sharedItem as IncidentRecord).id;
+      incOb = new BehaviorSubject(this.share.sharedItem as IncidentRecord);
     }
     this.inc$ = merge(incOb, this.incPrime).pipe(
       tap((inc) => {

@@ -76,13 +76,13 @@
     <ng-container matColumnDef="system">
       <th mat-header-cell *matHeaderCellDef>System</th>
       <td mat-cell *matCellDef="let call">
-        {{ call | talkgroup: "system":incident | async }}
+        {{ call | talkgroup: "system" : share | async }}
       </td>
     </ng-container>
     <ng-container matColumnDef="group">
       <th mat-header-cell *matHeaderCellDef>Group</th>
       <td mat-cell *matCellDef="let call">
-        {{ call | talkgroup: "group":incident | async }}
+        {{ call | talkgroup: "group" : share | async }}
       </td>
     </ng-container>
     <ng-container matColumnDef="talkgroup">
