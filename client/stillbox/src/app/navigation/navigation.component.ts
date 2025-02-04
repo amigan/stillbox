@@ -101,6 +101,11 @@ export class NavigationComponent {
       url: '/alerts',
       icon: 'notifications',
     },
+    {
+      name: 'Shares',
+      url: '/shares',
+      icon: 'share',
+    },
   ];
 
   toggleFilterPanel() {

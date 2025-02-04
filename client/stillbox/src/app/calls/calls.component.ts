@@ -11,7 +11,7 @@ import { PrefsService } from '../prefs/prefs.service';
 import { MatIconModule } from '@angular/material/icon';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import {
   CallsListParams,
@@ -115,9 +115,7 @@ export class CallsComponent {
 
   subscriptions = new Subscription();
   pageWindow = 0;
-  fetchCalls = new BehaviorSubject<CallsListParams>(
-    this.buildParams(this.curPage, this.curPage.pageIndex),
-  );
+  fetchCalls = new Subject<CallsListParams>();
 
   constructor(
     private callsSvc: CallsService,
@@ -180,6 +178,7 @@ export class CallsComponent {
   }
 
   setPage(p: PageEvent, force?: boolean) {
+    console.log("setpage")
     this.selection.clear();
     this.curPage = p;
     if (p && p!.pageSize != this.perPage) {
@@ -195,16 +194,19 @@ export class CallsComponent {
   }
 
   getCalls(p: PageEvent, force?: boolean) {
+    console.log("getcalls")
     const pageStart = p.pageIndex * p.pageSize;
     const serverPage = Math.floor(pageStart / reqPageSize) + 1;
     this.pageWindow = pageStart % reqPageSize;
     if (serverPage == this.currentServerPage && !force && this.currentSet) {
+      console.log("currentset");
       this.callsResult.next(
         this.callsResult
           ? this.currentSet.slice(this.pageWindow, this.pageWindow + p.pageSize)
           : [],
       );
     } else {
+      console.log("not currentset");
       this.currentServerPage = serverPage;
       this.fetchCalls.next(this.buildParams(p, serverPage));
     }
@@ -243,6 +245,7 @@ export class CallsComponent {
       this.fetchCalls
         .pipe(
           switchMap((params) => {
+            console.log("gc switchmap");
             return this.callsSvc.getCalls(params);
           }),
         )
