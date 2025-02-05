@@ -115,7 +115,9 @@ export class CallsComponent {
 
   subscriptions = new Subscription();
   pageWindow = 0;
-  fetchCalls = new Subject<CallsListParams>();
+  fetchCalls = new BehaviorSubject<CallsListParams>(
+    this.buildParams(this.curPage, this.curPage.pageIndex),
+  );
 
   constructor(
     private callsSvc: CallsService,
@@ -244,6 +246,7 @@ export class CallsComponent {
     this.subscriptions.add(
       this.fetchCalls
         .pipe(
+          debounceTime(500),
           switchMap((params) => {
             console.log("gc switchmap");
             return this.callsSvc.getCalls(params);
