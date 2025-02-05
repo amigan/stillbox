@@ -55,7 +55,7 @@ type Store interface {
 	// CallIn returns whether an incident is in an call
 	CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUID) (bool, error)
 
-	// TGsIn returns the talkgroups referenced by an incident as a map, primary for rbac use.
+	// TGsIn returns the talkgroups referenced by an incident as a map, primarily for rbac use.
 	TGsIn(ctx context.Context, inc uuid.UUID) (talkgroups.PresenceMap, error)
 }
 
