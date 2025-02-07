@@ -68,18 +68,18 @@ type Call struct {
 	AudioType      string        `json:"audioType,omitempty" relayOut:"audioType,omitempty"`
 	AudioURL       *string       `json:"audioURL,omitempty" relayOut:"audioURL,omitempty"`
 	Duration       CallDuration  `json:"duration,omitempty" relayOut:"duration,omitempty"`
-	DateTime       time.Time     `json:"call_date,omitempty" relayOut:"dateTime,omitempty"`
+	DateTime       time.Time     `json:"callDate,omitempty" relayOut:"dateTime,omitempty"`
 	Frequencies    []int         `json:"frequencies,omitempty" relayOut:"frequencies,omitempty"`
 	Frequency      int           `json:"frequency,omitempty" relayOut:"frequency,omitempty"`
 	Patches        []int         `json:"patches,omitempty" relayOut:"patches,omitempty"`
 	Source         int           `json:"source,omitempty" relayOut:"source,omitempty"`
-	System         int           `json:"system_id,omitempty" relayOut:"system,omitempty"`
+	System         int           `json:"systemId,omitempty" relayOut:"system,omitempty"`
 	Submitter      *users.UserID `json:"submitter,omitempty" relayOut:"submitter,omitempty"`
-	SystemLabel    string        `json:"system_name,omitempty" relayOut:"systemLabel,omitempty"`
+	SystemLabel    string        `json:"systemName,omitempty" relayOut:"systemLabel,omitempty"`
 	Talkgroup      int           `json:"tgid,omitempty" relayOut:"talkgroup,omitempty"`
 	TalkgroupGroup *string       `json:"talkgroupGroup,omitempty" relayOut:"talkgroupGroup,omitempty"`
 	TalkgroupLabel *string       `json:"talkgroupLabel,omitempty" relayOut:"talkgroupLabel,omitempty"`
-	TGAlphaTag     *string       `json:"tg_name,omitempty" relayOut:"talkgroupTag,omitempty"`
+	TGAlphaTag     *string       `json:"tgAlphaTag,omitempty" relayOut:"talkgroupTag,omitempty"`
 	Transcript     *string       `json:"transcript" relayOut:"transcript,omitempty"`
 
 	shouldStore bool `json:"-"`

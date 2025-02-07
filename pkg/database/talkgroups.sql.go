@@ -32,11 +32,11 @@ INSERT INTO talkgroups(
 `
 
 type AddLearnedTalkgroupParams struct {
-	SystemID int32   `json:"system_id"`
+	SystemID int32   `json:"systemId"`
 	TGID     int32   `json:"tgid"`
 	Name     *string `json:"name"`
-	AlphaTag *string `json:"alpha_tag"`
-	TGGroup  *string `json:"tg_group"`
+	AlphaTag *string `json:"alphaTag"`
+	TGGroup  *string `json:"tgGroup"`
 }
 
 func (q *Queries) AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error) {
@@ -202,7 +202,7 @@ AND NOT (tags @> ARRAY[$3])
 `
 
 type GetTalkgroupIDsByTagsRow struct {
-	SystemID int32 `json:"system_id"`
+	SystemID int32 `json:"systemId"`
 	TGID     int32 `json:"tgid"`
 }
 
@@ -511,9 +511,9 @@ FETCH NEXT $5 ROWS ONLY
 type GetTalkgroupsWithLearnedBySystemPParams struct {
 	System  int32   `json:"system"`
 	Filter  *string `json:"filter"`
-	OrderBy string  `json:"order_by"`
+	OrderBy string  `json:"orderBy"`
 	Offset  int32   `json:"offset"`
-	PerPage int32   `json:"per_page"`
+	PerPage int32   `json:"perPage"`
 }
 
 type GetTalkgroupsWithLearnedBySystemPRow struct {
@@ -611,9 +611,9 @@ FETCH NEXT $4 ROWS ONLY
 
 type GetTalkgroupsWithLearnedPParams struct {
 	Filter  *string `json:"filter"`
-	OrderBy string  `json:"order_by"`
+	OrderBy string  `json:"orderBy"`
 	Offset  int32   `json:"offset"`
-	PerPage int32   `json:"per_page"`
+	PerPage int32   `json:"perPage"`
 }
 
 type GetTalkgroupsWithLearnedPRow struct {
@@ -774,17 +774,17 @@ RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, t
 
 type UpdateTalkgroupParams struct {
 	Name       *string            `json:"name"`
-	AlphaTag   *string            `json:"alpha_tag"`
-	TGGroup    *string            `json:"tg_group"`
+	AlphaTag   *string            `json:"alphaTag"`
+	TGGroup    *string            `json:"tgGroup"`
 	Frequency  *int32             `json:"frequency"`
 	Metadata   jsontypes.Metadata `json:"metadata"`
 	Tags       []string           `json:"tags"`
 	Alert      *bool              `json:"alert"`
-	AlertRules rules.AlertRules   `json:"alert_rules"`
+	AlertRules rules.AlertRules   `json:"alertRules"`
 	Weight     *float32           `json:"weight"`
 	Learned    *bool              `json:"learned"`
 	ID         *int32             `json:"id"`
-	SystemID   *int32             `json:"system_id"`
+	SystemID   *int32             `json:"systemId"`
 	TGID       *int32             `json:"tgid"`
 }
 

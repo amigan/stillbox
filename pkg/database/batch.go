@@ -57,7 +57,7 @@ type StoreTGVersionBatchResults struct {
 
 type StoreTGVersionParams struct {
 	Submitter *int32 `json:"submitter"`
-	SystemID  int32  `json:"system_id"`
+	SystemID  int32  `json:"systemId"`
 	TGID      int32  `json:"tgid"`
 }
 
@@ -135,16 +135,16 @@ type UpsertTalkgroupBatchResults struct {
 }
 
 type UpsertTalkgroupParams struct {
-	SystemID   int32              `json:"system_id"`
+	SystemID   int32              `json:"systemId"`
 	TGID       int32              `json:"tgid"`
 	Name       *string            `json:"name"`
-	AlphaTag   *string            `json:"alpha_tag"`
-	TGGroup    *string            `json:"tg_group"`
+	AlphaTag   *string            `json:"alphaTag"`
+	TGGroup    *string            `json:"tgGroup"`
 	Frequency  *int32             `json:"frequency"`
 	Metadata   jsontypes.Metadata `json:"metadata"`
 	Tags       []string           `json:"tags"`
 	Alert      interface{}        `json:"alert"`
-	AlertRules rules.AlertRules   `json:"alert_rules"`
+	AlertRules rules.AlertRules   `json:"alertRules"`
 	Weight     pgtype.Numeric     `json:"weight"`
 	Learned    *bool              `json:"learned"`
 }

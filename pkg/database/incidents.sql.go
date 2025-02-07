@@ -83,8 +83,8 @@ type CreateIncidentParams struct {
 	Name        string             `json:"name"`
 	Owner       int                `json:"owner"`
 	Description *string            `json:"description"`
-	StartTime   pgtype.Timestamptz `json:"start_time"`
-	EndTime     pgtype.Timestamptz `json:"end_time"`
+	StartTime   pgtype.Timestamptz `json:"startTime"`
+	EndTime     pgtype.Timestamptz `json:"endTime"`
 	Location    []byte             `json:"location"`
 	Metadata    jsontypes.Metadata `json:"metadata"`
 }
@@ -206,16 +206,16 @@ ORDER BY ic.call_date ASC
 `
 
 type GetIncidentCallsRow struct {
-	CallID      uuid.UUID          `json:"call_id"`
-	CallDate    pgtype.Timestamptz `json:"call_date"`
+	CallID      uuid.UUID          `json:"callId"`
+	CallDate    pgtype.Timestamptz `json:"callDate"`
 	Duration    *int32             `json:"duration"`
-	SystemID    int                `json:"system_id"`
+	SystemID    int                `json:"systemId"`
 	TGID        int                `json:"tgid"`
 	Notes       []byte             `json:"notes"`
 	Submitter   *int32             `json:"submitter"`
-	AudioName   *string            `json:"audio_name"`
-	AudioType   *string            `json:"audio_type"`
-	AudioUrl    *string            `json:"audio_url"`
+	AudioName   *string            `json:"audioName"`
+	AudioType   *string            `json:"audioType"`
+	AudioUrl    *string            `json:"audioUrl"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	Patches     []int              `json:"patches"`
@@ -327,7 +327,7 @@ type ListIncidentsPParams struct {
 	Filter    *string            `json:"filter"`
 	Direction string             `json:"direction"`
 	Offset    int32              `json:"offset"`
-	PerPage   int32              `json:"per_page"`
+	PerPage   int32              `json:"perPage"`
 }
 
 type ListIncidentsPRow struct {
@@ -335,11 +335,11 @@ type ListIncidentsPRow struct {
 	Name        string             `json:"name"`
 	Owner       int                `json:"owner"`
 	Description *string            `json:"description"`
-	StartTime   pgtype.Timestamptz `json:"start_time"`
-	EndTime     pgtype.Timestamptz `json:"end_time"`
+	StartTime   pgtype.Timestamptz `json:"startTime"`
+	EndTime     pgtype.Timestamptz `json:"endTime"`
 	Location    []byte             `json:"location"`
 	Metadata    jsontypes.Metadata `json:"metadata"`
-	CallsCount  int64              `json:"calls_count"`
+	CallsCount  int64              `json:"callsCount"`
 }
 
 func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) ([]ListIncidentsPRow, error) {
@@ -417,8 +417,8 @@ RETURNING id, name, owner, description, start_time, end_time, location, metadata
 type UpdateIncidentParams struct {
 	Name        *string            `json:"name"`
 	Description *string            `json:"description"`
-	StartTime   pgtype.Timestamptz `json:"start_time"`
-	EndTime     pgtype.Timestamptz `json:"end_time"`
+	StartTime   pgtype.Timestamptz `json:"startTime"`
+	EndTime     pgtype.Timestamptz `json:"endTime"`
 	Location    []byte             `json:"location"`
 	Metadata    jsontypes.Metadata `json:"metadata"`
 	ID          uuid.UUID          `json:"id"`

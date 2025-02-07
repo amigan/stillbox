@@ -25,9 +25,9 @@ INSERT INTO shares (
 
 type CreateShareParams struct {
 	ID         string             `json:"id"`
-	EntityType string             `json:"entity_type"`
-	EntityID   uuid.UUID          `json:"entity_id"`
-	EntityDate pgtype.Timestamptz `json:"entity_date"`
+	EntityType string             `json:"entityType"`
+	EntityID   uuid.UUID          `json:"entityId"`
+	EntityDate pgtype.Timestamptz `json:"entityDate"`
 	Owner      int                `json:"owner"`
 	Expiration pgtype.Timestamptz `json:"expiration"`
 }
