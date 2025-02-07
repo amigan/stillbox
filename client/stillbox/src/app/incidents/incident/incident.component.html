@@ -7,18 +7,22 @@
         ><mat-icon>playlist_play</mat-icon></a
       >
     </h1>
-      @if (share == null) {
-    <button mat-icon-button (click)="editIncident(incID)">
-      <mat-icon>edit</mat-icon>
-    </button>
-    <button mat-icon-button [matMenuTriggerFor]="moreMenu">
-      <mat-icon>more_vert</mat-icon>
-    </button>
-    <mat-menu #moreMenu="matMenu">
-      <button class="deleteItem" mat-menu-item (click)="deleteIncident(incID)">
-        Delete
+    @if (share == null) {
+      <button mat-icon-button (click)="editIncident(incID)">
+        <mat-icon>edit</mat-icon>
       </button>
-    </mat-menu>
+      <button mat-icon-button [matMenuTriggerFor]="moreMenu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #moreMenu="matMenu">
+        <button
+          class="deleteItem"
+          mat-menu-item
+          (click)="deleteIncident(incID)"
+        >
+          Delete
+        </button>
+      </mat-menu>
     }
   </div>
   <div class="inc-heading">

@@ -12,6 +12,7 @@ import {
 import { Talkgroup, TalkgroupUpdate, TGID } from '../talkgroup';
 import { Share } from '../shares';
 import { ShareService } from '../share/share.service';
+import { AuthService } from '../login/auth.service';
 
 export interface Pagination {
   page: number;
@@ -31,9 +32,13 @@ export class TalkgroupService {
   private readonly _getTalkgroup = new Map<string, ReplaySubject<Talkgroup>>();
   private tgs$: Observable<Talkgroup[]>;
   private tags$!: Observable<string[]>;
-  private fetchAll = new Subject<Share|null>();
+  private fetchAll = new ReplaySubject<Share | null>();
   private subscriptions = new Subscription();
-  constructor(private http: HttpClient, private shareSvc: ShareService) {
+  constructor(
+    private http: HttpClient,
+    private shareSvc: ShareService,
+    private authSvc: AuthService,
+  ) {
     this.tgs$ = this.fetchAll.pipe(
       switchMap((share) => this.getTalkgroups(share)),
       shareReplay(),
@@ -43,16 +48,17 @@ export class TalkgroupService {
       shareReplay(),
     );
     let sh = this.shareSvc.inShare();
-    console.log(sh);
     if (sh) {
       this.shareSvc.getShare(sh).subscribe(this.fetchAll);
     } else {
-      this.fetchAll.next(null);
+      if (this.authSvc.loggedIn) {
+        this.fetchAll.next(null);
+      }
     }
     this.fillTgMap();
   }
 
-  setShare(share: Share|null) {
+  setShare(share: Share | null) {
     this.fetchAll.next(share);
   }
 
@@ -64,8 +70,10 @@ export class TalkgroupService {
     return this.http.get<string[]>('/api/talkgroup/tags');
   }
 
-  getTalkgroups(share: Share|null): Observable<Talkgroup[]> {
-    return this.http.get<Talkgroup[]>(share ? `/share/${share.id}/talkgroups` : '/api/talkgroup/');
+  getTalkgroups(share: Share | null): Observable<Talkgroup[]> {
+    return this.http.get<Talkgroup[]>(
+      share ? `/share/${share.id}/talkgroups` : '/api/talkgroup/',
+    );
   }
 
   getTalkgroup(

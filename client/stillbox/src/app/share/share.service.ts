@@ -10,10 +10,14 @@ import { ActivatedRoute, Router } from '@angular/router';
   providedIn: 'root',
 })
 export class ShareService {
-  constructor(private http: HttpClient, private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private route: ActivatedRoute,
+  ) {}
 
-  inShare(): string|null {
-    if(this.router.url.startsWith('/s/')) {
+  inShare(): string | null {
+    if (this.router.url.startsWith('/s/')) {
       return this.route.snapshot.paramMap.get('id');
     }
 

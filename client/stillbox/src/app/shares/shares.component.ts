@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-shares',
   imports: [],
   templateUrl: './shares.component.html',
-  styleUrl: './shares.component.scss'
+  styleUrl: './shares.component.scss',
 })
-export class SharesComponent {
-
-}
+export class SharesComponent {}

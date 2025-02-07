@@ -158,7 +158,6 @@ export class TalkgroupRecordComponent {
       .getTalkgroup(Number(this.tgid.sys), Number(this.tgid.tg))
       .pipe(
         tap((tg) => {
-          console.log('tap run');
           tg.alert_rules = tg.alert_rules
             ? tg.alert_rules.map((x) => Object.assign(new AlertRule(), x))
             : [];
