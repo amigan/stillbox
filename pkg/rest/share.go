@@ -98,7 +98,7 @@ func (s *api) respondShareHandler(ie EntityFunc) ShareHandlerFunc {
 		}
 
 		sRes := shareResponse{
-			ID:         id,
+			ID:         share.ID,
 			Type:       share.Type,
 			SharedItem: res,
 		}
