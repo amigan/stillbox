@@ -57,19 +57,19 @@ export class TalkgroupPipe implements PipeTransform {
     field: string,
     share: Share | null = null,
   ): Observable<string> {
-    return this.tgService.getTalkgroup(call.system_id, call.tgid).pipe(
+    return this.tgService.getTalkgroup(call.systemId, call.tgid).pipe(
       map((tg: Talkgroup) => {
         switch (field) {
           case 'alpha': {
-            return tg.alpha_tag ?? call.tgid;
+            return tg.alphaTag ?? call.tgid;
             break;
           }
           case 'group': {
-            return tg.tg_group ?? '\u2014';
+            return tg.tgGroup ?? '\u2014';
             break;
           }
           case 'system': {
-            return tg.system?.name ?? tg.system_id.toString();
+            return tg.system?.name ?? tg.systemId.toString();
           }
           default: {
             return tg.name ?? '\u2014';

@@ -90,10 +90,10 @@ export class TalkgroupService {
   }
 
   putTalkgroup(tu: TalkgroupUpdate): Observable<Talkgroup> {
-    let tgid = this.tgKey(tu.system_id, tu.tgid);
+    let tgid = this.tgKey(tu.systemId, tu.tgid);
 
     return this.http
-      .put<Talkgroup>(`/api/talkgroup/${tu.system_id}/${tu.tgid}`, tu)
+      .put<Talkgroup>(`/api/talkgroup/${tu.systemId}/${tu.tgid}`, tu)
       .pipe(
         switchMap((tg) => {
           let tObs = this._getTalkgroup.get(tgid);
@@ -128,7 +128,7 @@ export class TalkgroupService {
     this.subscriptions.add(
       this.tgs$.subscribe((tgs) => {
         tgs.forEach((tg) => {
-          let tgid = this.tgKey(tg.system_id, tg.tgid);
+          let tgid = this.tgKey(tg.systemId, tg.tgid);
           const rs = this._getTalkgroup.get(tgid);
           if (rs) {
             (rs as ReplaySubject<Talkgroup>).next(tg);

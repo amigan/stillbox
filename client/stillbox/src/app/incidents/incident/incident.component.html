@@ -75,13 +75,13 @@
     <ng-container matColumnDef="date">
       <th mat-header-cell *matHeaderCellDef>Date</th>
       <td mat-cell *matCellDef="let call">
-        {{ call.call_date | grabDate }}
+        {{ call.callDate | grabDate }}
       </td>
     </ng-container>
     <ng-container matColumnDef="time">
       <th mat-header-cell *matHeaderCellDef>Time</th>
-      <td [title]="call.call_date" mat-cell *matCellDef="let call">
-        {{ call.call_date | time }}
+      <td [title]="call.callDate" mat-cell *matCellDef="let call">
+        {{ call.callDate | time }}
       </td>
     </ng-container>
     <ng-container matColumnDef="system">
