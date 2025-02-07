@@ -3,7 +3,12 @@
   <div class="cardHdr">
     <h1>
       {{ inc?.name }}
-      <a [href]="'/api/incident/' + incID + '.m3u'"
+      <a
+        [href]="
+          share
+            ? '/share/' + share.id + '/m3u'
+            : '/api/incident/' + incID + '.m3u'
+        "
         ><mat-icon>playlist_play</mat-icon></a
       >
     </h1>
