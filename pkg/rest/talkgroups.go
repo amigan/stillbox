@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/database"
@@ -180,6 +181,14 @@ func (tga *talkgroupAPI) getTGsShareRoute(_ ID, w http.ResponseWriter, r *http.R
 	for id := range tgIDs {
 		idSl = append(idSl, id)
 	}
+
+	slices.SortFunc(idSl, func(a, b talkgroups.ID) int {
+		if d := int(a.System) - int(b.System); d != 0 {
+			return d
+		}
+
+		return int(a.Talkgroup) - int(b.Talkgroup)
+	})
 
 	tgRes, err := tgs.TGs(ctx, idSl)
 	if err != nil {
