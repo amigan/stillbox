@@ -7,7 +7,7 @@
         ><mat-icon>playlist_play</mat-icon></a
       >
     </h1>
-      @if (!inShare) {
+      @if (share == null) {
     <button mat-icon-button (click)="editIncident(incID)">
       <mat-icon>edit</mat-icon>
     </button>

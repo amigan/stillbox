@@ -27,15 +27,24 @@ export interface TalkgroupsPaginated {
 })
 export class TalkgroupService {
   private readonly _getTalkgroup = new Map<string, ReplaySubject<Talkgroup>>();
-  private tgs$!: Observable<Talkgroup[]>;
+  private tgs$: Observable<Talkgroup[]>;
   private tags$!: Observable<string[]>;
-  private fetchAll = new BehaviorSubject<'fetch'>('fetch');
+  private fetchAll = new BehaviorSubject<Share|null>(null);
   private subscriptions = new Subscription();
   constructor(private http: HttpClient) {
+    this.tgs$ = this.fetchAll.pipe(
+      switchMap((share) => this.getTalkgroups(share)),
+      shareReplay(),
+    );
     this.tags$ = this.fetchAll.pipe(
       switchMap(() => this.getAllTags()),
       shareReplay(),
     );
+    this.fillTgMap();
+  }
+
+  setShare(share: Share) {
+    this.fetchAll.next(share);
   }
 
   ngOnDestroy() {
@@ -46,8 +55,8 @@ export class TalkgroupService {
     return this.http.get<string[]>('/api/talkgroup/tags');
   }
 
-  getTalkgroups(share: Share | null): Observable<Talkgroup[]> {
-    return this.http.get<Talkgroup[]>('/api/talkgroup/');
+  getTalkgroups(share: Share|null): Observable<Talkgroup[]> {
+    return this.http.get<Talkgroup[]>(share ? `/share/${share.id}/talkgroups` : '/api/talkgroup/');
   }
 
   getTalkgroup(
@@ -55,9 +64,6 @@ export class TalkgroupService {
     tg: number,
     share: Share | null = null,
   ): Observable<Talkgroup> {
-    if (this._getTalkgroup.size < 1) {
-      this.fillTgMap(share);
-    }
     const key = this.tgKey(sys, tg);
     if (!this._getTalkgroup.get(key)) {
       let rs = new ReplaySubject<Talkgroup>();
@@ -101,11 +107,7 @@ export class TalkgroupService {
     return this.http.post<TalkgroupsPaginated>('/api/talkgroup/', pagination);
   }
 
-  fillTgMap(share: Share | null) {
-    this.tgs$ = this.fetchAll.pipe(
-      switchMap(() => this.getTalkgroups(share)),
-      shareReplay(),
-    );
+  fillTgMap() {
     this.subscriptions.add(
       this.tgs$.subscribe((tgs) => {
         tgs.forEach((tg) => {
