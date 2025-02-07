@@ -5,11 +5,13 @@ import {
   Observable,
   ReplaySubject,
   shareReplay,
+  Subject,
   Subscription,
   switchMap,
 } from 'rxjs';
 import { Talkgroup, TalkgroupUpdate, TGID } from '../talkgroup';
 import { Share } from '../shares';
+import { ShareService } from '../share/share.service';
 
 export interface Pagination {
   page: number;
@@ -29,9 +31,9 @@ export class TalkgroupService {
   private readonly _getTalkgroup = new Map<string, ReplaySubject<Talkgroup>>();
   private tgs$: Observable<Talkgroup[]>;
   private tags$!: Observable<string[]>;
-  private fetchAll = new BehaviorSubject<Share|null>(null);
+  private fetchAll = new Subject<Share|null>();
   private subscriptions = new Subscription();
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private shareSvc: ShareService) {
     this.tgs$ = this.fetchAll.pipe(
       switchMap((share) => this.getTalkgroups(share)),
       shareReplay(),
@@ -40,10 +42,17 @@ export class TalkgroupService {
       switchMap(() => this.getAllTags()),
       shareReplay(),
     );
+    let sh = this.shareSvc.inShare();
+    console.log(sh);
+    if (sh) {
+      this.shareSvc.getShare(sh).subscribe(this.fetchAll);
+    } else {
+      this.fetchAll.next(null);
+    }
     this.fillTgMap();
   }
 
-  setShare(share: Share) {
+  setShare(share: Share|null) {
     this.fetchAll.next(share);
   }
 

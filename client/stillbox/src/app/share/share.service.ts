@@ -4,12 +4,21 @@ import { map, Observable, switchMap } from 'rxjs';
 import { IncidentRecord } from '../incidents';
 import { CallRecord } from '../calls';
 import { Share, ShareType } from '../shares';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ShareService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router, private route: ActivatedRoute) {}
+
+  inShare(): string|null {
+    if(this.router.url.startsWith('/s/')) {
+      return this.route.snapshot.paramMap.get('id');
+    }
+
+    return null;
+  }
 
   getShare(id: string): Observable<Share> {
     return this.http.get<Share>(`/share/${id}`);
