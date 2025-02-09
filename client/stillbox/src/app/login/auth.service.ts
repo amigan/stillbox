@@ -1,4 +1,11 @@
-import { Injectable, signal, computed, effect, inject, DestroyRef } from '@angular/core';
+import {
+  Injectable,
+  signal,
+  computed,
+  effect,
+  inject,
+  DestroyRef,
+} from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
@@ -52,11 +59,11 @@ export class AuthService {
       .pipe(takeUntilDestroyed(this.destroyed))
       .subscribe({
         next: (res) => {
-            let state = <AuthState>{
-              user: username,
-              token: res.jwt,
-              is_auth: true,
-            };
+          let state = <AuthState>{
+            user: username,
+            token: res.jwt,
+            is_auth: true,
+          };
           this._state.set(state);
           this.loginFailed.update(() => false);
           this._router.navigateByUrl('/');
@@ -68,25 +75,17 @@ export class AuthService {
   }
 
   _clearState() {
-this._state.update((state) => {
-            state.is_auth = false;
-            state.token = null;
-            return state;
-          });
-
+    this._state.set(<AuthState>{});
   }
 
   logout() {
-    console.log("logout!");
-    this.http
-      .get('/api/logout', { withCredentials: true})
-      .subscribe({
-        next: (event) => {
-          this._clearState();
-                },
+    this.http.get('/api/logout', { withCredentials: true }).subscribe({
+      next: (event) => {
+        this._clearState();
+      },
       error: (err) => {
-          this._clearState();
-      }
+        this._clearState();
+      },
     });
     this._router.navigateByUrl('/login');
   }
@@ -97,12 +96,14 @@ this._state.update((state) => {
       .pipe(
         tap((event) => {
           if (event.status == 200) {
+            let ost = this._state();
             let tok = event.body?.jwt.toString();
-            this._state.update((state) => {
-              state.is_auth = true;
-              state.token = tok ? tok : null;
-              return state;
-            });
+            let state = <AuthState>{
+              user: ost.user,
+              token: tok ? tok : null,
+              is_auth: true,
+            };
+            this._state.set(state);
           }
         }),
       );
