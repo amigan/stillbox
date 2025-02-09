@@ -75,7 +75,10 @@ export class AuthService {
   }
 
   _clearState() {
-    this._state.set(<AuthState>{});
+    this._state.set(<AuthState>{
+      is_auth: false,
+      token: null,
+    });
   }
 
   logout() {
