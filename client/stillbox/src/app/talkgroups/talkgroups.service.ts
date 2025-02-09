@@ -59,7 +59,9 @@ export class TalkgroupService {
   }
 
   setShare(share: Share | null) {
-    this.fetchAll.next(share);
+    if (!this.authSvc.isAuth() && share !== null) {
+      this.fetchAll.next(share);
+    }
   }
 
   ngOnDestroy() {
