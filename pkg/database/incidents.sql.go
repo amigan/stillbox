@@ -61,6 +61,7 @@ INSERT INTO incidents (
 	name,
 	owner,
 	description,
+	created_at,
 	start_time,
 	end_time,
 	location,
@@ -70,12 +71,13 @@ INSERT INTO incidents (
 	$2,
 	$3,
 	$4,
+	NOW(),
 	$5,
 	$6,
 	$7,
 	$8
 )
-RETURNING id, name, owner, description, start_time, end_time, location, metadata
+RETURNING id, name, owner, description, created_at, start_time, end_time, location, metadata
 `
 
 type CreateIncidentParams struct {
@@ -106,6 +108,7 @@ func (q *Queries) CreateIncident(ctx context.Context, arg CreateIncidentParams) 
 		&i.Name,
 		&i.Owner,
 		&i.Description,
+		&i.CreatedAt,
 		&i.StartTime,
 		&i.EndTime,
 		&i.Location,
@@ -129,6 +132,7 @@ SELECT
 	i.name,
 	i.owner,
 	i.description,
+	i.created_at,
 	i.start_time,
 	i.end_time,
 	i.location,
@@ -145,6 +149,7 @@ func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (Incident, erro
 		&i.Name,
 		&i.Owner,
 		&i.Description,
+		&i.CreatedAt,
 		&i.StartTime,
 		&i.EndTime,
 		&i.Location,
@@ -297,6 +302,7 @@ SELECT
 	i.name,
 	i.owner,
 	i.description,
+	i.created_at,
 	i.start_time,
 	i.end_time,
 	i.location,
@@ -335,6 +341,7 @@ type ListIncidentsPRow struct {
 	Name        string             `json:"name"`
 	Owner       int                `json:"owner"`
 	Description *string            `json:"description"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
 	StartTime   pgtype.Timestamptz `json:"startTime"`
 	EndTime     pgtype.Timestamptz `json:"endTime"`
 	Location    []byte             `json:"location"`
@@ -363,6 +370,7 @@ func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) 
 			&i.Name,
 			&i.Owner,
 			&i.Description,
+			&i.CreatedAt,
 			&i.StartTime,
 			&i.EndTime,
 			&i.Location,
@@ -411,7 +419,7 @@ SET
 	metadata = COALESCE($6, metadata)
 WHERE
 	id = $7
-RETURNING id, name, owner, description, start_time, end_time, location, metadata
+RETURNING id, name, owner, description, created_at, start_time, end_time, location, metadata
 `
 
 type UpdateIncidentParams struct {
@@ -440,6 +448,7 @@ func (q *Queries) UpdateIncident(ctx context.Context, arg UpdateIncidentParams) 
 		&i.Name,
 		&i.Owner,
 		&i.Description,
+		&i.CreatedAt,
 		&i.StartTime,
 		&i.EndTime,
 		&i.Location,

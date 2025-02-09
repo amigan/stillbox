@@ -19,6 +19,7 @@ type Incident struct {
 	Owner       users.UserID       `json:"owner"`
 	Name        string             `json:"name"`
 	Description *string            `json:"description,omitempty"`
+	CreatedAt   jsontypes.Time     `json:"createdAt"`
 	StartTime   *jsontypes.Time    `json:"startTime,omitempty"`
 	EndTime     *jsontypes.Time    `json:"endTime,omitempty"`
 	Location    jsontypes.Location `json:"location,omitempty"`

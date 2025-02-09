@@ -60,6 +60,7 @@ type Incident struct {
 	Name        string             `json:"name,omitempty"`
 	Owner       int                `json:"owner,omitempty"`
 	Description *string            `json:"description,omitempty"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt,omitempty"`
 	StartTime   pgtype.Timestamptz `json:"startTime,omitempty"`
 	EndTime     pgtype.Timestamptz `json:"endTime,omitempty"`
 	Location    []byte             `json:"location,omitempty"`

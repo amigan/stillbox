@@ -143,6 +143,7 @@ CREATE TABLE IF NOT EXISTS incidents(
 	name TEXT NOT NULL,
 	owner INTEGER NOT NULL,
 	description TEXT,
+	created_at TIMESTAMPTZ,
 	start_time TIMESTAMPTZ,
 	end_time TIMESTAMPTZ,
 	location JSONB,
