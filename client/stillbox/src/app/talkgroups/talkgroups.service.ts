@@ -51,7 +51,7 @@ export class TalkgroupService {
     if (sh) {
       this.shareSvc.getShare(sh).subscribe(this.fetchAll);
     } else {
-      if (this.authSvc.loggedIn) {
+      if (this.authSvc.isAuth()) {
         this.fetchAll.next(null);
       }
     }

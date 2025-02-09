@@ -29,7 +29,7 @@ export function authIntercept(
   next: HttpHandlerFn,
 ): Observable<HttpEvent<unknown>> {
   let authSvc: AuthService = inject(AuthService);
-  if (authSvc.loggedIn) {
+  if (authSvc.isAuth()) {
     req = req.clone({
       setHeaders: {
         Authorization: `Bearer ${authSvc.getToken()}`,
