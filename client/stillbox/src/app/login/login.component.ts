@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../login/auth.service';
 import { catchError, of, Subscription } from 'rxjs';
@@ -17,31 +17,9 @@ export class LoginComponent {
   router: Router = inject(Router);
   username: string = '';
   password: string = '';
-  failed: boolean = false;
-  private subscriptions = new Subscription();
+  failed = this.apiService.loginFailed;
 
   onSubmit() {
-    this.failed = false;
-    this.subscriptions.add(
-      this.apiService
-        .login(this.username, this.password)
-        .pipe(
-          catchError(() => {
-            this.failed = true;
-            return of(null);
-          }),
-        )
-        .subscribe((event) => {
-          if (event?.status == 200) {
-            this.router.navigateByUrl('/');
-          } else {
-            this.failed = true;
-          }
-        }),
-    );
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.unsubscribe();
+    this.apiService.login(this.username, this.password);
   }
 }

@@ -28,7 +28,7 @@
       <button class="login sbButton" (click)="onSubmit()">Login</button>
     </div>
   </form>
-  @if (failed) {
+  @if (failed()) {
     <div role="alert">
       <span>Login Failed!</span>
     </div>

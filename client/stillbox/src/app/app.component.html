@@ -8,7 +8,7 @@
       </div>
       <div class="centerNav"></div>
       <div class="rightNav">
-        @if (auth.loggedIn) {
+        @if (auth.isAuth()) {
           <button class="ybtn sbButton">
             <a (click)="logout()" class="logout">Logout</a>
           </button>
@@ -19,7 +19,7 @@
 </header>
 
 <div class="container">
-  @if (auth.loggedIn) {
+  @if (auth.isAuth()) {
     <app-navigation [events]="toggleNavSubject.asObservable()"></app-navigation>
   } @else {
     <div class="content">
