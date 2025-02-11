@@ -1924,6 +1924,122 @@ func (_c *Store_GetShare_Call) RunAndReturn(run func(context.Context, string) (d
 	return _c
 }
 
+// GetSharesP provides a mock function with given fields: ctx, arg
+func (_m *Store) GetSharesP(ctx context.Context, arg database.GetSharesPParams) ([]database.Share, error) {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSharesP")
+	}
+
+	var r0 []database.Share
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetSharesPParams) ([]database.Share, error)); ok {
+		return rf(ctx, arg)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetSharesPParams) []database.Share); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.Share)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, database.GetSharesPParams) error); ok {
+		r1 = rf(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetSharesP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSharesP'
+type Store_GetSharesP_Call struct {
+	*mock.Call
+}
+
+// GetSharesP is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.GetSharesPParams
+func (_e *Store_Expecter) GetSharesP(ctx interface{}, arg interface{}) *Store_GetSharesP_Call {
+	return &Store_GetSharesP_Call{Call: _e.mock.On("GetSharesP", ctx, arg)}
+}
+
+func (_c *Store_GetSharesP_Call) Run(run func(ctx context.Context, arg database.GetSharesPParams)) *Store_GetSharesP_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(database.GetSharesPParams))
+	})
+	return _c
+}
+
+func (_c *Store_GetSharesP_Call) Return(_a0 []database.Share, _a1 error) *Store_GetSharesP_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetSharesP_Call) RunAndReturn(run func(context.Context, database.GetSharesPParams) ([]database.Share, error)) *Store_GetSharesP_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetSharesPCount provides a mock function with given fields: ctx, owner
+func (_m *Store) GetSharesPCount(ctx context.Context, owner *int32) (int64, error) {
+	ret := _m.Called(ctx, owner)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSharesPCount")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *int32) (int64, error)); ok {
+		return rf(ctx, owner)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *int32) int64); ok {
+		r0 = rf(ctx, owner)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *int32) error); ok {
+		r1 = rf(ctx, owner)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetSharesPCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSharesPCount'
+type Store_GetSharesPCount_Call struct {
+	*mock.Call
+}
+
+// GetSharesPCount is a helper method to define mock.On call
+//   - ctx context.Context
+//   - owner *int32
+func (_e *Store_Expecter) GetSharesPCount(ctx interface{}, owner interface{}) *Store_GetSharesPCount_Call {
+	return &Store_GetSharesPCount_Call{Call: _e.mock.On("GetSharesPCount", ctx, owner)}
+}
+
+func (_c *Store_GetSharesPCount_Call) Run(run func(ctx context.Context, owner *int32)) *Store_GetSharesPCount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*int32))
+	})
+	return _c
+}
+
+func (_c *Store_GetSharesPCount_Call) Return(_a0 int64, _a1 error) *Store_GetSharesPCount_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetSharesPCount_Call) RunAndReturn(run func(context.Context, *int32) (int64, error)) *Store_GetSharesPCount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetSystemName provides a mock function with given fields: ctx, systemID
 func (_m *Store) GetSystemName(ctx context.Context, systemID int) (string, error) {
 	ret := _m.Called(ctx, systemID)

@@ -3,7 +3,9 @@ package shares
 import (
 	"context"
 	"errors"
+	"fmt"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac"
@@ -12,12 +14,20 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+type SharesParams struct {
+	common.Pagination
+	Direction *common.SortDirection `json:"dir"`
+}
+
 type Shares interface {
 	// NewShare creates a new share.
 	NewShare(ctx context.Context, sh CreateShareParams) (*Share, error)
 
-	// Share retreives a share record.
+	// Share retrieves a share record.
 	GetShare(ctx context.Context, id string) (*Share, error)
+
+	// Shares retrieves shares visible by the context Subject.
+	Shares(ctx context.Context, p SharesParams) (shares []*Share, totalCount int, err error)
 
 	// Create stores a new share record.
 	Create(ctx context.Context, share *Share) error
@@ -96,6 +106,52 @@ func (s *postgresStore) Delete(ctx context.Context, id string) error {
 	}
 
 	return database.FromCtx(ctx).DeleteShare(ctx, id)
+}
+
+func (s *postgresStore) Shares(ctx context.Context, p SharesParams) (shares []*Share, totalCount int, err error) {
+	sub := entities.SubjectFrom(ctx)
+
+	// ersatz RBAC
+	owner := common.PtrTo(int32(-1)) // invalid UID
+	switch s := sub.(type) {
+	case *users.User:
+		if !s.IsAdmin {
+			owner = s.ID.Int32Ptr()
+		} else {
+			owner = nil
+		}
+	case *entities.SystemServiceSubject:
+		owner = nil
+	default:
+		return nil, 0, rbac.ErrAccessDenied(rbac.ErrNotAuthorized)
+	}
+
+	db := database.FromCtx(ctx)
+
+	count, err := db.GetSharesPCount(ctx, owner)
+	if err != nil {
+		return nil, 0, fmt.Errorf("shares count: %w", err)
+	}
+
+	offset, perPage := p.Pagination.OffsetPerPage(100)
+	dbParam := database.GetSharesPParams{
+		Owner:     owner,
+		Direction: p.Direction.DirString(common.DirAsc),
+		Offset:    offset,
+		PerPage:   perPage,
+	}
+
+	shs, err := db.GetSharesP(ctx, dbParam)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	shares = make([]*Share, 0, len(shs))
+	for _, v := range shs {
+		shares = append(shares, recToShare(v))
+	}
+
+	return shares, int(count), nil
 }
 
 func (s *postgresStore) Prune(ctx context.Context) error {

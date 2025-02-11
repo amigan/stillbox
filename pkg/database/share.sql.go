@@ -79,6 +79,79 @@ func (q *Queries) GetShare(ctx context.Context, id string) (Share, error) {
 	return i, err
 }
 
+const getSharesP = `-- name: GetSharesP :many
+SELECT
+	s.id,
+	s.entity_type,
+	s.entity_id,
+	s.entity_date,
+	s.owner,
+	s.expiration
+FROM shares s
+WHERE
+CASE WHEN $1::INTEGER IS NOT NULL THEN
+	s.owner = $1 ELSE TRUE END
+ORDER BY
+CASE WHEN $2::TEXT = 'asc' THEN s.entity_date END ASC,
+CASE WHEN $2::TEXT = 'desc' THEN s.entity_date END DESC
+OFFSET $3 ROWS
+FETCH NEXT $4 ROWS ONLY
+`
+
+type GetSharesPParams struct {
+	Owner     *int32 `json:"owner"`
+	Direction string `json:"direction"`
+	Offset    int32  `json:"offset"`
+	PerPage   int32  `json:"perPage"`
+}
+
+func (q *Queries) GetSharesP(ctx context.Context, arg GetSharesPParams) ([]Share, error) {
+	rows, err := q.db.Query(ctx, getSharesP,
+		arg.Owner,
+		arg.Direction,
+		arg.Offset,
+		arg.PerPage,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Share
+	for rows.Next() {
+		var i Share
+		if err := rows.Scan(
+			&i.ID,
+			&i.EntityType,
+			&i.EntityID,
+			&i.EntityDate,
+			&i.Owner,
+			&i.Expiration,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSharesPCount = `-- name: GetSharesPCount :one
+SELECT COUNT(*)
+FROM shares s
+WHERE
+CASE WHEN $1::INTEGER IS NOT NULL THEN
+	s.owner = $1 ELSE TRUE END
+`
+
+func (q *Queries) GetSharesPCount(ctx context.Context, owner *int32) (int64, error) {
+	row := q.db.QueryRow(ctx, getSharesPCount, owner)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const pruneShares = `-- name: PruneShares :exec
 DELETE FROM shares WHERE expiration < NOW()
 `

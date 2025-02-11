@@ -121,6 +121,7 @@ func (sa *shareAPI) Subrouter() http.Handler {
 
 	r.Post(`/create`, sa.createShare)
 	r.Delete(`/{id:[A-Za-z0-9_-]{20,}}`, sa.deleteShare)
+	r.Post(`/`, sa.listShares)
 
 	return r
 }
@@ -154,6 +155,34 @@ func (sa *shareAPI) createShare(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond(w, r, sh)
+}
+
+func (sa *shareAPI) listShares(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shs := shares.FromCtx(ctx)
+
+	p := shares.SharesParams{}
+	err := forms.Unmarshal(r, &p, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	shRes, count, err := shs.Shares(ctx, p)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	response := struct {
+		Shares     []*shares.Share `json:"shares"`
+		TotalCount int             `json:"totalCount"`
+	}{
+		Shares:     shRes,
+		TotalCount: count,
+	}
+
+	respond(w, r, &response)
 }
 
 func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
