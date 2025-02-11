@@ -47,7 +47,7 @@ func (et EntityType) IsValid() bool {
 type Share struct {
 	ID         string          `json:"id"`
 	Type       EntityType      `json:"entityType"`
-	Date       *jsontypes.Time `json:"-"` // we handle this for the user
+	Date       *jsontypes.Time `json:"entityDate,omitempty"` // we handle this for the user
 	Owner      users.UserID    `json:"owner"`
 	EntityID   uuid.UUID       `json:"entityID"`
 	Expiration *jsontypes.Time `json:"expiration"`
