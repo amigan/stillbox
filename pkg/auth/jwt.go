@@ -94,8 +94,16 @@ func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			if token != nil && jwt.Validate(token, a.jwt.ValidateOptions()...) == nil {
-				ctx := r.Context()
+			ctx := r.Context()
+
+			if token != nil {
+				err := jwt.Validate(token, a.jwt.ValidateOptions()...)
+				if err != nil {
+					err = jwtauth.ErrorReason(err)
+					http.Error(w, err.Error(), http.StatusUnauthorized)
+					return
+				}
+
 				username := token.Subject()
 
 				sub, err := users.FromCtx(ctx).GetUser(ctx, username)
@@ -111,8 +119,9 @@ func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			// Token is authenticated, pass it through
-			next.ServeHTTP(w, r)
+			// Public subject
+			ctx = entities.CtxWithSubject(ctx, entities.NewPublicSubject(r))
+			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 		return http.HandlerFunc(hfn)
 	}

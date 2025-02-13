@@ -2,6 +2,7 @@ package entities
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/el-mike/restrict/v2"
 )
@@ -64,6 +65,10 @@ func (s *PublicSubject) GetName() string {
 
 func (s *PublicSubject) GetRoles() []string {
 	return []string{RolePublic}
+}
+
+func NewPublicSubject(r *http.Request) *PublicSubject {
+	return &PublicSubject{RemoteAddr: r.RemoteAddr}
 }
 
 type SystemServiceSubject struct {
