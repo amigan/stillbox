@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	ErrBadSubject = errors.New("bad subject in token")
+	ErrBadSubject   = errors.New("bad subject in token")
 	ErrAccessDenied = errors.New("access denied")
 )
 

@@ -22,6 +22,7 @@ const (
 	ResourceAlert     = "Alert"
 	ResourceShare     = "Share"
 	ResourceAPIKey    = "APIKey"
+	ResourceCallStats = "CallStats"
 
 	ActionRead   = "read"
 	ActionCreate = "create"
