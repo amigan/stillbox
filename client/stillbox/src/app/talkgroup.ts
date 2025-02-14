@@ -58,43 +58,39 @@ export const iconMapping: IconMap = {
 
 export class Talkgroup {
   id!: number;
-  system_id!: number;
+  systemId!: number;
   tgid!: number;
   name!: string;
-  alpha_tag!: string;
-  tg_group!: string;
+  alphaTag!: string;
+  tgGroup!: string;
   frequency!: number;
   metadata!: Metadata | null;
   tags!: string[];
   alert!: boolean;
   system?: System;
-  alert_rules!: AlertRule[];
+  alertRules!: AlertRule[];
   weight!: number;
   learned?: boolean;
   icon?: string;
   iconSvg?: string;
   constructor(
     id: number,
-    system_id: number,
+    systemId: number,
     tgid: number,
     name: string,
-    alpha_tag: string,
-    tg_group: string,
+    alphaTag: string,
+    tgGroup: string,
     frequency: number,
     metadata: Metadata | null,
     tags: string[],
     alert: boolean,
-    alert_rules: AlertRule[],
+    alertRules: AlertRule[],
     weight: number,
     system?: System,
     learned?: boolean,
     icon?: string,
   ) {
     this.iconSvg = this.iconMap(this.metadata?.icon!);
-    this.alert_rules = this.alert_rules.map((x) =>
-      Object.assign(new AlertRule(), x),
-    );
-    console.log(this.alert_rules);
   }
 
   iconMap(icon: string): string {
@@ -103,7 +99,7 @@ export class Talkgroup {
 
   tgTuple(): TGID {
     return <TGID>{
-      sys: this.system_id,
+      sys: this.systemId,
       tg: this.tgid,
     };
   }
@@ -115,15 +111,15 @@ export interface TalkgroupUI extends Talkgroup {
 
 export interface TalkgroupUpdate {
   id: number;
-  system_id: number;
+  systemId: number;
   tgid: number;
   name: string | null;
-  alpha_tag: string | null;
-  tg_group: string | null;
+  alphaTag: string | null;
+  tgGroup: string | null;
   frequency: number | null;
   metadata: Object | null;
   tags: string[] | null;
   alert: boolean | null;
-  alert_rules: AlertRule[] | null;
+  alertRules: AlertRule[] | null;
   weight: number | null;
 }

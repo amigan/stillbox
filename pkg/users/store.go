@@ -2,9 +2,14 @@ package users
 
 import (
 	"context"
+	"errors"
 
 	"dynatron.me/x/stillbox/internal/cache"
 	"dynatron.me/x/stillbox/pkg/database"
+)
+
+var (
+	ErrNoSuchUser = errors.New("no such user")
 )
 
 type Store interface {
@@ -84,6 +89,10 @@ func (s *postgresStore) GetUser(ctx context.Context, username string) (*User, er
 
 	dbu, err := s.db.GetUserByUsername(ctx, username)
 	if err != nil {
+		if database.IsNoRows(err) {
+			return nil, ErrNoSuchUser
+		}
+
 		return nil, err
 	}
 

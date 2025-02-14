@@ -48,16 +48,7 @@ func New(baseURL url.URL) *api {
 		incidents: newIncidentsAPI(&baseURL),
 		users:     new(usersAPI),
 	}
-	s.shares = newShareAPI(&baseURL,
-		ShareHandlers{
-			ShareRequestCall:        s.calls.shareCallRoute,
-			ShareRequestCallDL:      s.calls.shareCallDLRoute,
-			ShareRequestIncident:    s.incidents.getIncident,
-			ShareRequestIncidentM3U: s.incidents.getCallsM3U,
-			ShareRequestTalkgroups:  s.tgs.getTGsShareRoute,
-		},
-	)
-
+	s.shares = newShareAPI(&baseURL, s.shareHandlers())
 	return s
 }
 
@@ -188,7 +179,7 @@ func autoError(err error) render.Renderer {
 		}
 	}
 
-	if rbac.ErrAccessDenied(err) != nil {
+	if rbac.IsErrAccessDenied(err) != nil {
 		return forbiddenErrText(err)
 	}
 

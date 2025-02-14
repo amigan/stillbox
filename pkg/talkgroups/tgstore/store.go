@@ -588,6 +588,7 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 }
 
 func (t *cache) DeleteSystem(ctx context.Context, id int) error {
+	// talkgroups don't have owners, so we can use a generic Resource
 	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err

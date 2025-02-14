@@ -71,6 +71,10 @@ func (u *User) GetName() string {
 	return u.Username
 }
 
+func (u *User) String() string {
+	return "USER:"+u.GetName()
+}
+
 func (u *User) GetRoles() []string {
 	r := make([]string, 1, 2)
 

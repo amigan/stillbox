@@ -5,7 +5,7 @@ import { inject } from '@angular/core';
 export const AuthGuard: CanActivateFn = (route, state) => {
   const router: Router = inject(Router);
   const authSvc: AuthService = inject(AuthService);
-  if (localStorage.getItem('jwt') == null) {
+  if (authSvc.token() === null) {
     let success = false;
     authSvc.refresh().subscribe({
       next: (event) => {

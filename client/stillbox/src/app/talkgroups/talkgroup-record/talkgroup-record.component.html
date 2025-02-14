@@ -15,9 +15,9 @@
             <mat-label>Alpha Tag</mat-label
             ><input
               matInput
-              name="alpha_tag"
+              name="alphaTag"
               type="text"
-              formControlName="alpha_tag"
+              formControlName="alphaTag"
             />
           </mat-form-field>
         </div>
@@ -26,9 +26,9 @@
             <mat-label>Group</mat-label
             ><input
               matInput
-              name="tg_group"
+              name="tgTroup"
               type="text"
-              formControlName="tg_group"
+              formControlName="tgGroup"
             />
           </mat-form-field>
         </div>
@@ -108,7 +108,7 @@
           >
         </div>
         <div class="alert">
-          <alert-rule-builder [rules]="tg.alert_rules" />
+          <alert-rule-builder [rules]="tg.alertRules" />
         </div>
       </form>
     } @else {

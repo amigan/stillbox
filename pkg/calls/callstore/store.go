@@ -74,6 +74,7 @@ func toAddCallParams(call *calls.Call) database.AddCallParams {
 		AudioName:   common.NilIfZero(call.AudioName),
 		AudioBlob:   call.Audio,
 		AudioType:   common.NilIfZero(call.AudioType),
+		AudioUrl:    call.AudioURL,
 		Duration:    call.Duration.MsInt32Ptr(),
 		Frequency:   call.Frequency,
 		Frequencies: call.Frequencies,
@@ -145,7 +146,7 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, 
 }
 
 func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceCall), rbac.WithActions(entities.ActionRead))
+	_, err := rbac.Check(ctx, &calls.Call{ID: id}, rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -178,6 +179,7 @@ func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 		TalkgroupLabel: c.TGLabel,
 		TalkgroupGroup: c.TGGroup,
 		TGAlphaTag:     c.TGAlphaTag,
+		Transcript:     c.Transcript,
 	}, nil
 }
 

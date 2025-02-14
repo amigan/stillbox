@@ -51,7 +51,7 @@ type CreateUserParams struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
-	IsAdmin  bool   `json:"is_admin"`
+	IsAdmin  bool   `json:"isAdmin"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -108,10 +108,10 @@ WHERE api_key = $1
 type GetAPIKeyRow struct {
 	ID        int              `json:"id"`
 	Owner     int              `json:"owner"`
-	CreatedAt time.Time        `json:"created_at"`
+	CreatedAt time.Time        `json:"createdAt"`
 	Expires   pgtype.Timestamp `json:"expires"`
 	Disabled  *bool            `json:"disabled"`
-	ApiKey    string           `json:"api_key"`
+	ApiKey    string           `json:"apiKey"`
 	Username  string           `json:"username"`
 }
 

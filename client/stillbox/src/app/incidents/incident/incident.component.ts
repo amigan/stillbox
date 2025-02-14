@@ -1,7 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { tap } from 'rxjs/operators';
 import { CommonModule, Location } from '@angular/common';
-import { BehaviorSubject, merge, Subscription } from 'rxjs';
+import { BehaviorSubject, merge, Subject, Subscription } from 'rxjs';
 import { Observable } from 'rxjs';
 import {
   ReactiveFormsModule,
@@ -35,10 +35,13 @@ import {
   TimePipe,
   DatePipe,
   DownloadURLPipe,
-} from '../../calls/calls.component';
+} from '../../calls/calls.service';
 import { CallPlayerComponent } from '../../calls/player/call-player/call-player.component';
 import { FmtDatePipe } from '../incidents.component';
 import { MatMenuModule } from '@angular/material/menu';
+import { Share } from '../../shares';
+import { ShareService } from '../../share/share.service';
+import { TalkgroupService } from '../../talkgroups/talkgroups.service';
 
 export interface EditDialogData {
   incID: string;
@@ -151,8 +154,9 @@ export class IncidentEditDialogComponent {
   styleUrl: './incident.component.scss',
 })
 export class IncidentComponent {
-  incPrime = new BehaviorSubject<IncidentRecord>(<IncidentRecord>{});
+  incPrime = new Subject<IncidentRecord>();
   inc$!: Observable<IncidentRecord>;
+  @Input() share?: Share;
   subscriptions: Subscription = new Subscription();
   dialog = inject(MatDialog);
   incID!: string;
@@ -174,15 +178,30 @@ export class IncidentComponent {
     private route: ActivatedRoute,
     private incSvc: IncidentsService,
     private location: Location,
+    private tgSvc: TalkgroupService,
   ) {}
 
   saveIncName(ev: Event) {}
 
   ngOnInit() {
-    this.incID = this.route.snapshot.paramMap.get('id')!;
-    this.inc$ = merge(this.incSvc.getIncident(this.incID), this.incPrime).pipe(
+    if (this.share) {
+      this.tgSvc.setShare(this.share);
+    }
+    let incOb: Observable<IncidentRecord>;
+    if (this.route.component === this.constructor) {
+      // loaded by route
+      this.incID = this.route.snapshot.paramMap.get('id')!;
+      incOb = this.incSvc.getIncident(this.incID);
+    } else {
+      if (!this.share) {
+        return;
+      }
+      this.incID = (this.share.sharedItem as IncidentRecord).id;
+      incOb = new BehaviorSubject(this.share.sharedItem as IncidentRecord);
+    }
+    this.inc$ = merge(incOb, this.incPrime).pipe(
       tap((inc) => {
-        if (inc.calls) {
+        if (inc && inc.calls) {
           this.callsResult.data = inc.calls;
         }
       }),

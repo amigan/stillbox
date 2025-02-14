@@ -42,6 +42,8 @@ type Querier interface {
 	GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error)
 	GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error)
 	GetShare(ctx context.Context, id string) (Share, error)
+	GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSharesPRow, error)
+	GetSharesPCount(ctx context.Context, owner *int32) (int64, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
 	GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error)
 	GetTalkgroupIDsByTags(ctx context.Context, anyTags []string, allTags []string, notTags []string) ([]GetTalkgroupIDsByTagsRow, error)

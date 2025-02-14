@@ -2,6 +2,7 @@ package rest
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/incidents"
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
-	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"
@@ -91,22 +91,22 @@ func (ia *incidentsAPI) createIncident(w http.ResponseWriter, r *http.Request) {
 func (ia *incidentsAPI) getIncidentRoute(w http.ResponseWriter, r *http.Request) {
 	id, err := idOnlyParam(w, r)
 	if err != nil {
+		wErr(w, r, autoError(err))
 		return
 	}
 
-	ia.getIncident(id, nil, w, r)
-}
-
-func (ia *incidentsAPI) getIncident(id ID, share *shares.Share, w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	incs := incstore.FromCtx(ctx)
-	inc, err := incs.Incident(ctx, id.(uuid.UUID))
+	e, err := ia.getIncident(r.Context(), id)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
 	}
 
-	respond(w, r, inc)
+	respond(w, r, e)
+}
+
+func (ia *incidentsAPI) getIncident(ctx context.Context, id ID) (SharedItem, error) {
+	incs := incstore.FromCtx(ctx)
+	return incs.Incident(ctx, id.(uuid.UUID))
 }
 
 func (ia *incidentsAPI) updateIncident(w http.ResponseWriter, r *http.Request) {
@@ -195,10 +195,10 @@ func (ia *incidentsAPI) getCallsM3URoute(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	ia.getCallsM3U(id, nil, w, r)
+	ia.getCallsM3U(id, w, r)
 }
 
-func (ia *incidentsAPI) getCallsM3U(id ID, share *shares.Share, w http.ResponseWriter, r *http.Request) {
+func (ia *incidentsAPI) getCallsM3U(id ID, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	incs := incstore.FromCtx(ctx)
 	tgst := tgstore.FromCtx(ctx)
@@ -213,9 +213,13 @@ func (ia *incidentsAPI) getCallsM3U(id ID, share *shares.Share, w http.ResponseW
 
 	callUrl := common.PtrTo(*ia.baseURL)
 	urlRoot := "/api/call"
+	filename := inc.PlaylistFilename()
+	share := ShareFrom(ctx)
 	if share != nil {
 		urlRoot = fmt.Sprintf("/share/%s/call/", share.ID)
+		filename += "_" + share.ID
 	}
+	filename += ".m3u"
 
 	b.WriteString("#EXTM3U\n\n")
 	for _, c := range inc.Calls {
@@ -231,11 +235,12 @@ func (ia *incidentsAPI) getCallsM3U(id ID, share *shares.Share, w http.ResponseW
 
 		callUrl.Path = urlRoot + c.ID.String()
 
-		fmt.Fprintf(b, "#EXTINF:%d,%s%s (%s)\n%s\n\n",
+		fmt.Fprintf(b, "#EXTINF:%d,%s%s (%s @ %s)\n%s\n\n",
 			c.Duration.Seconds(),
 			tg.StringTag(true),
 			from,
-			c.DateTime.Format("15:04 01/02"),
+			c.Duration.ColonFormat(),
+			c.DateTime.Format("15:04:05 01/02"),
 			callUrl,
 		)
 	}
@@ -243,6 +248,7 @@ func (ia *incidentsAPI) getCallsM3U(id ID, share *shares.Share, w http.ResponseW
 	// Not a lot of agreement on which MIME type to use for non-HLS m3u,
 	// let's hope this is good enough
 	w.Header().Set("Content-Type", "audio/x-mpegurl")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	w.WriteHeader(http.StatusOK)
 	_, _ = b.WriteTo(w)
 }

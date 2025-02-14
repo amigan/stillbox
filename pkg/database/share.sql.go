@@ -25,9 +25,9 @@ INSERT INTO shares (
 
 type CreateShareParams struct {
 	ID         string             `json:"id"`
-	EntityType string             `json:"entity_type"`
-	EntityID   uuid.UUID          `json:"entity_id"`
-	EntityDate pgtype.Timestamptz `json:"entity_date"`
+	EntityType string             `json:"entityType"`
+	EntityID   uuid.UUID          `json:"entityId"`
+	EntityDate pgtype.Timestamptz `json:"entityDate"`
 	Owner      int                `json:"owner"`
 	Expiration pgtype.Timestamptz `json:"expiration"`
 }
@@ -55,14 +55,14 @@ func (q *Queries) DeleteShare(ctx context.Context, id string) error {
 
 const getShare = `-- name: GetShare :one
 SELECT
-	id,
-	entity_type,
-	entity_id,
-	entity_date,
-	owner,
-	expiration
-FROM shares
-WHERE id = $1
+	s.id,
+	s.entity_type,
+	s.entity_id,
+	s.entity_date,
+	s.owner,
+	s.expiration
+FROM shares s
+WHERE s.id = $1
 `
 
 func (q *Queries) GetShare(ctx context.Context, id string) (Share, error) {
@@ -77,6 +77,82 @@ func (q *Queries) GetShare(ctx context.Context, id string) (Share, error) {
 		&i.Expiration,
 	)
 	return i, err
+}
+
+const getSharesP = `-- name: GetSharesP :many
+SELECT
+	s.id, s.entity_type, s.entity_id, s.entity_date, s.owner, s.expiration,
+	u.username
+FROM shares s
+JOIN users u ON (s.owner = u.id)
+WHERE
+CASE WHEN $1::INTEGER IS NOT NULL THEN
+	s.owner = $1 ELSE TRUE END
+ORDER BY
+CASE WHEN $2::TEXT = 'asc' THEN s.entity_date END ASC,
+CASE WHEN $2::TEXT = 'desc' THEN s.entity_date END DESC
+OFFSET $3 ROWS
+FETCH NEXT $4 ROWS ONLY
+`
+
+type GetSharesPParams struct {
+	Owner     *int32 `json:"owner"`
+	Direction string `json:"direction"`
+	Offset    int32  `json:"offset"`
+	PerPage   int32  `json:"perPage"`
+}
+
+type GetSharesPRow struct {
+	Share    Share  `json:"share"`
+	Username string `json:"username"`
+}
+
+func (q *Queries) GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSharesPRow, error) {
+	rows, err := q.db.Query(ctx, getSharesP,
+		arg.Owner,
+		arg.Direction,
+		arg.Offset,
+		arg.PerPage,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetSharesPRow
+	for rows.Next() {
+		var i GetSharesPRow
+		if err := rows.Scan(
+			&i.Share.ID,
+			&i.Share.EntityType,
+			&i.Share.EntityID,
+			&i.Share.EntityDate,
+			&i.Share.Owner,
+			&i.Share.Expiration,
+			&i.Username,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSharesPCount = `-- name: GetSharesPCount :one
+SELECT COUNT(*)
+FROM shares s
+WHERE
+CASE WHEN $1::INTEGER IS NOT NULL THEN
+	s.owner = $1 ELSE TRUE END
+`
+
+func (q *Queries) GetSharesPCount(ctx context.Context, owner *int32) (int64, error) {
+	row := q.db.QueryRow(ctx, getSharesPCount, owner)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const pruneShares = `-- name: PruneShares :exec

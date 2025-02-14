@@ -8,15 +8,21 @@ import (
 
 	"github.com/el-mike/restrict/v2"
 	"github.com/el-mike/restrict/v2/adapters"
+	"github.com/rs/zerolog/log"
 )
 
 var (
 	ErrBadSubject = errors.New("bad subject in token")
+	ErrAccessDenied = errors.New("access denied")
 )
 
-func ErrAccessDenied(err error) *restrict.AccessDeniedError {
+func IsErrAccessDenied(err error) error {
 	if accessErr, ok := err.(*restrict.AccessDeniedError); ok {
 		return accessErr
+	}
+
+	if err == ErrAccessDenied {
+		return err
 	}
 
 	return nil
@@ -115,5 +121,19 @@ func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOp
 		Context:  o.context,
 	}
 
-	return sub, r.access.Authorize(req)
+	authRes := r.access.Authorize(req)
+	if IsErrAccessDenied(authRes) != nil {
+		subS := ""
+		resS := ""
+		if sub != nil {
+			subS = sub.String()
+		}
+
+		if res != nil {
+			resS = res.GetResourceName()
+		}
+		log.Error().Str("resource", resS).Strs("actions", req.Actions).Str("subject", subS).Msg("access denied")
+	}
+
+	return sub, authRes
 }

@@ -1,5 +1,9 @@
 {
-  "/api": {
+  "/api/": {
+    "target": "http://xenon:3050",
+    "secure": false
+  },
+  "/share/": {
     "target": "http://xenon:3050",
     "secure": false
   }

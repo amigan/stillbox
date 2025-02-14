@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
-	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
@@ -161,9 +161,15 @@ func (tga *talkgroupAPI) postPaginated(w http.ResponseWriter, r *http.Request) {
 	respond(w, r, res)
 }
 
-func (tga *talkgroupAPI) getTGsShareRoute(_ ID, share *shares.Share, w http.ResponseWriter, r *http.Request) {
+func (tga *talkgroupAPI) getTGsShareRoute(_ ID, w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tgs := tgstore.FromCtx(ctx)
+
+	share := ShareFrom(ctx)
+	if share == nil {
+		wErr(w, r, autoError(ErrBadShare))
+		return
+	}
 
 	tgIDs, err := incstore.FromCtx(ctx).TGsIn(ctx, share.EntityID)
 	if err != nil {
@@ -175,6 +181,14 @@ func (tga *talkgroupAPI) getTGsShareRoute(_ ID, share *shares.Share, w http.Resp
 	for id := range tgIDs {
 		idSl = append(idSl, id)
 	}
+
+	slices.SortFunc(idSl, func(a, b talkgroups.ID) int {
+		if d := int(a.System) - int(b.System); d != 0 {
+			return d
+		}
+
+		return int(a.Talkgroup) - int(b.Talkgroup)
+	})
 
 	tgRes, err := tgs.TGs(ctx, idSl)
 	if err != nil {

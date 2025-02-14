@@ -17,10 +17,10 @@ type Alert struct {
 	ID        int                `json:"id,omitempty"`
 	Time      pgtype.Timestamptz `json:"time,omitempty"`
 	TGID      int                `json:"tgid,omitempty"`
-	SystemID  int                `json:"system_id,omitempty"`
+	SystemID  int                `json:"systemId,omitempty"`
 	Weight    *float32           `json:"weight,omitempty"`
 	Score     *float32           `json:"score,omitempty"`
-	OrigScore *float32           `json:"orig_score,omitempty"`
+	OrigScore *float32           `json:"origScore,omitempty"`
 	Notified  bool               `json:"notified,omitempty"`
 	Metadata  []byte             `json:"metadata,omitempty"`
 }
@@ -28,10 +28,10 @@ type Alert struct {
 type ApiKey struct {
 	ID        int              `json:"id,omitempty"`
 	Owner     int              `json:"owner,omitempty"`
-	CreatedAt time.Time        `json:"created_at,omitempty"`
+	CreatedAt time.Time        `json:"createdAt,omitempty"`
 	Expires   pgtype.Timestamp `json:"expires,omitempty"`
 	Disabled  *bool            `json:"disabled,omitempty"`
-	ApiKey    string           `json:"api_key,omitempty"`
+	ApiKey    string           `json:"apiKey,omitempty"`
 }
 
 type Call struct {
@@ -39,18 +39,18 @@ type Call struct {
 	Submitter   *int32             `json:"submitter,omitempty"`
 	System      int                `json:"system,omitempty"`
 	Talkgroup   int                `json:"talkgroup,omitempty"`
-	CallDate    pgtype.Timestamptz `json:"call_date,omitempty"`
-	AudioName   *string            `json:"audio_name,omitempty"`
-	AudioBlob   []byte             `json:"audio_blob,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"callDate,omitempty"`
+	AudioName   *string            `json:"audioName,omitempty"`
+	AudioBlob   []byte             `json:"audioBlob,omitempty"`
 	Duration    *int32             `json:"duration,omitempty"`
-	AudioType   *string            `json:"audio_type,omitempty"`
-	AudioUrl    *string            `json:"audio_url,omitempty"`
+	AudioType   *string            `json:"audioType,omitempty"`
+	AudioUrl    *string            `json:"audioUrl,omitempty"`
 	Frequency   int                `json:"frequency,omitempty"`
 	Frequencies []int              `json:"frequencies,omitempty"`
 	Patches     []int              `json:"patches,omitempty"`
-	TGLabel     *string            `json:"tg_label,omitempty"`
-	TGAlphaTag  *string            `json:"tg_alpha_tag,omitempty"`
-	TGGroup     *string            `json:"tg_group,omitempty"`
+	TGLabel     *string            `json:"tgLabel,omitempty"`
+	TGAlphaTag  *string            `json:"tgAlphaTag,omitempty"`
+	TGGroup     *string            `json:"tgGroup,omitempty"`
 	Source      int                `json:"source,omitempty"`
 	Transcript  *string            `json:"transcript,omitempty"`
 }
@@ -60,32 +60,33 @@ type Incident struct {
 	Name        string             `json:"name,omitempty"`
 	Owner       int                `json:"owner,omitempty"`
 	Description *string            `json:"description,omitempty"`
-	StartTime   pgtype.Timestamptz `json:"start_time,omitempty"`
-	EndTime     pgtype.Timestamptz `json:"end_time,omitempty"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt,omitempty"`
+	StartTime   pgtype.Timestamptz `json:"startTime,omitempty"`
+	EndTime     pgtype.Timestamptz `json:"endTime,omitempty"`
 	Location    []byte             `json:"location,omitempty"`
 	Metadata    jsontypes.Metadata `json:"metadata,omitempty"`
 }
 
 type IncidentsCall struct {
-	IncidentID  uuid.UUID          `json:"incident_id,omitempty"`
-	CallID      uuid.UUID          `json:"call_id,omitempty"`
-	CallsTblID  pgtype.UUID        `json:"calls_tbl_id,omitempty"`
-	SweptCallID pgtype.UUID        `json:"swept_call_id,omitempty"`
-	CallDate    pgtype.Timestamptz `json:"call_date,omitempty"`
+	IncidentID  uuid.UUID          `json:"incidentId,omitempty"`
+	CallID      uuid.UUID          `json:"callId,omitempty"`
+	CallsTblID  pgtype.UUID        `json:"callsTblId,omitempty"`
+	SweptCallID pgtype.UUID        `json:"sweptCallId,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"callDate,omitempty"`
 	Notes       []byte             `json:"notes,omitempty"`
 }
 
 type Setting struct {
 	Name      string `json:"name,omitempty"`
-	UpdatedBy *int32 `json:"updated_by,omitempty"`
+	UpdatedBy *int32 `json:"updatedBy,omitempty"`
 	Value     []byte `json:"value,omitempty"`
 }
 
 type Share struct {
 	ID         string             `json:"id,omitempty"`
-	EntityType string             `json:"entity_type,omitempty"`
-	EntityID   uuid.UUID          `json:"entity_id,omitempty"`
-	EntityDate pgtype.Timestamptz `json:"entity_date,omitempty"`
+	EntityType string             `json:"entityType,omitempty"`
+	EntityID   uuid.UUID          `json:"entityId,omitempty"`
+	EntityDate pgtype.Timestamptz `json:"entityDate,omitempty"`
 	Owner      int                `json:"owner,omitempty"`
 	Expiration pgtype.Timestamptz `json:"expiration,omitempty"`
 }
@@ -95,18 +96,18 @@ type SweptCall struct {
 	Submitter   *int32             `json:"submitter,omitempty"`
 	System      int                `json:"system,omitempty"`
 	Talkgroup   int                `json:"talkgroup,omitempty"`
-	CallDate    pgtype.Timestamptz `json:"call_date,omitempty"`
-	AudioName   *string            `json:"audio_name,omitempty"`
-	AudioBlob   []byte             `json:"audio_blob,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"callDate,omitempty"`
+	AudioName   *string            `json:"audioName,omitempty"`
+	AudioBlob   []byte             `json:"audioBlob,omitempty"`
 	Duration    *int32             `json:"duration,omitempty"`
-	AudioType   *string            `json:"audio_type,omitempty"`
-	AudioUrl    *string            `json:"audio_url,omitempty"`
+	AudioType   *string            `json:"audioType,omitempty"`
+	AudioUrl    *string            `json:"audioUrl,omitempty"`
 	Frequency   int                `json:"frequency,omitempty"`
 	Frequencies []int              `json:"frequencies,omitempty"`
 	Patches     []int              `json:"patches,omitempty"`
-	TGLabel     *string            `json:"tg_label,omitempty"`
-	TGAlphaTag  *string            `json:"tg_alpha_tag,omitempty"`
-	TGGroup     *string            `json:"tg_group,omitempty"`
+	TGLabel     *string            `json:"tgLabel,omitempty"`
+	TGAlphaTag  *string            `json:"tgAlphaTag,omitempty"`
+	TGGroup     *string            `json:"tgGroup,omitempty"`
 	Source      int                `json:"source,omitempty"`
 	Transcript  *string            `json:"transcript,omitempty"`
 }
@@ -118,16 +119,16 @@ type System struct {
 
 type Talkgroup struct {
 	ID         int                `json:"id,omitempty"`
-	SystemID   int32              `json:"system_id,omitempty"`
+	SystemID   int32              `json:"systemId,omitempty"`
 	TGID       int32              `json:"tgid,omitempty"`
 	Name       *string            `json:"name,omitempty"`
-	AlphaTag   *string            `json:"alpha_tag,omitempty"`
-	TGGroup    *string            `json:"tg_group,omitempty"`
+	AlphaTag   *string            `json:"alphaTag,omitempty"`
+	TGGroup    *string            `json:"tgGroup,omitempty"`
 	Frequency  *int32             `json:"frequency,omitempty"`
 	Metadata   jsontypes.Metadata `json:"metadata,omitempty"`
 	Tags       []string           `json:"tags,omitempty"`
 	Alert      bool               `json:"alert,omitempty"`
-	AlertRules rules.AlertRules   `json:"alert_rules,omitempty"`
+	AlertRules rules.AlertRules   `json:"alertRules,omitempty"`
 	Weight     float32            `json:"weight,omitempty"`
 	Learned    bool               `json:"learned,omitempty"`
 	Ignored    bool               `json:"ignored,omitempty"`
@@ -136,18 +137,18 @@ type Talkgroup struct {
 type TalkgroupVersion struct {
 	ID         int                `json:"id,omitempty"`
 	Time       pgtype.Timestamptz `json:"time,omitempty"`
-	CreatedBy  *int32             `json:"created_by,omitempty"`
+	CreatedBy  *int32             `json:"createdBy,omitempty"`
 	Deleted    *bool              `json:"deleted,omitempty"`
-	SystemID   *int32             `json:"system_id,omitempty"`
+	SystemID   *int32             `json:"systemId,omitempty"`
 	TGID       *int32             `json:"tgid,omitempty"`
 	Name       *string            `json:"name,omitempty"`
-	AlphaTag   *string            `json:"alpha_tag,omitempty"`
-	TGGroup    *string            `json:"tg_group,omitempty"`
+	AlphaTag   *string            `json:"alphaTag,omitempty"`
+	TGGroup    *string            `json:"tgGroup,omitempty"`
 	Frequency  *int32             `json:"frequency,omitempty"`
 	Metadata   []byte             `json:"metadata,omitempty"`
 	Tags       []string           `json:"tags,omitempty"`
 	Alert      *bool              `json:"alert,omitempty"`
-	AlertRules []byte             `json:"alert_rules,omitempty"`
+	AlertRules []byte             `json:"alertRules,omitempty"`
 	Weight     *float32           `json:"weight,omitempty"`
 	Learned    *bool              `json:"learned,omitempty"`
 	Ignored    *bool              `json:"ignored,omitempty"`
@@ -158,6 +159,6 @@ type User struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
 	Email    string `json:"email,omitempty"`
-	IsAdmin  bool   `json:"is_admin,omitempty"`
+	IsAdmin  bool   `json:"isAdmin,omitempty"`
 	Prefs    []byte `json:"prefs,omitempty"`
 }

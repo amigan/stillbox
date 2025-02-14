@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/url"
@@ -23,25 +24,29 @@ type ShareRequestType string
 
 const (
 	ShareRequestCall        ShareRequestType = "call"
+	ShareRequestCallInfo    ShareRequestType = "callinfo"
 	ShareRequestCallDL      ShareRequestType = "callDL"
 	ShareRequestIncident    ShareRequestType = "incident"
 	ShareRequestIncidentM3U ShareRequestType = "m3u"
 	ShareRequestTalkgroups  ShareRequestType = "talkgroups"
 )
 
-func (rt ShareRequestType) IsValid() bool {
-	switch rt {
-	case ShareRequestCall, ShareRequestCallDL, ShareRequestIncident,
-		ShareRequestIncidentM3U, ShareRequestTalkgroups:
-		return true
+// shareHandlers returns a ShareHandlers map from the api.
+func (s *api) shareHandlers() ShareHandlers {
+	return ShareHandlers{
+		ShareRequestCall:        s.calls.shareCallRoute,
+		ShareRequestCallInfo:    s.respondShareHandler(s.calls.getCallInfo),
+		ShareRequestCallDL:      s.calls.shareCallDLRoute,
+		ShareRequestIncident:    s.respondShareHandler(s.incidents.getIncident),
+		ShareRequestIncidentM3U: s.incidents.getCallsM3U,
+		ShareRequestTalkgroups:  s.tgs.getTGsShareRoute,
 	}
-
-	return false
 }
 
-func (rt ShareRequestType) IsValidSubtype() bool {
+func (rt ShareRequestType) IsValid() bool {
 	switch rt {
-	case ShareRequestCall, ShareRequestCallDL, ShareRequestTalkgroups:
+	case ShareRequestCall, ShareRequestCallInfo, ShareRequestCallDL, ShareRequestIncident,
+		ShareRequestIncidentM3U, ShareRequestTalkgroups:
 		return true
 	}
 
@@ -51,11 +56,57 @@ func (rt ShareRequestType) IsValidSubtype() bool {
 type ID interface {
 }
 
-type HandlerFunc func(id ID, share *shares.Share, w http.ResponseWriter, r *http.Request)
-type ShareHandlers map[ShareRequestType]HandlerFunc
+type ShareHandlerFunc func(id ID, w http.ResponseWriter, r *http.Request)
+type ShareHandlers map[ShareRequestType]ShareHandlerFunc
 type shareAPI struct {
 	baseURL *url.URL
 	shnd    ShareHandlers
+}
+
+type EntityFunc func(ctx context.Context, id ID) (SharedItem, error)
+type SharedItem interface {
+	SetShareURL(baseURL url.URL, shareID string)
+}
+
+type shareResponse struct {
+	ID         ID                `json:"id"`
+	Type       shares.EntityType `json:"type"`
+	SharedItem SharedItem        `json:"sharedItem,omitempty"`
+}
+
+func ShareFrom(ctx context.Context) *shares.Share {
+	if share, hasShare := entities.SubjectFrom(ctx).(*shares.Share); hasShare {
+		return share
+	}
+
+	return nil
+}
+
+func (s *api) respondShareHandler(ie EntityFunc) ShareHandlerFunc {
+	return func(id ID, w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		share := ShareFrom(ctx)
+		if share == nil {
+			wErr(w, r, autoError(ErrBadShare))
+			return
+		}
+
+		res, err := ie(r.Context(), id)
+		if err != nil {
+			wErr(w, r, autoError(err))
+			return
+		}
+
+		sRes := shareResponse{
+			ID:         share.ID,
+			Type:       share.Type,
+			SharedItem: res,
+		}
+
+		sRes.SharedItem.SetShareURL(*s.baseURL, share.ID)
+
+		respond(w, r, sRes)
+	}
 }
 
 func newShareAPI(baseURL *url.URL, shnd ShareHandlers) *shareAPI {
@@ -70,6 +121,7 @@ func (sa *shareAPI) Subrouter() http.Handler {
 
 	r.Post(`/create`, sa.createShare)
 	r.Delete(`/{id:[A-Za-z0-9_-]{20,}}`, sa.deleteShare)
+	r.Post(`/`, sa.listShares)
 
 	return r
 }
@@ -79,6 +131,7 @@ func (sa *shareAPI) RootRouter() http.Handler {
 
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}", sa.routeShare)
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}", sa.routeShare)
+	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}.{type}", sa.routeShare)
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}/{subID}", sa.routeShare)
 	return r
 }
@@ -102,6 +155,34 @@ func (sa *shareAPI) createShare(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond(w, r, sh)
+}
+
+func (sa *shareAPI) listShares(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shs := shares.FromCtx(ctx)
+
+	p := shares.SharesParams{}
+	err := forms.Unmarshal(r, &p, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	shRes, count, err := shs.Shares(ctx, p)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	response := struct {
+		Shares     []*shares.Share `json:"shares"`
+		TotalCount int             `json:"totalCount"`
+	}{
+		Shares:     shRes,
+		TotalCount: count,
+	}
+
+	respond(w, r, &response)
 }
 
 func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
@@ -134,12 +215,11 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 	} else {
 		switch sh.Type {
 		case shares.EntityCall:
-			rType = ShareRequestCall
+			rType = ShareRequestCallInfo
 			params.SubID = common.PtrTo(sh.EntityID.String())
 		case shares.EntityIncident:
 			rType = ShareRequestIncident
 		}
-		w.Header().Set("X-Share-Type", string(rType))
 	}
 
 	if !rType.IsValid() {
@@ -157,23 +237,44 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 
 	switch rType {
 	case ShareRequestTalkgroups:
-		sa.shnd[rType](nil, sh, w, r)
-	case ShareRequestCall, ShareRequestCallDL:
-		if params.SubID == nil {
-			wErr(w, r, autoError(ErrBadShare))
-			return
+		sa.shnd[rType](nil, w, r)
+	case ShareRequestCall, ShareRequestCallInfo, ShareRequestCallDL:
+		var subIDU uuid.UUID
+		if params.SubID != nil {
+			subIDU, err = uuid.Parse(*params.SubID)
+			if err != nil {
+				wErr(w, r, badRequest(err))
+				return
+			}
+		} else {
+			subIDU = sh.EntityID
 		}
 
-		subIDU, err := uuid.Parse(*params.SubID)
-		if err != nil {
-			wErr(w, r, badRequest(err))
-			return
-		}
-		sa.shnd[rType](subIDU, sh, w, r)
+		sa.shnd[rType](subIDU, w, r)
 	case ShareRequestIncident, ShareRequestIncidentM3U:
-		sa.shnd[rType](sh.EntityID, sh, w, r)
+		sa.shnd[rType](sh.EntityID, w, r)
 	}
 }
 
 func (sa *shareAPI) deleteShare(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shs := shares.FromCtx(ctx)
+
+	p := struct {
+		ID string `param:"id"`
+	}{}
+
+	err := decodeParams(&p, r)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	err = shs.Delete(ctx, p.ID)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

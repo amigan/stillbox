@@ -34,8 +34,8 @@ type jwtAuth interface {
 	// InstallVerifyMiddleware installs the JWT verifier middleware to the provided chi Router.
 	VerifyMiddleware() func(http.Handler) http.Handler
 
-	// InstallAuthMiddleware installs the JWT authenticator middleware to the provided chi Router.
-	AuthMiddleware() func(http.Handler) http.Handler
+	// SubjectMiddleware sets the request context subject from JWT or public.
+	SubjectMiddleware(requireAuth bool) func(http.Handler) http.Handler
 
 	// PublicRoutes installs the auth route to the provided chi Router.
 	PublicRoutes(chi.Router)
@@ -84,22 +84,39 @@ func TokenFromCookie(r *http.Request) string {
 	return cookie.Value
 }
 
-func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
+func (a *Auth) PublicSubjectMiddleware() func(http.Handler) http.Handler {
+	return a.SubjectMiddleware(false)
+}
+
+func (a *Auth) AuthorizedSubjectMiddleware() func(http.Handler) http.Handler {
+	return a.SubjectMiddleware(true)
+}
+
+func (a *Auth) SubjectMiddleware(requireToken bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
 			token, _, err := jwtauth.FromContext(r.Context())
 
-			if err != nil {
+			if err != nil && requireToken {
 				http.Error(w, err.Error(), http.StatusUnauthorized)
 				return
 			}
 
-			if token != nil && jwt.Validate(token, a.jwt.ValidateOptions()...) == nil {
-				ctx := r.Context()
+			ctx := r.Context()
+
+			if token != nil {
+				err := jwt.Validate(token, a.jwt.ValidateOptions()...)
+				if err != nil {
+					err = jwtauth.ErrorReason(err)
+					http.Error(w, err.Error(), http.StatusUnauthorized)
+					return
+				}
+
 				username := token.Subject()
 
 				sub, err := users.FromCtx(ctx).GetUser(ctx, username)
 				if err != nil {
+					log.Error().Str("username", username).Err(err).Msg("subject middleware get subject")
 					http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 					return
 				}
@@ -111,8 +128,9 @@ func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			// Token is authenticated, pass it through
-			next.ServeHTTP(w, r)
+			// Public subject
+			ctx = entities.CtxWithSubject(ctx, entities.NewPublicSubject(r))
+			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 		return http.HandlerFunc(hfn)
 	}
@@ -211,7 +229,7 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cookie.Secure {
-		cookie.Domain = r.Host
+		cookie.Domain = strings.Split(r.Host, ":")[0]
 	}
 	http.SetCookie(w, cookie)
 
@@ -271,7 +289,7 @@ func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   60 * 60 * 24 * 30, // one month
 	}
 
-	cookie.Domain = r.Host
+	cookie.Domain = strings.Split(r.Host, ":")[0]
 	if a.allowInsecureCookie(r) {
 		a.setInsecureCookie(cookie)
 	}
@@ -297,7 +315,7 @@ func (a *Auth) routeLogout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	}
 
-	cookie.Domain = r.Host
+	cookie.Domain = strings.Split(r.Host, ":")[0]
 	if a.allowInsecureCookie(r) {
 		cookie.Secure = true
 		cookie.SameSite = http.SameSiteNoneMode

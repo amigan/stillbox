@@ -3,9 +3,11 @@ package calls
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/audio"
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
@@ -20,6 +22,13 @@ type CallDuration time.Duration
 
 func (d CallDuration) Duration() time.Duration {
 	return time.Duration(d)
+}
+
+func (d CallDuration) ColonFormat() string {
+	dur := d.Duration().Round(time.Second)
+	m := dur / time.Minute
+	s := dur / time.Second
+	return fmt.Sprintf("%d:%02d", m, s)
 }
 
 func (d CallDuration) MsInt32Ptr() *int32 {
@@ -59,18 +68,19 @@ type Call struct {
 	AudioType      string        `json:"audioType,omitempty" relayOut:"audioType,omitempty"`
 	AudioURL       *string       `json:"audioURL,omitempty" relayOut:"audioURL,omitempty"`
 	Duration       CallDuration  `json:"duration,omitempty" relayOut:"duration,omitempty"`
-	DateTime       time.Time     `json:"call_date,omitempty" relayOut:"dateTime,omitempty"`
+	DateTime       time.Time     `json:"callDate,omitempty" relayOut:"dateTime,omitempty"`
 	Frequencies    []int         `json:"frequencies,omitempty" relayOut:"frequencies,omitempty"`
 	Frequency      int           `json:"frequency,omitempty" relayOut:"frequency,omitempty"`
 	Patches        []int         `json:"patches,omitempty" relayOut:"patches,omitempty"`
 	Source         int           `json:"source,omitempty" relayOut:"source,omitempty"`
-	System         int           `json:"system_id,omitempty" relayOut:"system,omitempty"`
+	System         int           `json:"systemId,omitempty" relayOut:"system,omitempty"`
 	Submitter      *users.UserID `json:"submitter,omitempty" relayOut:"submitter,omitempty"`
-	SystemLabel    string        `json:"system_name,omitempty" relayOut:"systemLabel,omitempty"`
+	SystemLabel    string        `json:"systemName,omitempty" relayOut:"systemLabel,omitempty"`
 	Talkgroup      int           `json:"tgid,omitempty" relayOut:"talkgroup,omitempty"`
 	TalkgroupGroup *string       `json:"talkgroupGroup,omitempty" relayOut:"talkgroupGroup,omitempty"`
 	TalkgroupLabel *string       `json:"talkgroupLabel,omitempty" relayOut:"talkgroupLabel,omitempty"`
-	TGAlphaTag     *string       `json:"tg_name,omitempty" relayOut:"talkgroupTag,omitempty"`
+	TGAlphaTag     *string       `json:"tgAlphaTag,omitempty" relayOut:"talkgroupTag,omitempty"`
+	Transcript     *string       `json:"transcript" relayOut:"transcript,omitempty"`
 
 	shouldStore bool `json:"-"`
 }
@@ -85,6 +95,15 @@ func (c *Call) String() string {
 
 func (c *Call) ShouldStore() bool {
 	return c.shouldStore
+}
+
+func (c *Call) SetShareURL(baseURL url.URL, shareID string) {
+	if c.AudioURL != nil {
+		return
+	}
+
+	baseURL.Path = fmt.Sprintf("/share/%s/call", shareID)
+	c.AudioURL = common.PtrTo(baseURL.String())
 }
 
 func Make(call *Call, dontStore bool) (*Call, error) {

@@ -47,14 +47,19 @@ func (et EntityType) IsValid() bool {
 type Share struct {
 	ID         string          `json:"id"`
 	Type       EntityType      `json:"entityType"`
-	Date       *jsontypes.Time `json:"-"` // we handle this for the user
-	Owner      users.UserID    `json:"owner"`
+	Date       *jsontypes.Time `json:"entityDate,omitempty"` // we handle this for the user
+	Owner      users.UserID    `json:"-"`
+	OwnerUser  *string         `json:"owner,omitempty"`
 	EntityID   uuid.UUID       `json:"entityID"`
 	Expiration *jsontypes.Time `json:"expiration"`
 }
 
 func (s *Share) GetName() string {
 	return "SHARE:" + s.ID
+}
+
+func (s *Share) String() string {
+	return s.GetName()
 }
 
 func (s *Share) GetRoles() []string {

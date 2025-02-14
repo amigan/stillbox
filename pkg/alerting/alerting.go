@@ -38,6 +38,7 @@ type Alerter interface {
 
 	Enabled() bool
 	Go(context.Context)
+	HUP(*config.Config)
 
 	stats
 }
@@ -101,9 +102,7 @@ func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerte
 		tgCache:    tgCache,
 	}
 
-	if cfg.Renotify != nil {
-		as.renotify = cfg.Renotify.Duration()
-	}
+	as.reload()
 
 	for _, opt := range opts {
 		opt(as)
@@ -120,6 +119,21 @@ func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerte
 	)
 
 	return as
+}
+
+func (as *alerter) reload() {
+	if as.cfg.Renotify != nil {
+		as.renotify = as.cfg.Renotify.Duration()
+	}
+}
+
+func (as *alerter) HUP(cfg *config.Config) {
+	as.Lock()
+	defer as.Unlock()
+
+	log.Debug().Msg("reloading alert config")
+	as.cfg = cfg.Alerting
+	as.reload()
 }
 
 // Go is the alerting loop. It does not start a goroutine.
@@ -166,7 +180,12 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 	for _, s := range as.scores {
 		origScore := s.Score
 		tgr, err := as.tgCache.TG(ctx, s.ID)
-		if err != nil || !tgr.Talkgroup.Alert {
+		if err != nil {
+			log.Error().Err(err).Msg("alerting eval tg get")
+			continue
+		}
+
+		if !tgr.Talkgroup.Alert {
 			continue
 		}
 
@@ -376,3 +395,4 @@ func (*noopAlerter) SinkType() string                            { return "noopA
 func (*noopAlerter) Call(_ context.Context, _ *calls.Call) error { return nil }
 func (*noopAlerter) Go(_ context.Context)                        {}
 func (*noopAlerter) Enabled() bool                               { return false }
+func (*noopAlerter) HUP(_ *config.Config)                        {}

@@ -2,14 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import {
   BehaviorSubject,
-  concatMap,
   Observable,
   ReplaySubject,
   shareReplay,
+  Subject,
   Subscription,
   switchMap,
 } from 'rxjs';
 import { Talkgroup, TalkgroupUpdate, TGID } from '../talkgroup';
+import { Share } from '../shares';
+import { ShareService } from '../share/share.service';
+import { AuthService } from '../login/auth.service';
 
 export interface Pagination {
   page: number;
@@ -29,15 +32,36 @@ export class TalkgroupService {
   private readonly _getTalkgroup = new Map<string, ReplaySubject<Talkgroup>>();
   private tgs$: Observable<Talkgroup[]>;
   private tags$!: Observable<string[]>;
-  private fetchAll = new BehaviorSubject<'fetch'>('fetch');
+  private fetchAll = new ReplaySubject<Share | null>();
   private subscriptions = new Subscription();
-  constructor(private http: HttpClient) {
-    this.tgs$ = this.fetchAll.pipe(switchMap(() => this.getTalkgroups()));
+  constructor(
+    private http: HttpClient,
+    private shareSvc: ShareService,
+    private authSvc: AuthService,
+  ) {
+    this.tgs$ = this.fetchAll.pipe(
+      switchMap((share) => this.getTalkgroups(share)),
+      shareReplay(),
+    );
     this.tags$ = this.fetchAll.pipe(
       switchMap(() => this.getAllTags()),
       shareReplay(),
     );
+    let sh = this.shareSvc.inShare();
+    if (sh) {
+      this.shareSvc.getShare(sh).subscribe(this.fetchAll);
+    } else {
+      if (this.authSvc.isAuth()) {
+        this.fetchAll.next(null);
+      }
+    }
     this.fillTgMap();
+  }
+
+  setShare(share: Share | null) {
+    if (!this.authSvc.isAuth() && share !== null) {
+      this.fetchAll.next(share);
+    }
   }
 
   ngOnDestroy() {
@@ -45,14 +69,20 @@ export class TalkgroupService {
   }
 
   getAllTags(): Observable<string[]> {
-    return this.http.get<string[]>('/api/talkgroup/tags').pipe(shareReplay());
+    return this.http.get<string[]>('/api/talkgroup/tags');
   }
 
-  getTalkgroups(): Observable<Talkgroup[]> {
-    return this.http.get<Talkgroup[]>('/api/talkgroup/').pipe(shareReplay());
+  getTalkgroups(share: Share | null): Observable<Talkgroup[]> {
+    return this.http.get<Talkgroup[]>(
+      share ? `/share/${share.id}/talkgroups` : '/api/talkgroup/',
+    );
   }
 
-  getTalkgroup(sys: number, tg: number): Observable<Talkgroup> {
+  getTalkgroup(
+    sys: number,
+    tg: number,
+    share: Share | null = null,
+  ): Observable<Talkgroup> {
     const key = this.tgKey(sys, tg);
     if (!this._getTalkgroup.get(key)) {
       let rs = new ReplaySubject<Talkgroup>();
@@ -62,10 +92,10 @@ export class TalkgroupService {
   }
 
   putTalkgroup(tu: TalkgroupUpdate): Observable<Talkgroup> {
-    let tgid = this.tgKey(tu.system_id, tu.tgid);
+    let tgid = this.tgKey(tu.systemId, tu.tgid);
 
     return this.http
-      .put<Talkgroup>(`/api/talkgroup/${tu.system_id}/${tu.tgid}`, tu)
+      .put<Talkgroup>(`/api/talkgroup/${tu.systemId}/${tu.tgid}`, tu)
       .pipe(
         switchMap((tg) => {
           let tObs = this._getTalkgroup.get(tgid);
@@ -100,7 +130,7 @@ export class TalkgroupService {
     this.subscriptions.add(
       this.tgs$.subscribe((tgs) => {
         tgs.forEach((tg) => {
-          let tgid = this.tgKey(tg.system_id, tg.tgid);
+          let tgid = this.tgKey(tg.systemId, tg.tgid);
           const rs = this._getTalkgroup.get(tgid);
           if (rs) {
             (rs as ReplaySubject<Talkgroup>).next(tg);

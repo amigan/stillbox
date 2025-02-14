@@ -9,6 +9,11 @@ export const routes: Routes = [
       import('./login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 's/:id',
+    loadComponent: () =>
+      import('./share/share.component').then((m) => m.ShareComponent),
+  },
+  {
     path: '',
     canActivateChild: [AuthGuard],
     children: [
@@ -70,6 +75,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./alerts/alerts.component').then((m) => m.AlertsComponent),
         data: { title: 'Alerts' },
+      },
+      {
+        path: 'shares',
+        loadComponent: () =>
+          import('./shares/shares.component').then((m) => m.SharesComponent),
+        data: { title: 'Shares' },
       },
     ],
   },

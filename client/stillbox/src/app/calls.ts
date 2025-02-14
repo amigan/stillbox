@@ -1,8 +1,9 @@
 export interface CallRecord {
   id: string;
-  call_date: Date;
+  callDate: Date;
+  audioURL: string | null;
   duration: number;
-  system_id: number;
+  systemId: number;
   tgid: number;
   incidents: number; // in incident
 }

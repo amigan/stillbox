@@ -84,8 +84,8 @@ export class TalkgroupRecordComponent {
   readonly _allTags: Observable<string[]>;
   form = new FormGroup({
     name: new FormControl(''),
-    alpha_tag: new FormControl(''),
-    tg_group: new FormControl(''),
+    alphaTag: new FormControl(''),
+    tgGroup: new FormControl(''),
     frequency: new FormControl(0),
     alert: new FormControl(false),
     weight: new FormControl(0.0),
@@ -158,9 +158,8 @@ export class TalkgroupRecordComponent {
       .getTalkgroup(Number(this.tgid.sys), Number(this.tgid.tg))
       .pipe(
         tap((tg) => {
-          console.log('tap run');
-          tg.alert_rules = tg.alert_rules
-            ? tg.alert_rules.map((x) => Object.assign(new AlertRule(), x))
+          tg.alertRules = tg.alertRules
+            ? tg.alertRules.map((x) => Object.assign(new AlertRule(), x))
             : [];
           this.form.patchValue(tg);
           this.form.controls['tagInput'].setValue('');
@@ -181,17 +180,17 @@ export class TalkgroupRecordComponent {
 
   save() {
     let tgu: TalkgroupUpdate = <TalkgroupUpdate>{
-      system_id: this.tgid.sys,
+      systemId: this.tgid.sys,
       tgid: this.tgid.tg,
     };
     if (this.form.controls['name'].dirty) {
       tgu.name = this.form.controls['name'].value;
     }
-    if (this.form.controls['alpha_tag'].dirty) {
-      tgu.alpha_tag = this.form.controls['alpha_tag'].value;
+    if (this.form.controls['alphaTag'].dirty) {
+      tgu.alphaTag = this.form.controls['alphaTag'].value;
     }
-    if (this.form.controls['tg_group'].dirty) {
-      tgu.tg_group = this.form.controls['tg_group'].value;
+    if (this.form.controls['tgGroup'].dirty) {
+      tgu.tgGroup = this.form.controls['tgGroup'].value;
     }
     if (this.form.controls['frequency'].dirty) {
       tgu.frequency = this.form.controls['frequency'].value;

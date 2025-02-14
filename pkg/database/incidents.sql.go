@@ -61,6 +61,7 @@ INSERT INTO incidents (
 	name,
 	owner,
 	description,
+	created_at,
 	start_time,
 	end_time,
 	location,
@@ -70,12 +71,13 @@ INSERT INTO incidents (
 	$2,
 	$3,
 	$4,
+	NOW(),
 	$5,
 	$6,
 	$7,
 	$8
 )
-RETURNING id, name, owner, description, start_time, end_time, location, metadata
+RETURNING id, name, owner, description, created_at, start_time, end_time, location, metadata
 `
 
 type CreateIncidentParams struct {
@@ -83,8 +85,8 @@ type CreateIncidentParams struct {
 	Name        string             `json:"name"`
 	Owner       int                `json:"owner"`
 	Description *string            `json:"description"`
-	StartTime   pgtype.Timestamptz `json:"start_time"`
-	EndTime     pgtype.Timestamptz `json:"end_time"`
+	StartTime   pgtype.Timestamptz `json:"startTime"`
+	EndTime     pgtype.Timestamptz `json:"endTime"`
 	Location    []byte             `json:"location"`
 	Metadata    jsontypes.Metadata `json:"metadata"`
 }
@@ -106,6 +108,7 @@ func (q *Queries) CreateIncident(ctx context.Context, arg CreateIncidentParams) 
 		&i.Name,
 		&i.Owner,
 		&i.Description,
+		&i.CreatedAt,
 		&i.StartTime,
 		&i.EndTime,
 		&i.Location,
@@ -129,6 +132,7 @@ SELECT
 	i.name,
 	i.owner,
 	i.description,
+	i.created_at,
 	i.start_time,
 	i.end_time,
 	i.location,
@@ -145,6 +149,7 @@ func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (Incident, erro
 		&i.Name,
 		&i.Owner,
 		&i.Description,
+		&i.CreatedAt,
 		&i.StartTime,
 		&i.EndTime,
 		&i.Location,
@@ -206,16 +211,16 @@ ORDER BY ic.call_date ASC
 `
 
 type GetIncidentCallsRow struct {
-	CallID      uuid.UUID          `json:"call_id"`
-	CallDate    pgtype.Timestamptz `json:"call_date"`
+	CallID      uuid.UUID          `json:"callId"`
+	CallDate    pgtype.Timestamptz `json:"callDate"`
 	Duration    *int32             `json:"duration"`
-	SystemID    int                `json:"system_id"`
+	SystemID    int                `json:"systemId"`
 	TGID        int                `json:"tgid"`
 	Notes       []byte             `json:"notes"`
 	Submitter   *int32             `json:"submitter"`
-	AudioName   *string            `json:"audio_name"`
-	AudioType   *string            `json:"audio_type"`
-	AudioUrl    *string            `json:"audio_url"`
+	AudioName   *string            `json:"audioName"`
+	AudioType   *string            `json:"audioType"`
+	AudioUrl    *string            `json:"audioUrl"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	Patches     []int              `json:"patches"`
@@ -297,6 +302,7 @@ SELECT
 	i.name,
 	i.owner,
 	i.description,
+	i.created_at,
 	i.start_time,
 	i.end_time,
 	i.location,
@@ -327,7 +333,7 @@ type ListIncidentsPParams struct {
 	Filter    *string            `json:"filter"`
 	Direction string             `json:"direction"`
 	Offset    int32              `json:"offset"`
-	PerPage   int32              `json:"per_page"`
+	PerPage   int32              `json:"perPage"`
 }
 
 type ListIncidentsPRow struct {
@@ -335,11 +341,12 @@ type ListIncidentsPRow struct {
 	Name        string             `json:"name"`
 	Owner       int                `json:"owner"`
 	Description *string            `json:"description"`
-	StartTime   pgtype.Timestamptz `json:"start_time"`
-	EndTime     pgtype.Timestamptz `json:"end_time"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	StartTime   pgtype.Timestamptz `json:"startTime"`
+	EndTime     pgtype.Timestamptz `json:"endTime"`
 	Location    []byte             `json:"location"`
 	Metadata    jsontypes.Metadata `json:"metadata"`
-	CallsCount  int64              `json:"calls_count"`
+	CallsCount  int64              `json:"callsCount"`
 }
 
 func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) ([]ListIncidentsPRow, error) {
@@ -363,6 +370,7 @@ func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) 
 			&i.Name,
 			&i.Owner,
 			&i.Description,
+			&i.CreatedAt,
 			&i.StartTime,
 			&i.EndTime,
 			&i.Location,
@@ -411,14 +419,14 @@ SET
 	metadata = COALESCE($6, metadata)
 WHERE
 	id = $7
-RETURNING id, name, owner, description, start_time, end_time, location, metadata
+RETURNING id, name, owner, description, created_at, start_time, end_time, location, metadata
 `
 
 type UpdateIncidentParams struct {
 	Name        *string            `json:"name"`
 	Description *string            `json:"description"`
-	StartTime   pgtype.Timestamptz `json:"start_time"`
-	EndTime     pgtype.Timestamptz `json:"end_time"`
+	StartTime   pgtype.Timestamptz `json:"startTime"`
+	EndTime     pgtype.Timestamptz `json:"endTime"`
 	Location    []byte             `json:"location"`
 	Metadata    jsontypes.Metadata `json:"metadata"`
 	ID          uuid.UUID          `json:"id"`
@@ -440,6 +448,7 @@ func (q *Queries) UpdateIncident(ctx context.Context, arg UpdateIncidentParams) 
 		&i.Name,
 		&i.Owner,
 		&i.Description,
+		&i.CreatedAt,
 		&i.StartTime,
 		&i.EndTime,
 		&i.Location,

@@ -30,10 +30,10 @@ VALUES
 type AddAlertParams struct {
 	Time      pgtype.Timestamptz `json:"time"`
 	TGID      int                `json:"tgid"`
-	SystemID  int                `json:"system_id"`
+	SystemID  int                `json:"systemId"`
 	Weight    *float32           `json:"weight"`
 	Score     *float32           `json:"score"`
-	OrigScore *float32           `json:"orig_score"`
+	OrigScore *float32           `json:"origScore"`
 	Notified  bool               `json:"notified"`
 	Metadata  []byte             `json:"metadata"`
 }
@@ -97,18 +97,18 @@ type AddCallParams struct {
 	Submitter   *int32             `json:"submitter"`
 	System      int                `json:"system"`
 	Talkgroup   int                `json:"talkgroup"`
-	CallDate    pgtype.Timestamptz `json:"call_date"`
-	AudioName   *string            `json:"audio_name"`
-	AudioBlob   []byte             `json:"audio_blob"`
-	AudioType   *string            `json:"audio_type"`
-	AudioUrl    *string            `json:"audio_url"`
+	CallDate    pgtype.Timestamptz `json:"callDate"`
+	AudioName   *string            `json:"audioName"`
+	AudioBlob   []byte             `json:"audioBlob"`
+	AudioType   *string            `json:"audioType"`
+	AudioUrl    *string            `json:"audioUrl"`
 	Duration    *int32             `json:"duration"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	Patches     []int              `json:"patches"`
-	TGLabel     *string            `json:"tg_label"`
-	TGAlphaTag  *string            `json:"tg_alpha_tag"`
-	TGGroup     *string            `json:"tg_group"`
+	TGLabel     *string            `json:"tgLabel"`
+	TGAlphaTag  *string            `json:"tgAlphaTag"`
+	TGGroup     *string            `json:"tgGroup"`
 	Source      int                `json:"source"`
 }
 
@@ -181,7 +181,8 @@ SELECT
 	tg_label,
 	tg_alpha_tag,
 	tg_group,
-	source
+	source,
+	transcript
 FROM calls
 WHERE id = $1
 `
@@ -191,18 +192,19 @@ type GetCallRow struct {
 	Submitter   *int32             `json:"submitter"`
 	System      int                `json:"system"`
 	Talkgroup   int                `json:"talkgroup"`
-	CallDate    pgtype.Timestamptz `json:"call_date"`
-	AudioName   *string            `json:"audio_name"`
-	AudioType   *string            `json:"audio_type"`
-	AudioUrl    *string            `json:"audio_url"`
+	CallDate    pgtype.Timestamptz `json:"callDate"`
+	AudioName   *string            `json:"audioName"`
+	AudioType   *string            `json:"audioType"`
+	AudioUrl    *string            `json:"audioUrl"`
 	Duration    *int32             `json:"duration"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	Patches     []int              `json:"patches"`
-	TGLabel     *string            `json:"tg_label"`
-	TGAlphaTag  *string            `json:"tg_alpha_tag"`
-	TGGroup     *string            `json:"tg_group"`
+	TGLabel     *string            `json:"tgLabel"`
+	TGAlphaTag  *string            `json:"tgAlphaTag"`
+	TGGroup     *string            `json:"tgGroup"`
 	Source      int                `json:"source"`
+	Transcript  *string            `json:"transcript"`
 }
 
 func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error) {
@@ -225,6 +227,7 @@ func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 		&i.TGAlphaTag,
 		&i.TGGroup,
 		&i.Source,
+		&i.Transcript,
 	)
 	return i, err
 }
@@ -248,10 +251,10 @@ WHERE sc.id = $1
 `
 
 type GetCallAudioByIDRow struct {
-	CallDate  pgtype.Timestamptz `json:"call_date"`
-	AudioName *string            `json:"audio_name"`
-	AudioType *string            `json:"audio_type"`
-	AudioBlob []byte             `json:"audio_blob"`
+	CallDate  pgtype.Timestamptz `json:"callDate"`
+	AudioName *string            `json:"audioName"`
+	AudioType *string            `json:"audioType"`
+	AudioBlob []byte             `json:"audioBlob"`
 }
 
 func (q *Queries) GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error) {
@@ -315,10 +318,10 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 type ListCallsCountParams struct {
 	Start      pgtype.Timestamptz `json:"start"`
 	End        pgtype.Timestamptz `json:"end"`
-	TagsAny    []string           `json:"tags_any"`
-	TagsNot    []string           `json:"tags_not"`
-	TGFilter   *string            `json:"tg_filter"`
-	LongerThan pgtype.Numeric     `json:"longer_than"`
+	TagsAny    []string           `json:"tagsAny"`
+	TagsNot    []string           `json:"tagsNot"`
+	TGFilter   *string            `json:"tgFilter"`
+	LongerThan pgtype.Numeric     `json:"longerThan"`
 }
 
 func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error) {
@@ -375,20 +378,20 @@ FETCH NEXT $9 ROWS ONLY
 type ListCallsPParams struct {
 	Start      pgtype.Timestamptz `json:"start"`
 	End        pgtype.Timestamptz `json:"end"`
-	TagsAny    []string           `json:"tags_any"`
-	TagsNot    []string           `json:"tags_not"`
-	TGFilter   *string            `json:"tg_filter"`
-	LongerThan pgtype.Numeric     `json:"longer_than"`
+	TagsAny    []string           `json:"tagsAny"`
+	TagsNot    []string           `json:"tagsNot"`
+	TGFilter   *string            `json:"tgFilter"`
+	LongerThan pgtype.Numeric     `json:"longerThan"`
 	Direction  string             `json:"direction"`
 	Offset     int32              `json:"offset"`
-	PerPage    int32              `json:"per_page"`
+	PerPage    int32              `json:"perPage"`
 }
 
 type ListCallsPRow struct {
 	ID        uuid.UUID          `json:"id"`
-	CallDate  pgtype.Timestamptz `json:"call_date"`
+	CallDate  pgtype.Timestamptz `json:"callDate"`
 	Duration  *int32             `json:"duration"`
-	SystemID  int                `json:"system_id"`
+	SystemID  int                `json:"systemId"`
 	TGID      int                `json:"tgid"`
 	Incidents int64              `json:"incidents"`
 }

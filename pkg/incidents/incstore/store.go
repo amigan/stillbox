@@ -55,7 +55,7 @@ type Store interface {
 	// CallIn returns whether an incident is in an call
 	CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUID) (bool, error)
 
-	// TGsIn returns the talkgroups referenced by an incident as a map, primary for rbac use.
+	// TGsIn returns the talkgroups referenced by an incident as a map, primarily for rbac use.
 	TGsIn(ctx context.Context, inc uuid.UUID) (talkgroups.PresenceMap, error)
 }
 
@@ -231,6 +231,7 @@ func fromDBIncident(id uuid.UUID, d database.Incident) incidents.Incident {
 		Owner:       users.UserID(d.Owner),
 		Name:        d.Name,
 		Description: d.Description,
+		CreatedAt:   jsontypes.Time(d.CreatedAt.Time),
 		StartTime:   jsontypes.TimePtrFromTSTZ(d.StartTime),
 		EndTime:     jsontypes.TimePtrFromTSTZ(d.EndTime),
 		Metadata:    d.Metadata,
@@ -250,6 +251,7 @@ func fromDBListInPRow(id uuid.UUID, d database.ListIncidentsPRow) Incident {
 			Owner:       users.UserID(d.Owner),
 			Name:        d.Name,
 			Description: d.Description,
+			CreatedAt:   jsontypes.Time(d.CreatedAt.Time),
 			StartTime:   jsontypes.TimePtrFromTSTZ(d.StartTime),
 			EndTime:     jsontypes.TimePtrFromTSTZ(d.EndTime),
 			Metadata:    d.Metadata,
@@ -268,6 +270,7 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 				ID:          v.CallID,
 				AudioName:   common.ZeroIfNil(v.AudioName),
 				AudioType:   common.ZeroIfNil(v.AudioType),
+				AudioURL:    v.AudioUrl,
 				Duration:    dur,
 				DateTime:    v.CallDate.Time,
 				Frequencies: v.Frequencies,

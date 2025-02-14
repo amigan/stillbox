@@ -134,7 +134,7 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	err = h.ing.Ingest(entities.CtxWithSubject(ctx, submitterSub), call)
 	if err != nil {
-		if rbac.ErrAccessDenied(err) != nil {
+		if rbac.IsErrAccessDenied(err) != nil {
 			log.Error().Err(err).Msg("ingest failed")
 			http.Error(w, "Call ingest failed.", http.StatusForbidden)
 		}

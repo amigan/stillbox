@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
@@ -11,10 +13,12 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/pb"
+	"golang.org/x/term"
 
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
@@ -37,6 +41,31 @@ func userAgent(h http.Header) {
 	h.Set("User-Agent", uaString)
 }
 
+func getCreds() {
+	rdr := bufio.NewReader(os.Stdin)
+	if username == nil || *username == "" {
+		fmt.Print("Username: ")
+		un, err := rdr.ReadString('\n')
+		if err != nil {
+			panic(err)
+		}
+
+		username = &un
+	}
+
+	if password == nil || *password == "" {
+		fmt.Print("Password: ")
+		bytePass, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			panic(err)
+		}
+
+		pS := string(bytePass)
+		pS = strings.Trim(pS, "\n")
+		password = &pS
+	}
+}
+
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
@@ -52,6 +81,8 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 	play := NewPlayer()
+
+	getCreds()
 
 	loginForm := url.Values{}
 	loginForm.Add("username", *username)

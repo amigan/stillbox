@@ -64,7 +64,7 @@ protobuf best practices (i.e. not changing field numbers).
 
 ## License and Copyright
 
-© 2024, Daniel Ponte <dan AT dynatron DOT me>
+© 2024, 2025 Daniel Ponte <dan AT dynatron DOT me>
 
 Licensed under the 3-clause BSD license. See LICENSE for details.
 
