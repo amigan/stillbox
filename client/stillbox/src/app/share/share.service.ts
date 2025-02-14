@@ -6,6 +6,26 @@ import { CallRecord } from '../calls';
 import { Share, ShareType } from '../shares';
 import { ActivatedRoute, Router } from '@angular/router';
 
+export interface ShareRecord {
+  id: string;
+  entityType: string;
+  entityDate: Date;
+  owner: string;
+  entityID: string;
+  expiration: Date | null;
+}
+
+export interface ShareListParams {
+  page: number | null;
+  perPage: number | null;
+  dir: string | null;
+}
+
+export interface Shares {
+  shares: ShareRecord[];
+  totalCount: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -26,6 +46,14 @@ export class ShareService {
 
   getShare(id: string): Observable<Share> {
     return this.http.get<Share>(`/share/${id}`);
+  }
+
+  deleteShare(id: string): Observable<void> {
+    return this.http.delete<void>(`/api/share/${id}`);
+  }
+
+  getShares(p: ShareListParams): Observable<Shares> {
+    return this.http.post<Shares>('/api/share/', p);
   }
 
   getSharedItem(s: Observable<Share>): Observable<ShareType> {
