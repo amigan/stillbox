@@ -19,6 +19,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/rbac/policy"
 	"dynatron.me/x/stillbox/pkg/rest"
+	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/sources"
@@ -158,6 +159,9 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 }
 
 func (s *Server) fillCtx(ctx context.Context) context.Context {
+	svc := services.New()
+	ctx = services.CtxWith(ctx, svc)
+
 	ctx = database.CtxWithDB(ctx, s.db)
 	ctx = tgstore.CtxWithStore(ctx, s.tgs)
 	ctx = users.CtxWithStore(ctx, s.users)

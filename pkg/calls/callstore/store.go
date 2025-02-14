@@ -12,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/users"
 
@@ -55,11 +56,11 @@ type storeCtxKey string
 const StoreCtxKey storeCtxKey = "store"
 
 func CtxWithStore(ctx context.Context, s Store) context.Context {
-	return context.WithValue(ctx, StoreCtxKey, s)
+	return services.WithValue(ctx, StoreCtxKey, s)
 }
 
 func FromCtx(ctx context.Context) Store {
-	s, ok := ctx.Value(StoreCtxKey).(Store)
+	s, ok := services.Value(ctx, StoreCtxKey).(Store)
 	if !ok {
 		panic("no call store in context")
 	}
