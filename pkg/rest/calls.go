@@ -10,8 +10,10 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/stats"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -34,6 +36,7 @@ func (ca *callsAPI) Subrouter() http.Handler {
 	r.Get(`/{call:[a-f0-9-]+}`, ca.getAudioRoute)
 	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.getAudioRoute)
 	r.Post(`/`, ca.listCalls)
+	r.Get(`/stats/{interval}`, ca.getCallStats)
 
 	return r
 }
@@ -53,6 +56,29 @@ func (ca *callsAPI) getAudioRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ca.getAudio(p, w, r)
+}
+
+func (ca *callsAPI) getCallStats(w http.ResponseWriter, r *http.Request) {
+	p := struct {
+		Interval calls.StatsInterval `param:"interval"`
+	}{}
+
+	err := decodeParams(&p, r)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	ctx := r.Context()
+	sts := stats.FromCtx(ctx)
+
+	st, err := sts.GetCallStats(ctx, p.Interval)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, st)
 }
 
 func (ca *callsAPI) getAudio(p getAudioParams, w http.ResponseWriter, r *http.Request) {

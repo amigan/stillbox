@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
@@ -165,6 +166,7 @@ var statusMapping = map[error]errResponder{
 	shares.ErrNoShare:         notFoundErrText,
 	ErrBadShare:               notFoundErrText,
 	shares.ErrBadType:         badRequestErrText,
+	calls.ErrInvalidInterval:  badRequestErrText,
 }
 
 func autoError(err error) render.Renderer {
