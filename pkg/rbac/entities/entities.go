@@ -2,6 +2,7 @@ package entities
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/el-mike/restrict/v2"
@@ -39,6 +40,7 @@ func SubjectFrom(ctx context.Context) Subject {
 }
 
 type Subject interface {
+	fmt.Stringer
 	restrict.Subject
 	GetName() string
 }
@@ -63,6 +65,10 @@ func (s *PublicSubject) GetName() string {
 	return "PUBLIC:" + s.RemoteAddr
 }
 
+func (s *PublicSubject) String() string {
+	return s.GetName()
+}
+
 func (s *PublicSubject) GetRoles() []string {
 	return []string{RolePublic}
 }
@@ -77,6 +83,10 @@ type SystemServiceSubject struct {
 
 func (s *SystemServiceSubject) GetName() string {
 	return "SYSTEM:" + s.Name
+}
+
+func (s *SystemServiceSubject) String() string {
+	return s.GetName()
 }
 
 func (s *SystemServiceSubject) GetRoles() []string {

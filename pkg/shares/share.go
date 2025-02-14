@@ -57,6 +57,10 @@ func (s *Share) GetName() string {
 	return "SHARE:" + s.ID
 }
 
+func (s *Share) String() string {
+	return s.GetName()
+}
+
 func (s *Share) GetRoles() []string {
 	return []string{entities.RoleShareGuest}
 }

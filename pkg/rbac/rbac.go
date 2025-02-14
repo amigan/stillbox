@@ -8,6 +8,7 @@ import (
 
 	"github.com/el-mike/restrict/v2"
 	"github.com/el-mike/restrict/v2/adapters"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -121,6 +122,18 @@ func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOp
 	}
 
 	authRes := r.access.Authorize(req)
+	if IsErrAccessDenied(authRes) != nil {
+		subS := ""
+		resS := ""
+		if sub != nil {
+			subS = sub.String()
+		}
+
+		if res != nil {
+			resS = res.GetResourceName()
+		}
+		log.Error().Str("resource", resS).Strs("actions", req.Actions).Str("subject", subS).Msg("access denied")
+	}
 
 	return sub, authRes
 }
