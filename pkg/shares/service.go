@@ -23,7 +23,7 @@ type service struct {
 }
 
 func (s *service) Go(ctx context.Context) {
-	ctx = entities.CtxWithSubject(ctx, &entities.SystemServiceSubject{Name: "share"})
+	ctx = entities.CtxWithServiceSubject(ctx, "share")
 
 	tick := time.NewTicker(PruneInterval)
 

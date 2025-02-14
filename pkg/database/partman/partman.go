@@ -135,7 +135,7 @@ func New(db database.Store, cfg config.Partition) (*partman, error) {
 var _ PartitionManager = (*partman)(nil)
 
 func (pm *partman) Go(ctx context.Context) {
-	ctx = entities.CtxWithSubject(ctx, &entities.SystemServiceSubject{Name: "partman"})
+	ctx = entities.CtxWithServiceSubject(ctx, "partman")
 	tick := time.NewTicker(CheckInterval)
 
 	select {

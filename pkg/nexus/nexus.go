@@ -39,7 +39,7 @@ func New() *Nexus {
 }
 
 func (n *Nexus) Go(ctx context.Context) {
-	ctx = entities.CtxWithSubject(ctx, &entities.SystemServiceSubject{Name: "nexus"})
+	ctx = entities.CtxWithServiceSubject(ctx, "nexus")
 	for {
 		select {
 		case call, ok := <-n.callCh:
