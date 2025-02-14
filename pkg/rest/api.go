@@ -179,7 +179,7 @@ func autoError(err error) render.Renderer {
 		}
 	}
 
-	if rbac.ErrAccessDenied(err) != nil {
+	if rbac.IsErrAccessDenied(err) != nil {
 		return forbiddenErrText(err)
 	}
 

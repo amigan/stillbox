@@ -12,11 +12,16 @@ import (
 
 var (
 	ErrBadSubject = errors.New("bad subject in token")
+	ErrAccessDenied = errors.New("access denied")
 )
 
-func ErrAccessDenied(err error) *restrict.AccessDeniedError {
+func IsErrAccessDenied(err error) error {
 	if accessErr, ok := err.(*restrict.AccessDeniedError); ok {
 		return accessErr
+	}
+
+	if err == ErrAccessDenied {
+		return err
 	}
 
 	return nil
@@ -115,5 +120,7 @@ func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOp
 		Context:  o.context,
 	}
 
-	return sub, r.access.Authorize(req)
+	authRes := r.access.Authorize(req)
+
+	return sub, authRes
 }

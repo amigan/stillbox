@@ -123,7 +123,7 @@ func (s *postgresStore) Shares(ctx context.Context, p SharesParams) (shares []*S
 	case *entities.SystemServiceSubject:
 		owner = nil
 	default:
-		return nil, 0, rbac.ErrAccessDenied(rbac.ErrNotAuthorized)
+		return nil, 0, rbac.ErrAccessDenied
 	}
 
 	db := database.FromCtx(ctx)
