@@ -32,7 +32,7 @@ func (s *Server) setupRoutes() {
 	r.Use(s.auth.VerifyMiddleware())
 
 	r.Group(func(r chi.Router) {
-		r.Use(s.auth.SubjectMiddleware(true))
+		r.Use(s.auth.AuthorizedSubjectMiddleware())
 		// authenticated routes
 		s.nex.PrivateRoutes(r)
 		s.auth.PrivateRoutes(r)
@@ -42,7 +42,7 @@ func (s *Server) setupRoutes() {
 
 	r.Group(func(r chi.Router) {
 		s.rateLimit(r)
-		r.Use(s.auth.SubjectMiddleware(false))
+		r.Use(s.auth.PublicSubjectMiddleware())
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		// public routes
 		s.sources.PublicRoutes(r)
@@ -51,7 +51,7 @@ func (s *Server) setupRoutes() {
 	r.Group(func(r chi.Router) {
 		// auth/share routes get rate-limited heavily, but not using middleware
 		s.rateLimit(r)
-		r.Use(s.auth.SubjectMiddleware(false))
+		r.Use(s.auth.PublicSubjectMiddleware())
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		s.auth.PublicRoutes(r)
 		r.Mount("/share", s.rest.ShareRouter())
@@ -60,7 +60,7 @@ func (s *Server) setupRoutes() {
 	r.Group(func(r chi.Router) {
 		s.rateLimit(r)
 		// optional auth routes
-		r.Use(s.auth.SubjectMiddleware(false))
+		r.Use(s.auth.PublicSubjectMiddleware())
 
 		s.clientRoute(r, clientRoot)
 	})

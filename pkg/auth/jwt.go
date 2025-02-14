@@ -116,6 +116,7 @@ func (a *Auth) SubjectMiddleware(requireToken bool) func(http.Handler) http.Hand
 
 				sub, err := users.FromCtx(ctx).GetUser(ctx, username)
 				if err != nil {
+					log.Error().Str("username", username).Err(err).Msg("subject middleware get subject")
 					http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 					return
 				}
