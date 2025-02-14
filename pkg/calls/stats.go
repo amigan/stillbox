@@ -11,6 +11,11 @@ type Stats struct {
 	Interval StatsInterval `json:"interval"`
 }
 
+type Stat struct {
+	Count int64          `json:"count"`
+	Time  jsontypes.Time `json:"time"`
+}
+
 var (
 	ErrInvalidInterval = errors.New("invalid interval")
 )
@@ -38,9 +43,4 @@ func (si StatsInterval) IsValid() bool {
 	}
 
 	return false
-}
-
-type Stat struct {
-	Count int64          `json:"count"`
-	Time  jsontypes.Time `json:"time"`
 }
