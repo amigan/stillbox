@@ -112,7 +112,7 @@ func (s *postgresStore) Shares(ctx context.Context, p SharesParams) (shares []*S
 	sub := entities.SubjectFrom(ctx)
 
 	// ersatz RBAC
-	owner := common.PtrTo(int32(-1)) // invalid UID
+	var owner *int32
 	switch s := sub.(type) {
 	case *users.User:
 		if !s.IsAdmin {
