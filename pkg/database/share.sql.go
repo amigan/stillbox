@@ -55,14 +55,14 @@ func (q *Queries) DeleteShare(ctx context.Context, id string) error {
 
 const getShare = `-- name: GetShare :one
 SELECT
-	id,
-	entity_type,
-	entity_id,
-	entity_date,
-	owner,
-	expiration
-FROM shares
-WHERE id = $1
+	s.id,
+	s.entity_type,
+	s.entity_id,
+	s.entity_date,
+	s.owner,
+	s.expiration
+FROM shares s
+WHERE s.id = $1
 `
 
 func (q *Queries) GetShare(ctx context.Context, id string) (Share, error) {
@@ -81,13 +81,10 @@ func (q *Queries) GetShare(ctx context.Context, id string) (Share, error) {
 
 const getSharesP = `-- name: GetSharesP :many
 SELECT
-	s.id,
-	s.entity_type,
-	s.entity_id,
-	s.entity_date,
-	s.owner,
-	s.expiration
+	s.id, s.entity_type, s.entity_id, s.entity_date, s.owner, s.expiration,
+	u.username
 FROM shares s
+JOIN users u ON (s.owner = u.id)
 WHERE
 CASE WHEN $1::INTEGER IS NOT NULL THEN
 	s.owner = $1 ELSE TRUE END
@@ -105,7 +102,12 @@ type GetSharesPParams struct {
 	PerPage   int32  `json:"perPage"`
 }
 
-func (q *Queries) GetSharesP(ctx context.Context, arg GetSharesPParams) ([]Share, error) {
+type GetSharesPRow struct {
+	Share    Share  `json:"share"`
+	Username string `json:"username"`
+}
+
+func (q *Queries) GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSharesPRow, error) {
 	rows, err := q.db.Query(ctx, getSharesP,
 		arg.Owner,
 		arg.Direction,
@@ -116,16 +118,17 @@ func (q *Queries) GetSharesP(ctx context.Context, arg GetSharesPParams) ([]Share
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Share
+	var items []GetSharesPRow
 	for rows.Next() {
-		var i Share
+		var i GetSharesPRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.EntityType,
-			&i.EntityID,
-			&i.EntityDate,
-			&i.Owner,
-			&i.Expiration,
+			&i.Share.ID,
+			&i.Share.EntityType,
+			&i.Share.EntityID,
+			&i.Share.EntityDate,
+			&i.Share.Owner,
+			&i.Share.Expiration,
+			&i.Username,
 		); err != nil {
 			return nil, err
 		}

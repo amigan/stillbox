@@ -148,7 +148,9 @@ func (s *postgresStore) Shares(ctx context.Context, p SharesParams) (shares []*S
 
 	shares = make([]*Share, 0, len(shs))
 	for _, v := range shs {
-		shares = append(shares, recToShare(v))
+		s := recToShare(v.Share)
+		s.OwnerUser = &v.Username
+		shares = append(shares, s)
 	}
 
 	return shares, int(count), nil

@@ -48,7 +48,8 @@ type Share struct {
 	ID         string          `json:"id"`
 	Type       EntityType      `json:"entityType"`
 	Date       *jsontypes.Time `json:"entityDate,omitempty"` // we handle this for the user
-	Owner      users.UserID    `json:"owner"`
+	Owner      users.UserID    `json:"-"`
+	OwnerUser  *string         `json:"owner,omitempty"`
 	EntityID   uuid.UUID       `json:"entityID"`
 	Expiration *jsontypes.Time `json:"expiration"`
 }

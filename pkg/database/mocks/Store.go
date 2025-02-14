@@ -1925,23 +1925,23 @@ func (_c *Store_GetShare_Call) RunAndReturn(run func(context.Context, string) (d
 }
 
 // GetSharesP provides a mock function with given fields: ctx, arg
-func (_m *Store) GetSharesP(ctx context.Context, arg database.GetSharesPParams) ([]database.Share, error) {
+func (_m *Store) GetSharesP(ctx context.Context, arg database.GetSharesPParams) ([]database.GetSharesPRow, error) {
 	ret := _m.Called(ctx, arg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSharesP")
 	}
 
-	var r0 []database.Share
+	var r0 []database.GetSharesPRow
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, database.GetSharesPParams) ([]database.Share, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetSharesPParams) ([]database.GetSharesPRow, error)); ok {
 		return rf(ctx, arg)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, database.GetSharesPParams) []database.Share); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetSharesPParams) []database.GetSharesPRow); ok {
 		r0 = rf(ctx, arg)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.Share)
+			r0 = ret.Get(0).([]database.GetSharesPRow)
 		}
 	}
 
@@ -1973,12 +1973,12 @@ func (_c *Store_GetSharesP_Call) Run(run func(ctx context.Context, arg database.
 	return _c
 }
 
-func (_c *Store_GetSharesP_Call) Return(_a0 []database.Share, _a1 error) *Store_GetSharesP_Call {
+func (_c *Store_GetSharesP_Call) Return(_a0 []database.GetSharesPRow, _a1 error) *Store_GetSharesP_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Store_GetSharesP_Call) RunAndReturn(run func(context.Context, database.GetSharesPParams) ([]database.Share, error)) *Store_GetSharesP_Call {
+func (_c *Store_GetSharesP_Call) RunAndReturn(run func(context.Context, database.GetSharesPParams) ([]database.GetSharesPRow, error)) *Store_GetSharesP_Call {
 	_c.Call.Return(run)
 	return _c
 }
