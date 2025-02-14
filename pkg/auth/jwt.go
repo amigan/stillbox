@@ -34,8 +34,8 @@ type jwtAuth interface {
 	// InstallVerifyMiddleware installs the JWT verifier middleware to the provided chi Router.
 	VerifyMiddleware() func(http.Handler) http.Handler
 
-	// InstallAuthMiddleware installs the JWT authenticator middleware to the provided chi Router.
-	AuthMiddleware() func(http.Handler) http.Handler
+	// SubjectMiddleware sets the request context subject from JWT or public.
+	SubjectMiddleware(requireAuth bool) func(http.Handler) http.Handler
 
 	// PublicRoutes installs the auth route to the provided chi Router.
 	PublicRoutes(chi.Router)
@@ -84,12 +84,20 @@ func TokenFromCookie(r *http.Request) string {
 	return cookie.Value
 }
 
-func (a *Auth) AuthMiddleware() func(http.Handler) http.Handler {
+func (a *Auth) PublicSubjectMiddleware() func(http.Handler) http.Handler {
+	return a.SubjectMiddleware(false)
+}
+
+func (a *Auth) AuthorizedSubjectMiddleware() func(http.Handler) http.Handler {
+	return a.SubjectMiddleware(true)
+}
+
+func (a *Auth) SubjectMiddleware(requireToken bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
 			token, _, err := jwtauth.FromContext(r.Context())
 
-			if err != nil {
+			if err != nil && requireToken {
 				http.Error(w, err.Error(), http.StatusUnauthorized)
 				return
 			}

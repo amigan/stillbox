@@ -31,11 +31,11 @@ const (
 
 func SubjectFrom(ctx context.Context) Subject {
 	sub, ok := ctx.Value(SubjectCtxKey).(Subject)
-	if ok {
-		return sub
+	if !ok {
+		panic("no subject in context")
 	}
 
-	return new(PublicSubject)
+	return sub
 }
 
 type Subject interface {
