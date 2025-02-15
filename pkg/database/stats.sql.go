@@ -21,7 +21,8 @@ CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date >= $2 ELSE TRUE END AND
 CASE WHEN $3::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date <= $3 ELSE TRUE END
-GROUP BY 2
+GROUP BY date
+ORDER BY date DESC
 `
 
 type GetCallStatsByIntervalRow struct {
@@ -62,6 +63,7 @@ CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
 CASE WHEN $3::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date <= $3 ELSE TRUE END
 GROUP BY 2, 3, 4
+ORDER BY 4 DESC
 `
 
 type GetCallStatsByTalkgroupRow struct {

@@ -10,7 +10,8 @@ CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date >= @start ELSE TRUE END AND
 CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date <= sqlc.narg('end') ELSE TRUE END
-GROUP BY 2, 3, 4;
+GROUP BY 2, 3, 4
+ORDER BY 4 DESC;
 
 -- name: GetCallStatsByInterval :many
 SELECT
@@ -22,4 +23,5 @@ CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date >= @start ELSE TRUE END AND
 CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date <= sqlc.narg('end') ELSE TRUE END
-GROUP BY 2;
+GROUP BY date
+ORDER BY date DESC;
