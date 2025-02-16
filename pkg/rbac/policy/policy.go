@@ -115,6 +115,7 @@ var Policy = &restrict.PolicyDefinition{
 			Parents:     []string{entities.RoleAdmin},
 		},
 		entities.RolePublic: {
+			Description: "Everybody else",
 			Grants: restrict.GrantsMap{
 				entities.ResourceShare: {
 					&restrict.Permission{Action: entities.ActionRead},
