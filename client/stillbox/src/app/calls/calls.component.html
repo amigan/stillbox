@@ -101,7 +101,7 @@
   </form>
 </div>
 <div class="tabContainer" *ngIf="!isLoading; else spinner">
-  <table class="callsTable" mat-table [dataSource]="callsResult">
+  <table #callsTable class="callsTable" mat-table [dataSource]="callsResult">
     <ng-container matColumnDef="select">
       <th mat-header-cell *matHeaderCellDef>
         <mat-checkbox
