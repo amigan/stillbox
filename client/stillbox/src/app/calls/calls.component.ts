@@ -189,9 +189,6 @@ export class CallsComponent {
   setPage(p: PageEvent, force?: boolean) {
     this.selection.clear();
     this.curPage = p;
-    if (this.callsTable) {
-      this.callsTable.nativeElement.scrollIntoView(true);
-    }
     if (p && p!.pageSize != this.perPage) {
       this.perPage = p!.pageSize;
       this.prefsSvc.set('callsPerPage', p!.pageSize);
@@ -261,6 +258,9 @@ export class CallsComponent {
           this.isLoading = false;
           this.count = calls.count;
           this.currentSet = calls.calls;
+          if (this.callsTable) {
+            this.callsTable.nativeElement.scrollIntoView(true);
+          }
           this.callsResult.next(
             this.currentSet
               ? this.currentSet.slice(
