@@ -4,10 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-home',
-  imports: [
-    ChartsComponent,
-    MatCardModule,
-  ],
+  imports: [ChartsComponent, MatCardModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

@@ -107,7 +107,7 @@ export class ChartsComponent {
           return height - y(d.count);
         })
         .attr('fill', function (d) {
-          return d3.interpolateTurbo((d.count - cMin) / (cMax - cMin))
+          return d3.interpolateTurbo((d.count - cMin) / (cMax - cMin));
         });
     });
   }

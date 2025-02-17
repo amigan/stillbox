@@ -135,6 +135,12 @@ export class CallsComponent {
     return numSelected === numRows;
   }
 
+  searchFilter(filt: string | null) {
+    if (filt) {
+      this.form.controls['filter'].setValue(filt);
+    }
+  }
+
   buildParams(p: PageEvent, serverPage: number): CallsListParams {
     const par: CallsListParams = {
       start: new Date(this.form.controls['start'].value!),
