@@ -11,6 +11,7 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/alerting/alert"
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/notify"
@@ -342,36 +343,16 @@ func (as *alerter) score(now time.Time) {
 }
 
 func (as *alerter) backfill(ctx context.Context, since time.Time, until time.Time) (count int, err error) {
-	db := database.FromCtx(ctx)
-	const backfillStatsQuery = `SELECT system, talkgroup, call_date FROM calls WHERE call_date > $1 AND call_date < $2 ORDER BY call_date ASC`
-
-	rows, err := db.DB().Query(ctx, backfillStatsQuery, since, until)
-	if err != nil {
-		return count, err
-	}
-	defer rows.Close()
-
 	as.Lock()
 	defer as.Unlock()
 
-	for rows.Next() {
-		var tg talkgroups.ID
-		var callDate time.Time
-		if err := rows.Scan(&tg.System, &tg.Talkgroup, &callDate); err != nil {
-			return count, err
-		}
-		as.scorer.AddEvent(tg, callDate)
-		if as.sim != nil { // step the simulator if it is active
-			as.sim.stepClock(callDate)
-		}
-		count++
+	cs := callstore.FromCtx(ctx)
+	var stepClock func(time.Time)
+	if as.sim != nil {
+		stepClock = as.sim.stepClock
 	}
 
-	if err := rows.Err(); err != nil {
-		return count, err
-	}
-
-	return count, nil
+	return cs.BackfillTrending(ctx, &as.scorer, stepClock, since, until)
 }
 
 func (as *alerter) SinkType() string {
