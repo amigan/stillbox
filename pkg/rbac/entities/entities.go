@@ -22,6 +22,7 @@ const (
 	ResourceAlert     = "Alert"
 	ResourceShare     = "Share"
 	ResourceAPIKey    = "APIKey"
+	ResourceCallStats = "CallStats"
 
 	ActionRead   = "read"
 	ActionCreate = "create"
@@ -47,6 +48,10 @@ type Subject interface {
 
 func CtxWithSubject(ctx context.Context, sub Subject) context.Context {
 	return context.WithValue(ctx, SubjectCtxKey, sub)
+}
+
+func CtxWithServiceSubject(ctx context.Context, name string) context.Context {
+	return CtxWithSubject(ctx, &SystemServiceSubject{Name: name})
 }
 
 type subjectContextKey string

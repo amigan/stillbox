@@ -7,3 +7,13 @@ export interface CallRecord {
   tgid: number;
   incidents: number; // in incident
 }
+
+export interface CallStats {
+  stats: CallStatsRecord[];
+  interval: string;
+}
+
+export interface CallStatsRecord {
+  count: number;
+  time: Date;
+}

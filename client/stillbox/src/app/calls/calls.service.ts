@@ -1,7 +1,7 @@
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { CallRecord } from '../calls';
+import { CallRecord, CallStats } from '../calls';
 import { environment } from '.././../environments/environment';
 import { TalkgroupService } from '../talkgroups/talkgroups.service';
 import { Talkgroup } from '../talkgroup';
@@ -184,5 +184,9 @@ export class CallsService {
 
   callAudioDownloadURL(id: string): string {
     return environment.baseUrl + '/api/call/' + id + '/download';
+  }
+
+  getCallStats(interval: string): Observable<CallStats> {
+    return this.http.get<CallStats>(`/api/call/stats/${interval}`);
   }
 }

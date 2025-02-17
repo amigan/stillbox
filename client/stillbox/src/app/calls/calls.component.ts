@@ -1,7 +1,7 @@
-import { Component, inject, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
+import { MatTable, MatTableModule } from '@angular/material/table';
 import {
   MatPaginator,
   MatPaginatorModule,
@@ -80,6 +80,7 @@ const reqPageSize = 200;
 export class CallsComponent {
   callsResult = new BehaviorSubject(new Array<CallRecord>(0));
   @ViewChild('paginator') paginator!: MatPaginator;
+  @ViewChild('callsTable', { read: ElementRef }) callsTable!: ElementRef;
   count = 0;
   dialog = inject(MatDialog);
   page = 0;
@@ -133,6 +134,12 @@ export class CallsComponent {
     const numSelected = this.selection.selected.length;
     const numRows = this.curLen;
     return numSelected === numRows;
+  }
+
+  searchFilter(filt: string | null) {
+    if (filt) {
+      this.form.controls['filter'].setValue(filt);
+    }
   }
 
   buildParams(p: PageEvent, serverPage: number): CallsListParams {
@@ -251,6 +258,9 @@ export class CallsComponent {
           this.isLoading = false;
           this.count = calls.count;
           this.currentSet = calls.calls;
+          if (this.callsTable) {
+            this.callsTable.nativeElement.scrollIntoView(true);
+          }
           this.callsResult.next(
             this.currentSet
               ? this.currentSet.slice(

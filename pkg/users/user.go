@@ -72,7 +72,7 @@ func (u *User) GetName() string {
 }
 
 func (u *User) String() string {
-	return "USER:"+u.GetName()
+	return "USER:" + u.GetName()
 }
 
 func (u *User) GetRoles() []string {

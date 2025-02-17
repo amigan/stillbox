@@ -1520,6 +1520,128 @@ func (_c *Store_GetCallAudioByID_Call) RunAndReturn(run func(context.Context, uu
 	return _c
 }
 
+// GetCallStatsByInterval provides a mock function with given fields: ctx, truncField, start, end
+func (_m *Store) GetCallStatsByInterval(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]database.GetCallStatsByIntervalRow, error) {
+	ret := _m.Called(ctx, truncField, start, end)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCallStatsByInterval")
+	}
+
+	var r0 []database.GetCallStatsByIntervalRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) ([]database.GetCallStatsByIntervalRow, error)); ok {
+		return rf(ctx, truncField, start, end)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) []database.GetCallStatsByIntervalRow); ok {
+		r0 = rf(ctx, truncField, start, end)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetCallStatsByIntervalRow)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+		r1 = rf(ctx, truncField, start, end)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetCallStatsByInterval_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCallStatsByInterval'
+type Store_GetCallStatsByInterval_Call struct {
+	*mock.Call
+}
+
+// GetCallStatsByInterval is a helper method to define mock.On call
+//   - ctx context.Context
+//   - truncField string
+//   - start pgtype.Timestamptz
+//   - end pgtype.Timestamptz
+func (_e *Store_Expecter) GetCallStatsByInterval(ctx interface{}, truncField interface{}, start interface{}, end interface{}) *Store_GetCallStatsByInterval_Call {
+	return &Store_GetCallStatsByInterval_Call{Call: _e.mock.On("GetCallStatsByInterval", ctx, truncField, start, end)}
+}
+
+func (_c *Store_GetCallStatsByInterval_Call) Run(run func(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz)) *Store_GetCallStatsByInterval_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(pgtype.Timestamptz), args[3].(pgtype.Timestamptz))
+	})
+	return _c
+}
+
+func (_c *Store_GetCallStatsByInterval_Call) Return(_a0 []database.GetCallStatsByIntervalRow, _a1 error) *Store_GetCallStatsByInterval_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetCallStatsByInterval_Call) RunAndReturn(run func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) ([]database.GetCallStatsByIntervalRow, error)) *Store_GetCallStatsByInterval_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetCallStatsByTalkgroup provides a mock function with given fields: ctx, truncField, start, end
+func (_m *Store) GetCallStatsByTalkgroup(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]database.GetCallStatsByTalkgroupRow, error) {
+	ret := _m.Called(ctx, truncField, start, end)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCallStatsByTalkgroup")
+	}
+
+	var r0 []database.GetCallStatsByTalkgroupRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) ([]database.GetCallStatsByTalkgroupRow, error)); ok {
+		return rf(ctx, truncField, start, end)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) []database.GetCallStatsByTalkgroupRow); ok {
+		r0 = rf(ctx, truncField, start, end)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetCallStatsByTalkgroupRow)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+		r1 = rf(ctx, truncField, start, end)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetCallStatsByTalkgroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCallStatsByTalkgroup'
+type Store_GetCallStatsByTalkgroup_Call struct {
+	*mock.Call
+}
+
+// GetCallStatsByTalkgroup is a helper method to define mock.On call
+//   - ctx context.Context
+//   - truncField string
+//   - start pgtype.Timestamptz
+//   - end pgtype.Timestamptz
+func (_e *Store_Expecter) GetCallStatsByTalkgroup(ctx interface{}, truncField interface{}, start interface{}, end interface{}) *Store_GetCallStatsByTalkgroup_Call {
+	return &Store_GetCallStatsByTalkgroup_Call{Call: _e.mock.On("GetCallStatsByTalkgroup", ctx, truncField, start, end)}
+}
+
+func (_c *Store_GetCallStatsByTalkgroup_Call) Run(run func(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz)) *Store_GetCallStatsByTalkgroup_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(pgtype.Timestamptz), args[3].(pgtype.Timestamptz))
+	})
+	return _c
+}
+
+func (_c *Store_GetCallStatsByTalkgroup_Call) Return(_a0 []database.GetCallStatsByTalkgroupRow, _a1 error) *Store_GetCallStatsByTalkgroup_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetCallStatsByTalkgroup_Call) RunAndReturn(run func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) ([]database.GetCallStatsByTalkgroupRow, error)) *Store_GetCallStatsByTalkgroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetCallSubmitter provides a mock function with given fields: ctx, id
 func (_m *Store) GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, error) {
 	ret := _m.Called(ctx, id)

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/services"
 
 	"github.com/el-mike/restrict/v2"
 	"github.com/el-mike/restrict/v2/adapters"
@@ -12,7 +13,7 @@ import (
 )
 
 var (
-	ErrBadSubject = errors.New("bad subject in token")
+	ErrBadSubject   = errors.New("bad subject in token")
 	ErrAccessDenied = errors.New("access denied")
 )
 
@@ -33,7 +34,7 @@ type rbacCtxKey string
 const RBACCtxKey rbacCtxKey = "rbac"
 
 func FromCtx(ctx context.Context) RBAC {
-	rbac, ok := ctx.Value(RBACCtxKey).(RBAC)
+	rbac, ok := services.Value(ctx, RBACCtxKey).(RBAC)
 	if !ok {
 		panic("no RBAC in context")
 	}
@@ -42,7 +43,7 @@ func FromCtx(ctx context.Context) RBAC {
 }
 
 func CtxWithRBAC(ctx context.Context, rbac RBAC) context.Context {
-	return context.WithValue(ctx, RBACCtxKey, rbac)
+	return services.WithValue(ctx, RBACCtxKey, rbac)
 }
 
 var (

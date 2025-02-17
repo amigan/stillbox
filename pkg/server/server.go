@@ -19,9 +19,11 @@ import (
 	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/rbac/policy"
 	"dynatron.me/x/stillbox/pkg/rest"
+	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/sources"
+	"dynatron.me/x/stillbox/pkg/stats"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/users"
 
@@ -54,6 +56,7 @@ type Server struct {
 	incidents incstore.Store
 	share     shares.Service
 	rbac      rbac.RBAC
+	stats     stats.Stats
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
@@ -79,12 +82,15 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	}
 
 	tgCache := tgstore.NewCache(db)
-	api := rest.New(cfg.BaseURL.URL())
 
 	rbacSvc, err := rbac.New(policy.Policy)
 	if err != nil {
 		return nil, err
 	}
+
+	callStore := callstore.NewStore(db)
+	statsSvc := stats.NewStats(callStore, stats.DefaultExpiration)
+	api := rest.New(cfg.BaseURL.URL())
 
 	srv := &Server{
 		auth:      authenticator,
@@ -100,9 +106,10 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		rest:      api,
 		share:     shares.NewService(),
 		users:     ust,
-		calls:     callstore.NewStore(db),
+		calls:     callStore,
 		incidents: incstore.NewStore(),
 		rbac:      rbacSvc,
+		stats:     statsSvc,
 	}
 
 	if cfg.DB.Partition.Enabled {
@@ -158,6 +165,9 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 }
 
 func (s *Server) fillCtx(ctx context.Context) context.Context {
+	svc := services.New()
+	ctx = services.CtxWith(ctx, svc)
+
 	ctx = database.CtxWithDB(ctx, s.db)
 	ctx = tgstore.CtxWithStore(ctx, s.tgs)
 	ctx = users.CtxWithStore(ctx, s.users)
@@ -165,6 +175,7 @@ func (s *Server) fillCtx(ctx context.Context) context.Context {
 	ctx = incstore.CtxWithStore(ctx, s.incidents)
 	ctx = shares.CtxWithStore(ctx, s.share)
 	ctx = rbac.CtxWithRBAC(ctx, s.rbac)
+	ctx = stats.CtxWithStats(ctx, s.stats)
 
 	return ctx
 }

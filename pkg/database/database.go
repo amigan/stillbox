@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/services"
 	sqlembed "dynatron.me/x/stillbox/sql"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
@@ -144,7 +145,8 @@ const DBCtxKey dBCtxKey = "dbctx"
 
 // FromCtx returns the database handle from the provided Context.
 func FromCtx(ctx context.Context) Store {
-	c, ok := ctx.Value(DBCtxKey).(Store)
+	sv := services.Value(ctx, DBCtxKey)
+	c, ok := sv.(Store)
 	if !ok {
 		panic("no DB in context")
 	}
@@ -154,7 +156,7 @@ func FromCtx(ctx context.Context) Store {
 
 // CtxWithDB returns a Context with the provided database handle.
 func CtxWithDB(ctx context.Context, conn Store) context.Context {
-	return context.WithValue(ctx, DBCtxKey, conn)
+	return services.WithValue(ctx, DBCtxKey, conn)
 }
 
 // IsNoRows is a convenience function that returns whether a returned error is a database

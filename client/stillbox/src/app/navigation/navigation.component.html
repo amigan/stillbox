@@ -12,6 +12,7 @@
           [routerLink]="r.url"
           [routerLinkActiveOptions]="{ exact: r.exact }"
           routerLinkActive
+          [title]="r.name"
           #routerLinkActiveInstance="routerLinkActive"
           [activated]="routerLinkActiveInstance.isActive"
           mat-list-item

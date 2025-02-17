@@ -138,7 +138,7 @@ func (as *alerter) HUP(cfg *config.Config) {
 
 // Go is the alerting loop. It does not start a goroutine.
 func (as *alerter) Go(ctx context.Context) {
-	ctx = entities.CtxWithSubject(ctx, &entities.SystemServiceSubject{Name: "alerter"})
+	ctx = entities.CtxWithServiceSubject(ctx, "alerter")
 
 	err := as.startBackfill(ctx)
 	if err != nil {

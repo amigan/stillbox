@@ -12,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/users"
 
@@ -35,14 +36,17 @@ type Store interface {
 
 	// Calls gets paginated Calls.
 	Calls(ctx context.Context, p CallsParams) (calls []database.ListCallsPRow, totalCount int, err error)
+
+	// CallStats gets call stats by interval.
+	CallStats(ctx context.Context, interval calls.StatsInterval, start, end jsontypes.Time) (*calls.Stats, error)
 }
 
-type store struct {
+type postgresStore struct {
 	db database.Store
 }
 
-func NewStore(db database.Store) *store {
-	return &store{
+func NewStore(db database.Store) *postgresStore {
+	return &postgresStore{
 		db: db,
 	}
 }
@@ -52,11 +56,11 @@ type storeCtxKey string
 const StoreCtxKey storeCtxKey = "store"
 
 func CtxWithStore(ctx context.Context, s Store) context.Context {
-	return context.WithValue(ctx, StoreCtxKey, s)
+	return services.WithValue(ctx, StoreCtxKey, s)
 }
 
 func FromCtx(ctx context.Context) Store {
-	s, ok := ctx.Value(StoreCtxKey).(Store)
+	s, ok := services.Value(ctx, StoreCtxKey).(Store)
 	if !ok {
 		panic("no call store in context")
 	}
@@ -86,7 +90,7 @@ func toAddCallParams(call *calls.Call) database.AddCallParams {
 	}
 }
 
-func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
+func (s *postgresStore) AddCall(ctx context.Context, call *calls.Call) error {
 	_, err := rbac.Check(ctx, call, rbac.WithActions(entities.ActionCreate))
 	if err != nil {
 		return err
@@ -124,7 +128,7 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
 	return nil
 }
 
-func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {
+func (s *postgresStore) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {
 	_, err := rbac.Check(ctx, &calls.Call{ID: id}, rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
@@ -145,7 +149,7 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, 
 	}, nil
 }
 
-func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
+func (s *postgresStore) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 	_, err := rbac.Check(ctx, &calls.Call{ID: id}, rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
@@ -195,7 +199,7 @@ type CallsParams struct {
 	AtLeastSeconds *float32        `json:"atLeastSeconds"`
 }
 
-func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
+func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
 	_, err = rbac.Check(ctx, rbac.UseResource(entities.ResourceCall), rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, 0, err
@@ -253,7 +257,7 @@ func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListC
 	return rows, int(count), err
 }
 
-func (s *store) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *postgresStore) Delete(ctx context.Context, id uuid.UUID) error {
 	callOwn, err := s.getCallOwner(ctx, id)
 	if err != nil {
 		return err
@@ -267,7 +271,7 @@ func (s *store) Delete(ctx context.Context, id uuid.UUID) error {
 	return database.FromCtx(ctx).DeleteCall(ctx, id)
 }
 
-func (s *store) getCallOwner(ctx context.Context, id uuid.UUID) (calls.Call, error) {
+func (s *postgresStore) getCallOwner(ctx context.Context, id uuid.UUID) (calls.Call, error) {
 	subInt, err := database.FromCtx(ctx).GetCallSubmitter(ctx, id)
 
 	var sub *users.UserID
@@ -276,4 +280,36 @@ func (s *store) getCallOwner(ctx context.Context, id uuid.UUID) (calls.Call, err
 		sub = common.PtrTo(users.UserID(*subInt))
 	}
 	return calls.Call{ID: id, Submitter: sub}, err
+}
+
+func (s *postgresStore) CallStats(ctx context.Context, interval calls.StatsInterval, start, end jsontypes.Time) (*calls.Stats, error) {
+	if !interval.IsValid() {
+		return nil, calls.ErrInvalidInterval
+	}
+
+	cs := &calls.Stats{
+		Interval: interval,
+	}
+
+	_, err := rbac.Check(ctx, cs, rbac.WithActions(entities.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
+	db := database.FromCtx(ctx)
+
+	dbs, err := db.GetCallStatsByInterval(ctx, string(interval), start.PGTypeTSTZ(), end.PGTypeTSTZ())
+	if err != nil {
+		return nil, err
+	}
+
+	cs.Stats = make([]calls.Stat, 0, len(dbs))
+	for _, st := range dbs {
+		cs.Stats = append(cs.Stats, calls.Stat{
+			Count: st.Count,
+			Time:  jsontypes.Time(st.Date.Time),
+		})
+	}
+
+	return cs, nil
 }

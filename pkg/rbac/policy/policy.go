@@ -47,6 +47,9 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Preset: PresetUpdateOwn},
 					&restrict.Permission{Preset: PresetDeleteOwn},
 				},
+				entities.ResourceCallStats: {
+					&restrict.Permission{Action: entities.ActionRead},
+				},
 			},
 		},
 		entities.RoleSubmitter: {
@@ -112,6 +115,7 @@ var Policy = &restrict.PolicyDefinition{
 			Parents:     []string{entities.RoleAdmin},
 		},
 		entities.RolePublic: {
+			Description: "Everybody else",
 			Grants: restrict.GrantsMap{
 				entities.ResourceShare: {
 					&restrict.Permission{Action: entities.ActionRead},

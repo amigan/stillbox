@@ -35,6 +35,8 @@ type Querier interface {
 	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
 	GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 	GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error)
+	GetCallStatsByInterval(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]GetCallStatsByIntervalRow, error)
+	GetCallStatsByTalkgroup(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]GetCallStatsByTalkgroupRow, error)
 	GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, error)
 	GetDatabaseSize(ctx context.Context) (string, error)
 	GetIncident(ctx context.Context, id uuid.UUID) (Incident, error)

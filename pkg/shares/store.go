@@ -10,6 +10,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/jackc/pgx/v5"
 )
@@ -169,11 +170,11 @@ type storeCtxKey string
 const StoreCtxKey storeCtxKey = "store"
 
 func CtxWithStore(ctx context.Context, s Shares) context.Context {
-	return context.WithValue(ctx, StoreCtxKey, s)
+	return services.WithValue(ctx, StoreCtxKey, s)
 }
 
 func FromCtx(ctx context.Context) Shares {
-	s, ok := ctx.Value(StoreCtxKey).(Shares)
+	s, ok := services.Value(ctx, StoreCtxKey).(Shares)
 	if !ok {
 		panic("no shares store in context")
 	}
