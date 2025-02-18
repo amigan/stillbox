@@ -45,6 +45,7 @@ func TestCacheTime(t *testing.T) {
 	time.Sleep(120 * time.Millisecond)
 	g, ok = c.Get(2)
 	assert.False(t, ok)
+	assert.Equal(t, "gff", g)
 
 	_, ok = c.Get(8)
 	assert.False(t, ok)
