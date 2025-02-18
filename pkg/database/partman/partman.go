@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/isoweek"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
@@ -325,23 +326,6 @@ func (pm *partman) Check(ctx context.Context, now time.Time) error {
 	}, pgx.TxOptions{})
 }
 
-func (p Partition) Range() (time.Time, time.Time) {
-	switch p.Interval {
-	case Daily:
-		return getDailyBounds(p.Time)
-	case Weekly:
-		return getWeeklyBounds(p.Time)
-	case Monthly:
-		return getMonthlyBounds(p.Time)
-	case Quarterly:
-		return getQuarterlyBounds(p.Time)
-	case Yearly:
-		return getYearlyBounds(p.Time)
-	}
-
-	panic("unknown interval!")
-}
-
 func (p Partition) PartitionName() string {
 	return p.Name
 }
@@ -423,7 +407,7 @@ func (pm *partman) verifyPartName(pr database.PartitionResult) (p Partition, err
 			if quarterNum > 4 {
 				return p, PartitionError(pn, errors.New("invalid quarter"))
 			}
-			firstMonthOfTheQuarter := time.Month((quarterNum-1)*monthsInQuarter + 1)
+			firstMonthOfTheQuarter := time.Month((quarterNum-1)*common.MonthsInQuarter + 1)
 			parsed := time.Date(year, firstMonthOfTheQuarter, 1, 0, 0, 0, 0, time.UTC)
 			if parsed != p.Time {
 				return p, PartitionError(pn, ParsedIntvlErr{parsed: parsed, start: p.Time})

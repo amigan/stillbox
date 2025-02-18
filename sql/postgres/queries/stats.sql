@@ -9,7 +9,7 @@ WHERE
 CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date >= @start ELSE TRUE END AND
 CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
-	c.call_date <= sqlc.narg('end') ELSE TRUE END
+	c.call_date < sqlc.narg('end') ELSE TRUE END
 GROUP BY 2, 3, 4
 ORDER BY 4 DESC;
 
@@ -22,6 +22,6 @@ WHERE
 CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 	c.call_date >= @start ELSE TRUE END AND
 CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
-	c.call_date <= sqlc.narg('end') ELSE TRUE END
+	c.call_date < sqlc.narg('end') ELSE TRUE END
 GROUP BY date
 ORDER BY date DESC;
