@@ -76,8 +76,6 @@ func (s *stats) GetCallStats(ctx context.Context, interval calls.StatsInterval) 
 		return nil, calls.ErrInvalidInterval
 	}
 
-	log.Debug().Str("start", start.String()).Str("end", end.String()).Msg("bound")
-
 	st, err := s.cs.CallStats(ctx, interval, jsontypes.Time(start), jsontypes.Time(end))
 	if err != nil {
 		return nil, err
