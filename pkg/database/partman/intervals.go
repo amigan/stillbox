@@ -3,52 +3,9 @@ package partman
 import (
 	"fmt"
 	"time"
+
+	"dynatron.me/x/stillbox/internal/common"
 )
-
-const (
-	daysInWeek      = 7
-	monthsInQuarter = 3
-)
-
-func getDailyBounds(date time.Time) (lowerBound, upperBound time.Time) {
-	lowerBound = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
-	upperBound = lowerBound.AddDate(0, 0, 1)
-
-	return
-}
-
-func getWeeklyBounds(date time.Time) (lowerBound, upperBound time.Time) {
-	lowerBound = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC).AddDate(0, 0, -int(date.Weekday()-time.Monday))
-	upperBound = lowerBound.AddDate(0, 0, daysInWeek)
-
-	return
-}
-
-func getMonthlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
-	lowerBound = time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, time.UTC)
-	upperBound = lowerBound.AddDate(0, 1, 0)
-
-	return
-}
-
-func getQuarterlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
-	year, _, _ := date.Date()
-
-	quarter := (int(date.Month()) - 1) / monthsInQuarter
-	firstMonthOfTheQuarter := time.Month(quarter*monthsInQuarter + 1)
-
-	lowerBound = time.Date(year, firstMonthOfTheQuarter, 1, 0, 0, 0, 0, time.UTC)
-	upperBound = lowerBound.AddDate(0, monthsInQuarter, 0)
-
-	return
-}
-
-func getYearlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
-	lowerBound = time.Date(date.Year(), 1, 1, 0, 0, 0, 0, time.UTC)
-	upperBound = lowerBound.AddDate(1, 0, 0)
-
-	return
-}
 
 func (p Partition) Next(i int) Partition {
 	var t time.Time
@@ -56,13 +13,13 @@ func (p Partition) Next(i int) Partition {
 	case Daily:
 		t = p.Time.AddDate(0, 0, i)
 	case Weekly:
-		t = p.Time.AddDate(0, 0, i*daysInWeek)
+		t = p.Time.AddDate(0, 0, i*common.DaysInWeek)
 	case Monthly:
 		year, month, _ := p.Time.Date()
 
 		t = time.Date(year, month+time.Month(i), 1, 0, 0, 0, 0, p.Time.Location())
 	case Quarterly:
-		t = p.Time.AddDate(0, i*monthsInQuarter, 0)
+		t = p.Time.AddDate(0, i*common.MonthsInQuarter, 0)
 	case Yearly:
 		year, _, _ := p.Time.Date()
 
@@ -125,13 +82,13 @@ func (p Partition) Prev(i int) Partition {
 	case Daily:
 		t = p.Time.AddDate(0, 0, -i)
 	case Weekly:
-		t = p.Time.AddDate(0, 0, -i*daysInWeek)
+		t = p.Time.AddDate(0, 0, -i*common.DaysInWeek)
 	case Monthly:
 		year, month, _ := p.Time.Date()
 
 		t = time.Date(year, month-time.Month(i), 1, 0, 0, 0, 0, p.Time.Location())
 	case Quarterly:
-		t = p.Time.AddDate(0, -i*monthsInQuarter, 0)
+		t = p.Time.AddDate(0, -i*common.MonthsInQuarter, 0)
 	case Yearly:
 		year, _, _ := p.Time.Date()
 
@@ -149,4 +106,22 @@ func (p Partition) Prev(i int) Partition {
 
 	return pp
 
+}
+
+func (p Partition) Range() (time.Time, time.Time) {
+	b := common.NewTimeBounder()
+	switch p.Interval {
+	case Daily:
+		return b.GetDailyBounds(p.Time)
+	case Weekly:
+		return b.GetWeeklyBounds(p.Time)
+	case Monthly:
+		return b.GetMonthlyBounds(p.Time)
+	case Quarterly:
+		return b.GetQuarterlyBounds(p.Time)
+	case Yearly:
+		return b.GetYearlyBounds(p.Time)
+	}
+
+	panic("unknown interval!")
 }
