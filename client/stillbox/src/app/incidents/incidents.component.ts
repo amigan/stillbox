@@ -60,8 +60,6 @@ export class FmtDatePipe implements PipeTransform {
   }
 }
 
-const reqPageSize = 200;
-
 @Component({
   selector: 'app-incidents',
   imports: [
@@ -93,7 +91,6 @@ export class IncidentsComponent {
   columns = ['select', 'startTime', 'endTime', 'name', 'numCalls', 'edit'];
   curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };
   currentSet!: IncidentRecord[];
-  currentServerPage = 0; // page is never 0, forces load
   isLoading = true;
 
   selection = new SelectionModel<IncidentRecord>(true, []);
@@ -105,9 +102,8 @@ export class IncidentsComponent {
   });
 
   subscriptions = new Subscription();
-  pageWindow = 0;
   fetchIncidents = new BehaviorSubject<IncidentsListParams>(
-    this.buildParams(this.curPage, this.curPage.pageIndex),
+    this.buildParams(this.curPage),
   );
 
   constructor(
@@ -125,14 +121,14 @@ export class IncidentsComponent {
     return numSelected === numRows;
   }
 
-  buildParams(p: PageEvent, serverPage: number): IncidentsListParams {
+  buildParams(p: PageEvent): IncidentsListParams {
     const par: IncidentsListParams = {
       start:
         this.form.controls['start'].value != null
           ? new Date(this.form.controls['start'].value!)
           : null,
-      page: serverPage,
-      perPage: reqPageSize,
+      page: p.pageIndex + 1,
+      perPage: p.pageSize,
       end:
         this.form.controls['end'].value != null
           ? new Date(this.form.controls['end'].value!)
@@ -175,19 +171,7 @@ export class IncidentsComponent {
   }
 
   getIncidents(p: PageEvent, force?: boolean) {
-    const pageStart = p.pageIndex * p.pageSize;
-    const serverPage = Math.floor(pageStart / reqPageSize) + 1;
-    this.pageWindow = pageStart % reqPageSize;
-    if (serverPage == this.currentServerPage && !force && this.currentSet) {
-      this.incsResult.next(
-        this.incsResult
-          ? this.currentSet.slice(this.pageWindow, this.pageWindow + p.pageSize)
-          : [],
-      );
-    } else {
-      this.currentServerPage = serverPage;
-      this.fetchIncidents.next(this.buildParams(p, serverPage));
-    }
+    this.fetchIncidents.next(this.buildParams(p));
   }
 
   zeroPage(): PageEvent {
@@ -204,7 +188,6 @@ export class IncidentsComponent {
 
   ngOnInit() {
     this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
-      this.currentServerPage = 0;
       this.setPage(this.zeroPage(), true);
     });
     this.subscriptions.add(
@@ -230,14 +213,7 @@ export class IncidentsComponent {
           this.isLoading = false;
           this.count = incidents.count;
           this.currentSet = incidents.incidents;
-          this.incsResult.next(
-            this.currentSet
-              ? this.currentSet.slice(
-                  this.pageWindow,
-                  this.pageWindow + this.perPage,
-                )
-              : [],
-          );
+          this.incsResult.next(this.currentSet);
         }),
     );
     this.subscriptions.add(
