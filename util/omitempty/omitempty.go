@@ -12,10 +12,46 @@ import (
 	"strings"
 )
 
-const filePath = "./pkg/database/models.go"
+type FileMap map[string]FieldDecider
+
+var filePaths = FileMap{
+	"./pkg/database/models.go": AllFields{},
+	"./pkg/database/calls.sql.go": FieldMap{
+		"TalkerAlias": true,
+		"Incidents":   true,
+	},
+}
+
+type FieldDecider interface {
+	Check(fields []*ast.Ident) bool
+}
+
+type FieldMap map[string]bool
+
+func (fm FieldMap) Check(f []*ast.Ident) bool {
+	for _, v := range f {
+		if v != nil && fm[v.Name] {
+			return true
+		}
+	}
+
+	return false
+}
+
+type AllFields struct{}
+
+func (AllFields) Check(_ []*ast.Ident) bool {
+	return true
+}
 
 func main() {
 	// Parse the source code
+	for k, v := range filePaths {
+		process(k, v)
+	}
+}
+
+func process(filePath string, fd FieldDecider) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
 	if err != nil {
@@ -27,6 +63,9 @@ func main() {
 		switch x := n.(type) {
 		case *ast.StructType:
 			for _, field := range x.Fields.List {
+				if !fd.Check(field.Names) {
+					continue
+				}
 				if field.Tag == nil {
 					continue
 				}

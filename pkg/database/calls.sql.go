@@ -108,7 +108,7 @@ type AddCallParams struct {
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	Patches     []int              `json:"patches"`
-	TalkerAlias *string            `json:"talkerAlias"`
+	TalkerAlias *string            `json:"talkerAlias,omitempty"`
 	TGLabel     *string            `json:"tgLabel"`
 	TGAlphaTag  *string            `json:"tgAlphaTag"`
 	TGGroup     *string            `json:"tgGroup"`
@@ -205,7 +205,7 @@ type GetCallRow struct {
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	Patches     []int              `json:"patches"`
-	TalkerAlias *string            `json:"talkerAlias"`
+	TalkerAlias *string            `json:"talkerAlias,omitempty"`
 	TGLabel     *string            `json:"tgLabel"`
 	TGAlphaTag  *string            `json:"tgAlphaTag"`
 	TGGroup     *string            `json:"tgGroup"`
@@ -401,8 +401,8 @@ type ListCallsPRow struct {
 	Duration    *int32             `json:"duration"`
 	SystemID    int                `json:"systemId"`
 	TGID        int                `json:"tgid"`
-	TalkerAlias *string            `json:"talkerAlias"`
-	Incidents   int64              `json:"incidents"`
+	TalkerAlias *string            `json:"talkerAlias,omitempty"`
+	Incidents   int64              `json:"incidents,omitempty"`
 }
 
 func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error) {
