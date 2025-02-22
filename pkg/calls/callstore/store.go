@@ -204,6 +204,7 @@ type CallsParams struct {
 	TagsNot        []string        `json:"tagsNot"`
 	TGFilter       *string         `json:"tgFilter"`
 	AtLeastSeconds *float32        `json:"atLeastSeconds"`
+	UnknownTG      bool            `json:"unknownTG"`
 }
 
 func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
@@ -224,6 +225,7 @@ func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []databa
 		PerPage:   perPage,
 		Direction: p.Direction.DirString(common.DirAsc),
 		TGFilter:  p.TGFilter,
+		UnknownTG: p.UnknownTG,
 	}
 
 	if p.AtLeastSeconds != nil {
@@ -245,6 +247,7 @@ func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []databa
 			TagsNot:    par.TagsNot,
 			TGFilter:   par.TGFilter,
 			LongerThan: par.LongerThan,
+			UnknownTG:  par.UnknownTG,
 		})
 		if err != nil {
 			return err
