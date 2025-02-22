@@ -67,6 +67,7 @@ duration,
 frequency,
 frequencies,
 patches,
+talker_alias,
 tg_label,
 tg_alpha_tag,
 tg_group,
@@ -88,7 +89,8 @@ $13,
 $14,
 $15,
 $16,
-$17
+$17,
+$18
 )
 `
 
@@ -106,6 +108,7 @@ type AddCallParams struct {
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	Patches     []int              `json:"patches"`
+	TalkerAlias *string            `json:"talkerAlias"`
 	TGLabel     *string            `json:"tgLabel"`
 	TGAlphaTag  *string            `json:"tgAlphaTag"`
 	TGGroup     *string            `json:"tgGroup"`
@@ -127,6 +130,7 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) error {
 		arg.Frequency,
 		arg.Frequencies,
 		arg.Patches,
+		arg.TalkerAlias,
 		arg.TGLabel,
 		arg.TGAlphaTag,
 		arg.TGGroup,
@@ -178,6 +182,7 @@ SELECT
 	frequency,
 	frequencies,
 	patches,
+	talker_alias,
 	tg_label,
 	tg_alpha_tag,
 	tg_group,
@@ -200,6 +205,7 @@ type GetCallRow struct {
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	Patches     []int              `json:"patches"`
+	TalkerAlias *string            `json:"talkerAlias"`
 	TGLabel     *string            `json:"tgLabel"`
 	TGAlphaTag  *string            `json:"tgAlphaTag"`
 	TGGroup     *string            `json:"tgGroup"`
@@ -223,6 +229,7 @@ func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 		&i.Frequency,
 		&i.Frequencies,
 		&i.Patches,
+		&i.TalkerAlias,
 		&i.TGLabel,
 		&i.TGAlphaTag,
 		&i.TGGroup,
@@ -345,6 +352,7 @@ c.call_date,
 c.duration,
 c.system system_id,
 c.talkgroup tgid,
+c.talker_alias,
 COUNT(ic.incident_id) incidents
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
@@ -388,12 +396,13 @@ type ListCallsPParams struct {
 }
 
 type ListCallsPRow struct {
-	ID        uuid.UUID          `json:"id"`
-	CallDate  pgtype.Timestamptz `json:"callDate"`
-	Duration  *int32             `json:"duration"`
-	SystemID  int                `json:"systemId"`
-	TGID      int                `json:"tgid"`
-	Incidents int64              `json:"incidents"`
+	ID          uuid.UUID          `json:"id"`
+	CallDate    pgtype.Timestamptz `json:"callDate"`
+	Duration    *int32             `json:"duration"`
+	SystemID    int                `json:"systemId"`
+	TGID        int                `json:"tgid"`
+	TalkerAlias *string            `json:"talkerAlias"`
+	Incidents   int64              `json:"incidents"`
 }
 
 func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error) {
@@ -421,6 +430,7 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 			&i.Duration,
 			&i.SystemID,
 			&i.TGID,
+			&i.TalkerAlias,
 			&i.Incidents,
 		); err != nil {
 			return nil, err
@@ -445,11 +455,11 @@ func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcrip
 const sweepCalls = `-- name: SweepCalls :execrows
 WITH to_sweep AS (
 	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type,
-		audio_url, frequency, frequencies, patches, tg_label, tg_alpha_tag, tg_group, source, transcript
+		audio_url, frequency, frequencies, talker_alias, patches, tg_label, tg_alpha_tag, tg_group, source, transcript
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= $1 AND calls.call_date < $2
-) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_url, frequency, frequencies, patches, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
+) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_url, frequency, frequencies, talker_alias, patches, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
 `
 
 // This is used to sweep calls that are part of an incident prior to pruning a partition.

@@ -94,6 +94,7 @@ CREATE TABLE IF NOT EXISTS calls(
 	frequency INTEGER NOT NULL,
 	frequencies INTEGER[],
 	patches INTEGER[],
+	talker_alias TEXT,
 	tg_label TEXT,
 	tg_alpha_tag TEXT,
 	tg_group TEXT,
@@ -105,6 +106,7 @@ CREATE TABLE IF NOT EXISTS calls(
 
 CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector('english', transcript));
 CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(call_date, talkgroup, system);
+CREATE INDEX IF NOT EXISTS calls_talker_alias ON calls(talker_alias);
 
 CREATE TABLE swept_calls (
 	id UUID PRIMARY KEY,
@@ -120,6 +122,7 @@ CREATE TABLE swept_calls (
 	frequency INTEGER NOT NULL,
 	frequencies INTEGER[],
 	patches INTEGER[],
+	talker_alias TEXT,
 	tg_label TEXT,
 	tg_alpha_tag TEXT,
 	tg_group TEXT,
@@ -130,6 +133,7 @@ CREATE TABLE swept_calls (
 
 CREATE INDEX IF NOT EXISTS swept_calls_transcript_idx ON swept_calls USING GIN (to_tsvector('english', transcript));
 CREATE INDEX IF NOT EXISTS swept_calls_call_date_tg_idx ON swept_calls(system, talkgroup, call_date);
+CREATE INDEX IF NOT EXISTS swept_calls_talker_alias ON calls(talker_alias);
 
 
 CREATE TABLE IF NOT EXISTS settings(
