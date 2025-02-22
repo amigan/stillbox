@@ -317,22 +317,26 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 		tgs.name ILIKE '%' || $5 || '%' OR
 		tgs.alpha_tag ILIKE '%' || $5 || '%'
 	) ELSE TRUE END) AND
-(CASE WHEN $6::NUMERIC IS NOT NULL THEN (
-		c.duration > $6
+(CASE WHEN $6::TEXT IS NOT NULL THEN (
+		c.talker_alias ILIKE '%' || $6 || '%'
 	) ELSE TRUE END) AND
-(CASE WHEN $7::BOOLEAN = TRUE THEN (
+(CASE WHEN $7::NUMERIC IS NOT NULL THEN (
+		c.duration > $7
+	) ELSE TRUE END) AND
+(CASE WHEN $8::BOOLEAN = TRUE THEN (
 	tgs.tgid IS NULL
 	) ELSE TRUE END)
 `
 
 type ListCallsCountParams struct {
-	Start      pgtype.Timestamptz `json:"start"`
-	End        pgtype.Timestamptz `json:"end"`
-	TagsAny    []string           `json:"tagsAny"`
-	TagsNot    []string           `json:"tagsNot"`
-	TGFilter   *string            `json:"tgFilter"`
-	LongerThan pgtype.Numeric     `json:"longerThan"`
-	UnknownTG  bool               `json:"unknownTg"`
+	Start        pgtype.Timestamptz `json:"start"`
+	End          pgtype.Timestamptz `json:"end"`
+	TagsAny      []string           `json:"tagsAny"`
+	TagsNot      []string           `json:"tagsNot"`
+	TGFilter     *string            `json:"tgFilter"`
+	SourceFilter *string            `json:"sourceFilter"`
+	LongerThan   pgtype.Numeric     `json:"longerThan"`
+	UnknownTG    bool               `json:"unknownTg"`
 }
 
 func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error) {
@@ -342,6 +346,7 @@ func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) 
 		arg.TagsAny,
 		arg.TagsNot,
 		arg.TGFilter,
+		arg.SourceFilter,
 		arg.LongerThan,
 		arg.UnknownTG,
 	)
@@ -377,31 +382,35 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 		tgs.name ILIKE '%' || $5 || '%' OR
 		tgs.alpha_tag ILIKE '%' || $5 || '%'
 	) ELSE TRUE END) AND
-(CASE WHEN $6::NUMERIC IS NOT NULL THEN (
-		c.duration > $6
+(CASE WHEN $6::TEXT IS NOT NULL THEN (
+		c.talker_alias ILIKE '%' || $6 || '%'
 	) ELSE TRUE END) AND
-(CASE WHEN $7::BOOLEAN = TRUE THEN (
+(CASE WHEN $7::NUMERIC IS NOT NULL THEN (
+		c.duration > $7
+	) ELSE TRUE END) AND
+(CASE WHEN $8::BOOLEAN = TRUE THEN (
 	tgs.tgid IS NULL
 	) ELSE TRUE END)
 GROUP BY c.id, c.call_date
 ORDER BY
-CASE WHEN $8::TEXT = 'asc' THEN c.call_date END ASC,
-CASE WHEN $8 = 'desc' THEN c.call_date END DESC
-OFFSET $9 ROWS
-FETCH NEXT $10 ROWS ONLY
+CASE WHEN $9::TEXT = 'asc' THEN c.call_date END ASC,
+CASE WHEN $9 = 'desc' THEN c.call_date END DESC
+OFFSET $10 ROWS
+FETCH NEXT $11 ROWS ONLY
 `
 
 type ListCallsPParams struct {
-	Start      pgtype.Timestamptz `json:"start"`
-	End        pgtype.Timestamptz `json:"end"`
-	TagsAny    []string           `json:"tagsAny"`
-	TagsNot    []string           `json:"tagsNot"`
-	TGFilter   *string            `json:"tgFilter"`
-	LongerThan pgtype.Numeric     `json:"longerThan"`
-	UnknownTG  bool               `json:"unknownTg"`
-	Direction  string             `json:"direction"`
-	Offset     int32              `json:"offset"`
-	PerPage    int32              `json:"perPage"`
+	Start        pgtype.Timestamptz `json:"start"`
+	End          pgtype.Timestamptz `json:"end"`
+	TagsAny      []string           `json:"tagsAny"`
+	TagsNot      []string           `json:"tagsNot"`
+	TGFilter     *string            `json:"tgFilter"`
+	SourceFilter *string            `json:"sourceFilter"`
+	LongerThan   pgtype.Numeric     `json:"longerThan"`
+	UnknownTG    bool               `json:"unknownTg"`
+	Direction    string             `json:"direction"`
+	Offset       int32              `json:"offset"`
+	PerPage      int32              `json:"perPage"`
 }
 
 type ListCallsPRow struct {
@@ -421,6 +430,7 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 		arg.TagsAny,
 		arg.TagsNot,
 		arg.TGFilter,
+		arg.SourceFilter,
 		arg.LongerThan,
 		arg.UnknownTG,
 		arg.Direction,
