@@ -28,14 +28,14 @@ VALUES
 `
 
 type AddAlertParams struct {
-	Time      pgtype.Timestamptz `json:"time"`
-	TGID      int                `json:"tgid"`
-	SystemID  int                `json:"systemId"`
-	Weight    *float32           `json:"weight"`
-	Score     *float32           `json:"score"`
-	OrigScore *float32           `json:"origScore"`
-	Notified  bool               `json:"notified"`
-	Metadata  []byte             `json:"metadata"`
+	Time      pgtype.Timestamptz `json:"time,omitempty"`
+	TGID      int                `json:"tgid,omitempty"`
+	SystemID  int                `json:"systemId,omitempty"`
+	Weight    *float32           `json:"weight,omitempty"`
+	Score     *float32           `json:"score,omitempty"`
+	OrigScore *float32           `json:"origScore,omitempty"`
+	Notified  bool               `json:"notified,omitempty"`
+	Metadata  []byte             `json:"metadata,omitempty"`
 }
 
 func (q *Queries) AddAlert(ctx context.Context, arg AddAlertParams) error {
@@ -95,24 +95,24 @@ $18
 `
 
 type AddCallParams struct {
-	ID          uuid.UUID          `json:"id"`
-	Submitter   *int32             `json:"submitter"`
-	System      int                `json:"system"`
-	Talkgroup   int                `json:"talkgroup"`
-	CallDate    pgtype.Timestamptz `json:"callDate"`
-	AudioName   *string            `json:"audioName"`
-	AudioBlob   []byte             `json:"audioBlob"`
-	AudioType   *string            `json:"audioType"`
-	AudioUrl    *string            `json:"audioUrl"`
-	Duration    *int32             `json:"duration"`
-	Frequency   int                `json:"frequency"`
-	Frequencies []int              `json:"frequencies"`
-	Patches     []int              `json:"patches"`
-	TalkerAlias *string            `json:"talkerAlias"`
-	TGLabel     *string            `json:"tgLabel"`
-	TGAlphaTag  *string            `json:"tgAlphaTag"`
-	TGGroup     *string            `json:"tgGroup"`
-	Source      int                `json:"source"`
+	ID          uuid.UUID          `json:"id,omitempty"`
+	Submitter   *int32             `json:"submitter,omitempty"`
+	System      int                `json:"system,omitempty"`
+	Talkgroup   int                `json:"talkgroup,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"callDate,omitempty"`
+	AudioName   *string            `json:"audioName,omitempty"`
+	AudioBlob   []byte             `json:"audioBlob,omitempty"`
+	AudioType   *string            `json:"audioType,omitempty"`
+	AudioUrl    *string            `json:"audioUrl,omitempty"`
+	Duration    *int32             `json:"duration,omitempty"`
+	Frequency   int                `json:"frequency,omitempty"`
+	Frequencies []int              `json:"frequencies,omitempty"`
+	Patches     []int              `json:"patches,omitempty"`
+	TalkerAlias *string            `json:"talkerAlias,omitempty"`
+	TGLabel     *string            `json:"tgLabel,omitempty"`
+	TGAlphaTag  *string            `json:"tgAlphaTag,omitempty"`
+	TGGroup     *string            `json:"tgGroup,omitempty"`
+	Source      int                `json:"source,omitempty"`
 }
 
 func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) error {
@@ -193,24 +193,24 @@ WHERE id = $1
 `
 
 type GetCallRow struct {
-	ID          uuid.UUID          `json:"id"`
-	Submitter   *int32             `json:"submitter"`
-	System      int                `json:"system"`
-	Talkgroup   int                `json:"talkgroup"`
-	CallDate    pgtype.Timestamptz `json:"callDate"`
-	AudioName   *string            `json:"audioName"`
-	AudioType   *string            `json:"audioType"`
-	AudioUrl    *string            `json:"audioUrl"`
-	Duration    *int32             `json:"duration"`
-	Frequency   int                `json:"frequency"`
-	Frequencies []int              `json:"frequencies"`
-	Patches     []int              `json:"patches"`
-	TalkerAlias *string            `json:"talkerAlias"`
-	TGLabel     *string            `json:"tgLabel"`
-	TGAlphaTag  *string            `json:"tgAlphaTag"`
-	TGGroup     *string            `json:"tgGroup"`
-	Source      int                `json:"source"`
-	Transcript  *string            `json:"transcript"`
+	ID          uuid.UUID          `json:"id,omitempty"`
+	Submitter   *int32             `json:"submitter,omitempty"`
+	System      int                `json:"system,omitempty"`
+	Talkgroup   int                `json:"talkgroup,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"callDate,omitempty"`
+	AudioName   *string            `json:"audioName,omitempty"`
+	AudioType   *string            `json:"audioType,omitempty"`
+	AudioUrl    *string            `json:"audioUrl,omitempty"`
+	Duration    *int32             `json:"duration,omitempty"`
+	Frequency   int                `json:"frequency,omitempty"`
+	Frequencies []int              `json:"frequencies,omitempty"`
+	Patches     []int              `json:"patches,omitempty"`
+	TalkerAlias *string            `json:"talkerAlias,omitempty"`
+	TGLabel     *string            `json:"tgLabel,omitempty"`
+	TGAlphaTag  *string            `json:"tgAlphaTag,omitempty"`
+	TGGroup     *string            `json:"tgGroup,omitempty"`
+	Source      int                `json:"source,omitempty"`
+	Transcript  *string            `json:"transcript,omitempty"`
 }
 
 func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error) {
@@ -258,10 +258,10 @@ WHERE sc.id = $1
 `
 
 type GetCallAudioByIDRow struct {
-	CallDate  pgtype.Timestamptz `json:"callDate"`
-	AudioName *string            `json:"audioName"`
-	AudioType *string            `json:"audioType"`
-	AudioBlob []byte             `json:"audioBlob"`
+	CallDate  pgtype.Timestamptz `json:"callDate,omitempty"`
+	AudioName *string            `json:"audioName,omitempty"`
+	AudioType *string            `json:"audioType,omitempty"`
+	AudioBlob []byte             `json:"audioBlob,omitempty"`
 }
 
 func (q *Queries) GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error) {
@@ -323,12 +323,12 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 `
 
 type ListCallsCountParams struct {
-	Start      pgtype.Timestamptz `json:"start"`
-	End        pgtype.Timestamptz `json:"end"`
-	TagsAny    []string           `json:"tagsAny"`
-	TagsNot    []string           `json:"tagsNot"`
-	TGFilter   *string            `json:"tgFilter"`
-	LongerThan pgtype.Numeric     `json:"longerThan"`
+	Start      pgtype.Timestamptz `json:"start,omitempty"`
+	End        pgtype.Timestamptz `json:"end,omitempty"`
+	TagsAny    []string           `json:"tagsAny,omitempty"`
+	TagsNot    []string           `json:"tagsNot,omitempty"`
+	TGFilter   *string            `json:"tgFilter,omitempty"`
+	LongerThan pgtype.Numeric     `json:"longerThan,omitempty"`
 }
 
 func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error) {
@@ -384,25 +384,25 @@ FETCH NEXT $9 ROWS ONLY
 `
 
 type ListCallsPParams struct {
-	Start      pgtype.Timestamptz `json:"start"`
-	End        pgtype.Timestamptz `json:"end"`
-	TagsAny    []string           `json:"tagsAny"`
-	TagsNot    []string           `json:"tagsNot"`
-	TGFilter   *string            `json:"tgFilter"`
-	LongerThan pgtype.Numeric     `json:"longerThan"`
-	Direction  string             `json:"direction"`
-	Offset     int32              `json:"offset"`
-	PerPage    int32              `json:"perPage"`
+	Start      pgtype.Timestamptz `json:"start,omitempty"`
+	End        pgtype.Timestamptz `json:"end,omitempty"`
+	TagsAny    []string           `json:"tagsAny,omitempty"`
+	TagsNot    []string           `json:"tagsNot,omitempty"`
+	TGFilter   *string            `json:"tgFilter,omitempty"`
+	LongerThan pgtype.Numeric     `json:"longerThan,omitempty"`
+	Direction  string             `json:"direction,omitempty"`
+	Offset     int32              `json:"offset,omitempty"`
+	PerPage    int32              `json:"perPage,omitempty"`
 }
 
 type ListCallsPRow struct {
-	ID          uuid.UUID          `json:"id"`
-	CallDate    pgtype.Timestamptz `json:"callDate"`
-	Duration    *int32             `json:"duration"`
-	SystemID    int                `json:"systemId"`
-	TGID        int                `json:"tgid"`
-	TalkerAlias *string            `json:"talkerAlias"`
-	Incidents   int64              `json:"incidents"`
+	ID          uuid.UUID          `json:"id,omitempty"`
+	CallDate    pgtype.Timestamptz `json:"callDate,omitempty"`
+	Duration    *int32             `json:"duration,omitempty"`
+	SystemID    int                `json:"systemId,omitempty"`
+	TGID        int                `json:"tgid,omitempty"`
+	TalkerAlias *string            `json:"talkerAlias,omitempty"`
+	Incidents   int64              `json:"incidents,omitempty"`
 }
 
 func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error) {
