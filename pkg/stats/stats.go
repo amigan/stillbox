@@ -10,7 +10,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/services"
-	"github.com/rs/zerolog/log"
 )
 
 const DefaultExpiration = 5 * time.Minute

@@ -91,7 +91,17 @@ func (c *Call) GetResourceName() string {
 }
 
 func (c *Call) String() string {
-	return fmt.Sprintf("%s to %d from %d", c.AudioName, c.Talkgroup, c.Source)
+	var from string
+	switch {
+	case c.Source != 0 && c.TalkerAlias != nil:
+		from = fmt.Sprintf(" from %s (%d)", *c.TalkerAlias, c.Source)
+	case c.Source != 0:
+		from = fmt.Sprintf(" from %d", c.Source)
+	case c.TalkerAlias != nil:
+		from = fmt.Sprintf(" from %s", *c.TalkerAlias)
+	}
+
+	return fmt.Sprintf("%s to %d%s", c.AudioName, c.Talkgroup, from)
 }
 
 func (c *Call) ShouldStore() bool {
