@@ -4,6 +4,7 @@ export interface CallRecord {
   audioURL: string | null;
   duration: number;
   systemId: number;
+  talkerAlias: string | null;
   tgid: number;
   incidents: number; // in incident
 }

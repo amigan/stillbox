@@ -1,7 +1,7 @@
 import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTable, MatTableModule } from '@angular/material/table';
+import { MatTableModule } from '@angular/material/table';
 import {
   MatPaginator,
   MatPaginatorModule,
@@ -19,6 +19,7 @@ import {
   DatePipe,
   DownloadURLPipe,
   FixedPointPipe,
+  TalkerPipe,
   TalkgroupPipe,
   TimePipe,
 } from './calls.service';
@@ -57,6 +58,7 @@ const reqPageSize = 200;
     MatIconModule,
     FixedPointPipe,
     TalkgroupPipe,
+    TalkerPipe,
     TimePipe,
     DatePipe,
     MatPaginatorModule,
@@ -95,6 +97,7 @@ export class CallsComponent {
     'system',
     'group',
     'talkgroup',
+    'talker',
     'duration',
   ];
   curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };

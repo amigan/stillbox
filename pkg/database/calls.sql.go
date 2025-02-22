@@ -319,6 +319,9 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN $6::NUMERIC IS NOT NULL THEN (
 		c.duration > $6
+	) ELSE TRUE END) AND
+(CASE WHEN $7::BOOLEAN = TRUE THEN (
+	tgs.tgid IS NULL
 	) ELSE TRUE END)
 `
 
@@ -329,6 +332,7 @@ type ListCallsCountParams struct {
 	TagsNot    []string           `json:"tagsNot"`
 	TGFilter   *string            `json:"tgFilter"`
 	LongerThan pgtype.Numeric     `json:"longerThan"`
+	UnknownTG  bool               `json:"unknownTg"`
 }
 
 func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error) {
@@ -339,6 +343,7 @@ func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) 
 		arg.TagsNot,
 		arg.TGFilter,
 		arg.LongerThan,
+		arg.UnknownTG,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -374,13 +379,16 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN $6::NUMERIC IS NOT NULL THEN (
 		c.duration > $6
+	) ELSE TRUE END) AND
+(CASE WHEN $7::BOOLEAN = TRUE THEN (
+	tgs.tgid IS NULL
 	) ELSE TRUE END)
 GROUP BY c.id, c.call_date
 ORDER BY
-CASE WHEN $7::TEXT = 'asc' THEN c.call_date END ASC,
-CASE WHEN $7 = 'desc' THEN c.call_date END DESC
-OFFSET $8 ROWS
-FETCH NEXT $9 ROWS ONLY
+CASE WHEN $8::TEXT = 'asc' THEN c.call_date END ASC,
+CASE WHEN $8 = 'desc' THEN c.call_date END DESC
+OFFSET $9 ROWS
+FETCH NEXT $10 ROWS ONLY
 `
 
 type ListCallsPParams struct {
@@ -390,6 +398,7 @@ type ListCallsPParams struct {
 	TagsNot    []string           `json:"tagsNot"`
 	TGFilter   *string            `json:"tgFilter"`
 	LongerThan pgtype.Numeric     `json:"longerThan"`
+	UnknownTG  bool               `json:"unknownTg"`
 	Direction  string             `json:"direction"`
 	Offset     int32              `json:"offset"`
 	PerPage    int32              `json:"perPage"`
@@ -413,6 +422,7 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 		arg.TagsNot,
 		arg.TGFilter,
 		arg.LongerThan,
+		arg.UnknownTG,
 		arg.Direction,
 		arg.Offset,
 		arg.PerPage,

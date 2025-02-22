@@ -127,6 +127,9 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN sqlc.narg('longer_than')::NUMERIC IS NOT NULL THEN (
 		c.duration > @longer_than
+	) ELSE TRUE END) AND
+(CASE WHEN @unknown_tg::BOOLEAN = TRUE THEN (
+	tgs.tgid IS NULL
 	) ELSE TRUE END)
 GROUP BY c.id, c.call_date
 ORDER BY
@@ -157,6 +160,9 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN sqlc.narg('longer_than')::NUMERIC IS NOT NULL THEN (
 		c.duration > @longer_than
+	) ELSE TRUE END) AND
+(CASE WHEN @unknown_tg::BOOLEAN = TRUE THEN (
+	tgs.tgid IS NULL
 	) ELSE TRUE END)
 ;
 

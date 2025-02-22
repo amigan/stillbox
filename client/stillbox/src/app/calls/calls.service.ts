@@ -28,6 +28,21 @@ export class DatePipe implements PipeTransform {
 }
 
 @Pipe({
+  name: 'talker',
+  standalone: true,
+  pure: true,
+})
+export class TalkerPipe implements PipeTransform {
+  transform(call: CallRecord, args?: any): string {
+    if (call.talkerAlias != null) {
+      return call.talkerAlias;
+    }
+
+    return '&mdash;';
+  }
+}
+
+@Pipe({
   name: 'time',
   standalone: true,
   pure: true,

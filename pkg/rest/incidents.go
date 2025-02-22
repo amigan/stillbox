@@ -229,8 +229,13 @@ func (ia *incidentsAPI) getCallsM3U(id ID, w http.ResponseWriter, r *http.Reques
 			return
 		}
 		var from string
-		if c.Source != 0 {
+		switch {
+		case c.Source != 0 && c.TalkerAlias != nil:
+			from = fmt.Sprintf(" from %s (%d)", *c.TalkerAlias, c.Source)
+		case c.Source != 0:
 			from = fmt.Sprintf(" from %d", c.Source)
+		case c.TalkerAlias != nil:
+			from = fmt.Sprintf(" from %s", *c.TalkerAlias)
 		}
 
 		callUrl.Path = urlRoot + c.ID.String()
