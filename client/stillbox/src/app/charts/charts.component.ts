@@ -1,16 +1,21 @@
 import { Component, ElementRef, Input } from '@angular/core';
 import * as d3 from 'd3';
 import { CallsService } from '../calls/calls.service';
-import { CallStatsRecord } from '../calls';
+import { Observable, switchMap } from 'rxjs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'chart',
-  imports: [],
+  imports: [
+    NgIf,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './charts.component.html',
   styleUrl: './charts.component.scss',
 })
 export class ChartsComponent {
-  @Input() interval!: string;
+  @Input() interval!: Observable<string>;
   loading = true;
   // I hate javascript so much
   months = [
@@ -32,8 +37,8 @@ export class ChartsComponent {
     private callsSvc: CallsService,
   ) {}
 
-  dateFormat(d: Date): string {
-    switch (this.interval) {
+  dateFormat(d: Date, interval: string): string {
+    switch (interval) {
       case 'month':
         return `${this.months[d.getMonth()]} ${d.getFullYear()}`;
       case 'day':
@@ -45,7 +50,11 @@ export class ChartsComponent {
   }
 
   ngOnInit() {
-    this.callsSvc.getCallStats(this.interval).subscribe((stats) => {
+    this.interval.pipe(switchMap((intv) => {
+      this.loading = true;
+      return this.callsSvc.getCallStats(intv);
+  })).
+    subscribe((stats) => {
       let cMax = 0;
       var cMin = 0;
       let data = stats.stats.map((rec) => {
@@ -58,12 +67,14 @@ export class ChartsComponent {
         if (rec.count > cMax) {
           cMax = rec.count;
         }
-        return { count: rec.count, time: this.dateFormat(new Date(rec.time)) };
+        return { count: rec.count, time: this.dateFormat(new Date(rec.time), stats.interval) };
       });
       // set the dimensions and margins of the graph
       var margin = { top: 30, right: 30, bottom: 70, left: 60 },
         width = 460 - margin.left - margin.right,
         height = 400 - margin.top - margin.bottom;
+      // clear the old one
+      d3.select(this.elementRef.nativeElement).select('.chart svg').remove();
       const svg = d3
         .select(this.elementRef.nativeElement)
         .select('.chart')
@@ -109,6 +120,7 @@ export class ChartsComponent {
         .attr('fill', function (d) {
           return d3.interpolateTurbo((d.count - cMin) / (cMax - cMin));
         });
+      this.loading = false;
     });
   }
 }
