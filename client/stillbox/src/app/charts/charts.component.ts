@@ -7,10 +7,7 @@ import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'chart',
-  imports: [
-    NgIf,
-    MatProgressSpinnerModule,
-  ],
+  imports: [NgIf, MatProgressSpinnerModule],
   templateUrl: './charts.component.html',
   styleUrl: './charts.component.scss',
 })
@@ -50,77 +47,87 @@ export class ChartsComponent {
   }
 
   ngOnInit() {
-    this.interval.pipe(switchMap((intv) => {
-      this.loading = true;
-      return this.callsSvc.getCallStats(intv);
-  })).
-    subscribe((stats) => {
-      let cMax = 0;
-      var cMin = 0;
-      let data = stats.stats.map((rec) => {
-        if (cMin == 0 && rec.count > cMin) {
-          cMin = rec.count;
-        }
-        if (rec.count < cMin) {
-          cMin = rec.count;
-        }
-        if (rec.count > cMax) {
-          cMax = rec.count;
-        }
-        return { count: rec.count, time: this.dateFormat(new Date(rec.time), stats.interval) };
-      });
-      // set the dimensions and margins of the graph
-      var margin = { top: 30, right: 30, bottom: 70, left: 60 },
-        width = 460 - margin.left - margin.right,
-        height = 400 - margin.top - margin.bottom;
-      // clear the old one
-      d3.select(this.elementRef.nativeElement).select('.chart svg').remove();
-      const svg = d3
-        .select(this.elementRef.nativeElement)
-        .select('.chart')
-        .append('svg')
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-      // X axis
-      var x = d3
-        .scaleBand()
-        .range([0, width])
-        .domain(
-          data.map(function (d) {
-            return d.time;
-          }),
-        )
-        .padding(0.2);
-      svg
-        .append('g')
-        .attr('transform', 'translate(0,' + height + ')')
-        .call(d3.axisBottom(x))
-        .selectAll('text')
-        .attr('transform', 'translate(-10,0)rotate(-45)')
-        .style('text-anchor', 'end');
-
-      // Add Y axis
-      var y = d3.scaleLinear().domain([0, cMax]).range([height, 0]);
-      svg.append('g').call(d3.axisLeft(y));
-      svg
-        .selectAll('mybar')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('x', (d) => x(d.time)!)
-        .attr('y', function (d) {
-          return y(d.count);
-        })
-        .attr('width', x.bandwidth())
-        .attr('height', function (d) {
-          return height - y(d.count);
-        })
-        .attr('fill', function (d) {
-          return d3.interpolateTurbo((d.count - cMin) / (cMax - cMin));
+    this.interval
+      .pipe(
+        switchMap((intv) => {
+          d3.select(this.elementRef.nativeElement).select('.chart').html('');
+          this.loading = true;
+          return this.callsSvc.getCallStats(intv);
+        }),
+      )
+      .subscribe((stats) => {
+        let cMax = 0;
+        var cMin = 0;
+        let data = stats.stats.map((rec) => {
+          if (cMin == 0 && rec.count > cMin) {
+            cMin = rec.count;
+          }
+          if (rec.count < cMin) {
+            cMin = rec.count;
+          }
+          if (rec.count > cMax) {
+            cMax = rec.count;
+          }
+          return {
+            count: rec.count,
+            time: this.dateFormat(new Date(rec.time), stats.interval),
+          };
         });
-      this.loading = false;
-    });
+        // set the dimensions and margins of the graph
+        var margin = { top: 30, right: 30, bottom: 70, left: 60 },
+          width = 460 - margin.left - margin.right,
+          height = 400 - margin.top - margin.bottom;
+        // clear the old one
+        d3.select(this.elementRef.nativeElement).select('.chart').html('');
+        const svg = d3
+          .select(this.elementRef.nativeElement)
+          .select('.chart')
+          .append('svg')
+          .attr('width', width + margin.left + margin.right)
+          .attr('height', height + margin.top + margin.bottom)
+          .append('g')
+          .attr(
+            'transform',
+            'translate(' + margin.left + ',' + margin.top + ')',
+          );
+        // X axis
+        var x = d3
+          .scaleBand()
+          .range([0, width])
+          .domain(
+            data.map(function (d) {
+              return d.time;
+            }),
+          )
+          .padding(0.2);
+        svg
+          .append('g')
+          .attr('transform', 'translate(0,' + height + ')')
+          .call(d3.axisBottom(x))
+          .selectAll('text')
+          .attr('transform', 'translate(-10,0)rotate(-45)')
+          .style('text-anchor', 'end');
+
+        // Add Y axis
+        var y = d3.scaleLinear().domain([0, cMax]).range([height, 0]);
+        svg.append('g').call(d3.axisLeft(y));
+        svg
+          .selectAll('mybar')
+          .data(data)
+          .enter()
+          .append('rect')
+          .attr('x', (d) => x(d.time)!)
+          .attr('y', function (d) {
+            return y(d.count);
+          })
+          .attr('width', x.bandwidth())
+          .attr('height', function (d) {
+            return height - y(d.count);
+          })
+          .attr('fill', function (d) {
+            return d3.interpolateTurbo((d.count - cMin) / (cMax - cMin));
+          });
+        this.loading = false;
+      });
   }
 }

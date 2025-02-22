@@ -1,14 +1,14 @@
 <mat-card class="chart" appearance="outlined">
-  <div class="chartTitle">Calls By</div>
   <form [formGroup]="form">
-  <mat-form-field>
-    <mat-select formControlName="callsPer">
+    <mat-form-field>
+      <label>Calls By</label>
+      <mat-select formControlName="callsPer">
         <mat-option value="hour">Hour</mat-option>
         <mat-option value="day">Day</mat-option>
         <mat-option value="week">Week</mat-option>
         <mat-option value="month">Month</mat-option>
-    </mat-select>
-  </mat-form-field>
-</form>
-  <chart [interval]="callsOb"></chart>
+      </mat-select>
+    </mat-form-field>
+  </form>
+  <chart #chart [interval]="callsOb"></chart>
 </mat-card>
