@@ -76,6 +76,7 @@ type Call struct {
 	System         int           `json:"systemId,omitempty" relayOut:"system,omitempty"`
 	Submitter      *users.UserID `json:"submitter,omitempty" relayOut:"submitter,omitempty"`
 	SystemLabel    string        `json:"systemName,omitempty" relayOut:"systemLabel,omitempty"`
+	TalkerAlias    *string       `json:"talkerAlias,omitempty" relayOut:"talkerAlias,omitempty"`
 	Talkgroup      int           `json:"tgid,omitempty" relayOut:"talkgroup,omitempty"`
 	TalkgroupGroup *string       `json:"talkgroupGroup,omitempty" relayOut:"talkgroupGroup,omitempty"`
 	TalkgroupLabel *string       `json:"talkgroupLabel,omitempty" relayOut:"talkgroupLabel,omitempty"`
@@ -144,6 +145,8 @@ func (c *Call) ToPB() *pb.Call {
 		DateTime:    timestamppb.New(c.DateTime),
 		System:      int32(c.System),
 		Talkgroup:   int32(c.Talkgroup),
+		TalkerAlias: c.TalkerAlias,
+
 		Source:      int32(c.Source),
 		Frequency:   int64(c.Frequency),
 		Frequencies: toInt64Slice(c.Frequencies),

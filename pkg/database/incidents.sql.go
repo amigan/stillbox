@@ -172,6 +172,7 @@ SELECT
 	c.audio_url,
 	c.frequency,
 	c.frequencies,
+	c.talker_alias,
 	c.patches,
 	c.source,
 	c.transcript
@@ -186,6 +187,7 @@ FROM incidents_calls ic, LATERAL (
 	ca.audio_url,
 	ca.frequency,
 	ca.frequencies,
+	ca.talker_alias,
 	ca.patches,
 	ca.source,
 	ca.transcript
@@ -201,6 +203,7 @@ FROM incidents_calls ic, LATERAL (
 	sc.audio_url,
 	sc.frequency,
 	sc.frequencies,
+	c.talker_alias,
 	sc.patches,
 	sc.source,
 	sc.transcript
@@ -223,6 +226,7 @@ type GetIncidentCallsRow struct {
 	AudioUrl    *string            `json:"audioUrl"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
+	TalkerAlias *string            `json:"talkerAlias"`
 	Patches     []int              `json:"patches"`
 	Source      int                `json:"source"`
 	Transcript  *string            `json:"transcript"`
@@ -250,6 +254,7 @@ func (q *Queries) GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetInci
 			&i.AudioUrl,
 			&i.Frequency,
 			&i.Frequencies,
+			&i.TalkerAlias,
 			&i.Patches,
 			&i.Source,
 			&i.Transcript,

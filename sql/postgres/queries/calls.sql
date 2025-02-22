@@ -13,6 +13,7 @@ duration,
 frequency,
 frequencies,
 patches,
+talker_alias,
 tg_label,
 tg_alpha_tag,
 tg_group,
@@ -31,6 +32,7 @@ source
 @frequency,
 @frequencies,
 @patches,
+@talker_alias,
 @tg_label,
 @tg_alpha_tag,
 @tg_group,
@@ -79,7 +81,7 @@ SELECT pg_size_pretty(pg_database_size(current_database()));
 -- This is used to sweep calls that are part of an incident prior to pruning a partition.
 WITH to_sweep AS (
 	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type,
-		audio_url, frequency, frequencies, patches, tg_label, tg_alpha_tag, tg_group, source, transcript
+		audio_url, frequency, frequencies, talker_alias, patches, tg_label, tg_alpha_tag, tg_group, source, transcript
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= @range_start AND calls.call_date < @range_end
@@ -103,6 +105,7 @@ c.call_date,
 c.duration,
 c.system system_id,
 c.talkgroup tgid,
+c.talker_alias,
 COUNT(ic.incident_id) incidents
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
@@ -177,6 +180,7 @@ SELECT
 	frequency,
 	frequencies,
 	patches,
+	talker_alias,
 	tg_label,
 	tg_alpha_tag,
 	tg_group,

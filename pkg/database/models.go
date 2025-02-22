@@ -48,6 +48,7 @@ type Call struct {
 	Frequency   int                `json:"frequency,omitempty"`
 	Frequencies []int              `json:"frequencies,omitempty"`
 	Patches     []int              `json:"patches,omitempty"`
+	TalkerAlias *string            `json:"talkerAlias,omitempty"`
 	TGLabel     *string            `json:"tgLabel,omitempty"`
 	TGAlphaTag  *string            `json:"tgAlphaTag,omitempty"`
 	TGGroup     *string            `json:"tgGroup,omitempty"`
@@ -105,6 +106,7 @@ type SweptCall struct {
 	Frequency   int                `json:"frequency,omitempty"`
 	Frequencies []int              `json:"frequencies,omitempty"`
 	Patches     []int              `json:"patches,omitempty"`
+	TalkerAlias *string            `json:"talkerAlias,omitempty"`
 	TGLabel     *string            `json:"tgLabel,omitempty"`
 	TGAlphaTag  *string            `json:"tgAlphaTag,omitempty"`
 	TGGroup     *string            `json:"tgGroup,omitempty"`
