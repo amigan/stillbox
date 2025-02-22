@@ -203,7 +203,7 @@ FROM incidents_calls ic, LATERAL (
 	sc.audio_url,
 	sc.frequency,
 	sc.frequencies,
-	c.talker_alias,
+	sc.talker_alias,
 	sc.patches,
 	sc.source,
 	sc.transcript
