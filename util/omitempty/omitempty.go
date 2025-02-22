@@ -12,10 +12,19 @@ import (
 	"strings"
 )
 
-const filePath = "./pkg/database/models.go"
+var filePaths = []string{
+	"./pkg/database/models.go",
+	"./pkg/database/calls.sql.go",
+}
 
 func main() {
 	// Parse the source code
+	for _, v := range filePaths {
+		process(v)
+	}
+}
+
+func process(filePath string) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
 	if err != nil {
