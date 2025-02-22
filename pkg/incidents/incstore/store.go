@@ -277,6 +277,7 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 				Frequencies: v.Frequencies,
 				Frequency:   v.Frequency,
 				Patches:     v.Patches,
+				TalkerAlias: v.TalkerAlias,
 				Source:      v.Source,
 				System:      v.SystemID,
 				Submitter:   sub,

@@ -51,6 +51,7 @@ type CallUploadRequest struct {
 	Source         int       `form:"source"`
 	System         int       `form:"system"`
 	SystemLabel    string    `form:"systemLabel"`
+	TalkerAlias    string    `form:"talkerAlias"`
 	Talkgroup      int       `form:"talkgroup"`
 	TalkgroupGroup string    `form:"talkgroupGroup"`
 	TalkgroupLabel string    `form:"talkgroupLabel"`
@@ -85,6 +86,7 @@ func (car *CallUploadRequest) ToCall(submitter users.UserID) (*calls.Call, error
 		Frequency:      car.Frequency,
 		Frequencies:    car.Frequencies,
 		Patches:        car.Patches,
+		TalkerAlias:    common.NilIfZero(car.TalkerAlias),
 		TalkgroupLabel: common.NilIfZero(car.TalkgroupLabel),
 		TGAlphaTag:     common.NilIfZero(car.TalkgroupTag),
 		TalkgroupGroup: common.NilIfZero(car.TalkgroupGroup),
