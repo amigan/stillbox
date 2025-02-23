@@ -33,12 +33,12 @@ export class DatePipe implements PipeTransform {
   pure: true,
 })
 export class TalkerPipe implements PipeTransform {
-  transform(call: CallRecord, args?: any): string {
+  transform(call: CallRecord, args?: any): string | null {
     if (call.talkerAlias != null) {
       return call.talkerAlias;
     }
 
-    return '&mdash;';
+    return null;
   }
 }
 
@@ -175,6 +175,7 @@ export interface CallsListParams {
   page: number;
   perPage: number;
   tgFilter: string | null;
+  sourceFilter: string | null;
   atLeastSeconds: number | null;
 }
 

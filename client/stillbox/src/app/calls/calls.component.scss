@@ -86,7 +86,7 @@ form {
 }
 
 .filterBox {
-  flex: 1 1 300px;
+  flex: 1 1 200px;
 }
 
 .durationFilter {
@@ -94,13 +94,14 @@ form {
 }
 
 .tagSelect {
-  flex: 1 1 250px;
+  flex: 1 1 220px;
 }
 
 .in-incident {
   background-color: rgb(59, 0, 59);
 }
 
-a.tgFilter:hover {
+a.tgFilter:hover,
+a.srcFilter:hover {
   text-decoration: underline;
 }

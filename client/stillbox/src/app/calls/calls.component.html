@@ -49,6 +49,25 @@
         <mat-icon>close</mat-icon>
       </button>
     </mat-form-field>
+    <mat-form-field class="filterBox" subscriptSizing="dynamic">
+      <mat-label>Source Filter</mat-label>
+      <input
+        matInput
+        name="sourceFilter"
+        type="text"
+        autocomplete="off"
+        formControlName="sourceFilter"
+      />
+      <button
+        class="clearBtn"
+        *ngIf="form.controls['sourceFilter'].value"
+        matSuffix
+        mat-icon-button
+        (click)="form.controls['sourceFilter'].setValue('')"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
     <mat-form-field class="tagSelect" subscriptSizing="dynamic">
       <mat-label>Any Tags</mat-label>
       <mat-select
@@ -163,14 +182,26 @@
         <a
           href="javascript:void(0)"
           class="tgFilter"
-          (click)="searchFilter(tgAlpha)"
+          (click)="searchTGFilter(tgAlpha)"
           >{{ tgAlpha }}</a
         >
       </td>
     </ng-container>
     <ng-container matColumnDef="talker">
       <th mat-header-cell *matHeaderCellDef>Source</th>
-      <td mat-cell *matCellDef="let call" [innerHTML]="call | talker"></td>
+      <td mat-cell *matCellDef="let call">
+        @let tlkAlias = call | talker;
+        @if (tlkAlias) {
+          <a
+            href="javascript:void(0)"
+            class="srcFilter"
+            (click)="searchSrcFilter(tlkAlias)"
+            >{{ tlkAlias }}</a
+          >
+        } @else {
+          &mdash;
+        }
+      </td>
     </ng-container>
     <ng-container matColumnDef="duration">
       <th mat-header-cell *matHeaderCellDef class="durationHdr">Duration</th>

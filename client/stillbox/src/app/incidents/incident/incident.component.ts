@@ -35,6 +35,7 @@ import {
   TimePipe,
   DatePipe,
   DownloadURLPipe,
+  TalkerPipe,
 } from '../../calls/calls.service';
 import { CallPlayerComponent } from '../../calls/player/call-player/call-player.component';
 import { FmtDatePipe } from '../incidents.component';
@@ -141,6 +142,7 @@ export class IncidentEditDialogComponent {
     MatIconModule,
     MatCardModule,
     FixedPointPipe,
+    TalkerPipe,
     TimePipe,
     DatePipe,
     TalkgroupPipe,
@@ -169,6 +171,7 @@ export class IncidentComponent {
     'system',
     'group',
     'talkgroup',
+    'talker',
     'duration',
   ];
   callsResult = new MatTableDataSource<IncidentCall>();

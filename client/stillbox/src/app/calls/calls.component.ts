@@ -112,6 +112,7 @@ export class CallsComponent {
     start: new FormControl(this.lTime(new Date())),
     end: new FormControl(null),
     filter: new FormControl(''),
+    sourceFilter: new FormControl(''),
     duration: new FormControl(0),
     tagsAny: new FormControl<string[]>([]),
     tagsNot: new FormControl<string[]>([]),
@@ -139,9 +140,15 @@ export class CallsComponent {
     return numSelected === numRows;
   }
 
-  searchFilter(filt: string | null) {
+  searchTGFilter(filt: string | null) {
     if (filt) {
       this.form.controls['filter'].setValue(filt);
+    }
+  }
+
+  searchSrcFilter(filt: string | null) {
+    if (filt) {
+      this.form.controls['sourceFilter'].setValue(filt);
     }
   }
 
@@ -166,6 +173,10 @@ export class CallsComponent {
       tgFilter:
         this.form.controls['filter'].value != ''
           ? this.form.controls['filter'].value
+          : null,
+      sourceFilter:
+        this.form.controls['sourceFilter'].value != ''
+          ? this.form.controls['sourceFilter'].value
           : null,
       atLeastSeconds:
         this.form.controls['duration'].value != null &&
