@@ -19,17 +19,23 @@ var (
 
 type Store interface {
 	// Get gets a setting and unmarshals it into dst.
-	Get(ctx context.Context, name string, dest interface{}) error
+	Get(ctx context.Context, name string) (Setting, error)
 
 	// Set sets a setting.
-	Set(ctx context.Context, name string, val interface{}) error
+	Set(ctx context.Context, name string, val Setting) error
+
+	// PrimeDefaults primes the cache with defaults and sets them in the database if they do not exist.
+	PrimeDefaults(ctx context.Context, def Defaults) error
 
 	// Delete removes a setting.
 	Delete(ctx context.Context, name string) error
 }
 
+type Setting interface {
+}
+
 type postgresStore struct {
-	c cache.Cache[string, []byte]
+	c cache.Cache[string, Setting]
 }
 
 type storeCtxKey string
@@ -51,38 +57,44 @@ func FromCtx(ctx context.Context) Store {
 
 func New() *postgresStore {
 	s := &postgresStore{
-		c: cache.New[string, []byte](),
+		c: cache.New[string, Setting](),
 	}
 
 	return s
 }
 
-func (s *postgresStore) Get(ctx context.Context, name string, dest interface{}) error {
+func (s *postgresStore) Get(ctx context.Context, name string) (Setting, error) {
 	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceSetting), rbac.WithActions(entities.ActionRead))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ci, has := s.c.Get(name)
-	if !has {
-		db := database.FromCtx(ctx)
+	if has {
+		return ci, nil
+	}
+	db := database.FromCtx(ctx)
 
-		ci, err = db.GetSetting(ctx, name)
-		if err != nil {
-			if database.IsNoRows(err) {
-				return ErrNoSetting
-			}
-
-			return err
+	cBytes, err := db.GetSetting(ctx, name)
+	if err != nil {
+		if database.IsNoRows(err) {
+			return nil, ErrNoSetting
 		}
 
-		s.c.Set(name, ci)
+		return nil, err
 	}
 
-	return json.Unmarshal(ci, dest)
+	err = json.Unmarshal(cBytes, ci)
+	if err != nil {
+		return nil, err
+	}
+
+	s.c.Set(name, ci)
+
+	return ci, nil
 }
 
-func (s *postgresStore) Set(ctx context.Context, name string, val interface{}) error {
+func (s *postgresStore) Set(ctx context.Context, name string, val Setting) error {
 	subj, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceSetting), rbac.WithActions(entities.ActionCreate, entities.ActionUpdate))
 	if err != nil {
 		return err
@@ -115,7 +127,7 @@ func (s *postgresStore) Set(ctx context.Context, name string, val interface{}) e
 		return err
 	}
 
-	s.c.Set(name, b)
+	s.c.Set(name, val)
 
 	return nil
 }
@@ -128,4 +140,22 @@ func (s *postgresStore) Delete(ctx context.Context, name string) error {
 
 	s.c.Delete(name)
 	return database.FromCtx(ctx).DeleteSetting(ctx, name)
+}
+
+func (s *postgresStore) PrimeDefaults(ctx context.Context, def Defaults) error {
+	for k, v := range def {
+		_, err := s.Get(ctx, k)
+		switch err {
+		case nil:
+		case ErrNoSetting:
+			err = s.Set(ctx, k, v)
+			if err != nil {
+				return err
+			}
+		default:
+			return err
+		}
+	}
+
+	return nil
 }

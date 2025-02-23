@@ -17,6 +17,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/rbac/policy"
 	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/services"
@@ -191,6 +192,11 @@ func (s *Server) Go(ctx context.Context) error {
 
 	ctx = s.fillCtx(ctx)
 
+	err := s.settings.PrimeDefaults(entities.CtxWithServiceSubject(ctx, "settings"), settings.ConfigDefaults)
+	if err != nil {
+		return err
+	}
+
 	httpSrv := &http.Server{
 		Addr:    s.conf.Listen,
 		Handler: s.r,
@@ -204,7 +210,6 @@ func (s *Server) Go(ctx context.Context) error {
 		go pm.Go(ctx)
 	}
 
-	var err error
 	go func() {
 		err = httpSrv.ListenAndServe()
 	}()
