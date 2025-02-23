@@ -102,12 +102,12 @@
         {{ call | talkgroup: "alpha" | async }}
       </td>
     </ng-container>
- <ng-container matColumnDef="talker">
+    <ng-container matColumnDef="talker">
       <th mat-header-cell *matHeaderCellDef>Source</th>
       <td mat-cell *matCellDef="let call">
         @let tlkAlias = call | talker;
         @if (tlkAlias) {
-            {{ tlkAlias }}
+          {{ tlkAlias }}
         } @else {
           &mdash;
         }
