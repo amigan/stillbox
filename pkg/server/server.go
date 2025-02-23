@@ -20,6 +20,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/rbac/policy"
 	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/services"
+	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/sources"
@@ -57,6 +58,7 @@ type Server struct {
 	share     shares.Service
 	rbac      rbac.RBAC
 	stats     stats.Stats
+	settings  settings.Store
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
@@ -110,6 +112,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		incidents: incstore.NewStore(),
 		rbac:      rbacSvc,
 		stats:     statsSvc,
+		settings:  settings.New(),
 	}
 
 	if cfg.DB.Partition.Enabled {
@@ -176,6 +179,7 @@ func (s *Server) fillCtx(ctx context.Context) context.Context {
 	ctx = shares.CtxWithStore(ctx, s.share)
 	ctx = rbac.CtxWithRBAC(ctx, s.rbac)
 	ctx = stats.CtxWithStats(ctx, s.stats)
+	ctx = settings.CtxWithStore(ctx, s.settings)
 
 	return ctx
 }

@@ -26,6 +26,7 @@ type Querier interface {
 	DeleteAPIKey(ctx context.Context, apiKey string) error
 	DeleteCall(ctx context.Context, id uuid.UUID) error
 	DeleteIncident(ctx context.Context, id uuid.UUID) error
+	DeleteSetting(ctx context.Context, name string) error
 	DeleteShare(ctx context.Context, id string) error
 	DeleteSystem(ctx context.Context, id int) error
 	DeleteTalkgroup(ctx context.Context, systemID int32, tGID int32) error
@@ -43,6 +44,7 @@ type Querier interface {
 	GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetIncidentCallsRow, error)
 	GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error)
 	GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error)
+	GetSetting(ctx context.Context, name string) ([]byte, error)
 	GetShare(ctx context.Context, id string) (Share, error)
 	GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSharesPRow, error)
 	GetSharesPCount(ctx context.Context, owner *int32) (int64, error)
@@ -71,6 +73,7 @@ type Querier interface {
 	RestoreTalkgroupVersion(ctx context.Context, versionIds int) (Talkgroup, error)
 	SetAppPrefs(ctx context.Context, appName string, prefs []byte, uid int) error
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error
+	SetSetting(ctx context.Context, name string, updatedBy *int32, value []byte) error
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error
 	StoreDeletedTGVersion(ctx context.Context, systemID *int32, tGID *int32, submitter *int32) error
 	StoreTGVersion(ctx context.Context, arg []StoreTGVersionParams) *StoreTGVersionBatchResults

@@ -947,6 +947,53 @@ func (_c *Store_DeleteIncident_Call) RunAndReturn(run func(context.Context, uuid
 	return _c
 }
 
+// DeleteSetting provides a mock function with given fields: ctx, name
+func (_m *Store) DeleteSetting(ctx context.Context, name string) error {
+	ret := _m.Called(ctx, name)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteSetting")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, name)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_DeleteSetting_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteSetting'
+type Store_DeleteSetting_Call struct {
+	*mock.Call
+}
+
+// DeleteSetting is a helper method to define mock.On call
+//   - ctx context.Context
+//   - name string
+func (_e *Store_Expecter) DeleteSetting(ctx interface{}, name interface{}) *Store_DeleteSetting_Call {
+	return &Store_DeleteSetting_Call{Call: _e.mock.On("DeleteSetting", ctx, name)}
+}
+
+func (_c *Store_DeleteSetting_Call) Run(run func(ctx context.Context, name string)) *Store_DeleteSetting_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Store_DeleteSetting_Call) Return(_a0 error) *Store_DeleteSetting_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_DeleteSetting_Call) RunAndReturn(run func(context.Context, string) error) *Store_DeleteSetting_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteShare provides a mock function with given fields: ctx, id
 func (_m *Store) DeleteShare(ctx context.Context, id string) error {
 	ret := _m.Called(ctx, id)
@@ -1985,6 +2032,65 @@ func (_c *Store_GetIncidentTalkgroups_Call) Return(_a0 []database.GetIncidentTal
 }
 
 func (_c *Store_GetIncidentTalkgroups_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]database.GetIncidentTalkgroupsRow, error)) *Store_GetIncidentTalkgroups_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetSetting provides a mock function with given fields: ctx, name
+func (_m *Store) GetSetting(ctx context.Context, name string) ([]byte, error) {
+	ret := _m.Called(ctx, name)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSetting")
+	}
+
+	var r0 []byte
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]byte, error)); ok {
+		return rf(ctx, name)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []byte); ok {
+		r0 = rf(ctx, name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetSetting_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSetting'
+type Store_GetSetting_Call struct {
+	*mock.Call
+}
+
+// GetSetting is a helper method to define mock.On call
+//   - ctx context.Context
+//   - name string
+func (_e *Store_Expecter) GetSetting(ctx interface{}, name interface{}) *Store_GetSetting_Call {
+	return &Store_GetSetting_Call{Call: _e.mock.On("GetSetting", ctx, name)}
+}
+
+func (_c *Store_GetSetting_Call) Run(run func(ctx context.Context, name string)) *Store_GetSetting_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Store_GetSetting_Call) Return(_a0 []byte, _a1 error) *Store_GetSetting_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetSetting_Call) RunAndReturn(run func(context.Context, string) ([]byte, error)) *Store_GetSetting_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -3800,6 +3906,55 @@ func (_c *Store_SetCallTranscript_Call) Return(_a0 error) *Store_SetCallTranscri
 }
 
 func (_c *Store_SetCallTranscript_Call) RunAndReturn(run func(context.Context, uuid.UUID, *string) error) *Store_SetCallTranscript_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetSetting provides a mock function with given fields: ctx, name, updatedBy, value
+func (_m *Store) SetSetting(ctx context.Context, name string, updatedBy *int32, value []byte) error {
+	ret := _m.Called(ctx, name, updatedBy, value)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetSetting")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, *int32, []byte) error); ok {
+		r0 = rf(ctx, name, updatedBy, value)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_SetSetting_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetSetting'
+type Store_SetSetting_Call struct {
+	*mock.Call
+}
+
+// SetSetting is a helper method to define mock.On call
+//   - ctx context.Context
+//   - name string
+//   - updatedBy *int32
+//   - value []byte
+func (_e *Store_Expecter) SetSetting(ctx interface{}, name interface{}, updatedBy interface{}, value interface{}) *Store_SetSetting_Call {
+	return &Store_SetSetting_Call{Call: _e.mock.On("SetSetting", ctx, name, updatedBy, value)}
+}
+
+func (_c *Store_SetSetting_Call) Run(run func(ctx context.Context, name string, updatedBy *int32, value []byte)) *Store_SetSetting_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(*int32), args[3].([]byte))
+	})
+	return _c
+}
+
+func (_c *Store_SetSetting_Call) Return(_a0 error) *Store_SetSetting_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_SetSetting_Call) RunAndReturn(run func(context.Context, string, *int32, []byte) error) *Store_SetSetting_Call {
 	_c.Call.Return(run)
 	return _c
 }
