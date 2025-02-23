@@ -125,6 +125,9 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 		tgs.name ILIKE '%' || @tg_filter || '%' OR
 		tgs.alpha_tag ILIKE '%' || @tg_filter || '%'
 	) ELSE TRUE END) AND
+(CASE WHEN sqlc.narg('source_filter')::TEXT IS NOT NULL THEN (
+		c.talker_alias ILIKE '%' || @source_filter || '%'
+	) ELSE TRUE END) AND
 (CASE WHEN sqlc.narg('longer_than')::NUMERIC IS NOT NULL THEN (
 		c.duration > @longer_than
 	) ELSE TRUE END) AND
@@ -157,6 +160,9 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 		tgs.tg_group ILIKE '%' || @tg_filter || '%' OR
 		tgs.name ILIKE '%' || @tg_filter || '%' OR
 		tgs.alpha_tag ILIKE '%' || @tg_filter || '%'
+	) ELSE TRUE END) AND
+(CASE WHEN sqlc.narg('source_filter')::TEXT IS NOT NULL THEN (
+		c.talker_alias ILIKE '%' || @source_filter || '%'
 	) ELSE TRUE END) AND
 (CASE WHEN sqlc.narg('longer_than')::NUMERIC IS NOT NULL THEN (
 		c.duration > @longer_than
