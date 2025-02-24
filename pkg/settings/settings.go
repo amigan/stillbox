@@ -24,9 +24,6 @@ type Store interface {
 	// Set sets a setting.
 	Set(ctx context.Context, name string, val Setting) error
 
-	// PrimeDefaults primes the cache with defaults and sets them in the database if they do not exist.
-	PrimeDefaults(ctx context.Context, def Defaults) error
-
 	// Delete removes a setting.
 	Delete(ctx context.Context, name string) error
 }
@@ -35,7 +32,8 @@ type Setting interface {
 }
 
 type postgresStore struct {
-	c cache.Cache[string, Setting]
+	c        cache.Cache[string, Setting]
+	defaults Defaults
 }
 
 type storeCtxKey string
@@ -55,9 +53,10 @@ func FromCtx(ctx context.Context) Store {
 	return s
 }
 
-func New() *postgresStore {
+func New(defaults Defaults) *postgresStore {
 	s := &postgresStore{
-		c: cache.New[string, Setting](),
+		c:        cache.New[string, Setting](),
+		defaults: defaults,
 	}
 
 	return s
@@ -78,6 +77,11 @@ func (s *postgresStore) Get(ctx context.Context, name string) (Setting, error) {
 	cBytes, err := db.GetSetting(ctx, name)
 	if err != nil {
 		if database.IsNoRows(err) {
+			def, hasDefault := s.defaults[name]
+			if hasDefault {
+				return def, nil
+			}
+
 			return nil, ErrNoSetting
 		}
 
@@ -140,22 +144,4 @@ func (s *postgresStore) Delete(ctx context.Context, name string) error {
 
 	s.c.Delete(name)
 	return database.FromCtx(ctx).DeleteSetting(ctx, name)
-}
-
-func (s *postgresStore) PrimeDefaults(ctx context.Context, def Defaults) error {
-	for k, v := range def {
-		_, err := s.Get(ctx, k)
-		switch err {
-		case nil:
-		case ErrNoSetting:
-			err = s.Set(ctx, k, v)
-			if err != nil {
-				return err
-			}
-		default:
-			return err
-		}
-	}
-
-	return nil
 }

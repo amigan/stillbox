@@ -17,7 +17,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/rbac/policy"
 	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/services"
@@ -113,7 +112,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		incidents: incstore.NewStore(),
 		rbac:      rbacSvc,
 		stats:     statsSvc,
-		settings:  settings.New(),
+		settings:  settings.New(settings.ConfigDefaults),
 	}
 
 	if cfg.DB.Partition.Enabled {
@@ -180,7 +179,6 @@ func (s *Server) fillCtx(ctx context.Context) context.Context {
 	ctx = shares.CtxWithStore(ctx, s.share)
 	ctx = rbac.CtxWithRBAC(ctx, s.rbac)
 	ctx = stats.CtxWithStats(ctx, s.stats)
-	ctx = settings.CtxWithStore(ctx, s.settings)
 
 	return ctx
 }
@@ -191,11 +189,6 @@ func (s *Server) Go(ctx context.Context) error {
 	s.installHupHandler()
 
 	ctx = s.fillCtx(ctx)
-
-	err := s.settings.PrimeDefaults(entities.CtxWithServiceSubject(ctx, "settings"), settings.ConfigDefaults)
-	if err != nil {
-		return err
-	}
 
 	httpSrv := &http.Server{
 		Addr:    s.conf.Listen,
@@ -210,6 +203,7 @@ func (s *Server) Go(ctx context.Context) error {
 		go pm.Go(ctx)
 	}
 
+	var err error
 	go func() {
 		err = httpSrv.ListenAndServe()
 	}()
