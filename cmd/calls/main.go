@@ -128,6 +128,7 @@ func main() {
 	}
 	wsHdr := make(http.Header)
 	userAgent(wsHdr)
+	wsHdr.Set("Authorization", "Bearer "+jwt.JWT)
 	c, _, err := dialer.Dial(u.String(), wsHdr)
 	if err != nil {
 		log.Fatal("dial:", err)
@@ -163,7 +164,11 @@ func main() {
 
 				switch v := m.ToClientMessage.(type) {
 				case *pb.Message_Call:
-					log.Printf("call tg %d (%s) [Q: %d]", v.Call.Talkgroup, timeLength(v.Call.Duration), play.Queue())
+					var talker string
+					if v.Call.TalkerAlias != nil {
+						talker = " from " + *v.Call.TalkerAlias
+					}
+					log.Printf("call tg %d%s (%s) [Q: %d]", v.Call.Talkgroup, talker, timeLength(v.Call.Duration), play.Queue())
 					play.Play(v.Call.Audio, v.Call.AudioType)
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
