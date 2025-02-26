@@ -1,16 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
-  BehaviorSubject,
-  concatMap,
+  map,
+  merge,
   Observable,
   ReplaySubject,
-  share,
   shareReplay,
   Subscription,
   switchMap,
 } from 'rxjs';
 
+export interface UserSysPreferences {
+  userPrefs: Preferences;
+  sysPrefs: Preferences;
+}
 export interface Preferences {
   [key: string]: any;
 }
@@ -28,8 +31,8 @@ function mapToObj(map: Map<any, any>): { [key: string]: any } {
 })
 export class PrefsService {
   private readonly _getPref = new Map<string, ReplaySubject<any>>();
-  prefs$: Observable<Preferences>;
-  last!: Preferences;
+  prefs$: Observable<UserSysPreferences>;
+  last!: UserSysPreferences;
   subscriptions = new Subscription();
 
   constructor(private http: HttpClient) {
@@ -57,20 +60,22 @@ export class PrefsService {
             }
           });
         } else {
-          this.last = {};
+          this.last = <UserSysPreferences>{};
         }
       }),
     );
   }
 
-  fetch(): Observable<Preferences> {
-    return this.http.get<Preferences>('/api/user/prefs/stillbox');
+  fetch(): Observable<UserSysPreferences> {
+    return this.http.get<UserSysPreferences>('/api/prefs/stillbox');
   }
 
   get(k: string): Observable<any> {
     if (!this._getPref.get(k)) {
       return this.prefs$.pipe(
-        switchMap((pref) => {
+        switchMap((res) => {
+          let rv = <Preferences>res.sysPrefs;
+          let pref = <Preferences>mergeDeep(rv, res.userPrefs);
           let ns = new ReplaySubject<any>(1);
           ns.next(pref ? pref[k] : null);
           return ns;
@@ -82,14 +87,54 @@ export class PrefsService {
   }
 
   set(pref: string, value: any) {
-    this.last[pref] = value;
+    if (this.last == null) {
+      this.last = <UserSysPreferences>{};
+    }
+    if (this.last.userPrefs == null) {
+      this.last.userPrefs = <Preferences>{};
+    }
+    this.last.userPrefs[pref] = value;
     let ex = this._getPref.get(pref);
-    if (!ex) {
+    if (ex == null) {
       ex = new ReplaySubject<any>(1);
       this._getPref.set(pref, ex);
+      ex.next(value);
     }
+    console.log('gonna up');
     this.http
-      .put<Preferences>('/api/user/prefs/stillbox', this.last)
+      .put<Preferences>('/api/prefs/stillbox', this.last.userPrefs)
       .subscribe((ev) => {});
   }
+}
+
+/**
+ * Simple object check.
+ * @param item
+ * @returns {boolean}
+ */
+export function isObject(item: any): boolean {
+  return item && typeof item === 'object' && !Array.isArray(item);
+}
+
+/**
+ * Deep merge two objects.
+ * @param target
+ * @param ...sources
+ */
+export function mergeDeep(target: any, ...sources: any): any {
+  if (!sources.length) return target;
+  const source = sources.shift();
+
+  if (isObject(target) && isObject(source)) {
+    for (const key in source) {
+      if (isObject(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} });
+        mergeDeep(target[key], source[key]);
+      } else {
+        Object.assign(target, { [key]: source[key] });
+      }
+    }
+  }
+
+  return mergeDeep(target, ...sources);
 }

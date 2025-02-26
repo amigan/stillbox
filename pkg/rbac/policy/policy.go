@@ -50,6 +50,9 @@ var Policy = &restrict.PolicyDefinition{
 				entities.ResourceCallStats: {
 					&restrict.Permission{Action: entities.ActionRead},
 				},
+				entities.ResourceSetting: {
+					&restrict.Permission{Action: entities.ActionRead},
+				},
 			},
 		},
 		entities.RoleSubmitter: {
@@ -106,6 +109,12 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: entities.ActionRead},
 					&restrict.Permission{Action: entities.ActionUpdate},
 					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionDelete},
+				},
+				entities.ResourceSetting: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionUpdate},
 					&restrict.Permission{Action: entities.ActionDelete},
 				},
 			},

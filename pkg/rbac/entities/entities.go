@@ -23,6 +23,7 @@ const (
 	ResourceShare     = "Share"
 	ResourceAPIKey    = "APIKey"
 	ResourceCallStats = "CallStats"
+	ResourceSetting   = "Setting"
 
 	ActionRead   = "read"
 	ActionCreate = "create"
@@ -96,4 +97,10 @@ func (s *SystemServiceSubject) String() string {
 
 func (s *SystemServiceSubject) GetRoles() []string {
 	return []string{RoleSystem}
+}
+
+func IsSystemService(sub Subject) bool {
+	_, is := sub.(*SystemServiceSubject)
+
+	return is
 }
