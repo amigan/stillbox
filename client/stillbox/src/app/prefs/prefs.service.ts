@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
   map,
+  merge,
   Observable,
   ReplaySubject,
   shareReplay,
@@ -72,11 +73,9 @@ export class PrefsService {
   get(k: string): Observable<any> {
     if (!this._getPref.get(k)) {
       return this.prefs$.pipe(
-        map((res) => {
+        switchMap((res) => {
           let rv = <Preferences>res.sysPrefs;
-          return <Preferences>mergeDeep(rv, res.userPrefs);
-        }),
-        switchMap((pref) => {
+          let pref = <Preferences>mergeDeep(rv, res.userPrefs);
           let ns = new ReplaySubject<any>(1);
           ns.next(pref ? pref[k] : null);
           return ns;
@@ -88,17 +87,23 @@ export class PrefsService {
   }
 
   set(pref: string, value: any) {
+    if (this.last == null) {
+      this.last = <UserSysPreferences>{};
+    }
+    if (this.last.userPrefs == null) {
+      this.last.userPrefs = <Preferences>{};
+    }
     this.last.userPrefs[pref] = value;
     let ex = this._getPref.get(pref);
     if (ex == null) {
       ex = new ReplaySubject<any>(1);
       this._getPref.set(pref, ex);
+      ex.next(value);
     }
-    console.log("set", pref, value);
+    console.log('gonna up');
     this.http
       .put<Preferences>('/api/prefs/stillbox', this.last.userPrefs)
       .subscribe((ev) => {});
-    console.log("set", pref, value);
   }
 }
 
@@ -108,7 +113,7 @@ export class PrefsService {
  * @returns {boolean}
  */
 export function isObject(item: any): boolean {
-  return (item && typeof item === 'object' && !Array.isArray(item));
+  return item && typeof item === 'object' && !Array.isArray(item);
 }
 
 /**
