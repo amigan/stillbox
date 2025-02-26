@@ -179,6 +179,7 @@ func (s *Server) fillCtx(ctx context.Context) context.Context {
 	ctx = shares.CtxWithStore(ctx, s.share)
 	ctx = rbac.CtxWithRBAC(ctx, s.rbac)
 	ctx = stats.CtxWithStats(ctx, s.stats)
+	ctx = settings.CtxWithStore(ctx, s.settings)
 
 	return ctx
 }
