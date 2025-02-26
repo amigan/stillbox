@@ -2,9 +2,11 @@ package settings
 
 import "encoding/json"
 
-type Defaults map[Setting]Setting
+type Defaults map[string]Setting
 
-func MustMarshal(s Setting) json.RawMessage {
+
+
+func MustMarshal(s interface{}) json.RawMessage {
 	b, err := json.Marshal(s)
 	if err != nil {
 		panic(err)
