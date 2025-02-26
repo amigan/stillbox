@@ -28,10 +28,6 @@ table,
   align-content: center;
 }
 
-.playButton {
-  cursor: pointer;
-}
-
 tr.mat-mdc-row {
   height: 2.3rem !important;
   font-size: 12pt;
@@ -65,7 +61,8 @@ tr.mat-mdc-row {
 
 @media screen and (max-width: 768px) {
   .mat-column-group,
-  .mat-column-system {
+  .mat-column-system,
+  .mat-column-date {
     display: none;
   }
 
