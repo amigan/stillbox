@@ -261,6 +261,13 @@ export class CallsComponent {
       }),
     );
     this.subscriptions.add(
+      this.prefsSvc.get('calls.view.showSourceAlias').subscribe((v) => {
+        if (v != true) {
+          this.columns = this.columns.filter((e) => e != 'talker');
+        }
+      }),
+    );
+    this.subscriptions.add(
       this.fetchCalls
         .pipe(
           debounceTime(500),
