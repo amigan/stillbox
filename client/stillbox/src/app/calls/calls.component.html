@@ -119,7 +119,11 @@
     </div>
   </form>
 </div>
-<div class="tabContainer" *ngIf="!isLoading; else spinner">
+<div
+  class="tabContainer"
+  [formGroup]="tableFG"
+  *ngIf="!isLoading; else spinner"
+>
   <table #callsTable class="callsTable" mat-table [dataSource]="callsResult">
     <ng-container matColumnDef="select">
       <th mat-header-cell *matHeaderCellDef>
@@ -140,15 +144,12 @@
       </td>
     </ng-container>
     <ng-container matColumnDef="play">
-      <th mat-header-cell *matHeaderCellDef></th>
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox title="Download mode" formControlName="downloadMode">
+        </mat-checkbox>
+      </th>
       <td mat-cell *matCellDef="let call">
-        <call-player [call]="call"></call-player>
-      </td>
-    </ng-container>
-    <ng-container matColumnDef="download">
-      <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell *matCellDef="let call">
-        <a [href]="call | audioDownloadURL"><mat-icon>download</mat-icon></a>
+        <call-player [download]="downloadMode()" [call]="call"></call-player>
       </td>
     </ng-container>
     <ng-container matColumnDef="date">

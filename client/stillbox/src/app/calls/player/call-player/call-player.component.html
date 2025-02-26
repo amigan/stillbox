@@ -1,4 +1,6 @@
-@if (playing) {
+@if (download()) {
+  <a [href]="call | audioDownloadURL"><mat-icon>download</mat-icon></a>
+} @else if (playing) {
   <a class="playButton" (click)="stopAudio($event)"
     ><mat-icon>stop</mat-icon></a
   >

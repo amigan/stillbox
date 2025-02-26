@@ -1,4 +1,10 @@
-import { Component, ElementRef, inject, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  inject,
+  Signal,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
@@ -12,12 +18,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import {
   CallsListParams,
   CallsService,
   DatePipe,
-  DownloadURLPipe,
   FixedPointPipe,
   TalkerPipe,
   TalkgroupPipe,
@@ -50,6 +55,7 @@ import {
 } from '../incidents/incidents.service';
 import { IncidentRecord } from '../incidents';
 import { SelectIncidentDialogComponent } from '../incidents/select-incident-dialog/select-incident-dialog.component';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 const reqPageSize = 200;
 @Component({
@@ -64,7 +70,6 @@ const reqPageSize = 200;
     MatPaginatorModule,
     MatTableModule,
     AsyncPipe,
-    DownloadURLPipe,
     MatFormFieldModule,
     ReactiveFormsModule,
     FormsModule,
@@ -91,7 +96,6 @@ export class CallsComponent {
   columns = [
     'select',
     'play',
-    'download',
     'date',
     'time',
     'system',
@@ -117,6 +121,20 @@ export class CallsComponent {
     tagsAny: new FormControl<string[]>([]),
     tagsNot: new FormControl<string[]>([]),
   });
+  tableFG = new FormGroup({
+    downloadMode: new FormControl<boolean>(false),
+  });
+  downloadMode = toSignal(
+    this.tableFG.controls.downloadMode.valueChanges.pipe(
+      map((v) => {
+        if (v == true) {
+          return true;
+        }
+
+        return false;
+      }),
+    ),
+  );
 
   subscriptions = new Subscription();
   pageWindow = 0;
@@ -248,6 +266,7 @@ export class CallsComponent {
       this.currentServerPage = 0;
       this.setPage(this.zeroPage(), true);
     });
+
     this.subscriptions.add(
       this.prefsSvc.get('callsPerPage').subscribe((cpp) => {
         if (cpp && cpp != this.perPage) {

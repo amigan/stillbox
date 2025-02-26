@@ -1,12 +1,12 @@
-import { Component, Input } from '@angular/core';
-import { CallsService } from '../../calls.service';
+import { Component, input, Input } from '@angular/core';
+import { CallsService, DownloadURLPipe } from '../../calls.service';
 import { CallRecord } from '../../../calls';
 import { MatIconModule } from '@angular/material/icon';
 import { fromEvent, Observable, Subscription } from 'rxjs';
 
 @Component({
   selector: 'call-player',
-  imports: [MatIconModule],
+  imports: [MatIconModule, DownloadURLPipe],
   templateUrl: './call-player.component.html',
   styleUrl: './call-player.component.scss',
 })
@@ -15,6 +15,7 @@ export class CallPlayerComponent {
   playing = false;
   playSub!: Subscription;
   au!: HTMLAudioElement;
+  download = input<boolean>();
 
   constructor(private callsSvc: CallsService) {}
 
