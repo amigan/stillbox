@@ -160,8 +160,8 @@
     </ng-container>
     <ng-container matColumnDef="time">
       <th mat-header-cell *matHeaderCellDef>Time</th>
-      <td mat-cell *matCellDef="let call" [title]="call.callDate" >
-        {{ call.callDate | time : true }}
+      <td mat-cell *matCellDef="let call" [title]="call.callDate">
+        {{ call.callDate | time: true }}
       </td>
     </ng-container>
     <ng-container matColumnDef="system">
@@ -178,7 +178,11 @@
     </ng-container>
     <ng-container matColumnDef="talkgroup">
       <th mat-header-cell *matHeaderCellDef>Talkgroup</th>
-      <td mat-cell *matCellDef="let call" [title]="call.systemId+':'+call.tgid">
+      <td
+        mat-cell
+        *matCellDef="let call"
+        [title]="call.systemId + ':' + call.tgid"
+      >
         @let tgAlpha = call | talkgroup: "alpha" | async;
         <a
           href="javascript:void(0)"
