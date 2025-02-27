@@ -8,7 +8,7 @@ table,
 }
 
 .duration {
-  text-align: right;
+  justify-content: center;
 }
 
 .tabContainer {
@@ -55,13 +55,13 @@ tr.mat-mdc-row {
   flex: 0 1.1 20%;
 }
 
-
 @media screen and (max-width: 768px) {
   tr.mat-mdc-row {
     font-size: 12pt;
-    height: 2.0rem !important;
+    height: 2rem !important;
   }
-  .mdc-data-table__cell, .mdc-data-table__header-cell {
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
     padding: 0 4px;
   }
 
