@@ -161,13 +161,13 @@ export class CallsComponent {
   }
 
   searchTGFilter(filt: string | null) {
-    if (filt) {
+    if (filt != null && filt != this.form.controls.filter.value) {
       this.form.controls['filter'].setValue(filt);
     }
   }
 
   searchSrcFilter(filt: string | null) {
-    if (filt) {
+    if (filt != null && filt != this.form.controls.sourceFilter.value) {
       this.form.controls['sourceFilter'].setValue(filt);
     }
   }
