@@ -366,7 +366,6 @@ c.talker_alias,
 COUNT(ic.incident_id) incidents
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
-JOIN systems sys ON sys.id = tgs.system_id
 LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
 WHERE
 CASE WHEN $1::TIMESTAMPTZ IS NOT NULL THEN
