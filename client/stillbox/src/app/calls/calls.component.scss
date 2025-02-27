@@ -57,8 +57,12 @@ tr.mat-mdc-row {
 
 
 @media screen and (max-width: 768px) {
+  tr.mat-mdc-row {
+    font-size: 12pt;
+    height: 2.0rem !important;
+  }
   .mdc-data-table__cell, .mdc-data-table__header-cell {
-    padding: 0 6px;
+    padding: 0 4px;
   }
 
   .mat-column-group,
