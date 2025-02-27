@@ -56,6 +56,7 @@ import {
 import { IncidentRecord } from '../incidents';
 import { SelectIncidentDialogComponent } from '../incidents/select-incident-dialog/select-incident-dialog.component';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 const reqPageSize = 200;
 @Component({
@@ -80,6 +81,7 @@ const reqPageSize = 200;
     MatSelectModule,
     CallPlayerComponent,
     MatMenuModule,
+    MatTooltipModule,
   ],
   templateUrl: './calls.component.html',
   styleUrl: './calls.component.scss',
