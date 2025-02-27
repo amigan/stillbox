@@ -43,7 +43,7 @@ tr.mat-mdc-row {
 .mat-column-download,
 .mat-column-duration {
   width: 10px;
-  padding: 0 2px;
+  padding: 0 1px;
 }
 
 .mat-column-date {
@@ -55,7 +55,12 @@ tr.mat-mdc-row {
   flex: 0 1.1 20%;
 }
 
+
 @media screen and (max-width: 768px) {
+  .mdc-data-table__cell, .mdc-data-table__header-cell {
+    padding: 0 6px;
+  }
+
   .mat-column-group,
   .mat-column-system,
   .mat-column-date {
