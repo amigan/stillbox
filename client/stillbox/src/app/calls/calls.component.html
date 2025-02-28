@@ -119,7 +119,9 @@
     </div>
   </form>
 </div>
-<mat-progress-bar [mode]="queryInProgress ? 'query' : 'determinate'"></mat-progress-bar>
+<mat-progress-bar
+  [mode]="queryInProgress ? 'query' : 'determinate'"
+></mat-progress-bar>
 <div
   class="tabContainer"
   [formGroup]="tableFG"
@@ -210,8 +212,15 @@
       </td>
     </ng-container>
     <ng-container matColumnDef="duration">
-      <th mat-header-cell *matHeaderCellDef class="durationHdr"><mat-icon>timer_outline</mat-icon></th>
-      <td mat-cell [title]="(call.duration/1000)+'s'" *matCellDef="let call" class="duration">
+      <th mat-header-cell *matHeaderCellDef class="durationHdr">
+        <mat-icon>timer_outline</mat-icon>
+      </th>
+      <td
+        mat-cell
+        [title]="call.duration / 1000 + 's'"
+        *matCellDef="let call"
+        class="duration"
+      >
         {{ call.duration | fixedPoint: 1000 : 0 }}s
       </td>
     </ng-container>
