@@ -1,7 +1,11 @@
 mat-card.chart {
-  width: 500px;
-  height: 500px;
-  margin: 30px 30px 40px 40px;
+  max-height: calc(
+    (
+        100vh - var(--mat-mat-maginator-container-size, 56px) - 2 *
+          (var(--mat-toolbar-standard-height, 64px))
+      ) + 7px
+  );
+  overflow: auto;
 }
 
 mat-card div {
