@@ -218,13 +218,12 @@ export class CallsComponent {
   }
 
   lTime(now: Date): string {
-    now.setDate(new Date().getDate() - 7);
+    now.setDate(new Date().getDate() - 3);
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     return now.toISOString().slice(0, 16);
   }
 
   setPage(p: PageEvent, force?: boolean) {
-    this.spinBar();
     this.selection.clear();
     this.curPage = p;
     if (p && p!.pageSize != this.perPage) {
@@ -235,7 +234,6 @@ export class CallsComponent {
   }
 
   refresh() {
-    this.spinBar();
     this.selection.clear();
     this.getCalls(this.curPage, true);
   }
@@ -249,7 +247,6 @@ export class CallsComponent {
   }
 
   getCalls(p: PageEvent, force?: boolean) {
-    this.spinBar();
     const pageStart = p.pageIndex * p.pageSize;
     const serverPage = Math.floor(pageStart / reqPageSize) + 1;
     this.pageWindow = pageStart % reqPageSize;
@@ -260,6 +257,7 @@ export class CallsComponent {
           : [],
       );
     } else {
+      this.spinBar();
       this.currentServerPage = serverPage;
       this.fetchCalls.next(this.buildParams(p, serverPage));
     }
