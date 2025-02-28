@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
 import {
   MatPaginator,
@@ -78,6 +79,7 @@ const reqPageSize = 200;
     MatCheckboxModule,
     CommonModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatSelectModule,
     CallPlayerComponent,
     MatMenuModule,
@@ -111,6 +113,7 @@ export class CallsComponent {
   currentSet!: CallRecord[];
   currentServerPage = 0; // page is never 0, forces load
   isLoading = true;
+  queryInProgress = false;
 
   selection = new SelectionModel<CallRecord>(true, []);
 
@@ -221,6 +224,7 @@ export class CallsComponent {
   }
 
   setPage(p: PageEvent, force?: boolean) {
+    this.spinBar();
     this.selection.clear();
     this.curPage = p;
     if (p && p!.pageSize != this.perPage) {
@@ -231,11 +235,21 @@ export class CallsComponent {
   }
 
   refresh() {
+    this.spinBar();
     this.selection.clear();
     this.getCalls(this.curPage, true);
   }
 
+  spinBar() {
+    this.queryInProgress = true;
+  }
+
+  stopSpinBar() {
+    this.queryInProgress = false;
+  }
+
   getCalls(p: PageEvent, force?: boolean) {
+    this.spinBar();
     const pageStart = p.pageIndex * p.pageSize;
     const serverPage = Math.floor(pageStart / reqPageSize) + 1;
     this.pageWindow = pageStart % reqPageSize;
@@ -298,6 +312,7 @@ export class CallsComponent {
         )
         .subscribe((calls) => {
           this.isLoading = false;
+          this.stopSpinBar();
           this.count = calls.count;
           this.currentSet = calls.calls;
           if (this.callsTable) {
