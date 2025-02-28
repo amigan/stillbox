@@ -8,7 +8,7 @@ table,
 }
 
 .duration {
-  text-align: right;
+  justify-content: center;
 }
 
 .tabContainer {
@@ -28,10 +28,6 @@ table,
   align-content: center;
 }
 
-.playButton {
-  cursor: pointer;
-}
-
 tr.mat-mdc-row {
   height: 2.3rem !important;
   font-size: 12pt;
@@ -47,7 +43,7 @@ tr.mat-mdc-row {
 .mat-column-download,
 .mat-column-duration {
   width: 10px;
-  padding: 0 2px;
+  padding: 0 1px;
 }
 
 .mat-column-date {
@@ -55,17 +51,23 @@ tr.mat-mdc-row {
   padding: 0 6px;
 }
 
-.mat-column-system {
-  width: 4%;
-}
-
-.mat-column-talkgroup {
-  width: 40%;
+.mat-column-group {
+  flex: 0 1.1 20%;
 }
 
 @media screen and (max-width: 768px) {
+  tr.mat-mdc-row {
+    font-size: 12pt;
+    height: 2rem !important;
+  }
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
+    padding: 0 4px;
+  }
+
   .mat-column-group,
-  .mat-column-system {
+  .mat-column-system,
+  .mat-column-date {
     display: none;
   }
 

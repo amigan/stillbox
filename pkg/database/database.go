@@ -119,6 +119,23 @@ func NewClient(ctx context.Context, conf config.DB) (*Postgres, error) {
 		return nil, err
 	}
 
+	// Set some optimizations for calls queries.
+	var pgQueryOptions = [...]string{
+		"SET parallel_tuple_cost = 0.005;",
+		"SET parallel_setup_cost = 250;",
+		"SET work_mem = '8MB';",
+	}
+	pgConf.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		for _, o := range pgQueryOptions {
+			_, err := conn.Exec(ctx, o)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
 	if conf.LogQueries {
 		pgConf.ConnConfig.Tracer = &tracelog.TraceLog{
 			Logger:   dbLogger{},

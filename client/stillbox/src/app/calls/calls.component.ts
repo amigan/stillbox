@@ -1,6 +1,13 @@
-import { Component, ElementRef, inject, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  inject,
+  Signal,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
 import {
   MatPaginator,
@@ -12,12 +19,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import {
   CallsListParams,
   CallsService,
   DatePipe,
-  DownloadURLPipe,
   FixedPointPipe,
   TalkerPipe,
   TalkgroupPipe,
@@ -50,6 +56,8 @@ import {
 } from '../incidents/incidents.service';
 import { IncidentRecord } from '../incidents';
 import { SelectIncidentDialogComponent } from '../incidents/select-incident-dialog/select-incident-dialog.component';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 const reqPageSize = 200;
 @Component({
@@ -64,7 +72,6 @@ const reqPageSize = 200;
     MatPaginatorModule,
     MatTableModule,
     AsyncPipe,
-    DownloadURLPipe,
     MatFormFieldModule,
     ReactiveFormsModule,
     FormsModule,
@@ -72,9 +79,11 @@ const reqPageSize = 200;
     MatCheckboxModule,
     CommonModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatSelectModule,
     CallPlayerComponent,
     MatMenuModule,
+    MatTooltipModule,
   ],
   templateUrl: './calls.component.html',
   styleUrl: './calls.component.scss',
@@ -91,7 +100,6 @@ export class CallsComponent {
   columns = [
     'select',
     'play',
-    'download',
     'date',
     'time',
     'system',
@@ -105,6 +113,7 @@ export class CallsComponent {
   currentSet!: CallRecord[];
   currentServerPage = 0; // page is never 0, forces load
   isLoading = true;
+  queryInProgress = false;
 
   selection = new SelectionModel<CallRecord>(true, []);
 
@@ -117,6 +126,20 @@ export class CallsComponent {
     tagsAny: new FormControl<string[]>([]),
     tagsNot: new FormControl<string[]>([]),
   });
+  tableFG = new FormGroup({
+    downloadMode: new FormControl<boolean>(false),
+  });
+  downloadMode = toSignal(
+    this.tableFG.controls.downloadMode.valueChanges.pipe(
+      map((v) => {
+        if (v == true) {
+          return true;
+        }
+
+        return false;
+      }),
+    ),
+  );
 
   subscriptions = new Subscription();
   pageWindow = 0;
@@ -141,13 +164,13 @@ export class CallsComponent {
   }
 
   searchTGFilter(filt: string | null) {
-    if (filt) {
+    if (filt != null && filt != this.form.controls.filter.value) {
       this.form.controls['filter'].setValue(filt);
     }
   }
 
   searchSrcFilter(filt: string | null) {
-    if (filt) {
+    if (filt != null && filt != this.form.controls.sourceFilter.value) {
       this.form.controls['sourceFilter'].setValue(filt);
     }
   }
@@ -201,6 +224,7 @@ export class CallsComponent {
   }
 
   setPage(p: PageEvent, force?: boolean) {
+    this.spinBar();
     this.selection.clear();
     this.curPage = p;
     if (p && p!.pageSize != this.perPage) {
@@ -211,11 +235,21 @@ export class CallsComponent {
   }
 
   refresh() {
+    this.spinBar();
     this.selection.clear();
     this.getCalls(this.curPage, true);
   }
 
+  spinBar() {
+    this.queryInProgress = true;
+  }
+
+  stopSpinBar() {
+    this.queryInProgress = false;
+  }
+
   getCalls(p: PageEvent, force?: boolean) {
+    this.spinBar();
     const pageStart = p.pageIndex * p.pageSize;
     const serverPage = Math.floor(pageStart / reqPageSize) + 1;
     this.pageWindow = pageStart % reqPageSize;
@@ -248,6 +282,7 @@ export class CallsComponent {
       this.currentServerPage = 0;
       this.setPage(this.zeroPage(), true);
     });
+
     this.subscriptions.add(
       this.prefsSvc.get('callsPerPage').subscribe((cpp) => {
         if (cpp && cpp != this.perPage) {
@@ -277,6 +312,7 @@ export class CallsComponent {
         )
         .subscribe((calls) => {
           this.isLoading = false;
+          this.stopSpinBar();
           this.count = calls.count;
           this.currentSet = calls.calls;
           if (this.callsTable) {

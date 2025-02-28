@@ -106,7 +106,11 @@ CREATE TABLE IF NOT EXISTS calls(
 
 CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector('english', transcript));
 CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(call_date, talkgroup, system);
+CREATE INDEX IF NOT EXISTS calls_call_date_brin_idx ON calls USING brin (call_date);
 CREATE INDEX IF NOT EXISTS calls_talker_alias ON calls(talker_alias);
+-- These indices were not found to have any effect.
+-- CREATE INDEX IF NOT EXISTS calls_call_date_hash_idx ON calls using hash (call_date);
+-- CREATE INDEX IF NOT EXISTS calls_call_date_desc_idx ON calls(call_date DC);
 
 CREATE TABLE swept_calls (
 	id UUID PRIMARY KEY,
