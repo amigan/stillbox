@@ -129,7 +129,7 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
-func (a *Auth) routeAuth(w http.ResponseWriter, r *http.Request) {
+func (a *Auth) routeLogin(w http.ResponseWriter, r *http.Request) {
 	var creds struct {
 		Username string `json:"username"`
 		Password string `json:"password"`

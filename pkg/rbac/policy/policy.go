@@ -17,6 +17,8 @@ const (
 	PresetDeleteSubmitter      = "deleteSubmitter"
 	PresetShareSubmitter       = "shareSubmitter"
 	PresetReadInSharedIncident = "readInSharedIncident"
+	PresetReadPrivilegedSelf   = "readPrivileged"
+	PresetUpdateSelf           = "updateSelf"
 )
 
 var Policy = &restrict.PolicyDefinition{
@@ -52,6 +54,11 @@ var Policy = &restrict.PolicyDefinition{
 				},
 				entities.ResourceSetting: {
 					&restrict.Permission{Action: entities.ActionRead},
+				},
+				entities.ResourceUser: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Preset: PresetReadPrivilegedSelf},
+					&restrict.Permission{Preset: PresetUpdateSelf},
 				},
 			},
 		},
@@ -113,6 +120,13 @@ var Policy = &restrict.PolicyDefinition{
 				},
 				entities.ResourceSetting: {
 					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionDelete},
+				},
+				entities.ResourceUser: {
+					&restrict.Permission{Action: entities.ActionReadPrivileged},
+					&restrict.Permission{Action: entities.ActionUpdatePrivileged},
 					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Action: entities.ActionUpdate},
 					&restrict.Permission{Action: entities.ActionDelete},
@@ -257,6 +271,38 @@ var Policy = &restrict.PolicyDefinition{
 					Incident: &restrict.ValueDescriptor{
 						Source: restrict.SubjectField,
 						Field:  "EntityID",
+					},
+				},
+			},
+		},
+		PresetReadPrivilegedSelf: &restrict.Permission{
+			Action: entities.ActionReadPrivileged,
+			Conditions: restrict.Conditions{
+				&restrict.EqualCondition{
+					ID: "userSelf",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetUpdateSelf: &restrict.Permission{
+			Action: entities.ActionUpdate,
+			Conditions: restrict.Conditions{
+				&restrict.EqualCondition{
+					ID: "userSelf",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "ID",
 					},
 				},
 			},

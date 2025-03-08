@@ -3,9 +3,10 @@ package users
 import (
 	"context"
 	"encoding/json"
+	"net/netip"
 	"strings"
-	"time"
 
+	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
@@ -65,9 +66,13 @@ type User struct {
 	Password      string
 	Email         string
 	IsAdmin       bool
-	LastLoginAt   *time.Time
-	LastLoginFrom string
+	LastLoginAt   *jsontypes.Time
+	LastLoginFrom *netip.Addr
 	Prefs         json.RawMessage
+}
+
+func (*User) GetResourceName() string {
+	return entities.ResourceUser
 }
 
 func (u *User) GetName() string {
@@ -91,12 +96,19 @@ func (u *User) GetRoles() []string {
 }
 
 func fromDBUser(dbu database.User) *User {
+	var lastLoginAt *jsontypes.Time
+	if dbu.LastLoginAt.Valid {
+		lastLoginAt = (*jsontypes.Time)(&dbu.LastLoginAt.Time)
+	}
+
 	return &User{
-		ID:       UserID(dbu.ID),
-		Username: dbu.Username,
-		Password: dbu.Password,
-		Email:    dbu.Email,
-		IsAdmin:  dbu.IsAdmin,
-		Prefs:    dbu.Prefs,
+		ID:            UserID(dbu.ID),
+		Username:      dbu.Username,
+		Password:      dbu.Password,
+		Email:         dbu.Email,
+		IsAdmin:       dbu.IsAdmin,
+		Prefs:         dbu.Prefs,
+		LastLoginAt:   lastLoginAt,
+		LastLoginFrom: dbu.LastLoginFrom,
 	}
 }

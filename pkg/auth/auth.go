@@ -31,7 +31,7 @@ type Auth struct {
 // NewAuthenticator creates a new Authenticator with the provided config.
 func NewAuthenticator(cfg config.Auth, ust users.Store) *Auth {
 	a := &Auth{
-		rl:  httprate.NewRateLimiter(5, time.Minute),
+		rl:  httprate.NewRateLimiter(5, 5*time.Minute),
 		cfg: cfg,
 		ust: ust,
 	}
@@ -67,8 +67,8 @@ func ErrorResponse(w http.ResponseWriter, err error) {
 }
 
 func (a *Auth) PublicRoutes(r chi.Router) {
-	r.Post("/api/login", a.routeAuth)
-	r.Get("/api/login", a.routeLogin)
+	r.Post("/api/login", a.routeLogin)
+	r.Get("/api/login", a.routeLoginPage)
 }
 
 func (a *Auth) PrivateRoutes(r chi.Router) {
@@ -79,7 +79,7 @@ func (a *Auth) PrivateRoutes(r chi.Router) {
 //go:embed login.html
 var loginPage []byte
 
-func (a *Auth) routeLogin(w http.ResponseWriter, r *http.Request) {
+func (a *Auth) routeLoginPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
 	_, _ = w.Write(loginPage)
 }

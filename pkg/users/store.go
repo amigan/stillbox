@@ -3,10 +3,10 @@ package users
 import (
 	"context"
 	"errors"
-	"net/netip"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/cache"
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/services"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -136,12 +136,12 @@ func (s *postgresStore) GetAPIKey(ctx context.Context, b64hash string) (database
 	return s.db.GetAPIKey(ctx, b64hash)
 }
 
-func (s *postgresStore) RecordLogin(ctx context.Context, username string, source string) error {
+func (s *postgresStore) RecordLogin(ctx context.Context, username, source string) error {
 	ts := pgtype.Timestamptz{Time: time.Now(), Valid: true}
-	ip, err := netip.ParseAddr(source)
+	ip, err := common.RemoteAddr(source)
 	if err != nil {
 		return err
 	}
 
-	return s.db.RecordUserLogin(ctx, username, ts, &ip)
+	return s.db.RecordUserLogin(ctx, username, ts, ip)
 }

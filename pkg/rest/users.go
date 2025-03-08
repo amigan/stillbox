@@ -2,7 +2,11 @@ package rest
 
 import (
 	"net/http"
+	"net/netip"
 
+	"dynatron.me/x/stillbox/internal/jsontypes"
+	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 )
@@ -37,12 +41,26 @@ func (ua *usersAPI) getUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var lastLoginAt *jsontypes.Time
+	var lastLoginFrom *netip.Addr
+
+	// TODO: this should probably be moved into the store
+	_, err = rbac.Check(ctx, user, rbac.WithActions(entities.ActionReadPrivileged))
+	if err == nil {
+		lastLoginAt = user.LastLoginAt
+		lastLoginFrom = user.LastLoginFrom
+	}
+
 	response := struct {
-		UID      users.UserID `json:"uid"`
-		Username string       `json:"username"`
+		UID           users.UserID    `json:"uid"`
+		Username      string          `json:"username"`
+		LastLoginAt   *jsontypes.Time `json:"lastLoginAt,omitempty"`
+		LastLoginFrom *netip.Addr     `json:"lastLoginFrom,omitempty"`
 	}{
-		UID:      user.ID,
-		Username: user.Username,
+		UID:           user.ID,
+		Username:      user.Username,
+		LastLoginAt:   lastLoginAt,
+		LastLoginFrom: lastLoginFrom,
 	}
 
 	respond(w, r, response)
