@@ -5,8 +5,6 @@ import (
 	"net/netip"
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 )
@@ -35,20 +33,10 @@ func (ua *usersAPI) getUser(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	ust := users.FromCtx(ctx)
-	user, err := ust.GetUser(ctx, p.User)
+	user, err := ust.GetUserPrivCheck(ctx, p.User)
 	if err != nil {
 		wErr(w, r, recordNotFound(err))
 		return
-	}
-
-	var lastLoginAt *jsontypes.Time
-	var lastLoginFrom *netip.Addr
-
-	// TODO: this should probably be moved into the store
-	_, err = rbac.Check(ctx, user, rbac.WithActions(entities.ActionReadPrivileged))
-	if err == nil {
-		lastLoginAt = user.LastLoginAt
-		lastLoginFrom = user.LastLoginFrom
 	}
 
 	response := struct {
@@ -59,8 +47,8 @@ func (ua *usersAPI) getUser(w http.ResponseWriter, r *http.Request) {
 	}{
 		UID:           user.ID,
 		Username:      user.Username,
-		LastLoginAt:   lastLoginAt,
-		LastLoginFrom: lastLoginFrom,
+		LastLoginAt:   user.LastLoginAt,
+		LastLoginFrom: user.LastLoginFrom,
 	}
 
 	respond(w, r, response)
