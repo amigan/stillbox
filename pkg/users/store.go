@@ -3,10 +3,13 @@ package users
 import (
 	"context"
 	"errors"
+	"net/netip"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/cache"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/services"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 var (
@@ -28,6 +31,9 @@ type Store interface {
 
 	// UpdateUser updates a user's record
 	UpdateUser(ctx context.Context, username string, user UserUpdate) error
+
+	// RecordLogin records a users's login.
+	RecordLogin(ctx context.Context, username, source string) error
 
 	// GetUserByAPIKey gets a user by API key.
 	GetAPIKey(ctx context.Context, key string) (database.GetAPIKeyRow, error)
@@ -128,4 +134,14 @@ func (s *postgresStore) SetUserPrefs(ctx context.Context, username string, appNa
 
 func (s *postgresStore) GetAPIKey(ctx context.Context, b64hash string) (database.GetAPIKeyRow, error) {
 	return s.db.GetAPIKey(ctx, b64hash)
+}
+
+func (s *postgresStore) RecordLogin(ctx context.Context, username string, source string) error {
+	ts := pgtype.Timestamptz{Time: time.Now(), Valid: true}
+	ip, err := netip.ParseAddr(source)
+	if err != nil {
+		return err
+	}
+
+	return s.db.RecordUserLogin(ctx, username, ts, &ip)
 }

@@ -32,6 +32,12 @@ WHERE
 	username = $1
 RETURNING *;
 
+-- name: RecordUserLogin :exec
+UPDATE users SET
+	last_login_at = @last_login_at,
+	last_login_from = @last_login_from
+WHERE username = $1;
+
 -- name: CreateAPIKey :one
 INSERT INTO api_keys(
 	owner,

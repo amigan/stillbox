@@ -3,6 +3,9 @@ mockname: "{{.InterfaceName}}"
 outpkg: "mocks"
 filename: "{{.InterfaceName}}.go"
 with-expecter: true
+resolve-type-alias: false
+disable-version-string: true
+issue-845-fix: true
 packages:
   dynatron.me/x/stillbox/pkg/database:
     config:

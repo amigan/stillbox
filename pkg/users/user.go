@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac"
@@ -59,12 +60,14 @@ func FromSubject(sub entities.Subject) (*User, error) {
 }
 
 type User struct {
-	ID       UserID
-	Username string
-	Password string
-	Email    string
-	IsAdmin  bool
-	Prefs    json.RawMessage
+	ID            UserID
+	Username      string
+	Password      string
+	Email         string
+	IsAdmin       bool
+	LastLoginAt   *time.Time
+	LastLoginFrom string
+	Prefs         json.RawMessage
 }
 
 func (u *User) GetName() string {

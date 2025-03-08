@@ -17,7 +17,7 @@ import (
 
 // Authenticator performs API key and user JWT authentication.
 type Authenticator interface {
-	jwtAuth
+	loginJWTAuth
 	apiKeyAuth
 }
 
@@ -82,4 +82,12 @@ var loginPage []byte
 func (a *Auth) routeLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
 	_, _ = w.Write(loginPage)
+}
+
+func (a *Auth) PublicSubjectMiddleware() func(http.Handler) http.Handler {
+	return a.SubjectMiddleware(false)
+}
+
+func (a *Auth) AuthorizedSubjectMiddleware() func(http.Handler) http.Handler {
+	return a.SubjectMiddleware(true)
 }
