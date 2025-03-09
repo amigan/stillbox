@@ -419,7 +419,7 @@ type ListCallsPRow struct {
 	SystemID    int                `json:"systemId"`
 	TGID        int                `json:"tgid"`
 	TalkerAlias *string            `json:"talkerAlias,omitempty"`
-	Incidents   int64              `json:"incidents,omitempty"`
+	Incidents   int64              `json:"incidents,omitempty,omitzero"`
 }
 
 func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error) {
