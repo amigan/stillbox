@@ -1,0 +1,7 @@
+@let call = playSvc.playing();
+@if(call) {
+<div class="nowPlaying">
+  <call-player [pause]="true" [call]="call!"></call-player>
+  {{call | talkgroup: "summary" | async}}
+</div>
+}

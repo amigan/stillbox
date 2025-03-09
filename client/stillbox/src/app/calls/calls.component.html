@@ -151,8 +151,8 @@
         <mat-checkbox title="Download mode" formControlName="downloadMode">
         </mat-checkbox>
       </th>
-      <td mat-cell *matCellDef="let call">
-        <call-player [download]="downloadMode()" [call]="call"></call-player>
+      <td mat-cell *matCellDef="let call; let i = index">
+        <call-player [download]="downloadMode()" [index]="i" [call]="call"></call-player>
       </td>
     </ng-container>
     <ng-container matColumnDef="date">

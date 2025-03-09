@@ -15,6 +15,7 @@ import {
   ActivatedRoute,
 } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { NowPlayingComponent } from './calls/now-playing/now-playing.component';
 
 @Component({
   selector: 'app-root',
@@ -25,6 +26,7 @@ import { filter, map } from 'rxjs';
     FormsModule,
     NavigationComponent,
     UpdateNagComponent,
+    NowPlayingComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
