@@ -11,6 +11,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/services"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -98,7 +99,7 @@ func (s *postgresStore) UpdateUser(ctx context.Context, username string, user Us
 func userPrivMask(ctx context.Context, user *User) *User {
 	_, err := rbac.Check(ctx, user, rbac.WithActions(entities.ActionReadPrivileged))
 	switch err {
-	case nil:
+	case nil: // privileged
 		user = &User{
 			ID:            user.ID,
 			Username:      user.Username,

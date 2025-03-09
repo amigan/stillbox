@@ -42,11 +42,15 @@ func (ua *usersAPI) getUser(w http.ResponseWriter, r *http.Request) {
 	response := struct {
 		UID           users.UserID    `json:"uid"`
 		Username      string          `json:"username"`
+		Email         string          `json:"email,omitzero"`
+		IsAdmin       bool            `json:"isAdmin,omitzero"`
 		LastLoginAt   *jsontypes.Time `json:"lastLoginAt,omitempty"`
 		LastLoginFrom *netip.Addr     `json:"lastLoginFrom,omitempty"`
 	}{
 		UID:           user.ID,
 		Username:      user.Username,
+		Email:         user.Email,
+		IsAdmin:       user.IsAdmin,
 		LastLoginAt:   user.LastLoginAt,
 		LastLoginFrom: user.LastLoginFrom,
 	}
