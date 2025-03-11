@@ -15,11 +15,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func New(configFile *string) *Configuration {
-	if configFile == nil {
-		panic("configFile must not be nil")
-	}
-
+func New(configFile string) *Configuration {
 	return &Configuration{configPath: configFile}
 }
 
@@ -28,14 +24,14 @@ func (c *Configuration) Before(ctx *cli.Context) error {
 }
 
 func (c *Configuration) ReadConfig() error {
-	log.Info().Str("configPath", *c.configPath).Msg("read config")
+	log.Info().Str("configPath", c.configPath).Msg("read config")
 
 	return c.read()
 }
 
 func (c *Configuration) read() error {
 	k := koanf.New(".")
-	err := k.Load(file.Provider(*c.configPath), yaml.Parser())
+	err := k.Load(file.Provider(c.configPath), yaml.Parser())
 	if err != nil {
 		return err
 	}

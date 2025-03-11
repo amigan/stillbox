@@ -12,7 +12,7 @@ import (
 type Configuration struct {
 	Config
 
-	configPath *string `yaml:"-"`
+	configPath string `yaml:"-"`
 }
 
 type Config struct {
