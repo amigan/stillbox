@@ -1,6 +1,6 @@
 # this is used to compose URLs, for example in M3U responses.
 # set it to what users access the instance as.
-baseURL: "https://stillbox.example.com/"
+baseURL: "https://stillbox.example.com"
 db:
   connect: 'postgres://postgres:password@localhost:5432/example'
   partition:
