@@ -24,7 +24,7 @@ type Store interface {
 	// GetPrefs gets system prefs for an app name.
 	GetPrefs(ctx context.Context, appName string) (json.RawMessage, error)
 
-	// SetPrefs gets system prefs for an app name.
+	// SetPrefs sets system prefs for an app name.
 	SetPrefs(ctx context.Context, appName string, val Setting) error
 
 	// Set sets a setting.
