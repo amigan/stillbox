@@ -9,7 +9,7 @@ import (
 type AlertRules []AlertRule
 
 func (ars AlertRules) Apply(t time.Time, coversOpts ...ruletime.CoversOption) float64 {
-	if ars == nil || len(ars) < 1 {
+	if len(ars) < 1 {
 		return 1.0
 	}
 

@@ -74,7 +74,7 @@ func (m dbLogger) Log(ctx context.Context, level tracelog.LogLevel, msg string, 
 	var rs string
 
 	// zerolog doesn't do this for us...
-	if i, ok := data["args"].([]interface{}); ok {
+	if i, ok := data["args"].([]any); ok {
 		res := make([]string, 0, len(i))
 		for _, v := range i {
 			res = append(res, fmt.Sprintf("%T:%+v", v, v))

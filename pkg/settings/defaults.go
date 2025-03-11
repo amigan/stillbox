@@ -4,7 +4,7 @@ import "encoding/json"
 
 type Defaults map[string]Setting
 
-func MustMarshal(s interface{}) json.RawMessage {
+func MustMarshal(s any) json.RawMessage {
 	b, err := json.Marshal(s)
 	if err != nil {
 		panic(err)

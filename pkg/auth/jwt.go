@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type claims map[string]interface{}
+type claims map[string]any
 
 // UsernameFrom gets the username (just the subject from token) from ctx.
 func UsernameFrom(ctx context.Context) *string {

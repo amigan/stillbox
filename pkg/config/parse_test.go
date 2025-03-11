@@ -55,7 +55,7 @@ var expCfg = &Config{
 	Notify: Notify{
 		NotifyService{
 			Provider: "slackwebhook",
-			Config: map[string]interface{}{
+			Config: map[string]any{
 				"webhookURL": "https://hook",
 			},
 		},

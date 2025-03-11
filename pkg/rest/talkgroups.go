@@ -91,7 +91,7 @@ func (tga *talkgroupAPI) get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var res interface{}
+	var res any
 	switch {
 	case p.hasBoth():
 		res, err = tgs.TG(ctx, talkgroups.TG(*p.System, *p.ID))

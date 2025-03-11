@@ -89,7 +89,7 @@ type NotifyService struct {
 	Provider        string                 `yaml:"provider" json:"provider"`
 	SubjectTemplate *string                `yaml:"subjectTemplate" json:"subjectTemplate"`
 	BodyTemplate    *string                `yaml:"bodyTemplate" json:"bodyTemplate"`
-	Config          map[string]interface{} `yaml:"config" json:"config"`
+	Config          map[string]any `yaml:"config" json:"config"`
 }
 
 func (rl *RateLimit) Verify() bool {
