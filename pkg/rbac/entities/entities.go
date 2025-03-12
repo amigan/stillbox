@@ -24,12 +24,15 @@ const (
 	ResourceAPIKey    = "APIKey"
 	ResourceCallStats = "CallStats"
 	ResourceSetting   = "Setting"
+	ResourceUser      = "User"
 
-	ActionRead   = "read"
-	ActionCreate = "create"
-	ActionUpdate = "update"
-	ActionDelete = "delete"
-	ActionShare  = "share"
+	ActionRead             = "read"
+	ActionReadPrivileged   = "readPrivileged"
+	ActionCreate           = "create"
+	ActionUpdate           = "update"
+	ActionDelete           = "delete"
+	ActionShare            = "share"
+	ActionUpdatePrivileged = "updatePrivileged"
 )
 
 func SubjectFrom(ctx context.Context) Subject {

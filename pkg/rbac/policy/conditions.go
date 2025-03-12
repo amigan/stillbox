@@ -18,6 +18,7 @@ const (
 	InMapConditionType          = "IN_MAP"
 	CallInIncidentConditionType = "CALL_IN_INCIDENT"
 	TGInIncidentConditionType   = "TG_IN_INCIDENT"
+	SelfOrAdminConditionType    = "SELF_OR_ADMIN"
 )
 
 type TGInIncidentCondition struct {

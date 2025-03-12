@@ -3,10 +3,16 @@ package users
 import (
 	"context"
 	"errors"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/cache"
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/services"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 var (
@@ -14,8 +20,11 @@ var (
 )
 
 type Store interface {
-	// GetUser gets a user by UID.
+	// GetUser gets a user by username. This is for use by the system, not for presentation to the API.
 	GetUser(ctx context.Context, username string) (*User, error)
+
+	// GetUserPrivCheck gets a user by  username, checking context Subject and masking.
+	GetUserPrivCheck(ctx context.Context, username string) (*User, error)
 
 	// UserPrefs gets the preferences for the specified user and app name.
 	UserPrefs(ctx context.Context, username string, appName string) ([]byte, error)
@@ -28,6 +37,9 @@ type Store interface {
 
 	// UpdateUser updates a user's record
 	UpdateUser(ctx context.Context, username string, user UserUpdate) error
+
+	// RecordLogin records a users's login.
+	RecordLogin(ctx context.Context, username, source string) error
 
 	// GetUserByAPIKey gets a user by API key.
 	GetAPIKey(ctx context.Context, key string) (database.GetAPIKeyRow, error)
@@ -82,6 +94,32 @@ func (s *postgresStore) UpdateUser(ctx context.Context, username string, user Us
 	return nil
 }
 
+// userPrivMask masks privileged fields if the subject is not permitted to read them.
+// It copies the user it is passed.
+func userPrivMask(ctx context.Context, user *User) *User {
+	_, err := rbac.Check(ctx, user, rbac.WithActions(entities.ActionReadPrivileged))
+	switch err {
+	case nil: // privileged
+		user = &User{
+			ID:            user.ID,
+			Username:      user.Username,
+			Password:      user.Password,
+			Email:         user.Email,
+			IsAdmin:       user.IsAdmin,
+			Prefs:         user.Prefs,
+			LastLoginAt:   user.LastLoginAt,
+			LastLoginFrom: user.LastLoginFrom,
+		}
+	default:
+		user = &User{
+			ID:       user.ID,
+			Username: user.Username,
+		}
+	}
+
+	return user
+}
+
 func (s *postgresStore) GetUser(ctx context.Context, username string) (*User, error) {
 	u, has := s.Get(username)
 	if has {
@@ -101,6 +139,15 @@ func (s *postgresStore) GetUser(ctx context.Context, username string) (*User, er
 	s.Set(username, u)
 
 	return u, nil
+}
+
+func (s *postgresStore) GetUserPrivCheck(ctx context.Context, username string) (*User, error) {
+	u, err := s.GetUser(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+
+	return userPrivMask(ctx, u), nil
 }
 
 func (s *postgresStore) UserPrefs(ctx context.Context, username string, appName string) ([]byte, error) {
@@ -128,4 +175,14 @@ func (s *postgresStore) SetUserPrefs(ctx context.Context, username string, appNa
 
 func (s *postgresStore) GetAPIKey(ctx context.Context, b64hash string) (database.GetAPIKeyRow, error) {
 	return s.db.GetAPIKey(ctx, b64hash)
+}
+
+func (s *postgresStore) RecordLogin(ctx context.Context, username, source string) error {
+	ts := pgtype.Timestamptz{Time: time.Now(), Valid: true}
+	ip, err := common.RemoteAddr(source)
+	if err != nil {
+		return err
+	}
+
+	return s.db.RecordUserLogin(ctx, username, ts, ip)
 }

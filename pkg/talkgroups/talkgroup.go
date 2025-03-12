@@ -34,7 +34,7 @@ func (t Talkgroup) String() string {
 	return fmt.Sprintf("%s:%d", t.System.Name, int(t.Talkgroup.TGID))
 }
 
-type Metadata map[string]interface{}
+type Metadata map[string]any
 
 type ID struct {
 	System    uint32 `json:"sys"`

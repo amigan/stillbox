@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS users(
 	password TEXT NOT NULL,
 	email TEXT NOT NULL,
 	is_admin BOOLEAN NOT NULL,
+	last_login_at TIMESTAMPTZ,
+	last_login_from INET,
 	prefs JSONB
 );
 

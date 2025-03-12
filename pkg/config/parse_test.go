@@ -55,7 +55,7 @@ var expCfg = &Config{
 	Notify: Notify{
 		NotifyService{
 			Provider: "slackwebhook",
-			Config: map[string]interface{}{
+			Config: map[string]any{
 				"webhookURL": "https://hook",
 			},
 		},
@@ -70,7 +70,7 @@ var expCfg = &Config{
 }
 
 func TestConfigParse(t *testing.T) {
-	c := &Configuration{configPath: common.PtrTo("testdata/testconfig.yaml")}
+	c := &Configuration{configPath: "testdata/testconfig.yaml"}
 
 	err := c.read()
 	require.NoError(t, err)

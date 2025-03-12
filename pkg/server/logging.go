@@ -136,7 +136,7 @@ func RequestLogger() func(next http.Handler) http.Handler {
 					log.Error().Interface("recover", r).Bytes("stack", debug.Stack()).Msg("incoming_request_panic")
 					ww.WriteHeader(http.StatusInternalServerError)
 				}
-				log.Info().Fields(map[string]interface{}{
+				log.Info().Fields(map[string]any{
 					"remote_addr": r.RemoteAddr,
 					"path":        r.URL.Path,
 					"proto":       r.Proto,
@@ -172,12 +172,12 @@ const (
 	colorDarkGray = 90
 )
 
-func (l *Logger) fieldNameFormat(i interface{}) string {
+func (l *Logger) fieldNameFormat(i any) string {
 	l.lastFieldName = fmt.Sprint(i)
 	return l.colorize(l.lastFieldName+"=", colorCyan)
 }
 
-func (l *Logger) fieldValueFormat(i interface{}) string {
+func (l *Logger) fieldValueFormat(i any) string {
 	color := colorNone
 	switch l.lastFieldName {
 	case "method":
@@ -198,7 +198,7 @@ func (l *Logger) fieldValueFormat(i interface{}) string {
 }
 
 // colorize returns the string s wrapped in ANSI code c, unless disabled is true or c is 0.
-func (l *Logger) colorize(s interface{}, c int) string {
+func (l *Logger) colorize(s any, c int) string {
 	if l.noColor {
 		return fmt.Sprintf("%v", s)
 	}

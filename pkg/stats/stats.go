@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/cache"
-	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
@@ -58,7 +57,6 @@ func (s *stats) GetCallStats(ctx context.Context, interval calls.StatsInterval) 
 	var start time.Time
 	now := time.Now()
 	end := now
-	bnd := common.NewTimeBounder(common.WithLocation(now.Location()))
 
 	switch interval {
 	case calls.IntervalHour:
@@ -66,9 +64,7 @@ func (s *stats) GetCallStats(ctx context.Context, interval calls.StatsInterval) 
 	case calls.IntervalDay:
 		start = now.Add(-7 * 24 * time.Hour) // one week
 	case calls.IntervalWeek:
-		start, end = bnd.GetMonthlyBounds(now)
-		start, _ = bnd.GetWeeklyBounds(start)
-		_, end = bnd.GetWeeklyBounds(end)
+		start = now.Add(-30 * 24 * time.Hour) // one month
 	case calls.IntervalMonth:
 		start = now.Add(-365 * 24 * time.Hour) // one year
 	default:

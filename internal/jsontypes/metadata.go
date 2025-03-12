@@ -1,3 +1,3 @@
 package jsontypes
 
-type Metadata map[string]interface{}
+type Metadata map[string]any

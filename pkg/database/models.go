@@ -5,6 +5,7 @@
 package database
 
 import (
+	"net/netip"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
@@ -157,10 +158,12 @@ type TalkgroupVersion struct {
 }
 
 type User struct {
-	ID       int    `json:"id,omitempty"`
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-	Email    string `json:"email,omitempty"`
-	IsAdmin  bool   `json:"isAdmin,omitempty"`
-	Prefs    []byte `json:"prefs,omitempty"`
+	ID            int                `json:"id,omitempty"`
+	Username      string             `json:"username,omitempty"`
+	Password      string             `json:"password,omitempty"`
+	Email         string             `json:"email,omitempty"`
+	IsAdmin       bool               `json:"isAdmin,omitempty"`
+	LastLoginAt   pgtype.Timestamptz `json:"lastLoginAt,omitempty"`
+	LastLoginFrom *netip.Addr        `json:"lastLoginFrom,omitempty"`
+	Prefs         []byte             `json:"prefs,omitempty"`
 }

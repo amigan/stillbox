@@ -1,8 +1,9 @@
-import { Component, input, Input } from '@angular/core';
+import { Component, computed, input, Input, Signal } from '@angular/core';
 import { CallsService, DownloadURLPipe } from '../../calls.service';
 import { CallRecord } from '../../../calls';
 import { MatIconModule } from '@angular/material/icon';
 import { fromEvent, Observable, Subscription } from 'rxjs';
+import { PlayerService } from '../player.service';
 
 @Component({
   selector: 'call-player',
@@ -12,34 +13,17 @@ import { fromEvent, Observable, Subscription } from 'rxjs';
 })
 export class CallPlayerComponent {
   @Input() call!: CallRecord;
-  playing = false;
-  playSub!: Subscription;
-  au!: HTMLAudioElement;
   download = input<boolean>();
 
-  constructor(private callsSvc: CallsService) {}
+  constructor(private callsSvc: CallsService, private playSvc: PlayerService) {}
+
+  playing: Signal<boolean> = computed(() => this.playSvc.playing() == this.call.id);
 
   stopAudio(ev: Event) {
-    this.au.pause();
-    this.playing = false;
+    this.playSvc.stopAudio();
   }
 
   playAudio(ev: Event) {
-    this.au = new Audio();
-    this.playSub = fromEvent(this.au, 'ended').subscribe((ev) => {
-      this.playing = false;
-      this.playSub.unsubscribe();
-    });
-    this.playing = true;
-    if (this.call.audioURL != null) {
-      this.au.src = this.call.audioURL;
-    } else {
-      this.au.src = this.callsSvc.callAudioURL(this.call.id);
-    }
-    this.au.load();
-    this.au.play().then(null, (reason) => {
-      this.playing = false;
-      alert(reason);
-    });
+    this.playSvc.playAudio(this.call);
   }
 }

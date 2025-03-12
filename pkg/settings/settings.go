@@ -24,7 +24,7 @@ type Store interface {
 	// GetPrefs gets system prefs for an app name.
 	GetPrefs(ctx context.Context, appName string) (json.RawMessage, error)
 
-	// SetPrefs gets system prefs for an app name.
+	// SetPrefs sets system prefs for an app name.
 	SetPrefs(ctx context.Context, appName string, val Setting) error
 
 	// Set sets a setting.
@@ -68,13 +68,9 @@ func New(defaults Defaults) *postgresStore {
 	return s
 }
 
-func (s *postgresStore) defaultPrefs(appName string) json.RawMessage {
+func (s *postgresStore) defaultPrefs(appName string) (json.RawMessage, bool) {
 	d, has := s.defaults[prefsName(appName)].(json.RawMessage)
-	if has {
-		return d
-	}
-
-	return nil
+	return d, has
 }
 
 func (s *postgresStore) getJSONB(ctx context.Context, name string) (json.RawMessage, error) {
@@ -139,7 +135,7 @@ func (s *postgresStore) GetPrefs(ctx context.Context, appName string) (json.RawM
 
 	p, err := s.getJSONB(ctx, prName)
 	if errors.Is(err, ErrNoSetting) {
-		def, hasDefault := s.defaults[prName].(json.RawMessage)
+		def, hasDefault := s.defaultPrefs(prName)
 		if hasDefault {
 			return def, nil
 		}
@@ -168,7 +164,7 @@ func (s *postgresStore) Set(ctx context.Context, name string, val Setting) error
 	}
 
 	var uid *int32
-	switch u := subj.(type) {
+	switch subj.(type) {
 	case *entities.SystemServiceSubject:
 		// uid remains null
 	case *users.User:

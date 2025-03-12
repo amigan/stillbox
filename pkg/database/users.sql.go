@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"net/netip"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -44,7 +45,7 @@ INSERT INTO users (
 		email,
 		is_admin
 	) VALUES ($1, $2, $3, $4)
-RETURNING id, username, password, email, is_admin, prefs
+RETURNING id, username, password, email, is_admin, last_login_at, last_login_from, prefs
 `
 
 type CreateUserParams struct {
@@ -68,6 +69,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Password,
 		&i.Email,
 		&i.IsAdmin,
+		&i.LastLoginAt,
+		&i.LastLoginFrom,
 		&i.Prefs,
 	)
 	return i, err
@@ -142,7 +145,7 @@ func (q *Queries) GetAppPrefs(ctx context.Context, appName string, uid int) ([]b
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, password, email, is_admin, prefs FROM users
+SELECT id, username, password, email, is_admin, last_login_at, last_login_from, prefs FROM users
 WHERE id = $1
 `
 
@@ -155,13 +158,15 @@ func (q *Queries) GetUserByID(ctx context.Context, id int) (User, error) {
 		&i.Password,
 		&i.Email,
 		&i.IsAdmin,
+		&i.LastLoginAt,
+		&i.LastLoginFrom,
 		&i.Prefs,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password, email, is_admin, prefs FROM users
+SELECT id, username, password, email, is_admin, last_login_at, last_login_from, prefs FROM users
 WHERE username = $1
 `
 
@@ -174,13 +179,15 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.Password,
 		&i.Email,
 		&i.IsAdmin,
+		&i.LastLoginAt,
+		&i.LastLoginFrom,
 		&i.Prefs,
 	)
 	return i, err
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, username, password, email, is_admin, prefs FROM users
+SELECT id, username, password, email, is_admin, last_login_at, last_login_from, prefs FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -198,6 +205,8 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 			&i.Password,
 			&i.Email,
 			&i.IsAdmin,
+			&i.LastLoginAt,
+			&i.LastLoginFrom,
 			&i.Prefs,
 		); err != nil {
 			return nil, err
@@ -208,6 +217,18 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const recordUserLogin = `-- name: RecordUserLogin :exec
+UPDATE users SET
+	last_login_at = $2,
+	last_login_from = $3
+WHERE username = $1
+`
+
+func (q *Queries) RecordUserLogin(ctx context.Context, username string, lastLoginAt pgtype.Timestamptz, lastLoginFrom *netip.Addr) error {
+	_, err := q.db.Exec(ctx, recordUserLogin, username, lastLoginAt, lastLoginFrom)
+	return err
 }
 
 const setAppPrefs = `-- name: SetAppPrefs :exec
@@ -234,7 +255,7 @@ UPDATE users SET
 	is_admin = COALESCE($3, is_admin)
 WHERE
 	username = $1
-RETURNING id, username, password, email, is_admin, prefs
+RETURNING id, username, password, email, is_admin, last_login_at, last_login_from, prefs
 `
 
 func (q *Queries) UpdateUser(ctx context.Context, username string, email *string, isAdmin *bool) (User, error) {
@@ -246,6 +267,8 @@ func (q *Queries) UpdateUser(ctx context.Context, username string, email *string
 		&i.Password,
 		&i.Email,
 		&i.IsAdmin,
+		&i.LastLoginAt,
+		&i.LastLoginFrom,
 		&i.Prefs,
 	)
 	return i, err

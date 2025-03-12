@@ -14,34 +14,42 @@ import (
 
 type FileMap map[string]FieldDecider
 
+type FieldTag int
+
+const (
+	NotSet    FieldTag = 0
+	OmitEmpty FieldTag = iota << 1
+	OmitZero
+)
+
 var filePaths = FileMap{
-	"./pkg/database/models.go": AllFields{},
+	"./pkg/database/models.go": AllFields(OmitEmpty),
 	"./pkg/database/calls.sql.go": FieldMap{
-		"TalkerAlias": true,
-		"Incidents":   true,
+		"TalkerAlias": OmitEmpty,
+		"Incidents":   OmitEmpty|OmitZero,
 	},
 }
 
 type FieldDecider interface {
-	Check(fields []*ast.Ident) bool
+	Check(fields []*ast.Ident) FieldTag
 }
 
-type FieldMap map[string]bool
+type FieldMap map[string]FieldTag
 
-func (fm FieldMap) Check(f []*ast.Ident) bool {
+func (fm FieldMap) Check(f []*ast.Ident) FieldTag {
 	for _, v := range f {
-		if v != nil && fm[v.Name] {
-			return true
+		if v != nil && fm[v.Name] != NotSet {
+			return fm[v.Name]
 		}
 	}
 
-	return false
+	return NotSet
 }
 
-type AllFields struct{}
+type AllFields FieldTag
 
-func (AllFields) Check(_ []*ast.Ident) bool {
-	return true
+func (a AllFields) Check(_ []*ast.Ident) FieldTag {
+	return FieldTag(a)
 }
 
 func main() {
@@ -63,7 +71,8 @@ func process(filePath string, fd FieldDecider) {
 		switch x := n.(type) {
 		case *ast.StructType:
 			for _, field := range x.Fields.List {
-				if !fd.Check(field.Names) {
+				res := fd.Check(field.Names)
+				if res == NotSet {
 					continue
 				}
 				if field.Tag == nil {
@@ -73,7 +82,7 @@ func process(filePath string, fd FieldDecider) {
 					continue
 				}
 
-				field.Tag.Value = modifyJSONTag(field.Tag.Value)
+				field.Tag.Value = modifyJSONTag(res, field.Tag.Value)
 			}
 		}
 		return true
@@ -96,7 +105,7 @@ func process(filePath string, fd FieldDecider) {
 	}
 }
 
-func modifyJSONTag(tagValue string) string {
+func modifyJSONTag(res FieldTag, tagValue string) string {
 	tagValue = strings.Trim(tagValue, "`")
 
 	tags := strings.Split(tagValue, " ")
@@ -114,17 +123,25 @@ func modifyJSONTag(tagValue string) string {
 		jsonOptions := strings.Split(jsonValue, ",") // Split options
 
 		// Check if "omitempty" is already present
-		hasOmitempty := false
+		curTags := NotSet
 		for _, opt := range jsonOptions {
-			if opt == "omitempty" {
-				hasOmitempty = true
-				break
+			switch opt {
+			case "omitempty":
+				curTags |= OmitEmpty
+			case "omitzero":
+				curTags |= OmitZero
 			}
 		}
 
-		// Add "omitempty" if not present and the field is not ignored
-		if !hasOmitempty && jsonOptions[0] != "-" {
-			jsonOptions = append(jsonOptions, "omitempty")
+		// Add field if not present and the field is not ignored
+		if jsonOptions[0] != "-" {
+			if res&OmitEmpty > 0 && curTags&OmitEmpty == 0 {
+				jsonOptions = append(jsonOptions, "omitempty")
+			}
+
+			if res&OmitZero > 0 && curTags&OmitZero == 0 {
+				jsonOptions = append(jsonOptions, "omitzero")
+			}
 		}
 
 		// Reconstruct the JSON tag

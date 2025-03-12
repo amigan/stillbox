@@ -198,7 +198,7 @@ func wErr(w http.ResponseWriter, r *http.Request, v render.Renderer) {
 	}
 }
 
-func decodeParams(d interface{}, r *http.Request) error {
+func decodeParams(d any, r *http.Request) error {
 	params := chi.RouteContext(r.Context()).URLParams
 	m := make(map[string]string, len(params.Keys))
 
@@ -238,6 +238,6 @@ func idOnlyParam(w http.ResponseWriter, r *http.Request) (uuid.UUID, error) {
 	return params.ID, nil
 }
 
-func respond(w http.ResponseWriter, r *http.Request, v interface{}) {
+func respond(w http.ResponseWriter, r *http.Request, v any) {
 	render.DefaultResponder(w, r, v)
 }
