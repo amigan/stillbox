@@ -9,17 +9,21 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"dynatron.me/x/go-minimp3"
+	"dynatron.me/x/stillbox/internal/audio"
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	whisper "github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
 	gaudio "github.com/go-audio/audio"
+	"github.com/go-audio/wav"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
-	ErrInvalidSampleRate = errors.New("invalid sample rate or channels")
+	ErrInvalidChannels = errors.New("invalid channels")
 )
 
 type transcriber struct {
@@ -76,12 +80,55 @@ func (t *transcriber) Go(ctx context.Context) {
 				continue
 			}
 
+			log.Println(transcription.Text)
 			err = t.txCallback(rq, transcription)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
 		}
+	}
+}
+
+func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	payload, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	contentType := r.Header.Get("Content-Type")
+	ct := strings.Split(contentType, ";")[0]
+	var rq *pb.CallTranscribeRequest
+	switch ct {
+	case "application/x-protobuf":
+		rq = new(pb.CallTranscribeRequest)
+		err = proto.Unmarshal(payload, rq)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	case "audio/mpeg":
+		l := int32(1234)
+		rq = &pb.CallTranscribeRequest{
+			Call: &pb.Call{
+				Duration: &l,
+				Audio: payload,
+				AudioType: ct,
+			},
+		}
+	default:
+		http.Error(w, "Not a protobuf", http.StatusBadRequest)
+		return
+	}
+
+
+	err = t.Transcribe(rq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
 	}
 }
 
@@ -120,6 +167,8 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		return nil, err
 	}
 
+	log.Printf("duration %d", *call.Duration)
+
 	var flBuf []float32
 	switch call.AudioType {
 	case "audio/mpeg":
@@ -127,22 +176,53 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		if err != nil {
 			return nil, err
 		}
-		if dec.Channels != 1 || dec.SampleRate != whisper.SampleRate {
-			return nil, ErrInvalidSampleRate
+		if dec.Channels != 1 {
+			log.Println("chan", dec.Channels, "len", len(data))
+			return nil, ErrInvalidChannels
 		}
+
 		pcmbuf := &gaudio.PCMBuffer{
 			Format: &gaudio.Format{
 				NumChannels: 1,
-				SampleRate:  whisper.SampleRate,
+				SampleRate: dec.SampleRate,
 			},
-			I8:             data,
+			DataType: gaudio.DataTypeI8,
+			I8: data,
 			SourceBitDepth: 1, // this is hardcoded
 		}
+
+		log.Printf("i8 samples %d", len(data))
+
 		flBuf = pcmbuf.AsFloat32Buffer().Data
-	case "audio/wav":
-	default:
-		return nil, fmt.Errorf("unknwon audio mime type %s", call.AudioType)
+			f, err := os.Create("out.wav")
+			if err != nil {
+				panic(err)
+			}
+			e := wav.NewEncoder(f, dec.SampleRate, 8, 1, 1)
+			if err := e.Write(pcmbuf.AsIntBuffer()); err != nil {
+				panic(err)
+			}
+			f.Close()
+
+
+		if dec.SampleRate != whisper.SampleRate {
+			rs, err := audio.NewResampler[float32](1, dec.SampleRate, whisper.SampleRate)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Printf("samples %d", len(flBuf))
+
+			flBuf = rs.ResampleFloat(flBuf)
+
+		//	os.WriteFile("out.pcmf32", )
+			log.Printf("rs samples %d", len(flBuf))
+		}
+		case "audio/wav":
+		default:
+			return nil, fmt.Errorf("unknwon audio mime type %s", call.AudioType)
 	}
+
 
 	ctx.ResetTimings()
 	if err := ctx.Process(flBuf, nil, nil); err != nil {
@@ -157,6 +237,7 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		} else if err != nil {
 			return nil, err
 		}
+		log.Printf("%+v", segment)
 		st.WriteString(segment.Text)
 	}
 
