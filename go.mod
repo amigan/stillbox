@@ -3,9 +3,10 @@ module dynatron.me/x/stillbox
 go 1.24.1
 
 require (
-	dynatron.me/x/go-minimp3 v0.0.0-20240805171536-7ea857e216d6
+	dynatron.me/x/go-minimp3 v0.0.0-20250314003403-7c2c5bbc9d65
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/el-mike/restrict/v2 v2.0.0
+	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20250308131301-7d1400571779
 	github.com/go-audio/wav v1.1.0
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/cors v1.2.1
@@ -67,6 +68,7 @@ require (
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
+	github.com/zaf/resample v1.5.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/exp/shiny v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/image v0.22.0 // indirect
