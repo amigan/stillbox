@@ -9,16 +9,14 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"dynatron.me/x/go-minimp3"
 	"dynatron.me/x/stillbox/internal/audio"
+	"dynatron.me/x/stillbox/internal/audio/resample"
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	whisper "github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
-	gaudio "github.com/go-audio/audio"
-	"github.com/go-audio/wav"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -91,6 +89,7 @@ func (t *transcriber) Go(ctx context.Context) {
 }
 
 func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Println(err)
@@ -98,7 +97,8 @@ func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contentType := r.Header.Get("Content-Type")
+	log.Println("payload", len(payload))
+
 	ct := strings.Split(contentType, ";")[0]
 	var rq *pb.CallTranscribeRequest
 	switch ct {
@@ -113,8 +113,8 @@ func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		l := int32(1234)
 		rq = &pb.CallTranscribeRequest{
 			Call: &pb.Call{
-				Duration: &l,
-				Audio: payload,
+				Duration:  &l,
+				Audio:     payload,
 				AudioType: ct,
 			},
 		}
@@ -122,7 +122,6 @@ func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not a protobuf", http.StatusBadRequest)
 		return
 	}
-
 
 	err = t.Transcribe(rq)
 	if err != nil {
@@ -167,12 +166,10 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		return nil, err
 	}
 
-	log.Printf("duration %d", *call.Duration)
-
-	var flBuf []float32
+	var f32le []float32
 	switch call.AudioType {
 	case "audio/mpeg":
-		dec, data, err := minimp3.DecodeFull[int8](call.Audio)
+		dec, data, err := minimp3.DecodeFull[byte](call.Audio)
 		if err != nil {
 			return nil, err
 		}
@@ -181,55 +178,36 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 			return nil, ErrInvalidChannels
 		}
 
-		pcmbuf := &gaudio.PCMBuffer{
-			Format: &gaudio.Format{
-				NumChannels: 1,
-				SampleRate: dec.SampleRate,
-			},
-			DataType: gaudio.DataTypeI8,
-			I8: data,
-			SourceBitDepth: 1, // this is hardcoded
-		}
-
-		log.Printf("i8 samples %d", len(data))
-
-		flBuf = pcmbuf.AsFloat32Buffer().Data
-			f, err := os.Create("out.wav")
-			if err != nil {
-				panic(err)
-			}
-			e := wav.NewEncoder(f, dec.SampleRate, 8, 1, 1)
-			if err := e.Write(pcmbuf.AsIntBuffer()); err != nil {
-				panic(err)
-			}
-			f.Close()
-
+		var f32w audio.Float32Writer
 
 		if dec.SampleRate != whisper.SampleRate {
-			rs, err := audio.NewResampler[float32](1, dec.SampleRate, whisper.SampleRate)
+			frs, err := resample.New(&f32w, float64(dec.SampleRate), whisper.SampleRate, 1, resample.I16, resample.F32, resample.HighQ)
 			if err != nil {
-				log.Fatal(err)
+				return nil, err
 			}
+			_, err = frs.Write(data)
+			if err != nil {
+				return nil, err
+			}
+			frs.Close()
 
-			log.Printf("samples %d", len(flBuf))
-
-			flBuf = rs.ResampleFloat(flBuf)
-
-		//	os.WriteFile("out.pcmf32", )
-			log.Printf("rs samples %d", len(flBuf))
+		} else {
+			f32w.Write(data)
 		}
-		case "audio/wav":
-		default:
-			return nil, fmt.Errorf("unknwon audio mime type %s", call.AudioType)
+
+		f32le = f32w.Buffer()
+	case "audio/wav":
+	default:
+		return nil, fmt.Errorf("unknwon audio mime type %s", call.AudioType)
 	}
 
-
 	ctx.ResetTimings()
-	if err := ctx.Process(flBuf, nil, nil); err != nil {
+	if err := ctx.Process(f32le, nil, nil); err != nil {
 		return nil, err
 	}
 
 	var st strings.Builder
+	log.Printf("thr %f", *Pthresh)
 	for {
 		segment, err := ctx.NextSegment()
 		if err == io.EOF {
@@ -237,8 +215,15 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		} else if err != nil {
 			return nil, err
 		}
-		log.Printf("%+v", segment)
-		st.WriteString(segment.Text)
+
+		for _, tok := range segment.Tokens {
+			if tok.P >= float32(*Pthresh) {
+				st.WriteString(tok.Text)
+			} else if strings.Contains(tok.Text, " ") {
+				st.WriteRune(' ')
+			}
+		}
+		st.WriteRune(' ')
 	}
 
 	tx.Text = st.String()
