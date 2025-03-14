@@ -9,6 +9,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/google/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/rs/zerolog/log"
 )
@@ -65,13 +66,41 @@ func (a *Auth) SubjectMiddleware(requireToken bool) func(http.Handler) http.Hand
 					return
 				}
 
-				username := token.Subject()
+				var sub entities.Subject
 
-				sub, err := users.FromCtx(ctx).GetUser(ctx, username)
-				if err != nil {
-					log.Error().Str("username", username).Err(err).Msg("subject middleware get subject")
-					http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-					return
+				subjectString := token.Subject()
+				realm, hasRealm := token.Get("realm")
+				if hasRealm {
+					realmStr, ok := realm.(string)
+					if !ok {
+						log.Error().Msg("realm not set")
+						http.Error(w, "realm not set", http.StatusUnauthorized)
+						return
+					}
+					switch realmStr {
+					case "call":
+						cUUID, err := uuid.Parse(subjectString)
+						if err != nil {
+							log.Error().Err(err).Msg("cannot parse call UUID")
+							http.Error(w, err.Error(), http.StatusUnauthorized)
+							return
+						}
+
+						sub = &entities.CallSubject{
+							CallID: cUUID,
+						}
+					default:
+						log.Error().Str("realm", realmStr).Msg("unknown realm")
+						http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+						return
+					}
+				} else {
+					sub, err = users.FromCtx(ctx).GetUser(ctx, subjectString)
+					if err != nil {
+						log.Error().Str("username", subjectString).Err(err).Msg("subject middleware get subject")
+						http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+						return
+					}
 				}
 
 				ctx = entities.CtxWithSubject(ctx, sub)
@@ -114,5 +143,19 @@ func (a *Auth) newToken(username string) string {
 	if err != nil {
 		panic(err)
 	}
+	return tokenString
+}
+
+func (a *Auth) NewCallToken(callID string) string {
+	claims := claims{
+		"sub":   callID,
+		"realm": "call",
+	}
+	jwtauth.SetExpiryIn(claims, time.Hour*2) // two hours
+	_, tokenString, err := a.jwt.Encode(claims)
+	if err != nil {
+		panic(err)
+	}
+
 	return tokenString
 }
