@@ -102,6 +102,10 @@ type Transcription struct {
 	Config         ConfigMap `yaml:"config,omitempty"`
 }
 
+type Transcription struct {
+	URL string `yaml:"url"`
+}
+
 func (rl *RateLimit) Verify() bool {
 	if rl.Enable {
 		if rl.Requests > 0 && rl.Over > 0 {
