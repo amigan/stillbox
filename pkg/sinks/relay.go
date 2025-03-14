@@ -107,6 +107,8 @@ func (s *Relay) Call(ctx context.Context, call *calls.Call) error {
 		return fmt.Errorf("relay %s: %w", s.Name, err)
 	}
 
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		et, _ := io.ReadAll(r.Body)
 		return fmt.Errorf("relay %s: received HTTP %d (%s)", s.Name, resp.StatusCode, string(et))
