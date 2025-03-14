@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"net/http"
 	"os"
-
 )
 
+var Pthresh = flag.Float64("thr", 0.1, "probability threshold")
+
 func main() {
+	flag.Parse()
 	model := os.Getenv("SBTTSD_MODEL")
 	if model == "" {
 		model = "base.en"

@@ -7,7 +7,6 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/el-mike/restrict/v2 v2.0.0
 	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20250308131301-7d1400571779
-	github.com/go-audio/audio v1.0.0
 	github.com/go-audio/wav v1.1.0
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/cors v1.2.1
@@ -45,6 +44,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
+	github.com/go-audio/audio v1.0.0 // indirect
 	github.com/go-audio/riff v1.0.0 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
