@@ -24,9 +24,9 @@ var (
 
 type transcriber struct {
 	calllbackEndpoint string
-	model whisper.Model
-	ch chan *pb.CallTranscribeRequest
-	cli *http.Client
+	model             whisper.Model
+	ch                chan *pb.CallTranscribeRequest
+	cli               *http.Client
 }
 
 type Transcriber interface {
@@ -41,9 +41,8 @@ func NewTranscriber(modelName string) (*transcriber, error) {
 	}
 	t := &transcriber{
 		model: model,
-		ch: make(chan *pb.CallTranscribeRequest, 256),
-		cli: &http.Client{
-		},
+		ch:    make(chan *pb.CallTranscribeRequest, 256),
+		cli:   &http.Client{},
 	}
 
 	return t, nil
@@ -134,15 +133,15 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		pcmbuf := &gaudio.PCMBuffer{
 			Format: &gaudio.Format{
 				NumChannels: 1,
-				SampleRate: whisper.SampleRate,
+				SampleRate:  whisper.SampleRate,
 			},
-			I8: data,
+			I8:             data,
 			SourceBitDepth: 1, // this is hardcoded
 		}
 		flBuf = pcmbuf.AsFloat32Buffer().Data
-		case "audio/wav":
-		default:
-			return nil, fmt.Errorf("unknwon audio mime type %s", call.AudioType)
+	case "audio/wav":
+	default:
+		return nil, fmt.Errorf("unknwon audio mime type %s", call.AudioType)
 	}
 
 	ctx.ResetTimings()
