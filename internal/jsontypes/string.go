@@ -4,10 +4,15 @@ import (
 	"encoding/json"
 )
 
+// This type is used when we should unmarshal even values that are valid as another type into a string.
 type String string
 
 func (s *String) StringPtr() *string {
 	return (*string)(s)
+}
+
+func (s String) String() string {
+	return string(s)
 }
 
 func (s *String) UnmarshalJSON(data []byte) error {
