@@ -219,6 +219,9 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		}
 
 		for _, tok := range segment.Tokens {
+			if strings.HasPrefix(tok.Text, "[_") && strings.HasSuffix(tok.Text, "]") {
+				continue
+			}
 			if tok.P >= float32(*Pthresh) {
 				st.WriteString(tok.Text)
 			} else if strings.Contains(tok.Text, " ") {
