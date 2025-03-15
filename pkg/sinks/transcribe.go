@@ -80,6 +80,7 @@ func (rs *TranscriptionManager) newTranscriber(idx int, a *auth.Auth, cfg config
 
 func (s *Transcriber) Call(ctx context.Context, call *calls.Call) error {
 	token := s.auth.NewCallToken(call.ID.String())
+	// TODO: put this in the config code so we don't do it every call
 	callbackURL, err := url.Parse(s.CallbackBase)
 	if err != nil {
 		return err
