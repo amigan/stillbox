@@ -103,7 +103,8 @@ type Transcription struct {
 }
 
 type Transcription struct {
-	URL string `yaml:"url"`
+	URL          string `yaml:"url"`
+	CallbackBase string `yaml:"callbackBase"`
 }
 
 func (rl *RateLimit) Verify() bool {
