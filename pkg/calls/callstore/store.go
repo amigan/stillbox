@@ -198,14 +198,14 @@ type CallsParams struct {
 	common.Pagination
 	Direction *common.SortDirection `json:"dir"`
 
-	Start          *jsontypes.Time `json:"start"`
-	End            *jsontypes.Time `json:"end"`
-	TagsAny        []string        `json:"tagsAny"`
-	TagsNot        []string        `json:"tagsNot"`
-	TGFilter       *string         `json:"tgFilter"`
-	SourceFilter   *string         `json:"sourceFilter"`
-	AtLeastSeconds *float32        `json:"atLeastSeconds"`
-	UnknownTG      bool            `json:"unknownTG"`
+	Start          *jsontypes.Time   `json:"start"`
+	End            *jsontypes.Time   `json:"end"`
+	TagsAny        []string          `json:"tagsAny"`
+	TagsNot        []string          `json:"tagsNot"`
+	TGFilter       *jsontypes.String `json:"tgFilter"`
+	SourceFilter   *string           `json:"sourceFilter"`
+	AtLeastSeconds *float32          `json:"atLeastSeconds"`
+	UnknownTG      bool              `json:"unknownTG"`
 }
 
 func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
@@ -225,7 +225,7 @@ func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []databa
 		Offset:       offset,
 		PerPage:      perPage,
 		Direction:    p.Direction.DirString(common.DirAsc),
-		TGFilter:     p.TGFilter,
+		TGFilter:     p.TGFilter.StringPtr(),
 		SourceFilter: p.SourceFilter,
 		UnknownTG:    p.UnknownTG,
 	}
