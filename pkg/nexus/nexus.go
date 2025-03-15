@@ -22,7 +22,7 @@ type Nexus struct {
 }
 
 type Registry interface {
-	NewClient(Connection) Client
+	NewClient(Connection, entities.Subject) Client
 	Register(Client)
 	Unregister(Client)
 }
@@ -67,7 +67,8 @@ func (n *Nexus) broadcastCallToClients(ctx context.Context, call *calls.Call) {
 	defer n.Unlock()
 
 	for cl := range n.clients {
-		if !cl.filter.Test(ctx, call) {
+		clientCtx := entities.CtxWithSubject(ctx, cl.subject)
+		if !cl.filter.Test(clientCtx, call) {
 			continue
 		}
 
