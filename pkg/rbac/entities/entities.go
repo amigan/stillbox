@@ -35,6 +35,7 @@ const (
 	ActionDelete           = "delete"
 	ActionShare            = "share"
 	ActionUpdatePrivileged = "updatePrivileged"
+	ActionTranscribe       = "updateTranscription"
 )
 
 func SubjectFrom(ctx context.Context) Subject {
