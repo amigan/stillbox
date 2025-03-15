@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,6 +13,7 @@ import (
 	"dynatron.me/x/go-minimp3"
 	"dynatron.me/x/stillbox/internal/audio"
 	"dynatron.me/x/stillbox/internal/audio/resample"
+	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	whisper "github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
@@ -132,25 +132,27 @@ func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *transcriber) txCallback(rq *pb.CallTranscribeRequest, tx *Transcription) error {
-	txJson, err := json.Marshal(tx)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("PUT", rq.Callback, bytes.NewReader(txJson))
+	req, err := http.NewRequest("PUT", rq.Callback, bytes.NewReader([]byte(tx.Text)))
 	if err != nil {
 		return err
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", rq.Token))
+	req.Header.Add("Content-Type", "text/plain")
+	req.Header.Set("User-Agent", version.HttpString("sbttsd"))
 
 	resp, err := t.cli.Do(req)
-	if err != nil || resp.StatusCode != http.StatusNoContent {
+	if err != nil {
 		return err
 	}
 
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		et, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("got status %d: %s", resp.StatusCode, string(et))
+	}
+
 	io.Copy(io.Discard, resp.Body)
-	resp.Body.Close()
 
 	return nil
 }
