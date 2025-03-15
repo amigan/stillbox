@@ -10,6 +10,7 @@ import (
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/pb"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	tgfilter "dynatron.me/x/stillbox/pkg/talkgroups/filter"
 
 	"github.com/rs/zerolog/log"
@@ -35,6 +36,8 @@ type client struct {
 	liveState pb.LiveState
 	filter    *tgfilter.TalkgroupFilter
 
+	subject entities.Subject
+
 	nexus *Nexus
 }
 
@@ -55,10 +58,11 @@ type Connection interface {
 	Send(ToClient) error
 }
 
-func (n *Nexus) NewClient(conn Connection) Client {
+func (n *Nexus) NewClient(conn Connection, subject entities.Subject) Client {
 	sess := &client{
 		Connection: conn,
 		nexus:      n,
+		subject:    subject,
 	}
 
 	return sess

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
@@ -76,8 +77,9 @@ func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+	subject := entities.SubjectFrom(ctx)
 	wsc := newWsConn(conn)
-	cli := wm.NewClient(wsc)
+	cli := wm.NewClient(wsc, subject)
 	wm.Register(cli)
 
 	go wsc.readPump(ctx, wm, cli)
