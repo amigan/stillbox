@@ -3,6 +3,7 @@ package sinks
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,7 +15,12 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups/filter"
+	"github.com/go-viper/mapstructure/v2"
 	"google.golang.org/protobuf/proto"
+)
+
+var (
+	ErrInvalidTranscriberTransport = errors.New("invalid transcriber transport type")
 )
 
 type TranscriptionManager struct {
@@ -26,14 +32,13 @@ type TranscriptionManager struct {
 }
 
 type Transcriber struct {
-	URL *url.URL
-	CallbackBase *url.URL
-	Filter *filter.TalkgroupFilter
+	Filter  *filter.TalkgroupFilter
 	AtLeast time.Duration
+
+	transport transcribeTransport
 
 	mgr  *TranscriptionManager
 	Name string
-	auth *auth.Auth
 }
 
 func NewTranscriptionManager(s Sinks, a *auth.Auth, cfgs []config.Transcription) (*TranscriptionManager, error) {
@@ -52,7 +57,7 @@ func NewTranscriptionManager(s Sinks, a *auth.Auth, cfgs []config.Transcription)
 	}
 
 	for i, cfg := range cfgs {
-		rs, err := tm.newTranscriber(i, a, cfg)
+		rs, err := tm.newTranscriber(i, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -65,25 +70,29 @@ func NewTranscriptionManager(s Sinks, a *auth.Auth, cfgs []config.Transcription)
 	return tm, nil
 }
 
-func (rs *TranscriptionManager) newTranscriber(idx int, a *auth.Auth, cfg config.Transcription) (*Transcriber, error) {
-	u, err := url.Parse(cfg.URL)
-	if err != nil {
-		return nil, err
-	}
+type transcribeTransport interface {
+	fmt.Stringer
+	Dispatch(ctx context.Context, call *calls.Call) error
+}
 
-	cbBase, err := url.Parse(cfg.CallbackBase)
-	if err != nil {
-		return nil, err
-	}
-
+func (rs *TranscriptionManager) newTranscriber(idx int, cfg config.Transcription) (*Transcriber, error) {
 	t := &Transcriber{
-		Name:          fmt.Sprintf("transcriber%d:%s", idx, u.Host),
-		URL:           u,
-		CallbackBase: cbBase,
 		AtLeast: time.Second * time.Duration(cfg.AtLeastSeconds),
-		mgr:           rs,
-		auth:          a,
+		mgr:     rs,
 	}
+	var err error
+
+	switch cfg.Type {
+	case "http":
+		t.transport, err = newHttpTranscriber(cfg.Config, rs)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, ErrInvalidTranscriberTransport
+	}
+
+	t.Name = fmt.Sprintf("transcriber%d:%s:%s", idx, cfg.Type, t.transport.String())
 
 	if cfg.Filter != nil {
 		filt, err := filter.FromMap(cfg.Filter)
@@ -91,22 +100,69 @@ func (rs *TranscriptionManager) newTranscriber(idx int, a *auth.Auth, cfg config
 			return nil, err
 		}
 
-		 t.Filter = filt
+		t.Filter = filt
 	}
-
-	u.Path = "/call"
 
 	return t, nil
 }
 
-func (s *Transcriber) Call(ctx context.Context, call *calls.Call) error {
-	if call.Duration < calls.CallDuration(s.AtLeast) || !s.Filter.Test(ctx, call) {
-		return nil
+type httpTranscriberTransport struct {
+	URL          string `yaml:"url"`
+	CallbackBase string `yaml:"callbackBase"`
+
+	url          *url.URL
+	callbackBase *url.URL
+	mgr          *TranscriptionManager
+}
+
+func newHttpTranscriber(cfg config.ConfigMap, mgr *TranscriptionManager) (*httpTranscriberTransport, error) {
+	htt := &httpTranscriberTransport{
+		mgr: mgr,
+	}
+	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Metadata:         nil,
+		Result:           htt,
+		TagName:          "yaml",
+		WeaklyTypedInput: true,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.TextUnmarshallerHookFunc(),
+		),
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = dec.Decode(cfg)
+	if err != nil {
+		return nil, err
 	}
 
-	token := s.auth.NewCallToken(call.ID.String())
+	u, err := url.Parse(htt.URL)
+	if err != nil {
+		return nil, err
+	}
 
-	callbackURL := *s.CallbackBase
+	u.Path = "/call"
+
+	cbBase, err := url.Parse(htt.CallbackBase)
+	if err != nil {
+		return nil, err
+	}
+
+	htt.url = u
+	htt.callbackBase = cbBase
+
+	return htt, nil
+}
+
+func (h *httpTranscriberTransport) String() string {
+	return fmt.Sprintf("http:%s", h.url.Hostname())
+}
+
+func (h *httpTranscriberTransport) Dispatch(ctx context.Context, call *calls.Call) error {
+	token := h.mgr.auth.NewCallToken(call.ID.String())
+
+	callbackURL := *h.callbackBase
 
 	callbackURL.Path = "/api/call/" + call.ID.String() + "/transcript"
 
@@ -116,14 +172,14 @@ func (s *Transcriber) Call(ctx context.Context, call *calls.Call) error {
 		Token:    token,
 	}
 
-	cm, err := proto.Marshal(cRq)
+	msg, err := proto.Marshal(cRq)
 	if err != nil {
 		return err
 	}
 
-	rdr := bytes.NewBuffer(cm)
+	rdr := bytes.NewBuffer(msg)
 
-	r, err := http.NewRequestWithContext(ctx, http.MethodPost, s.URL.String(), rdr)
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, h.url.String(), rdr)
 	if err != nil {
 		return fmt.Errorf("transcribe newrequest: %w", err)
 	}
@@ -131,15 +187,28 @@ func (s *Transcriber) Call(ctx context.Context, call *calls.Call) error {
 	r.Header.Set("Content-Type", "application/x-protobuf")
 	r.Header.Set("User-Agent", version.HttpString("call-transcribe"))
 
-	resp, err := s.mgr.client.Do(r)
+	resp, err := h.mgr.client.Do(r)
 	if err != nil {
-		return fmt.Errorf("transcribe %s: %w", s.Name, err)
+		return err
 	}
 
 	defer r.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("transcribe %s: received HTTP %d", s.Name, resp.StatusCode)
+		return fmt.Errorf("received HTTP %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func (s *Transcriber) Call(ctx context.Context, call *calls.Call) error {
+	if call.Duration < calls.CallDuration(s.AtLeast) || !s.Filter.Test(ctx, call) {
+		return nil
+	}
+
+	err := s.transport.Dispatch(ctx, call)
+	if err != nil {
+		return fmt.Errorf("transcribe:%s: %w", s.Name, err)
 	}
 
 	return nil

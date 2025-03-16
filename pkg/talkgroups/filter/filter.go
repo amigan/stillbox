@@ -80,7 +80,6 @@ func (tgf *TalkgroupFilter) IsEmpty() bool {
 	return true
 }
 
-
 func FromMap(m map[string]any) (*TalkgroupFilter, error) {
 	filter := new(TalkgroupFilter)
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
@@ -103,7 +102,6 @@ func FromMap(m map[string]any) (*TalkgroupFilter, error) {
 
 	return filter, nil
 }
-
 
 func FromProtobuf(ctx context.Context, p *pb.Filter) (*TalkgroupFilter, error) {
 	tgf := &TalkgroupFilter{
@@ -152,7 +150,7 @@ func (f *TalkgroupFilter) compile(ctx context.Context) error {
 	tgst := tgstore.FromCtx(ctx)
 
 	if f.hasTags() { // don't bother with DB if no tags
-		tagTGs, err := tgst.TGsByTags(ctx, f.TalkgroupTagsAny, f.TalkgroupTagsAll, f.TalkgroupTagsNot)
+		tagTGs, err := tgst.TGsByTags(ctx, f.TalkgroupTagsAll, f.TalkgroupTagsAny, f.TalkgroupTagsNot)
 		if err != nil {
 			return fmt.Errorf("tgsbytags: %w", err)
 		}

@@ -87,7 +87,7 @@ func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = callstore.FromCtx(ctx).UpdateTranscription(ctx, p.CallID, string(xsc))
+	err = callstore.FromCtx(ctx).UpdateTranscription(ctx, p.CallID, strings.Trim(string(xsc), " \t"))
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return

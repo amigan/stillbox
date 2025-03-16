@@ -2445,9 +2445,9 @@ func (_c *Store_GetTalkgroup_Call) RunAndReturn(run func(context.Context, int32,
 	return _c
 }
 
-// GetTalkgroupIDsByTags provides a mock function with given fields: ctx, anyTags, allTags, notTags
-func (_m *Store) GetTalkgroupIDsByTags(ctx context.Context, anyTags []string, allTags []string, notTags []string) ([]database.GetTalkgroupIDsByTagsRow, error) {
-	ret := _m.Called(ctx, anyTags, allTags, notTags)
+// GetTalkgroupIDsByTags provides a mock function with given fields: ctx, allTags, anyTags, notAnyTags
+func (_m *Store) GetTalkgroupIDsByTags(ctx context.Context, allTags []string, anyTags []string, notAnyTags []string) ([]database.GetTalkgroupIDsByTagsRow, error) {
+	ret := _m.Called(ctx, allTags, anyTags, notAnyTags)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTalkgroupIDsByTags")
@@ -2456,10 +2456,10 @@ func (_m *Store) GetTalkgroupIDsByTags(ctx context.Context, anyTags []string, al
 	var r0 []database.GetTalkgroupIDsByTagsRow
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, []string, []string, []string) ([]database.GetTalkgroupIDsByTagsRow, error)); ok {
-		return rf(ctx, anyTags, allTags, notTags)
+		return rf(ctx, allTags, anyTags, notAnyTags)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, []string, []string, []string) []database.GetTalkgroupIDsByTagsRow); ok {
-		r0 = rf(ctx, anyTags, allTags, notTags)
+		r0 = rf(ctx, allTags, anyTags, notAnyTags)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]database.GetTalkgroupIDsByTagsRow)
@@ -2467,7 +2467,7 @@ func (_m *Store) GetTalkgroupIDsByTags(ctx context.Context, anyTags []string, al
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, []string, []string, []string) error); ok {
-		r1 = rf(ctx, anyTags, allTags, notTags)
+		r1 = rf(ctx, allTags, anyTags, notAnyTags)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -2482,14 +2482,14 @@ type Store_GetTalkgroupIDsByTags_Call struct {
 
 // GetTalkgroupIDsByTags is a helper method to define mock.On call
 //   - ctx context.Context
-//   - anyTags []string
 //   - allTags []string
-//   - notTags []string
-func (_e *Store_Expecter) GetTalkgroupIDsByTags(ctx interface{}, anyTags interface{}, allTags interface{}, notTags interface{}) *Store_GetTalkgroupIDsByTags_Call {
-	return &Store_GetTalkgroupIDsByTags_Call{Call: _e.mock.On("GetTalkgroupIDsByTags", ctx, anyTags, allTags, notTags)}
+//   - anyTags []string
+//   - notAnyTags []string
+func (_e *Store_Expecter) GetTalkgroupIDsByTags(ctx interface{}, allTags interface{}, anyTags interface{}, notAnyTags interface{}) *Store_GetTalkgroupIDsByTags_Call {
+	return &Store_GetTalkgroupIDsByTags_Call{Call: _e.mock.On("GetTalkgroupIDsByTags", ctx, allTags, anyTags, notAnyTags)}
 }
 
-func (_c *Store_GetTalkgroupIDsByTags_Call) Run(run func(ctx context.Context, anyTags []string, allTags []string, notTags []string)) *Store_GetTalkgroupIDsByTags_Call {
+func (_c *Store_GetTalkgroupIDsByTags_Call) Run(run func(ctx context.Context, allTags []string, anyTags []string, notAnyTags []string)) *Store_GetTalkgroupIDsByTags_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].([]string), args[2].([]string), args[3].([]string))
 	})
