@@ -7,7 +7,7 @@ client/calls/
 /gordio
 /stillbox
 /calls
-/sbttsd
+/transcribed
 Session.vim
 *.log
 *.dlv
