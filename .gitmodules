@@ -1,3 +1,3 @@
 [submodule "cmd/sbttsd/whisper.cpp"]
-	path = cmd/sbttsd/whisper.cpp
+	path = cmd/sbsxscribe/whisper.cpp
 	url = https://github.com/ggerganov/whisper.cpp.git
