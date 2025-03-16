@@ -8,7 +8,10 @@ import (
 	"os"
 )
 
-var Pthresh = flag.Float64("thr", 0.1, "probability threshold")
+var (
+	Pthresh = flag.Float64("thr", 0.1, "probability threshold")
+	NoCallback = flag.Bool("nocb", false, "don't callback requests")
+)
 
 func main() {
 	flag.Parse()
