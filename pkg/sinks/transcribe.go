@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/auth"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/pb"
+	"dynatron.me/x/stillbox/pkg/talkgroups/filter"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -24,12 +26,14 @@ type TranscriptionManager struct {
 }
 
 type Transcriber struct {
-	config.Transcription
+	URL *url.URL
+	CallbackBase *url.URL
+	Filter *filter.TalkgroupFilter
+	AtLeast time.Duration
+
 	mgr  *TranscriptionManager
 	Name string
 	auth *auth.Auth
-
-	url *url.URL
 }
 
 func NewTranscriptionManager(s Sinks, a *auth.Auth, cfgs []config.Transcription) (*TranscriptionManager, error) {
@@ -67,24 +71,42 @@ func (rs *TranscriptionManager) newTranscriber(idx int, a *auth.Auth, cfg config
 		return nil, err
 	}
 
-	u.Path = "/call"
+	cbBase, err := url.Parse(cfg.CallbackBase)
+	if err != nil {
+		return nil, err
+	}
 
-	return &Transcriber{
+	t := &Transcriber{
 		Name:          fmt.Sprintf("transcriber%d:%s", idx, u.Host),
-		Transcription: cfg,
-		url:           u,
+		URL:           u,
+		CallbackBase: cbBase,
+		AtLeast: time.Second * time.Duration(cfg.AtLeastSeconds),
 		mgr:           rs,
 		auth:          a,
-	}, nil
+	}
+
+	if cfg.Filter != nil {
+		filt, err := filter.FromMap(cfg.Filter)
+		if err != nil {
+			return nil, err
+		}
+
+		 t.Filter = filt
+	}
+
+	u.Path = "/call"
+
+	return t, nil
 }
 
 func (s *Transcriber) Call(ctx context.Context, call *calls.Call) error {
-	token := s.auth.NewCallToken(call.ID.String())
-	// TODO: put this in the config code so we don't do it every call
-	callbackURL, err := url.Parse(s.CallbackBase)
-	if err != nil {
-		return err
+	if call.Duration < calls.CallDuration(s.AtLeast) || !s.Filter.Test(ctx, call) {
+		return nil
 	}
+
+	token := s.auth.NewCallToken(call.ID.String())
+
+	callbackURL := *s.CallbackBase
 
 	callbackURL.Path = "/api/call/" + call.ID.String() + "/transcript"
 
@@ -101,7 +123,7 @@ func (s *Transcriber) Call(ctx context.Context, call *calls.Call) error {
 
 	rdr := bytes.NewBuffer(cm)
 
-	r, err := http.NewRequestWithContext(ctx, http.MethodPost, s.url.String(), rdr)
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, s.URL.String(), rdr)
 	if err != nil {
 		return fmt.Errorf("transcribe newrequest: %w", err)
 	}

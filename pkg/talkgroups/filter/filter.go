@@ -2,12 +2,16 @@ package filter
 
 import (
 	"context"
+	"fmt"
 
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/pb"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	tgsp "dynatron.me/x/stillbox/pkg/talkgroups"
+
+	"github.com/go-viper/mapstructure/v2"
 )
 
 type TalkgroupFilter struct {
@@ -76,7 +80,32 @@ func (tgf *TalkgroupFilter) IsEmpty() bool {
 	return true
 }
 
-func TalkgroupFilterFromPB(ctx context.Context, p *pb.Filter) (*TalkgroupFilter, error) {
+
+func FromMap(m map[string]any) (*TalkgroupFilter, error) {
+	filter := new(TalkgroupFilter)
+	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Metadata:         nil,
+		Result:           &filter,
+		TagName:          "yaml",
+		WeaklyTypedInput: true,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.TextUnmarshallerHookFunc(),
+		),
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = dec.Decode(m)
+	if err != nil {
+		return nil, err
+	}
+
+	return filter, nil
+}
+
+
+func FromProtobuf(ctx context.Context, p *pb.Filter) (*TalkgroupFilter, error) {
 	tgf := &TalkgroupFilter{
 		TalkgroupTagsAll: p.TalkgroupTagsAll,
 		TalkgroupTagsAny: p.TalkgroupTagsAny,
@@ -120,16 +149,16 @@ func (f *TalkgroupFilter) compile(ctx context.Context) error {
 		f.talkgroups[tg] = true
 	}
 
+	tgst := tgstore.FromCtx(ctx)
+
 	if f.hasTags() { // don't bother with DB if no tags
-		db := database.FromCtx(ctx)
-		// TODO: change this to use tgstore, and make sure the context is no longer a system subject (see nexus.Go)
-		tagTGs, err := db.GetTalkgroupIDsByTags(ctx, f.TalkgroupTagsAny, f.TalkgroupTagsAll, f.TalkgroupTagsNot)
+		tagTGs, err := tgst.TGsByTags(ctx, f.TalkgroupTagsAny, f.TalkgroupTagsAll, f.TalkgroupTagsNot)
 		if err != nil {
-			return err
+			return fmt.Errorf("tgsbytags: %w", err)
 		}
 
 		for _, tg := range tagTGs {
-			f.talkgroups[tgsp.ID{System: uint32(tg.SystemID), Talkgroup: uint32(tg.TGID)}] = true
+			f.talkgroups[tg] = true
 		}
 	}
 
