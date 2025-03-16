@@ -144,7 +144,10 @@ func newHttpTranscriber(cfg config.ConfigMap, mgr *TranscriptionManager) (*httpT
 		return nil, err
 	}
 
-	u.Path = "/call"
+	cbBase, err := url.Parse(cfg.CallbackBase)
+	if err != nil {
+		return nil, err
+	}
 
 	cbBase, err := url.Parse(htt.CallbackBase)
 	if err != nil {
@@ -165,6 +168,10 @@ func (h *httpTranscriberTransport) Dispatch(ctx context.Context, call *calls.Cal
 	token := h.mgr.auth.NewCallToken(call.ID.String())
 
 	callbackURL := *h.callbackBase
+
+	token := s.auth.NewCallToken(call.ID.String())
+
+	callbackURL := *s.CallbackBase
 
 	callbackURL.Path = "/api/call/" + call.ID.String() + "/transcript"
 

@@ -43,6 +43,7 @@ type ID struct {
 	Talkgroup uint32 `json:"tg"`
 }
 
+
 type PresenceMap map[ID]struct{}
 
 func (t PresenceMap) Has(id ID) bool {
