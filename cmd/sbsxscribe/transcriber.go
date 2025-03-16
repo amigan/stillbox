@@ -143,7 +143,7 @@ func (t *transcriber) txCallback(rq *pb.CallTranscribeRequest, tx *Transcription
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", rq.Token))
 	req.Header.Add("Content-Type", "text/plain")
-	req.Header.Set("User-Agent", version.HttpString("sbttsd"))
+	req.Header.Set("User-Agent", version.HttpString("sbxscribe"))
 
 	resp, err := t.cli.Do(req)
 	if err != nil {
