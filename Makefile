@@ -54,12 +54,9 @@ test:
 run:
 	go run -v ./cmd/stillbox/ serve
 
-buildsbsxscribe:
-	cd cmd/sbsxscribe/whisper.cpp && sh ./models/download-ggml-model.sh base.en
-	#env GGML_CUDA=1 make -C cmd/sbsxscribe sbsxscribe
+buildtranscribed:
+	cd cmd/transcribed/whisper.cpp && sh ./models/download-ggml-model.sh base.en
+	#env GGML_CUDA=1 make -C cmd/transcribed transcribed
 	#&& cmake -B build -DGGML_CUDA=1 && cmake --build build --config Release
-	#cd cmd/sbsxscribe/whisper.cpp/bindings/go && make whisper
-	go build -o sbsxscribe -v ./cmd/sbsxscribe/
-
-sbsxscribe-cuda:
-
+	#cd cmd/transcribed/whisper.cpp/bindings/go && make whisper
+	go build -o transcribed -v ./cmd/transcribed/
