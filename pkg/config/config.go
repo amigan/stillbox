@@ -93,9 +93,13 @@ type NotifyService struct {
 	Config          map[string]any `yaml:"config" json:"config"`
 }
 
+type TGFilterSpec map[string]any
+
 type Transcription struct {
 	URL          string `yaml:"url"`
 	CallbackBase string `yaml:"callbackBase"`
+	Filter TGFilterSpec `yaml:"filter,omitempty"`
+	AtLeastSeconds int `yaml:"atLeastSeconds"`
 }
 
 func (rl *RateLimit) Verify() bool {

@@ -8,8 +8,10 @@ import (
 	"strconv"
 	"strings"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"gopkg.in/yaml.v3"
 )
 
 type Talkgroup struct {
@@ -40,6 +42,7 @@ type ID struct {
 	System    uint32 `json:"sys"`
 	Talkgroup uint32 `json:"tg"`
 }
+
 
 type PresenceMap map[ID]struct{}
 
@@ -78,27 +81,40 @@ func (tid *ID) UnmarshalJSON(j []byte) error {
 	return nil
 }
 
-func (tid *ID) UnmarshalText(txt []byte) error {
+func (id *ID) UnmarshalText(txt []byte) error {
 	ar := strings.Split(string(txt), ":")
+
+	var err error
 	switch len(ar) {
 	case 2:
-		sys, err := strconv.Atoi(ar[0])
+		id.System, err = common.AtoiU32(ar[0])
 		if err != nil {
 			return err
 		}
-		tid.System = uint32(sys)
 		fallthrough
 	case 1:
-		tg, err := strconv.Atoi(ar[len(ar)-1])
+		id.Talkgroup, err = common.AtoiU32(ar[len(ar)-1])
 		if err != nil {
 			return err
 		}
-		tid.Talkgroup = uint32(tg)
 	default:
 		return ErrBadTG
 	}
 
 	return nil
+}
+
+func (id *ID) UnmarshalYAML(node *yaml.Node) error {
+	switch node.Kind {
+	case yaml.ScalarNode:
+		return id.UnmarshalText([]byte(node.Value))
+	case yaml.MappingNode:
+		type alias ID
+		noMethods := (*alias)(id)
+		return node.Decode(&noMethods)
+	default:
+		return ErrBadTG
+	}
 }
 
 type IDs []ID
