@@ -1,24 +1,25 @@
 -- name: GetTalkgroupsWithAnyTags :many
 SELECT sqlc.embed(talkgroups) FROM talkgroups
-WHERE tags @> ARRAY[$1];
+WHERE tags && ARRAY[$1];
 
 -- name: GetTalkgroupsWithAllTags :many
 SELECT sqlc.embed(talkgroups) FROM talkgroups
-WHERE tags && ARRAY[$1];
+WHERE tags @> ARRAY[$1];
 
 -- name: GetTalkgroupIDsByTags :many
 SELECT system_id, tgid FROM talkgroups
-WHERE (tags @> ARRAY[@any_tags])
-AND (tags && ARRAY[@all_tags])
-AND NOT (tags @> ARRAY[@not_tags]);
+WHERE
+((tags @> @all_tags::TEXT[])
+OR (tags && @any_tags::TEXT[]))
+AND (NOT (tags && @not_any_tags::TEXT[]));
 
 -- name: GetTalkgroupTags :one
 SELECT tags FROM talkgroups
-WHERE system_id = @system_id AND tgid = @tg_id;
+WHERE (system_id, tgid) = (@system_id, @tg_id);
 
 -- name: SetTalkgroupTags :exec
 UPDATE talkgroups SET tags = @tags
-WHERE system_id = @system_id AND tgid = @tg_id;
+WHERE (system_id, tgid) = (@system_id, @tg_id);
 
 -- name: GetTalkgroup :one
 SELECT sqlc.embed(talkgroups) FROM talkgroups

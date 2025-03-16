@@ -87,19 +87,19 @@ type Relay struct {
 type Notify []NotifyService
 
 type NotifyService struct {
-	Provider        string         `yaml:"provider" json:"provider"`
-	SubjectTemplate *string        `yaml:"subjectTemplate" json:"subjectTemplate"`
-	BodyTemplate    *string        `yaml:"bodyTemplate" json:"bodyTemplate"`
-	Config          map[string]any `yaml:"config" json:"config"`
+	Provider        string    `yaml:"provider" json:"provider"`
+	SubjectTemplate *string   `yaml:"subjectTemplate" json:"subjectTemplate"`
+	BodyTemplate    *string   `yaml:"bodyTemplate" json:"bodyTemplate"`
+	Config          ConfigMap `yaml:"config" json:"config"`
 }
 
-type TGFilterSpec map[string]any
+type ConfigMap map[string]any
 
 type Transcription struct {
-	URL          string `yaml:"url"`
-	CallbackBase string `yaml:"callbackBase"`
-	Filter TGFilterSpec `yaml:"filter,omitempty"`
-	AtLeastSeconds int `yaml:"atLeastSeconds"`
+	Type           string    `yaml:"type"`
+	Filter         ConfigMap `yaml:"filter,omitempty"`
+	AtLeastSeconds int       `yaml:"atLeastSeconds"`
+	Config         ConfigMap `yaml:"config,omitempty"`
 }
 
 func (rl *RateLimit) Verify() bool {
