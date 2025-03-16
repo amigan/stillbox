@@ -78,7 +78,11 @@ func (t *transcriber) Go(ctx context.Context) {
 				continue
 			}
 
-			log.Println(transcription.Text)
+			log.Printf("TG %s %d:%d %s", rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text)
+			if *NoCallback {
+				continue
+			}
+
 			err = t.txCallback(rq, transcription)
 			if err != nil {
 				log.Println(err)
@@ -97,7 +101,7 @@ func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("payload", len(payload))
+	log.Println("payload", len(payload), r.RemoteAddr)
 
 	ct := strings.Split(contentType, ";")[0]
 	var rq *pb.CallTranscribeRequest
@@ -209,7 +213,6 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 	}
 
 	var st strings.Builder
-	log.Printf("thr %f", *Pthresh)
 	for {
 		segment, err := ctx.NextSegment()
 		if err == io.EOF {
@@ -220,6 +223,9 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 
 		for _, tok := range segment.Tokens {
 			if strings.HasPrefix(tok.Text, "[_") && strings.HasSuffix(tok.Text, "]") {
+				continue
+			}
+			if tok.Text == "Thank you." {
 				continue
 			}
 			if tok.P >= float32(*Pthresh) {
