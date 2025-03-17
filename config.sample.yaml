@@ -68,3 +68,15 @@ relay:
     # `required` specifies whether we should report failure (i.e. HTTP 500 for rdio-http) to the source
     # if the relay call submission fails
 #   required: false
+#transcription:
+# - type: http
+#   atLeastSeconds: 2
+#   filter:
+#     talkgroups:
+#       - "197:10101"
+#     talkgroupTagsAny:
+#       - fire dispatch
+#       - law dispatch
+#   config:
+#     url: "http://transcriber:3053/"
+#     callbackBase: "http://stillboxinternal:3050/"
