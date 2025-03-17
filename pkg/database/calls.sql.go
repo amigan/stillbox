@@ -363,7 +363,8 @@ c.duration,
 c.system system_id,
 c.talkgroup tgid,
 c.talker_alias,
-COUNT(ic.incident_id) incidents
+COUNT(ic.incident_id) incidents,
+(c.transcript IS NOT NULL)::BOOLEAN has_transcript
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
 LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
@@ -413,13 +414,14 @@ type ListCallsPParams struct {
 }
 
 type ListCallsPRow struct {
-	ID          uuid.UUID          `json:"id"`
-	CallDate    pgtype.Timestamptz `json:"callDate"`
-	Duration    *int32             `json:"duration"`
-	SystemID    int                `json:"systemId"`
-	TGID        int                `json:"tgid"`
-	TalkerAlias *string            `json:"talkerAlias,omitempty"`
-	Incidents   int64              `json:"incidents,omitempty,omitzero"`
+	ID            uuid.UUID          `json:"id"`
+	CallDate      pgtype.Timestamptz `json:"callDate"`
+	Duration      *int32             `json:"duration"`
+	SystemID      int                `json:"systemId"`
+	TGID          int                `json:"tgid"`
+	TalkerAlias   *string            `json:"talkerAlias,omitempty"`
+	Incidents     int64              `json:"incidents,omitempty,omitzero"`
+	HasTranscript bool               `json:"hasTranscript,omitzero"`
 }
 
 func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error) {
@@ -451,6 +453,7 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 			&i.TGID,
 			&i.TalkerAlias,
 			&i.Incidents,
+			&i.HasTranscript,
 		); err != nil {
 			return nil, err
 		}

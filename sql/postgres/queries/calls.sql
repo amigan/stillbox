@@ -106,7 +106,8 @@ c.duration,
 c.system system_id,
 c.talkgroup tgid,
 c.talker_alias,
-COUNT(ic.incident_id) incidents
+COUNT(ic.incident_id) incidents,
+(c.transcript IS NOT NULL)::BOOLEAN has_transcript
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
 LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
