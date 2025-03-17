@@ -174,6 +174,8 @@ type Transcription struct {
 	Text string `json:"text"`
 }
 
+var SpaceReplacer = strings.NewReplacer("    ", " ", "   ", " ", "  ", " ")
+
 func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 	tx := &Transcription{}
 	ctx, err := t.model.NewContext()
@@ -246,7 +248,7 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		st.WriteRune(' ')
 	}
 
-	tx.Text = strings.TrimSpace(strings.ReplaceAll(st.String(), "  ", " "))
+	tx.Text = strings.TrimSpace(SpaceReplacer.Replace(st.String()))
 
 	return tx, nil
 }
