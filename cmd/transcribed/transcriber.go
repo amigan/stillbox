@@ -246,7 +246,7 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		st.WriteRune(' ')
 	}
 
-	tx.Text = st.String()
+	tx.Text = strings.TrimSpace(strings.ReplaceAll(st.String(), "  ", " "))
 
 	return tx, nil
 }
