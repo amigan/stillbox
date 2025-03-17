@@ -17,7 +17,7 @@ func main() {
 	f := flag.NewFlagSet("config", flag.ExitOnError)
 	f.Float64P("threshold", "t", 0.1, "token threshold")
 	f.BoolP("nocb", "c", false, "don't callback requests")
-	f.StringP("model", "m", "base.en", "model file")
+	f.StringP("model", "m", "models/ggml-large-v3-turbo.bin", "model file")
 	f.StringP("listen", "l", ":3053", "listen address")
 	f.Parse(os.Args[1:])
 
@@ -38,9 +38,6 @@ func main() {
 	}
 
 	addr := k.String("listen")
-	if addr == "" {
-		addr = ":3053"
-	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
