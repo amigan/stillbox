@@ -13,3 +13,4 @@ Session.vim
 *.dlv
 cover.out
 backups/
+models/
