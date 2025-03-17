@@ -149,9 +149,9 @@ func (a *Auth) newToken(username string) string {
 func (a *Auth) NewCallToken(callID string) string {
 	claims := claims{
 		"sub":   callID,
-		"realm": "call",
+		"realm": "me.dynatron.stillbox.call",
 	}
-	jwtauth.SetExpiryIn(claims, time.Hour*2) // two hours
+	jwtauth.SetExpiryIn(claims, time.Hour)
 	_, tokenString, err := a.jwt.Encode(claims)
 	if err != nil {
 		panic(err)
