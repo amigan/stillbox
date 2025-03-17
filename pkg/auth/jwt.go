@@ -14,6 +14,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	CallRealm = "me.dynatron.stillbox.call"
+)
+
 type claims map[string]any
 
 // UsernameFrom gets the username (just the subject from token) from ctx.
@@ -78,7 +82,7 @@ func (a *Auth) SubjectMiddleware(requireToken bool) func(http.Handler) http.Hand
 						return
 					}
 					switch realmStr {
-					case "call":
+					case CallRealm:
 						cUUID, err := uuid.Parse(subjectString)
 						if err != nil {
 							log.Error().Err(err).Msg("cannot parse call UUID")
@@ -149,7 +153,7 @@ func (a *Auth) newToken(username string) string {
 func (a *Auth) NewCallToken(callID string) string {
 	claims := claims{
 		"sub":   callID,
-		"realm": "me.dynatron.stillbox.call",
+		"realm": CallRealm,
 	}
 	jwtauth.SetExpiryIn(claims, time.Hour)
 	_, tokenString, err := a.jwt.Encode(claims)
