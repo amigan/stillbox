@@ -32,6 +32,8 @@ type transcriber struct {
 	model             whisper.Model
 	ch                chan txRq
 	cli               *http.Client
+	noCallback        bool
+	thresh            float64
 }
 
 type Transcriber interface {
@@ -39,15 +41,17 @@ type Transcriber interface {
 	Close()
 }
 
-func NewTranscriber(modelName string) (*transcriber, error) {
+func NewTranscriber(modelName string, tokThresh float64, noCallback bool) (*transcriber, error) {
 	model, err := whisper.New(modelName)
 	if err != nil {
 		return nil, err
 	}
 	t := &transcriber{
-		model: model,
-		ch:    make(chan txRq, 256),
-		cli:   &http.Client{},
+		model:      model,
+		ch:         make(chan txRq, 256),
+		cli:        &http.Client{},
+		thresh:     tokThresh,
+		noCallback: noCallback,
 	}
 
 	return t, nil
@@ -88,7 +92,7 @@ func (t *transcriber) Go(ctx context.Context) {
 			elapsed := time.Since(rq.t)
 
 			log.Printf("Call %s %s %d:%d %s", elapsed.Round(time.Millisecond).String(), rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text)
-			if *NoCallback {
+			if t.noCallback {
 				continue
 			}
 
@@ -239,7 +243,7 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 			if tok.Text == "Thank you." {
 				continue
 			}
-			if tok.P >= float32(*Pthresh) {
+			if tok.P >= float32(t.thresh) {
 				st.WriteString(tok.Text)
 			} else if strings.Contains(tok.Text, " ") {
 				st.WriteRune(' ')

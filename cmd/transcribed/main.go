@@ -2,29 +2,40 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
 	"net/http"
-	"os"
-)
+	"strings"
 
-var (
-	Pthresh    = flag.Float64("thr", 0.1, "probability threshold")
-	NoCallback = flag.Bool("nocb", false, "don't callback requests")
+	"github.com/knadh/koanf/providers/env"
+	"github.com/knadh/koanf/providers/posflag"
+	"github.com/knadh/koanf/v2"
+	flag "github.com/spf13/pflag"
 )
 
 func main() {
-	flag.Parse()
-	model := os.Getenv("SBTTSD_MODEL")
-	if model == "" {
-		model = "base.en"
+	f := flag.NewFlagSet("config", flag.ExitOnError)
+	f.Float64P("threshold", "t", 0.1, "token threshold")
+	f.BoolP("nocb", "c", false, "don't callback requests")
+	f.StringP("model", "m", "base.en", "model file")
+	f.StringP("listen", "l", ":3053", "listen address")
+
+	k := koanf.New(".")
+	if err := k.Load(posflag.Provider(f, ".", k), nil); err != nil {
+		log.Fatal(err)
 	}
-	tx, err := NewTranscriber(model)
+
+	if err := k.Load(env.Provider("TRANSCRIBED_", ".", func(s string) string {
+		return strings.Replace(strings.ToLower(
+			strings.TrimPrefix(s, "TRANSCRIBED_")), "_", ".", -1)
+	}), nil); err != nil {
+		log.Fatal(err)
+	}
+	tx, err := NewTranscriber(k.String("model"), k.Float64("threshold"), k.Bool("nocb"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	addr := os.Getenv("SBTTSD_LISTEN")
+	addr := k.String("listen")
 	if addr == "" {
 		addr = ":3053"
 	}
