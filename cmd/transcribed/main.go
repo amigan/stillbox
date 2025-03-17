@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/knadh/koanf/providers/env"
@@ -18,6 +19,7 @@ func main() {
 	f.BoolP("nocb", "c", false, "don't callback requests")
 	f.StringP("model", "m", "base.en", "model file")
 	f.StringP("listen", "l", ":3053", "listen address")
+	f.Parse(os.Args[1:])
 
 	k := koanf.New(".")
 	if err := k.Load(posflag.Provider(f, ".", k), nil); err != nil {
