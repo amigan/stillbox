@@ -55,8 +55,4 @@ run:
 	go run -v ./cmd/stillbox/ serve
 
 buildtranscribed:
-	cd cmd/transcribed/whisper.cpp && sh ./models/download-ggml-model.sh base.en
-	#env GGML_CUDA=1 make -C cmd/transcribed transcribed
-	#&& cmake -B build -DGGML_CUDA=1 && cmake --build build --config Release
-	#cd cmd/transcribed/whisper.cpp/bindings/go && make whisper
 	go build -o transcribed ${GOFLAGS} ${LDFLAGS} ./cmd/transcribed/
