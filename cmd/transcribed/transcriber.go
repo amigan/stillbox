@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"dynatron.me/x/go-minimp3"
 	"dynatron.me/x/stillbox/internal/audio"
@@ -22,12 +23,14 @@ import (
 
 var (
 	ErrInvalidChannels = errors.New("invalid channels")
+
+	UserAgent = version.HttpString("transcribed")
 )
 
 type transcriber struct {
 	calllbackEndpoint string
 	model             whisper.Model
-	ch                chan *pb.CallTranscribeRequest
+	ch                chan txRq
 	cli               *http.Client
 }
 
@@ -43,7 +46,7 @@ func NewTranscriber(modelName string) (*transcriber, error) {
 	}
 	t := &transcriber{
 		model: model,
-		ch:    make(chan *pb.CallTranscribeRequest, 256),
+		ch:    make(chan txRq, 256),
 		cli:   &http.Client{},
 	}
 
@@ -61,8 +64,13 @@ func (t *transcriber) Close() {
 	t.cli.CloseIdleConnections()
 }
 
+type txRq struct {
+	*pb.CallTranscribeRequest
+	t time.Time
+}
+
 func (t *transcriber) Transcribe(call *pb.CallTranscribeRequest) error {
-	t.ch <- call
+	t.ch <- txRq{CallTranscribeRequest: call, t: time.Now()}
 	return nil
 }
 
@@ -77,13 +85,14 @@ func (t *transcriber) Go(ctx context.Context) {
 				log.Println(err)
 				continue
 			}
+			elapsed := time.Since(rq.t)
 
-			log.Printf("TG %s %d:%d %s", rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text)
+			log.Printf("Call %s %s %d:%d %s", elapsed.Round(time.Millisecond).String(), rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text)
 			if *NoCallback {
 				continue
 			}
 
-			err = t.txCallback(rq, transcription)
+			err = t.txCallback(rq.CallTranscribeRequest, transcription)
 			if err != nil {
 				log.Println(err)
 				continue
@@ -101,8 +110,6 @@ func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("payload", len(payload), r.RemoteAddr)
-
 	ct := strings.Split(contentType, ";")[0]
 	var rq *pb.CallTranscribeRequest
 	switch ct {
@@ -113,8 +120,10 @@ func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		log.Printf("TxRq %s len %d\n", rq.Call.Id, len(payload))
 	case "audio/mpeg":
 		l := int32(1234)
+		log.Printf("Test call len %d\n", len(payload))
 		rq = &pb.CallTranscribeRequest{
 			Call: &pb.Call{
 				Duration:  &l,
@@ -143,7 +152,7 @@ func (t *transcriber) txCallback(rq *pb.CallTranscribeRequest, tx *Transcription
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", rq.Token))
 	req.Header.Add("Content-Type", "text/plain")
-	req.Header.Set("User-Agent", version.HttpString("sbxscribe"))
+	req.Header.Set("User-Agent", UserAgent)
 
 	resp, err := t.cli.Do(req)
 	if err != nil {

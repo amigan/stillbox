@@ -21,6 +21,8 @@ import (
 
 var (
 	ErrInvalidTranscriberTransport = errors.New("invalid transcriber transport type")
+
+	TranscribeUserAgent = version.HttpString("call-transcribe")
 )
 
 type TranscriptionManager struct {
@@ -185,7 +187,7 @@ func (h *httpTranscriberTransport) Dispatch(ctx context.Context, call *calls.Cal
 	}
 
 	r.Header.Set("Content-Type", "application/x-protobuf")
-	r.Header.Set("User-Agent", version.HttpString("call-transcribe"))
+	r.Header.Set("User-Agent", TranscribeUserAgent)
 
 	resp, err := h.mgr.client.Do(r)
 	if err != nil {

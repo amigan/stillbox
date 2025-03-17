@@ -15,6 +15,10 @@ import (
 	"github.com/go-chi/render"
 )
 
+var (
+	UserAgent = version.HttpString(version.Name)
+)
+
 const (
 	serverHeader = "Server"
 )
@@ -111,9 +115,8 @@ func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
 }
 
 func ServerHeaderAdd(next http.Handler) http.Handler {
-	serverString := version.HttpString(version.Name)
 	hfn := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set(serverHeader, serverString)
+		w.Header().Set(serverHeader, UserAgent)
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(hfn)
