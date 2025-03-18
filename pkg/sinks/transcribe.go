@@ -201,7 +201,7 @@ func (h *httpTranscriberTransport) Dispatch(ctx context.Context, call *calls.Cal
 }
 
 func (h *httpTranscriberTransport) String() string {
-	return fmt.Sprintf("http:%s", h.url.Hostname())
+	return h.url.Hostname()
 }
 
 func (h *httpTranscriberTransport) Dispatch(ctx context.Context, call *calls.Call) error {
