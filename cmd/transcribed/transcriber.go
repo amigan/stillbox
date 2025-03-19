@@ -91,7 +91,7 @@ func (t *transcriber) Go(ctx context.Context) {
 			}
 			elapsed := time.Since(rq.t)
 
-			log.Printf("Call %s %s %d:%d %s", elapsed.Round(time.Millisecond).String(), rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text)
+			log.Printf("Call [Q%d] %s %s %d:%d %s", len(t.ch), elapsed.Round(time.Millisecond).String(), rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text)
 			if t.noCallback {
 				continue
 			}
@@ -124,7 +124,7 @@ func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		log.Printf("TxRq %s len %d\n", rq.Call.Id, len(payload))
+		log.Printf("TxRq [Q%d] %s len %d\n", len(t.ch),  rq.Call.Id, len(payload))
 	case "audio/mpeg":
 		l := int32(1234)
 		log.Printf("Test call len %d\n", len(payload))
