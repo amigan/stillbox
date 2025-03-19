@@ -36,6 +36,7 @@ export class PlayerService {
   playSub!: Subscription;
   au!: HTMLAudioElement;
   public playing = signal<CallRecord|null>(null);
+  public paused = signal<boolean>(false);
   stack = new Stack<CallRecord>();
   results = <CallRecord[]>[];
 
@@ -49,16 +50,19 @@ export class PlayerService {
       this.play(this.stack.pop()!);
     } else {
       this.playing.set(null);
+      this.paused.set(false);
     }
   }
 
   stopAudio() {
     this.playing.set(null);
+    this.paused.set(false);
     this.au.pause();
   }
 
   pauseAudio() {
     this.au.pause();
+    this.paused.set(true);
   }
 
   playAudio(call: CallRecord, index: number) {
@@ -72,9 +76,11 @@ export class PlayerService {
 
   resume() {
     this.au.play();
+    this.paused.set(false);
   }
 
   play(call: CallRecord) {
+    this.paused.set(false);
     this.playing.set(call);
     if (call.audioURL != null) {
       this.au.src = call.audioURL;

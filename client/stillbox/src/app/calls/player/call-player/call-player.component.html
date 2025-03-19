@@ -4,7 +4,7 @@
   >
 } @else if (playing()) {
   <a class="playButton" (click)="pauseStopAudio($event)"><mat-icon>
-      {{ resume ? 'play_arrow' : (pause ? 'pause' : 'stop') }}
+      {{ !pause && !playSvc.playing() ? 'play_arrow' : (pause ? 'pause' : 'stop') }}
       </mat-icon>
       </a>
 } @else {

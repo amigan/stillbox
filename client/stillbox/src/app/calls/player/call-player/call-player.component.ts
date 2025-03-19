@@ -16,26 +16,22 @@ export class CallPlayerComponent {
   @Input() index!: number;
   @Input() pause!: boolean|null;
   download = input<boolean>();
-  resume = false;
 
-  constructor(private callsSvc: CallsService, private playSvc: PlayerService) {}
+  constructor(private callsSvc: CallsService, public playSvc: PlayerService) {}
 
   playing: Signal<boolean> = computed(() => this.playSvc.playing()?.id == this.call.id);
 
   pauseStopAudio(ev: Event) {
-    if (this.resume) {
-      this.resume = false;
+    if (this.playSvc.paused()) {
       this.playSvc.resume();
-    } else if(this.pause) {
+    } else if(this.playSvc.playing()) {
       this.playSvc.pauseAudio();
-      this.resume = true;
     } else {
       this.playSvc.stopAudio();
     }
   }
 
   playAudio(ev: Event) {
-    this.resume = false;
     this.playSvc.playAudio(this.call, this.index);
   }
 }
