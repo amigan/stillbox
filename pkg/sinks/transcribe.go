@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -240,8 +241,11 @@ func (h *httpTranscriberTransport) Dispatch(ctx context.Context, call *calls.Cal
 	defer r.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("received HTTP %d", resp.StatusCode)
+		et, _ := io.ReadAll(r.Body)
+		return fmt.Errorf("received HTTP %d body %s", resp.StatusCode, string(et))
 	}
+
+	io.Copy(io.Discard, resp.Body)
 
 	return nil
 }
