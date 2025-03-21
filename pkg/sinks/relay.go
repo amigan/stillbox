@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -107,8 +108,11 @@ func (s *Relay) Call(ctx context.Context, call *calls.Call) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("relay %s: received HTTP %d", s.Name, resp.StatusCode)
+		et, _ := io.ReadAll(r.Body)
+		return fmt.Errorf("relay %s: received HTTP %d (%s)", s.Name, resp.StatusCode, string(et))
 	}
+
+	io.Copy(io.Discard, resp.Body)
 
 	return nil
 }

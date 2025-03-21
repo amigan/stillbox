@@ -28,8 +28,6 @@ func (h hand) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestRelay(t *testing.T) {
-	uuid.SetRand(rand.New(rand.NewSource(1)))
-
 	tests := []struct {
 		name      string
 		submitter users.UserID
@@ -56,47 +54,53 @@ func TestRelay(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var serr error
-			var called bool
-			h := hand(func(w http.ResponseWriter, r *http.Request) {
-				called = true
-				assert.Equal(t, "/api/call-upload", r.URL.Path)
-				serr = r.ParseMultipartForm(1024 * 1024 * 2)
-				if serr != nil {
-					t.Log("parsemultipart", serr)
-					return
-				}
+		var prevRemote string
 
-				cur := new(sources.CallUploadRequest)
-				serr = forms.Unmarshal(r, cur, forms.WithAcceptBlank())
-				cur.DontStore = true
-				if serr != nil {
-					t.Log("unmarshal", serr)
-					return
-				}
+		var called bool
 
-				assert.Equal(t, tc.apiKey, cur.Key)
-
-				toC, tcerr := cur.ToCall(tc.submitter)
-				require.NoError(t, tcerr)
-				assert.Equal(t, &tc.call, toC)
-			})
-			svr := httptest.NewServer(h)
-
-			cfg := config.Relay{
-				URL:    svr.URL,
-				APIKey: tc.apiKey,
+		h := hand(func(w http.ResponseWriter, r *http.Request) {
+			if prevRemote == "" {
+				prevRemote = r.RemoteAddr
+			} else {
+				assert.Equal(t, prevRemote, r.RemoteAddr)
 			}
-			ns := &nullSinks{}
+			called = true
+			assert.Equal(t, "/api/call-upload", r.URL.Path)
+			err := r.ParseMultipartForm(1024 * 1024 * 2)
+			require.NoError(t, err, "server parse multipart")
 
-			rm, err := NewRelayManager(ns, []config.Relay{cfg})
-			require.NoError(t, err)
-			err = rm.relays[0].Call(context.Background(), &tc.call)
-			assert.True(t, called)
-			assert.NoError(t, err)
-			assert.NoError(t, serr)
+			cur := new(sources.CallUploadRequest)
+			err = forms.Unmarshal(r, cur, forms.WithAcceptBlank())
+			require.NoError(t, err, "server unmarshal")
+			cur.DontStore = true
+
+			assert.Equal(t, tc.apiKey, cur.Key)
+
+			toC, tcerr := cur.ToCall(tc.submitter)
+			require.NoError(t, tcerr)
+			assert.Equal(t, &tc.call, toC)
 		})
+
+		svr := httptest.NewServer(h)
+
+		cfg := config.Relay{
+			URL:    svr.URL,
+			APIKey: tc.apiKey,
+		}
+		ns := &nullSinks{}
+
+		rm, err := NewRelayManager(ns, []config.Relay{cfg})
+		require.NoError(t, err)
+
+		for range 5 {
+			t.Run(tc.name, func(t *testing.T) {
+				uuid.SetRand(rand.New(rand.NewSource(1)))
+
+				err = rm.relays[0].Call(context.Background(), &tc.call)
+				assert.True(t, called)
+				assert.NoError(t, err)
+			})
+		}
 	}
 }
 
