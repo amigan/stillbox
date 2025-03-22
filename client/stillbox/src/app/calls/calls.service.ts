@@ -96,7 +96,6 @@ export class TalkgroupPipe implements PipeTransform {
               from = ` from ${call.talkerAlias}`;
             }
             let r = `To ${tg.alphaTag ?? call.tgid}${from}`;
-            console.log(r);
             return r;
           }
           default: {
