@@ -102,15 +102,6 @@ type Transcription struct {
 	Config         ConfigMap `yaml:"config,omitempty"`
 }
 
-type ConfigMap map[string]any
-
-type Transcription struct {
-	Type           string    `yaml:"type"`
-	Filter         ConfigMap `yaml:"filter,omitempty"`
-	AtLeastSeconds int       `yaml:"atLeastSeconds"`
-	Config         ConfigMap `yaml:"config,omitempty"`
-}
-
 func (rl *RateLimit) Verify() bool {
 	if rl.Enable {
 		if rl.Requests > 0 && rl.Over > 0 {

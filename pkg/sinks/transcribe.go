@@ -145,49 +145,6 @@ func newHttpTranscriber(cfg config.ConfigMap, mgr *TranscriptionManager) (*httpT
 		return nil, err
 	}
 
-	cbBase, err := url.Parse(cfg.CallbackBase)
-	if err != nil {
-		return nil, err
-	}
-
-	cbBase, err := url.Parse(htt.CallbackBase)
-	if err != nil {
-		return nil, err
-	}
-	var err error
-
-	switch cfg.Type {
-	case "http":
-		t.transport, err = newHttpTranscriber(cfg.Config, rs)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		return nil, ErrInvalidTranscriberTransport
-	}
-
-	t.Name = fmt.Sprintf("transcriber%d:%s:%s", idx, cfg.Type, t.transport.String())
-
-	htt.url = u
-	htt.callbackBase = cbBase
-
-	return htt, nil
-}
-
-func (h *httpTranscriberTransport) String() string {
-	return fmt.Sprintf("http:%s", h.url.Hostname())
-}
-
-func (h *httpTranscriberTransport) Dispatch(ctx context.Context, call *calls.Call) error {
-	token := h.mgr.auth.NewCallToken(call.ID.String())
-
-	callbackURL := *h.callbackBase
-
-	u, err := url.Parse(htt.URL)
-	if err != nil {
-		return nil, err
-	}
-
 	u.Path = "/call"
 
 	cbBase, err := url.Parse(htt.CallbackBase)
