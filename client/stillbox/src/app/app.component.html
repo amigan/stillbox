@@ -1,4 +1,3 @@
-<!-- ========== HEADER ========== -->
 <app-update-nag></app-update-nag>
 <header class="topHeader">
   <mat-toolbar>
@@ -19,12 +18,8 @@
   </mat-toolbar>
 </header>
 
-<div class="container">
-  @if (auth.isAuth()) {
-    <app-navigation [events]="toggleNavSubject.asObservable()"></app-navigation>
-  } @else {
-    <div class="content">
-      <router-outlet />
-    </div>
-  }
-</div>
+@if (auth.isAuth()) {
+  <app-navigation [events]="toggleNavSubject.asObservable()"></app-navigation>
+} @else {
+  <router-outlet />
+}

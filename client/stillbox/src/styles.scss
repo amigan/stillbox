@@ -220,6 +220,14 @@ button.sbButton {
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+app-navigation {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidenav {
@@ -250,4 +258,11 @@ textarea {
 .mat-mdc-menu-item.deleteItem {
   color: white;
   background-color: red;
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100vh;
 }
