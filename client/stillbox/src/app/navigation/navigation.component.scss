@@ -1,5 +1,5 @@
 .sidenav-container {
-  height: calc(100vh - var(--mat-toolbar-standard-height));
+ // height: calc(100vh - var(--mat-toolbar-standard-height));
   position: absolute;
   width: 100%;
 }
@@ -21,7 +21,6 @@
 }
 
 .content {
-  height: calc(100vh - var(--mat-toolbar-standard-height));
   margin-left: 2px;
 }
 
