@@ -1,0 +1,35 @@
+a.playButton {
+  cursor: pointer;
+}
+
+now-playing {
+  width: 100%;
+}
+
+div.nowPlaying {
+  display: flex;
+  width: 100%;
+  border: 1px solid rgb(100, 100, 100);
+  background-color: #ffc400;
+  color: #272727;
+  padding-top: 5px;
+  border-radius: 5px;
+  padding-left: 1em;
+}
+
+mat-icon {
+  color: #272727 !important;
+}
+
+div.playButton {
+  width: 30px;
+  padding-top: 0.1em;
+  justify-content: flex-start;
+}
+
+div.playingText {
+  flex: 2 0 30px;
+  justify-content: flex-end;
+  align-content: center;
+  font-family: "Arcade", sans-serif;
+}

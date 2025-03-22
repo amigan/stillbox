@@ -14,19 +14,19 @@ import { PlayerService } from '../player.service';
 export class CallPlayerComponent {
   @Input() call!: CallRecord;
   @Input() index!: number;
-  @Input() pause!: boolean|null;
   download = input<boolean>();
 
-  constructor(private callsSvc: CallsService, public playSvc: PlayerService) {}
+  constructor(
+    private callsSvc: CallsService,
+    public playSvc: PlayerService,
+  ) {}
 
-  playing: Signal<boolean> = computed(() => this.playSvc.playing()?.id == this.call.id);
+  playing: Signal<boolean> = computed(
+    () => this.playSvc.playing()?.id == this.call.id,
+  );
 
-  pauseStopAudio(ev: Event) {
-    if (this.playSvc.paused()) {
-      this.playSvc.resume();
-    } else if(this.playSvc.playing()) {
-      this.playSvc.pauseAudio();
-    } else {
+  stopAudio(ev: Event) {
+    if (this.playSvc.playing()) {
       this.playSvc.stopAudio();
     }
   }

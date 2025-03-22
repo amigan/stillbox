@@ -152,7 +152,11 @@
         </mat-checkbox>
       </th>
       <td mat-cell *matCellDef="let call; let i = index">
-        <call-player [download]="downloadMode()" [index]="i" [call]="call"></call-player>
+        <call-player
+          [download]="downloadMode()"
+          [index]="i"
+          [call]="call"
+        ></call-player>
       </td>
     </ng-container>
     <ng-container matColumnDef="date">

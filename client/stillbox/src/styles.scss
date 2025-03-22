@@ -67,6 +67,11 @@ html {
 }
 
 @font-face {
+  font-family: "Arcade";
+  src: url("./assets/Arcade.ttf");
+}
+
+@font-face {
   font-family: "Roboto";
   font-style: normal;
   font-weight: 300;
@@ -158,10 +163,18 @@ header.topHeader {
 }
 
 .stillboxLogo,
-.centerNav,
 .rightNav {
   display: flex;
   flex: 1;
+}
+
+now-playing {
+  width: 100%;
+}
+
+.centerNav {
+  display: flex;
+  flex: 2;
 }
 
 .stillboxLogo,

@@ -30,23 +30,25 @@ class Stack<T> implements IStack<T> {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PlayerService {
   playSub!: Subscription;
   au!: HTMLAudioElement;
-  public playing = signal<CallRecord|null>(null);
+  public playing = signal<CallRecord | null>(null);
   public paused = signal<boolean>(false);
   stack = new Stack<CallRecord>();
   results = <CallRecord[]>[];
 
-  constructor(private callsSvc: CallsService) { 
+  constructor(private callsSvc: CallsService) {
     this.au = new Audio();
-    this.playSub = fromEvent(this.au, 'ended').subscribe((ev) => this.playNext());
+    this.playSub = fromEvent(this.au, 'ended').subscribe((ev) =>
+      this.playNext(),
+    );
   }
 
   playNext() {
-    if(this.stack.size() > 0) {
+    if (this.stack.size() > 0) {
       this.play(this.stack.pop()!);
     } else {
       this.playing.set(null);
@@ -66,11 +68,11 @@ export class PlayerService {
   }
 
   playAudio(call: CallRecord, index: number) {
-    if(this.playing() != null) {
+    if (this.playing() != null) {
       this.stopAudio();
     }
     this.stack.cancel();
-    this.stack.push(this.results.slice(0, index+1));
+    this.stack.push(this.results.slice(0, index + 1));
     this.playNext();
   }
 

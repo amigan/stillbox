@@ -1,7 +1,13 @@
 @let call = playSvc.playing();
-@if(call) {
-<div class="nowPlaying">
-  <call-player [pause]="!playSvc.paused()" [call]="call!"></call-player>
-  {{call | talkgroup: "summary" | async}}
-</div>
+@if (call) {
+  <div class="nowPlaying">
+    <div class="playButton">
+      <a class="playButton" (click)="playPause($event)"
+        ><mat-icon> {{ playSvc.paused() ? "play_arrow" : "pause" }}</mat-icon>
+      </a>
+    </div>
+    <div class="playingText">
+      {{ call | talkgroup: "summary" | async }}
+    </div>
+  </div>
 }

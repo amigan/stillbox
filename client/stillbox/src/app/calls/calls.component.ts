@@ -242,7 +242,7 @@ export class CallsComponent {
     if (p.pageIndex > 0) {
       p.pageIndex--;
     }
-    this.setPage(p, false, true)
+    this.setPage(p, false, true);
   }
 
   refresh() {

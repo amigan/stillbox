@@ -66,7 +66,10 @@ export class TimePipe implements PipeTransform {
   pure: true,
 })
 export class TalkgroupPipe implements PipeTransform {
-  constructor(private tgService: TalkgroupService, private playSvc: PlayerService) {}
+  constructor(
+    private tgService: TalkgroupService,
+    private playSvc: PlayerService,
+  ) {}
 
   transform(
     call: CallRecord,
@@ -89,8 +92,8 @@ export class TalkgroupPipe implements PipeTransform {
           }
           case 'summary': {
             let from = '';
-            if(call.talkerAlias) {
-              from = ` from ${call.talkerAlias}`
+            if (call.talkerAlias) {
+              from = ` from ${call.talkerAlias}`;
             }
             let r = `To ${tg.alphaTag ?? call.tgid}${from}`;
             console.log(r);

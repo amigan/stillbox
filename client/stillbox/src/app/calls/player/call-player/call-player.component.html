@@ -3,10 +3,9 @@
     ><mat-icon>download</mat-icon></a
   >
 } @else if (playing()) {
-  <a class="playButton" (click)="pauseStopAudio($event)"><mat-icon>
-      {{ !pause && !playSvc.playing() ? 'play_arrow' : (pause ? 'pause' : 'stop') }}
-      </mat-icon>
-      </a>
+  <a class="playButton" (click)="stopAudio($event)"
+    ><mat-icon> stop </mat-icon>
+  </a>
 } @else {
   <a class="playButton" (click)="playAudio($event)"
     ><mat-icon>play_arrow</mat-icon></a
