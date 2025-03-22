@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './login/auth.service';
@@ -26,7 +25,6 @@ import { NowPlayingComponent } from './calls/now-playing/now-playing.component';
     FormsModule,
     NavigationComponent,
     UpdateNagComponent,
-    NowPlayingComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
