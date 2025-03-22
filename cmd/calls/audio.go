@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"dynatron.me/x/go-minimp3"
 	"github.com/hajimehoshi/oto"
@@ -65,8 +64,6 @@ func (p *Player) playMP3(audio []byte) error {
 	if err != nil {
 		return err
 	}
-
-	<-time.After(time.Second)
 
 	dec.Close()
 	if err = player.Close(); err != nil {
