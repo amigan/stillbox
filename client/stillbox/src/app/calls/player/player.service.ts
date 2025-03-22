@@ -3,33 +3,87 @@ import { fromEvent, Observable, Subscription } from 'rxjs';
 import { CallRecord } from '../../calls';
 import { CallsService } from '../calls.service';
 
+interface IStack<T> {
+  push(e: T[]): void;
+  pop(): T | undefined;
+  size(): number;
+  cancel(): void;
+}
+
+class Stack<T> implements IStack<T> {
+  private storage: T[] = [];
+
+  constructor() {}
+
+  push(items: T[]): void {
+    this.storage.push(...items);
+  }
+  pop(): T | undefined {
+    return this.storage.pop();
+  }
+  size(): number {
+    return this.storage.length;
+  }
+  cancel(): void {
+    this.storage = [];
+  }
+}
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PlayerService {
   playSub!: Subscription;
   au!: HTMLAudioElement;
-  public playing = signal<string|null>(null);
-  queue = <CallRecord[]>[];
+  public playing = signal<CallRecord | null>(null);
+  public paused = signal<boolean>(false);
+  stack = new Stack<CallRecord>();
+  results = <CallRecord[]>[];
 
-  constructor(private callsSvc: CallsService) { 
+  constructor(private callsSvc: CallsService) {
     this.au = new Audio();
-    this.playSub = fromEvent(this.au, 'ended').subscribe((ev) => {
+    this.playSub = fromEvent(this.au, 'ended').subscribe((ev) =>
+      this.playNext(),
+    );
+  }
+
+  playNext() {
+    if (this.stack.size() > 0) {
+      this.play(this.stack.pop()!);
+    } else {
       this.playing.set(null);
-    });
+      this.paused.set(false);
+    }
   }
 
   stopAudio() {
     this.playing.set(null);
+    this.paused.set(false);
     this.au.pause();
   }
 
-  playAudio(call: CallRecord) {
-    if(this.playing() != null) {
+  pauseAudio() {
+    this.au.pause();
+    this.paused.set(true);
+  }
+
+  playAudio(call: CallRecord, index: number) {
+    if (this.playing() != null) {
       this.stopAudio();
     }
+    this.stack.cancel();
+    this.stack.push(this.results.slice(0, index + 1));
+    this.playNext();
+  }
 
-    this.playing.set(call.id);
+  resume() {
+    this.au.play();
+    this.paused.set(false);
+  }
+
+  play(call: CallRecord) {
+    this.paused.set(false);
+    this.playing.set(call);
     if (call.audioURL != null) {
       this.au.src = call.audioURL;
     } else {
@@ -38,7 +92,6 @@ export class PlayerService {
     this.au.load();
     this.au.play().then(null, (reason) => {
       this.playing.set(null);
-      alert(reason);
     });
   }
 }

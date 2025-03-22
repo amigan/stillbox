@@ -13,17 +13,25 @@ import { PlayerService } from '../player.service';
 })
 export class CallPlayerComponent {
   @Input() call!: CallRecord;
+  @Input() index!: number;
   download = input<boolean>();
 
-  constructor(private callsSvc: CallsService, private playSvc: PlayerService) {}
+  constructor(
+    private callsSvc: CallsService,
+    public playSvc: PlayerService,
+  ) {}
 
-  playing: Signal<boolean> = computed(() => this.playSvc.playing() == this.call.id);
+  playing: Signal<boolean> = computed(
+    () => this.playSvc.playing()?.id == this.call.id,
+  );
 
   stopAudio(ev: Event) {
-    this.playSvc.stopAudio();
+    if (this.playSvc.playing()) {
+      this.playSvc.stopAudio();
+    }
   }
 
   playAudio(ev: Event) {
-    this.playSvc.playAudio(this.call);
+    this.playSvc.playAudio(this.call, this.index);
   }
 }

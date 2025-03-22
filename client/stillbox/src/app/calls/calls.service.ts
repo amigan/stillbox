@@ -14,6 +14,7 @@ import {
   SafeStyle,
   SafeUrl,
 } from '@angular/platform-browser';
+import { PlayerService } from './player/player.service';
 
 @Pipe({
   name: 'grabDate',
@@ -65,7 +66,10 @@ export class TimePipe implements PipeTransform {
   pure: true,
 })
 export class TalkgroupPipe implements PipeTransform {
-  constructor(private tgService: TalkgroupService) {}
+  constructor(
+    private tgService: TalkgroupService,
+    private playSvc: PlayerService,
+  ) {}
 
   transform(
     call: CallRecord,
@@ -85,6 +89,15 @@ export class TalkgroupPipe implements PipeTransform {
           }
           case 'system': {
             return tg.system?.name ?? tg.systemId.toString();
+          }
+          case 'summary': {
+            let from = '';
+            if (call.talkerAlias) {
+              from = ` from ${call.talkerAlias}`;
+            }
+            let r = `To ${tg.alphaTag ?? call.tgid}${from}`;
+            console.log(r);
+            return r;
           }
           default: {
             return tg.name ?? '\u2014';

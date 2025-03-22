@@ -58,6 +58,7 @@ import { IncidentRecord } from '../incidents';
 import { SelectIncidentDialogComponent } from '../incidents/select-incident-dialog/select-incident-dialog.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { PlayerService } from './player/player.service';
 
 const reqPageSize = 200;
 @Component({
@@ -153,6 +154,7 @@ export class CallsComponent {
     public tcSvc: ToolbarContextService,
     public tgSvc: TalkgroupService,
     public incSvc: IncidentsService,
+    public playerSvc: PlayerService,
   ) {
     this.tcSvc.showFilterButton();
   }
@@ -223,14 +225,24 @@ export class CallsComponent {
     return now.toISOString().slice(0, 16);
   }
 
-  setPage(p: PageEvent, force?: boolean) {
-    this.selection.clear();
+  setPage(p: PageEvent, force?: boolean, dontClear?: boolean) {
+    if (!dontClear) {
+      this.selection.clear();
+    }
     this.curPage = p;
     if (p && p!.pageSize != this.perPage) {
       this.perPage = p!.pageSize;
       this.prefsSvc.set('callsPerPage', p!.pageSize);
     }
     this.getCalls(p, force);
+  }
+
+  prevPage() {
+    let p = this.curPage;
+    if (p.pageIndex > 0) {
+      p.pageIndex--;
+    }
+    this.setPage(p, false, true);
   }
 
   refresh() {
@@ -329,6 +341,7 @@ export class CallsComponent {
     this.subscriptions.add(
       this.callsResult.subscribe((cr) => {
         this.curLen = cr.length;
+        this.playerSvc.results = cr;
       }),
     );
   }
