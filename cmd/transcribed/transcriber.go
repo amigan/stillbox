@@ -124,7 +124,7 @@ func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		log.Printf("TxRq [Q%d] %s len %d\n", len(t.ch),  rq.Call.Id, len(payload))
+		log.Printf("TxRq [Q%d] %s len %d\n", len(t.ch), rq.Call.Id, len(payload))
 	case "audio/mpeg":
 		l := int32(1234)
 		log.Printf("Test call len %d\n", len(payload))

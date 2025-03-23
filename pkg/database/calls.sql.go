@@ -325,18 +325,22 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN $8::BOOLEAN = TRUE THEN (
 	tgs.tgid IS NULL
+	) ELSE TRUE END) AND
+(CASE WHEN $9::TEXT IS NOT NULL THEN (
+	to_tsvector('english', transcript) @@ websearch_to_tsquery('english', $9)
 	) ELSE TRUE END)
 `
 
 type ListCallsCountParams struct {
-	Start        pgtype.Timestamptz `json:"start"`
-	End          pgtype.Timestamptz `json:"end"`
-	TagsAny      []string           `json:"tagsAny"`
-	TagsNot      []string           `json:"tagsNot"`
-	TGFilter     *string            `json:"tgFilter"`
-	SourceFilter *string            `json:"sourceFilter"`
-	LongerThan   pgtype.Numeric     `json:"longerThan"`
-	UnknownTG    bool               `json:"unknownTg"`
+	Start            pgtype.Timestamptz `json:"start"`
+	End              pgtype.Timestamptz `json:"end"`
+	TagsAny          []string           `json:"tagsAny"`
+	TagsNot          []string           `json:"tagsNot"`
+	TGFilter         *string            `json:"tgFilter"`
+	SourceFilter     *string            `json:"sourceFilter"`
+	LongerThan       pgtype.Numeric     `json:"longerThan"`
+	UnknownTG        bool               `json:"unknownTg"`
+	TranscriptSearch *string            `json:"transcriptSearch"`
 }
 
 func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error) {
@@ -349,6 +353,7 @@ func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) 
 		arg.SourceFilter,
 		arg.LongerThan,
 		arg.UnknownTG,
+		arg.TranscriptSearch,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -363,54 +368,65 @@ c.duration,
 c.system system_id,
 c.talkgroup tgid,
 c.talker_alias,
+(CASE
+	WHEN $1::TEXT = '' THEN c.transcript
+	WHEN $1 IS NOT NULL THEN 
+	ts_headline(c.transcript,
+		websearch_to_tsquery('english', $1),
+		'HighlightAll=true')
+	ELSE NULL END) transcript,
 COUNT(ic.incident_id) incidents,
 (c.transcript IS NOT NULL)::BOOLEAN has_transcript
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
 LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
 WHERE
-CASE WHEN $1::TIMESTAMPTZ IS NOT NULL THEN
-	c.call_date >= $1 ELSE TRUE END AND
 CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
-	c.call_date <= $2 ELSE TRUE END AND
-CASE WHEN $3::TEXT[] IS NOT NULL THEN
-	tgs.tags && ARRAY[$3] ELSE TRUE END AND
+	c.call_date >= $2 ELSE TRUE END AND
+CASE WHEN $3::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date <= $3 ELSE TRUE END AND
 CASE WHEN $4::TEXT[] IS NOT NULL THEN
-	(NOT (tgs.tags && ARRAY[$4])) ELSE TRUE END AND
-(CASE WHEN $5::TEXT IS NOT NULL THEN (
-		tgs.tg_group ILIKE '%' || $5 || '%' OR
-		tgs.name ILIKE '%' || $5 || '%' OR
-		tgs.alpha_tag ILIKE '%' || $5 || '%'
-	) ELSE TRUE END) AND
+	tgs.tags && ARRAY[$4] ELSE TRUE END AND
+CASE WHEN $5::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags && ARRAY[$5])) ELSE TRUE END AND
 (CASE WHEN $6::TEXT IS NOT NULL THEN (
-		c.talker_alias ILIKE '%' || $6 || '%'
+		tgs.tg_group ILIKE '%' || $6 || '%' OR
+		tgs.name ILIKE '%' || $6 || '%' OR
+		tgs.alpha_tag ILIKE '%' || $6 || '%'
 	) ELSE TRUE END) AND
-(CASE WHEN $7::NUMERIC IS NOT NULL THEN (
-		c.duration > $7
+(CASE WHEN $7::TEXT IS NOT NULL THEN (
+		c.talker_alias ILIKE '%' || $7 || '%'
 	) ELSE TRUE END) AND
-(CASE WHEN $8::BOOLEAN = TRUE THEN (
+(CASE WHEN $8::NUMERIC IS NOT NULL THEN (
+		c.duration > $8
+	) ELSE TRUE END) AND
+(CASE WHEN $9::BOOLEAN = TRUE THEN (
 	tgs.tgid IS NULL
+	) ELSE TRUE END) AND
+(CASE WHEN $1::TEXT IS NOT NULL AND $1 != '' THEN (
+	to_tsvector('english', c.transcript) @@ websearch_to_tsquery('english', $1)
 	) ELSE TRUE END)
 GROUP BY c.id, c.call_date
 ORDER BY
-CASE WHEN $9::TEXT = 'asc' THEN c.call_date END ASC,
-CASE WHEN $9 = 'desc' THEN c.call_date END DESC
-OFFSET $10 ROWS
-FETCH NEXT $11 ROWS ONLY
+CASE WHEN $10::TEXT = 'asc' THEN c.call_date END ASC,
+CASE WHEN $10 = 'desc' THEN c.call_date END DESC
+OFFSET $11 ROWS
+FETCH NEXT $12 ROWS ONLY
 `
 
 type ListCallsPParams struct {
-	Start        pgtype.Timestamptz `json:"start"`
-	End          pgtype.Timestamptz `json:"end"`
-	TagsAny      []string           `json:"tagsAny"`
-	TagsNot      []string           `json:"tagsNot"`
-	TGFilter     *string            `json:"tgFilter"`
-	SourceFilter *string            `json:"sourceFilter"`
-	LongerThan   pgtype.Numeric     `json:"longerThan"`
-	UnknownTG    bool               `json:"unknownTg"`
-	Direction    string             `json:"direction"`
-	Offset       int32              `json:"offset"`
-	PerPage      int32              `json:"perPage"`
+	TranscriptSearch *string            `json:"transcriptSearch"`
+	Start            pgtype.Timestamptz `json:"start"`
+	End              pgtype.Timestamptz `json:"end"`
+	TagsAny          []string           `json:"tagsAny"`
+	TagsNot          []string           `json:"tagsNot"`
+	TGFilter         *string            `json:"tgFilter"`
+	SourceFilter     *string            `json:"sourceFilter"`
+	LongerThan       pgtype.Numeric     `json:"longerThan"`
+	UnknownTG        bool               `json:"unknownTg"`
+	Direction        string             `json:"direction"`
+	Offset           int32              `json:"offset"`
+	PerPage          int32              `json:"perPage"`
 }
 
 type ListCallsPRow struct {
@@ -420,12 +436,14 @@ type ListCallsPRow struct {
 	SystemID      int                `json:"systemId"`
 	TGID          int                `json:"tgid"`
 	TalkerAlias   *string            `json:"talkerAlias,omitempty"`
+	Transcript    interface{}        `json:"transcript"`
 	Incidents     int64              `json:"incidents,omitempty,omitzero"`
 	HasTranscript bool               `json:"hasTranscript,omitzero"`
 }
 
 func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error) {
 	rows, err := q.db.Query(ctx, listCallsP,
+		arg.TranscriptSearch,
 		arg.Start,
 		arg.End,
 		arg.TagsAny,
@@ -452,6 +470,7 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 			&i.SystemID,
 			&i.TGID,
 			&i.TalkerAlias,
+			&i.Transcript,
 			&i.Incidents,
 			&i.HasTranscript,
 		); err != nil {
