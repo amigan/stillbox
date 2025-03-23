@@ -1,9 +1,11 @@
 import {
   Component,
+  computed,
   ElementRef,
   inject,
   Sanitizer,
   SecurityContext,
+  signal,
   Signal,
   ViewChild,
 } from '@angular/core';
@@ -64,6 +66,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { PlayerService } from './player/player.service';
 import { DomSanitizer } from '@angular/platform-browser';
 
+const debounceInterval = 300;
+
 const reqPageSize = 200;
 @Component({
   selector: 'app-calls',
@@ -115,12 +119,7 @@ export class CallsComponent {
     'transcript',
     'duration',
   ];
-  getColumns(): string[] {
-    if (this.txSearchSet()) {
-      return this.columns;
-    }
-    return this.columns.filter((tx) => tx != 'transcript');
-  }
+
   curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };
   curLen = 0;
   currentSet!: CallRecord[];
@@ -135,10 +134,21 @@ export class CallsComponent {
     end: new FormControl(null),
     filter: new FormControl(''),
     sourceFilter: new FormControl(''),
-    transcriptSearch: new FormControl<string|null>(null),
+    transcriptSearch: new FormControl<string | null>(null),
     duration: new FormControl(0),
     tagsAny: new FormControl<string[]>([]),
     tagsNot: new FormControl<string[]>([]),
+  });
+  transcriptFilter = toSignal(
+    this.form.controls.transcriptSearch.valueChanges.pipe(
+      debounceTime(debounceInterval),
+    ),
+  );
+  getColumns = computed(() => {
+    if (this.txSearchSet()) {
+      return this.columns;
+    }
+    return this.columns.filter((tx) => tx != 'transcript');
   });
   tableFG = new FormGroup({
     downloadMode: new FormControl<boolean>(false),
@@ -184,7 +194,8 @@ export class CallsComponent {
   }
 
   txSearchSet(): boolean {
-    return this.form.controls['transcriptSearch'].value !== null;
+    let tf = this.transcriptFilter();
+    return tf != null && tf.length > 0;
   }
 
   searchTGFilter(filt: string | null) {
@@ -314,10 +325,12 @@ export class CallsComponent {
   }
 
   ngOnInit() {
-    this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
-      this.currentServerPage = 0;
-      this.setPage(this.zeroPage(), true);
-    });
+    this.form.valueChanges
+      .pipe(debounceTime(debounceInterval))
+      .subscribe(() => {
+        this.currentServerPage = 0;
+        this.setPage(this.zeroPage(), true);
+      });
 
     this.subscriptions.add(
       this.prefsSvc.get('callsPerPage').subscribe((cpp) => {

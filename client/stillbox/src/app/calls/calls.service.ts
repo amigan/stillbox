@@ -77,10 +77,7 @@ export class TimePipe implements PipeTransform {
   pure: true,
 })
 export class TalkgroupPipe implements PipeTransform {
-  constructor(
-    private tgService: TalkgroupService,
-    private playSvc: PlayerService,
-  ) {}
+  constructor(private tgService: TalkgroupService) {}
 
   transform(
     call: CallRecord,
