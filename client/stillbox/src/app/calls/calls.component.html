@@ -122,12 +122,15 @@
 <mat-progress-bar
   [mode]="queryInProgress ? 'query' : 'determinate'"
 ></mat-progress-bar>
-<div
-  class="tabContainer"
-  [formGroup]="tableFG"
-  *ngIf="!isLoading; else spinner"
->
-  <table #callsTable class="callsTable" mat-table [dataSource]="callsResult">
+<div class="tableCont">
+  <table
+    [formGroup]="tableFG"
+    *ngIf="!isLoading; else spinner"
+    #callsTable
+    class="callsTable"
+    mat-table
+    [dataSource]="callsResult"
+  >
     <ng-container matColumnDef="select">
       <th mat-header-cell *matHeaderCellDef>
         <mat-checkbox
