@@ -238,10 +238,16 @@ app-root {
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+  overscroll-behavior: contain;
 }
 
 app-navigation {
   flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+talkgroups {
   display: flex;
   flex-direction: column;
 }
