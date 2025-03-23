@@ -19,6 +19,8 @@ const (
 	PresetReadInSharedIncident = "readInSharedIncident"
 	PresetReadPrivilegedSelf   = "readPrivileged"
 	PresetUpdateSelf           = "updateSelf"
+	PresetTranscribeCallID     = "transcribeCallID"
+	PresetTranscribeSubmitter  = "transcribeSubmitter"
 )
 
 var Policy = &restrict.PolicyDefinition{
@@ -38,7 +40,8 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Preset: PresetUpdateSubmitter},
 					&restrict.Permission{Preset: PresetDeleteSubmitter},
-					&restrict.Permission{Action: entities.ActionShare},
+					&restrict.Permission{Preset: PresetShareSubmitter},
+					&restrict.Permission{Preset: PresetTranscribeSubmitter},
 				},
 				entities.ResourceTalkgroup: {
 					&restrict.Permission{Action: entities.ActionRead},
@@ -105,6 +108,7 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: entities.ActionUpdate},
 					&restrict.Permission{Action: entities.ActionDelete},
 					&restrict.Permission{Action: entities.ActionShare},
+					&restrict.Permission{Action: entities.ActionTranscribe},
 				},
 				entities.ResourceTalkgroup: {
 					&restrict.Permission{Action: entities.ActionRead},
@@ -142,6 +146,14 @@ var Policy = &restrict.PolicyDefinition{
 			Grants: restrict.GrantsMap{
 				entities.ResourceShare: {
 					&restrict.Permission{Action: entities.ActionRead},
+				},
+			},
+		},
+		entities.RoleTranscriber: {
+			Description: "Call transcription service",
+			Grants: restrict.GrantsMap{
+				entities.ResourceCall: {
+					&restrict.Permission{Preset: PresetTranscribeCallID},
 				},
 			},
 		},
@@ -302,6 +314,38 @@ var Policy = &restrict.PolicyDefinition{
 					},
 					Right: &restrict.ValueDescriptor{
 						Source: restrict.ResourceField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetTranscribeCallID: &restrict.Permission{
+			Action: entities.ActionTranscribe,
+			Conditions: restrict.Conditions{
+				&restrict.EqualCondition{
+					ID: "callIDSame",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "CallID",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetTranscribeSubmitter: &restrict.Permission{
+			Action: entities.ActionTranscribe,
+			Conditions: restrict.Conditions{
+				&SubmitterEqualCondition{
+					ID: "isSubmitter",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Submitter",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
 						Field:  "ID",
 					},
 				},

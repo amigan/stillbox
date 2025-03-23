@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"mime"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
@@ -24,7 +26,8 @@ const (
 )
 
 var (
-	ErrNoCall = errors.New("no call specified")
+	ErrNoCall          = errors.New("no call specified")
+	ErrMustBePlaintext = errors.New("content type must be text/plain")
 )
 
 type callsAPI struct {
@@ -34,7 +37,9 @@ func (ca *callsAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
 	r.Get(`/{call:[a-f0-9-]+}`, ca.getAudioRoute)
+	r.Get(`/{call:[a-f0-9-]+}/info`, ca.getCallInfoRoute)
 	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.getAudioRoute)
+	r.Put(`/{call:[a-f0-9-]+}/transcript`, ca.transcriptRoute)
 	r.Post(`/`, ca.listCalls)
 	r.Get(`/stats/{interval}`, ca.getCallStats)
 
@@ -56,6 +61,40 @@ func (ca *callsAPI) getAudioRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ca.getAudio(p, w, r)
+}
+
+func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
+	p := struct {
+		CallID uuid.UUID `param:"call"`
+	}{}
+
+	err := decodeParams(&p, r)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	contentType := strings.Split(r.Header.Get("Content-Type"), ";")[0]
+	if contentType != "text/plain" {
+		wErr(w, r, badRequestErrText(ErrMustBePlaintext))
+		return
+	}
+
+	ctx := r.Context()
+
+	xsc, err := io.ReadAll(r.Body)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	err = callstore.FromCtx(ctx).UpdateTranscription(ctx, p.CallID, strings.Trim(string(xsc), " \t"))
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (ca *callsAPI) getCallStats(w http.ResponseWriter, r *http.Request) {
@@ -126,6 +165,27 @@ func (ca *callsAPI) getAudio(p getAudioParams, w http.ResponseWriter, r *http.Re
 		fmt.Sprintf(`%s; filename="%s"`, disposition, *call.AudioName))
 
 	_, _ = w.Write(call.AudioBlob)
+}
+
+func (ca *callsAPI) getCallInfoRoute(w http.ResponseWriter, r *http.Request) {
+	p := struct {
+		CallID uuid.UUID `param:"call"`
+	}{}
+	err := decodeParams(&p, r)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+	ctx := r.Context()
+	cs := callstore.FromCtx(ctx)
+
+	ci, err := cs.Call(ctx, p.CallID)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, ci)
 }
 
 func (ca *callsAPI) getCallInfo(ctx context.Context, id ID) (SharedItem, error) {

@@ -2,7 +2,9 @@ package audio
 
 import (
 	"bytes"
+	"encoding/binary"
 	"io"
+	"math"
 	"time"
 
 	"github.com/go-audio/wav"
@@ -38,4 +40,23 @@ func WAVDuration(a []byte) (time.Duration, error) {
 	}
 
 	return dur, nil
+}
+
+type Float32Writer struct {
+	f []float32
+}
+
+var _ io.Writer = (*Float32Writer)(nil)
+
+func (f *Float32Writer) Write(in []byte) (int, error) {
+	for i := 0; i < len(in); i += 4 {
+		fl := math.Float32frombits(binary.LittleEndian.Uint32(in[i : i+4]))
+		f.f = append(f.f, fl)
+	}
+
+	return len(in), nil
+}
+
+func (f *Float32Writer) Buffer() []float32 {
+	return f.f
 }

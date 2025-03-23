@@ -15,6 +15,10 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 )
 
+var (
+	RelayUserAgent = version.HttpString("call-relay")
+)
+
 type RelayManager struct {
 	xp     *http.Transport
 	client *http.Client
@@ -100,12 +104,14 @@ func (s *Relay) Call(ctx context.Context, call *calls.Call) error {
 	}
 
 	r.Header.Set("Content-Type", body.FormDataContentType())
-	r.Header.Set("User-Agent", version.HttpString("call-relay"))
+	r.Header.Set("User-Agent", RelayUserAgent)
 
 	resp, err := s.mgr.client.Do(r)
 	if err != nil {
 		return fmt.Errorf("relay %s: %w", s.Name, err)
 	}
+
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		et, _ := io.ReadAll(r.Body)

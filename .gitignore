@@ -7,8 +7,10 @@ client/calls/
 /gordio
 /stillbox
 /calls
+/transcribed
 Session.vim
 *.log
 *.dlv
 cover.out
 backups/
+models/

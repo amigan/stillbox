@@ -1158,6 +1158,69 @@ func (x *ServerInfo) GetDbSize() string {
 	return ""
 }
 
+type CallTranscribeRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Call     *Call  `protobuf:"bytes,1,opt,name=call,proto3" json:"call,omitempty"`
+	Callback string `protobuf:"bytes,2,opt,name=callback,proto3" json:"callback,omitempty"`
+	Token    string `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
+}
+
+func (x *CallTranscribeRequest) Reset() {
+	*x = CallTranscribeRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_stillbox_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CallTranscribeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CallTranscribeRequest) ProtoMessage() {}
+
+func (x *CallTranscribeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_stillbox_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CallTranscribeRequest.ProtoReflect.Descriptor instead.
+func (*CallTranscribeRequest) Descriptor() ([]byte, []int) {
+	return file_stillbox_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *CallTranscribeRequest) GetCall() *Call {
+	if x != nil {
+		return x.Call
+	}
+	return nil
+}
+
+func (x *CallTranscribeRequest) GetCallback() string {
+	if x != nil {
+		return x.Callback
+	}
+	return ""
+}
+
+func (x *CallTranscribeRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
 var File_stillbox_proto protoreflect.FileDescriptor
 
 var file_stillbox_proto_rawDesc = []byte{
@@ -1317,11 +1380,18 @@ var file_stillbox_proto_rawDesc = []byte{
 	0x12, 0x1a, 0x0a, 0x08, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x18, 0x04, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x08, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x12, 0x17, 0x0a, 0x07,
 	0x64, 0x62, 0x5f, 0x73, 0x69, 0x7a, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x64,
-	0x62, 0x53, 0x69, 0x7a, 0x65, 0x2a, 0x37, 0x0a, 0x09, 0x4c, 0x69, 0x76, 0x65, 0x53, 0x74, 0x61,
-	0x74, 0x65, 0x12, 0x0e, 0x0a, 0x0a, 0x4c, 0x53, 0x5f, 0x53, 0x54, 0x4f, 0x50, 0x50, 0x45, 0x44,
-	0x10, 0x00, 0x12, 0x0b, 0x0a, 0x07, 0x4c, 0x53, 0x5f, 0x4c, 0x49, 0x56, 0x45, 0x10, 0x01, 0x12,
-	0x0d, 0x0a, 0x09, 0x4c, 0x53, 0x5f, 0x50, 0x41, 0x55, 0x53, 0x45, 0x44, 0x10, 0x02, 0x42, 0x06,
-	0x5a, 0x04, 0x2e, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x62, 0x53, 0x69, 0x7a, 0x65, 0x22, 0x6d, 0x0a, 0x15, 0x43, 0x61, 0x6c, 0x6c, 0x54, 0x72, 0x61,
+	0x6e, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x22,
+	0x0a, 0x04, 0x63, 0x61, 0x6c, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x73,
+	0x74, 0x69, 0x6c, 0x6c, 0x62, 0x6f, 0x78, 0x2e, 0x43, 0x61, 0x6c, 0x6c, 0x52, 0x04, 0x63, 0x61,
+	0x6c, 0x6c, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x61, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63, 0x61, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x12, 0x14,
+	0x0a, 0x05, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74,
+	0x6f, 0x6b, 0x65, 0x6e, 0x2a, 0x37, 0x0a, 0x09, 0x4c, 0x69, 0x76, 0x65, 0x53, 0x74, 0x61, 0x74,
+	0x65, 0x12, 0x0e, 0x0a, 0x0a, 0x4c, 0x53, 0x5f, 0x53, 0x54, 0x4f, 0x50, 0x50, 0x45, 0x44, 0x10,
+	0x00, 0x12, 0x0b, 0x0a, 0x07, 0x4c, 0x53, 0x5f, 0x4c, 0x49, 0x56, 0x45, 0x10, 0x01, 0x12, 0x0d,
+	0x0a, 0x09, 0x4c, 0x53, 0x5f, 0x50, 0x41, 0x55, 0x53, 0x45, 0x44, 0x10, 0x02, 0x42, 0x06, 0x5a,
+	0x04, 0x2e, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1337,7 +1407,7 @@ func file_stillbox_proto_rawDescGZIP() []byte {
 }
 
 var file_stillbox_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_stillbox_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_stillbox_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_stillbox_proto_goTypes = []interface{}{
 	(LiveState)(0),                // 0: stillbox.LiveState
 	(*Message)(nil),               // 1: stillbox.Message
@@ -1354,8 +1424,9 @@ var file_stillbox_proto_goTypes = []interface{}{
 	(*Filter)(nil),                // 12: stillbox.Filter
 	(*Search)(nil),                // 13: stillbox.Search
 	(*ServerInfo)(nil),            // 14: stillbox.ServerInfo
-	(*timestamppb.Timestamp)(nil), // 15: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),       // 16: google.protobuf.Struct
+	(*CallTranscribeRequest)(nil), // 15: stillbox.CallTranscribeRequest
+	(*timestamppb.Timestamp)(nil), // 16: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),       // 17: google.protobuf.Struct
 }
 var file_stillbox_proto_depIdxs = []int32{
 	2,  // 0: stillbox.Message.response:type_name -> stillbox.CommandResponse
@@ -1365,24 +1436,25 @@ var file_stillbox_proto_depIdxs = []int32{
 	6,  // 4: stillbox.Message.error:type_name -> stillbox.Error
 	4,  // 5: stillbox.Message.hello:type_name -> stillbox.Hello
 	9,  // 6: stillbox.CommandResponse.tg_info:type_name -> stillbox.TalkgroupInfo
-	15, // 7: stillbox.Call.date_time:type_name -> google.protobuf.Timestamp
+	16, // 7: stillbox.Call.date_time:type_name -> google.protobuf.Timestamp
 	14, // 8: stillbox.Hello.server_info:type_name -> stillbox.ServerInfo
 	8,  // 9: stillbox.Error.command:type_name -> stillbox.Command
-	15, // 10: stillbox.Notification.date_time:type_name -> google.protobuf.Timestamp
+	16, // 10: stillbox.Notification.date_time:type_name -> google.protobuf.Timestamp
 	10, // 11: stillbox.Command.live_command:type_name -> stillbox.Live
 	13, // 12: stillbox.Command.search_command:type_name -> stillbox.Search
 	11, // 13: stillbox.Command.tg_command:type_name -> stillbox.Talkgroup
 	11, // 14: stillbox.TalkgroupInfo.tg:type_name -> stillbox.Talkgroup
-	16, // 15: stillbox.TalkgroupInfo.metadata:type_name -> google.protobuf.Struct
+	17, // 15: stillbox.TalkgroupInfo.metadata:type_name -> google.protobuf.Struct
 	0,  // 16: stillbox.Live.state:type_name -> stillbox.LiveState
 	12, // 17: stillbox.Live.filter:type_name -> stillbox.Filter
 	11, // 18: stillbox.Filter.talkgroups:type_name -> stillbox.Talkgroup
 	11, // 19: stillbox.Filter.talkgroups_not:type_name -> stillbox.Talkgroup
-	20, // [20:20] is the sub-list for method output_type
-	20, // [20:20] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	3,  // 20: stillbox.CallTranscribeRequest.call:type_name -> stillbox.Call
+	21, // [21:21] is the sub-list for method output_type
+	21, // [21:21] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_stillbox_proto_init() }
@@ -1559,6 +1631,18 @@ func file_stillbox_proto_init() {
 				return nil
 			}
 		}
+		file_stillbox_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CallTranscribeRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_stillbox_proto_msgTypes[0].OneofWrappers = []interface{}{
 		(*Message_Response)(nil),
@@ -1585,7 +1669,7 @@ func file_stillbox_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_stillbox_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   14,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

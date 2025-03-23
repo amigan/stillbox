@@ -1,4 +1,3 @@
-<!-- ========== HEADER ========== -->
 <app-update-nag></app-update-nag>
 <header class="topHeader">
   <mat-toolbar>
@@ -6,9 +5,7 @@
       <div class="stillboxLogo">
         <a (click)="toggleNav()">Stillbox</a>
       </div>
-      <div class="centerNav">
-        <now-playing></now-playing>
-      </div>
+      <div class="centerNav"></div>
       <div class="rightNav">
         @if (auth.isAuth()) {
           <button class="ybtn sbButton">
@@ -19,13 +16,10 @@
     </div>
   </mat-toolbar>
 </header>
-
-<div class="container">
+<main>
   @if (auth.isAuth()) {
     <app-navigation [events]="toggleNavSubject.asObservable()"></app-navigation>
   } @else {
-    <div class="content">
-      <router-outlet />
-    </div>
+    <router-outlet />
   }
-</div>
+</main>

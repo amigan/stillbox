@@ -67,11 +67,6 @@ html {
 }
 
 @font-face {
-  font-family: "Arcade";
-  src: url("./assets/Arcade.ttf");
-}
-
-@font-face {
   font-family: "Roboto";
   font-style: normal;
   font-weight: 300;
@@ -222,9 +217,45 @@ button.sbButton {
   }
 }
 
+main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+app-calls {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+}
+
+app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+  overscroll-behavior: contain;
+}
+
+app-navigation {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+talkgroups {
+  display: flex;
+  flex-direction: column;
+}
+
+app-shares {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 0;
 }
 
 .sidenav {
@@ -255,4 +286,11 @@ textarea {
 .mat-mdc-menu-item.deleteItem {
   color: white;
   background-color: red;
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100vh;
 }

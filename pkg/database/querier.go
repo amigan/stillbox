@@ -51,7 +51,7 @@ type Querier interface {
 	GetSharesPCount(ctx context.Context, owner *int32) (int64, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
 	GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error)
-	GetTalkgroupIDsByTags(ctx context.Context, anyTags []string, allTags []string, notTags []string) ([]GetTalkgroupIDsByTagsRow, error)
+	GetTalkgroupIDsByTags(ctx context.Context, allTags []string, anyTags []string, notAnyTags []string) ([]GetTalkgroupIDsByTagsRow, error)
 	GetTalkgroupTags(ctx context.Context, systemID int32, tGID int32) ([]string, error)
 	GetTalkgroupWithLearned(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupWithLearnedRow, error)
 	GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAllTagsRow, error)

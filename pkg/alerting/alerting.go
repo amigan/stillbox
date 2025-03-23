@@ -182,7 +182,7 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 		origScore := s.Score
 		tgr, err := as.tgCache.TG(ctx, s.ID)
 		if err != nil {
-			log.Debug().Str("tg", s.ID.String()).Err(err).Msg("alerting eval tg get")
+			log.Error().Str("tg", s.ID.String()).Err(err).Msg("alerting eval tg get")
 			continue
 		}
 

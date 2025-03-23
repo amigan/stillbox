@@ -3,9 +3,10 @@ module dynatron.me/x/stillbox
 go 1.24.1
 
 require (
-	dynatron.me/x/go-minimp3 v0.0.0-20240805171536-7ea857e216d6
+	dynatron.me/x/go-minimp3 v0.0.0-20250314003403-7c2c5bbc9d65
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/el-mike/restrict/v2 v2.0.0
+	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20250308131301-7d1400571779
 	github.com/go-audio/wav v1.1.0
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/cors v1.2.1
@@ -53,6 +54,7 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/knadh/koanf/maps v0.1.1 // indirect
+	github.com/knadh/koanf/providers/posflag v0.1.0 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.2 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
 	github.com/lestrrat-go/httprc v1.0.6 // indirect
@@ -65,6 +67,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
+	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	go.uber.org/atomic v1.11.0 // indirect

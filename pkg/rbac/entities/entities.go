@@ -6,15 +6,17 @@ import (
 	"net/http"
 
 	"github.com/el-mike/restrict/v2"
+	"github.com/google/uuid"
 )
 
 const (
-	RoleUser       = "User"
-	RoleSubmitter  = "Submitter"
-	RoleAdmin      = "Admin"
-	RoleSystem     = "System"
-	RolePublic     = "Public"
-	RoleShareGuest = "ShareGuest"
+	RoleUser        = "User"
+	RoleSubmitter   = "Submitter"
+	RoleAdmin       = "Admin"
+	RoleSystem      = "System"
+	RolePublic      = "Public"
+	RoleShareGuest  = "ShareGuest"
+	RoleTranscriber = "Transcriber"
 
 	ResourceCall      = "Call"
 	ResourceIncident  = "Incident"
@@ -33,6 +35,7 @@ const (
 	ActionDelete           = "delete"
 	ActionShare            = "share"
 	ActionUpdatePrivileged = "updatePrivileged"
+	ActionTranscribe       = "updateTranscription"
 )
 
 func SubjectFrom(ctx context.Context) Subject {
@@ -100,6 +103,22 @@ func (s *SystemServiceSubject) String() string {
 
 func (s *SystemServiceSubject) GetRoles() []string {
 	return []string{RoleSystem}
+}
+
+type CallSubject struct {
+	CallID uuid.UUID
+}
+
+func (s *CallSubject) GetRoles() []string {
+	return []string{RoleTranscriber}
+}
+
+func (s *CallSubject) GetName() string {
+	return "TRANSCRIBER:" + s.CallID.String()
+}
+
+func (s *CallSubject) String() string {
+	return s.GetName()
 }
 
 func IsSystemService(sub Subject) bool {

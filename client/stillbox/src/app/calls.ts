@@ -6,6 +6,7 @@ export interface CallRecord {
   systemId: number;
   talkerAlias: string | null;
   tgid: number;
+  transcript: string | null;
   incidents: number; // in incident
 }
 

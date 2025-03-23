@@ -111,7 +111,7 @@ func (c *client) Live(ctx context.Context, cmd *pb.Live) error {
 	}
 
 	if cmd.Filter != nil {
-		filter, err := tgfilter.TalkgroupFilterFromPB(ctx, cmd.Filter)
+		filter, err := tgfilter.FromProtobuf(ctx, cmd.Filter)
 		if err != nil {
 			log.Error().Err(err).Msg("filter create failed")
 			return err

@@ -196,9 +196,10 @@ func (q *Queries) GetTalkgroup(ctx context.Context, systemID int32, tGID int32) 
 
 const getTalkgroupIDsByTags = `-- name: GetTalkgroupIDsByTags :many
 SELECT system_id, tgid FROM talkgroups
-WHERE (tags @> ARRAY[$1])
-AND (tags && ARRAY[$2])
-AND NOT (tags @> ARRAY[$3])
+WHERE
+((tags @> $1::TEXT[])
+OR (tags && $2::TEXT[]))
+AND (NOT (tags && $3::TEXT[]))
 `
 
 type GetTalkgroupIDsByTagsRow struct {
@@ -206,8 +207,8 @@ type GetTalkgroupIDsByTagsRow struct {
 	TGID     int32 `json:"tgid"`
 }
 
-func (q *Queries) GetTalkgroupIDsByTags(ctx context.Context, anyTags []string, allTags []string, notTags []string) ([]GetTalkgroupIDsByTagsRow, error) {
-	rows, err := q.db.Query(ctx, getTalkgroupIDsByTags, anyTags, allTags, notTags)
+func (q *Queries) GetTalkgroupIDsByTags(ctx context.Context, allTags []string, anyTags []string, notAnyTags []string) ([]GetTalkgroupIDsByTagsRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupIDsByTags, allTags, anyTags, notAnyTags)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +229,7 @@ func (q *Queries) GetTalkgroupIDsByTags(ctx context.Context, anyTags []string, a
 
 const getTalkgroupTags = `-- name: GetTalkgroupTags :one
 SELECT tags FROM talkgroups
-WHERE system_id = $1 AND tgid = $2
+WHERE (system_id, tgid) = ($1, $2)
 `
 
 func (q *Queries) GetTalkgroupTags(ctx context.Context, systemID int32, tGID int32) ([]string, error) {
@@ -277,7 +278,7 @@ func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int32, t
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
 SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_rules, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
-WHERE tags && ARRAY[$1]
+WHERE tags @> ARRAY[$1]
 `
 
 type GetTalkgroupsWithAllTagsRow struct {
@@ -321,7 +322,7 @@ func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) (
 
 const getTalkgroupsWithAnyTags = `-- name: GetTalkgroupsWithAnyTags :many
 SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_rules, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
-WHERE tags @> ARRAY[$1]
+WHERE tags && ARRAY[$1]
 `
 
 type GetTalkgroupsWithAnyTagsRow struct {
@@ -732,7 +733,7 @@ func (q *Queries) RestoreTalkgroupVersion(ctx context.Context, versionIds int) (
 
 const setTalkgroupTags = `-- name: SetTalkgroupTags :exec
 UPDATE talkgroups SET tags = $1
-WHERE system_id = $2 AND tgid = $3
+WHERE (system_id, tgid) = ($2, $3)
 `
 
 func (q *Queries) SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error {

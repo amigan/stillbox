@@ -37,28 +37,29 @@ import (
 const shutdownTimeout = 5 * time.Second
 
 type Server struct {
-	auth      *auth.Auth
-	conf      *config.Configuration
-	db        database.Store
-	r         *chi.Mux
-	sources   sources.Sources
-	sinks     sinks.Sinks
-	relayer   *sinks.RelayManager
-	nex       *nexus.Nexus
-	logger    *Logger
-	alerter   alerting.Alerter
-	notifier  notify.Notifier
-	hup       chan os.Signal
-	tgs       tgstore.Store
-	rest      rest.APIRoot
-	partman   partman.PartitionManager
-	users     users.Store
-	calls     callstore.Store
-	incidents incstore.Store
-	share     shares.Service
-	rbac      rbac.RBAC
-	stats     stats.Stats
-	settings  settings.Store
+	auth        *auth.Auth
+	conf        *config.Configuration
+	db          database.Store
+	r           *chi.Mux
+	sources     sources.Sources
+	sinks       sinks.Sinks
+	relayer     *sinks.RelayManager
+	transcriber *sinks.TranscriptionManager
+	nex         *nexus.Nexus
+	logger      *Logger
+	alerter     alerting.Alerter
+	notifier    notify.Notifier
+	hup         chan os.Signal
+	tgs         tgstore.Store
+	rest        rest.APIRoot
+	partman     partman.PartitionManager
+	users       users.Store
+	calls       callstore.Store
+	incidents   incstore.Store
+	share       shares.Service
+	rbac        rbac.RBAC
+	stats       stats.Stats
+	settings    settings.Store
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
@@ -142,6 +143,13 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	}
 
 	srv.relayer = relayer
+
+	transcriber, err := sinks.NewTranscriptionManager(srv.sinks, authenticator, cfg.Transcription)
+	if err != nil {
+		return nil, err
+	}
+
+	srv.transcriber = transcriber
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)

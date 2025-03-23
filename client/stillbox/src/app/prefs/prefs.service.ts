@@ -100,7 +100,6 @@ export class PrefsService {
       this._getPref.set(pref, ex);
       ex.next(value);
     }
-    console.log('gonna up');
     this.http
       .put<Preferences>('/api/prefs/stillbox', this.last.userPrefs)
       .subscribe((ev) => {});

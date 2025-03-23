@@ -53,3 +53,6 @@ test:
 
 run:
 	go run -v ./cmd/stillbox/ serve
+
+buildtranscribed:
+	go build -o transcribed ${GOFLAGS} ${LDFLAGS} ./cmd/transcribed/

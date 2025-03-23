@@ -5,20 +5,20 @@
 table,
 .callsTable {
   width: 100%;
+  overflow: scroll;
+}
+
+.tableCont {
+  overflow: scroll;
+  flex: 1 0 0;
+}
+
+.pagFoot {
+  flex: 0 0 0;
 }
 
 .duration {
   justify-content: center;
-}
-
-.tabContainer {
-  max-height: calc(
-    (
-        100vh - var(--mat-mat-maginator-container-size, 56px) - 2 *
-          (var(--mat-toolbar-standard-height, 64px))
-      ) + 7px
-  );
-  overflow: auto;
 }
 
 .toolbarButtons button,
@@ -67,6 +67,7 @@ tr.mat-mdc-row {
 
   .mat-column-group,
   .mat-column-system,
+  .mat-column-transcript,
   .mat-column-date {
     display: none;
   }
@@ -88,7 +89,7 @@ form {
 }
 
 .filterBox {
-  flex: 1 2 150px;
+  flex: 1 0 80px;
 }
 
 .durationFilter {
