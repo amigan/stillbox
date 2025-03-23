@@ -79,10 +79,10 @@
       />
       <button
         class="clearBtn"
-        *ngIf="form.controls['filter'].value"
+        *ngIf="form.controls['transcriptSearch'].value !== null"
         matSuffix
         mat-icon-button
-        (click)="form.controls['filter'].setValue('')"
+        (click)="form.controls['transcriptSearch'].setValue(null)"
       >
         <mat-icon>close</mat-icon>
       </button>
