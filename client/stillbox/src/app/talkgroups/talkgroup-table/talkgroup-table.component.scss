@@ -10,8 +10,7 @@ table {
     (
         100vh - var(--mat-mat-maginator-container-size, 56px) - 2 *
           (var(--mat-toolbar-standard-height, 64px))
-      ) +
-      7px
+      ) + 7px
   );
   overflow: auto;
 }
