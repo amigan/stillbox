@@ -135,7 +135,7 @@ export class CallsComponent {
     end: new FormControl(null),
     filter: new FormControl(''),
     sourceFilter: new FormControl(''),
-    transcriptSearch: new FormControl(null),
+    transcriptSearch: new FormControl<string|null>(null),
     duration: new FormControl(0),
     tagsAny: new FormControl<string[]>([]),
     tagsNot: new FormControl<string[]>([]),
