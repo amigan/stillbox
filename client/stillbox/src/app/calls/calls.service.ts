@@ -44,6 +44,17 @@ export class TalkerPipe implements PipeTransform {
 }
 
 @Pipe({
+  name: 'transcript',
+  standalone: true,
+  pure: true,
+})
+export class TranscriptPipe implements PipeTransform {
+  transform(call: CallRecord, args?: any): string | null {
+    return call.transcript;
+  }
+}
+
+@Pipe({
   name: 'time',
   standalone: true,
   pure: true,
@@ -189,6 +200,7 @@ export interface CallsListParams {
   tgFilter: string | null;
   sourceFilter: string | null;
   atLeastSeconds: number | null;
+  transcriptSearch: string | null;
 }
 
 export interface CallsPaginated {

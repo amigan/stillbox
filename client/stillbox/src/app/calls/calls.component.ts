@@ -2,6 +2,8 @@ import {
   Component,
   ElementRef,
   inject,
+  Sanitizer,
+  SecurityContext,
   Signal,
   ViewChild,
 } from '@angular/core';
@@ -28,6 +30,7 @@ import {
   TalkerPipe,
   TalkgroupPipe,
   TimePipe,
+  TranscriptPipe,
 } from './calls.service';
 import { CallRecord } from '../calls';
 
@@ -59,6 +62,7 @@ import { SelectIncidentDialogComponent } from '../incidents/select-incident-dial
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PlayerService } from './player/player.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 const reqPageSize = 200;
 @Component({
@@ -68,6 +72,7 @@ const reqPageSize = 200;
     FixedPointPipe,
     TalkgroupPipe,
     TalkerPipe,
+    TranscriptPipe,
     TimePipe,
     DatePipe,
     MatPaginatorModule,
@@ -107,8 +112,15 @@ export class CallsComponent {
     'group',
     'talkgroup',
     'talker',
+    'transcript',
     'duration',
   ];
+  getColumns(): string[] {
+    if (this.txSearchSet()) {
+      return this.columns;
+    }
+    return this.columns.filter((tx) => tx != 'transcript');
+  }
   curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };
   curLen = 0;
   currentSet!: CallRecord[];
@@ -123,6 +135,7 @@ export class CallsComponent {
     end: new FormControl(null),
     filter: new FormControl(''),
     sourceFilter: new FormControl(''),
+    transcriptSearch: new FormControl(null),
     duration: new FormControl(0),
     tagsAny: new FormControl<string[]>([]),
     tagsNot: new FormControl<string[]>([]),
@@ -151,6 +164,7 @@ export class CallsComponent {
   constructor(
     private callsSvc: CallsService,
     private prefsSvc: PrefsService,
+    private sanitizer: DomSanitizer,
     public tcSvc: ToolbarContextService,
     public tgSvc: TalkgroupService,
     public incSvc: IncidentsService,
@@ -159,10 +173,18 @@ export class CallsComponent {
     this.tcSvc.showFilterButton();
   }
 
+  sanitize(s: string): string | null {
+    return this.sanitizer.sanitize(SecurityContext.HTML, s);
+  }
+
   isAllSelected() {
     const numSelected = this.selection.selected.length;
     const numRows = this.curLen;
     return numSelected === numRows;
+  }
+
+  txSearchSet(): boolean {
+    return this.form.controls['transcriptSearch'].value !== null;
   }
 
   searchTGFilter(filt: string | null) {
@@ -202,6 +224,10 @@ export class CallsComponent {
       sourceFilter:
         this.form.controls['sourceFilter'].value != ''
           ? this.form.controls['sourceFilter'].value
+          : null,
+      transcriptSearch:
+        this.form.controls['transcriptSearch'].value != ''
+          ? this.form.controls['transcriptSearch'].value
           : null,
       atLeastSeconds:
         this.form.controls['duration'].value != null &&
