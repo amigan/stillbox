@@ -201,14 +201,15 @@ type CallsParams struct {
 	common.Pagination
 	Direction *common.SortDirection `json:"dir"`
 
-	Start          *jsontypes.Time   `json:"start"`
-	End            *jsontypes.Time   `json:"end"`
-	TagsAny        []string          `json:"tagsAny"`
-	TagsNot        []string          `json:"tagsNot"`
-	TGFilter       *jsontypes.String `json:"tgFilter"`
-	SourceFilter   *string           `json:"sourceFilter"`
-	AtLeastSeconds *float32          `json:"atLeastSeconds"`
-	UnknownTG      bool              `json:"unknownTG"`
+	Start            *jsontypes.Time   `json:"start"`
+	End              *jsontypes.Time   `json:"end"`
+	TagsAny          []string          `json:"tagsAny"`
+	TagsNot          []string          `json:"tagsNot"`
+	TGFilter         *jsontypes.String `json:"tgFilter"`
+	SourceFilter     *string           `json:"sourceFilter"`
+	AtLeastSeconds   *float32          `json:"atLeastSeconds"`
+	UnknownTG        bool              `json:"unknownTG"`
+	TranscriptSearch *string           `json:"transcriptSearch"`
 }
 
 func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
@@ -221,16 +222,17 @@ func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []databa
 
 	offset, perPage := p.Pagination.OffsetPerPage(100)
 	par := database.ListCallsPParams{
-		Start:        p.Start.PGTypeTSTZ(),
-		End:          p.End.PGTypeTSTZ(),
-		TagsAny:      p.TagsAny,
-		TagsNot:      p.TagsNot,
-		Offset:       offset,
-		PerPage:      perPage,
-		Direction:    p.Direction.DirString(common.DirAsc),
-		TGFilter:     p.TGFilter.StringPtr(),
-		SourceFilter: p.SourceFilter,
-		UnknownTG:    p.UnknownTG,
+		Start:            p.Start.PGTypeTSTZ(),
+		End:              p.End.PGTypeTSTZ(),
+		TagsAny:          p.TagsAny,
+		TagsNot:          p.TagsNot,
+		Offset:           offset,
+		PerPage:          perPage,
+		Direction:        p.Direction.DirString(common.DirAsc),
+		TGFilter:         p.TGFilter.StringPtr(),
+		SourceFilter:     p.SourceFilter,
+		UnknownTG:        p.UnknownTG,
+		TranscriptSearch: p.TranscriptSearch,
 	}
 
 	if p.AtLeastSeconds != nil {
@@ -246,14 +248,15 @@ func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []databa
 	txErr := db.InTx(ctx, func(db database.Store) error {
 		var err error
 		count, err = db.ListCallsCount(ctx, database.ListCallsCountParams{
-			Start:        par.Start,
-			End:          par.End,
-			TagsAny:      par.TagsAny,
-			TagsNot:      par.TagsNot,
-			TGFilter:     par.TGFilter,
-			SourceFilter: p.SourceFilter,
-			LongerThan:   par.LongerThan,
-			UnknownTG:    par.UnknownTG,
+			Start:            par.Start,
+			End:              par.End,
+			TagsAny:          par.TagsAny,
+			TagsNot:          par.TagsNot,
+			TGFilter:         par.TGFilter,
+			SourceFilter:     p.SourceFilter,
+			LongerThan:       par.LongerThan,
+			UnknownTG:        par.UnknownTG,
+			TranscriptSearch: par.TranscriptSearch,
 		})
 		if err != nil {
 			return err

@@ -106,6 +106,13 @@ c.duration,
 c.system system_id,
 c.talkgroup tgid,
 c.talker_alias,
+(CASE
+	WHEN sqlc.narg('transcript_search')::TEXT = '' THEN c.transcript
+	WHEN @transcript_search IS NOT NULL THEN 
+	ts_headline(c.transcript,
+		websearch_to_tsquery('english', @transcript_search),
+		'HighlightAll=true')
+	ELSE NULL END) transcript,
 COUNT(ic.incident_id) incidents,
 (c.transcript IS NOT NULL)::BOOLEAN has_transcript
 FROM calls c
@@ -133,6 +140,9 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN @unknown_tg::BOOLEAN = TRUE THEN (
 	tgs.tgid IS NULL
+	) ELSE TRUE END) AND
+(CASE WHEN sqlc.narg('transcript_search')::TEXT IS NOT NULL AND @transcript_search != '' THEN (
+	to_tsvector('english', c.transcript) @@ websearch_to_tsquery('english', @transcript_search)
 	) ELSE TRUE END)
 GROUP BY c.id, c.call_date
 ORDER BY
@@ -169,6 +179,9 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN @unknown_tg::BOOLEAN = TRUE THEN (
 	tgs.tgid IS NULL
+	) ELSE TRUE END) AND
+(CASE WHEN sqlc.narg('transcript_search')::TEXT IS NOT NULL THEN (
+	to_tsvector('english', transcript) @@ websearch_to_tsquery('english', @transcript_search)
 	) ELSE TRUE END)
 ;
 
