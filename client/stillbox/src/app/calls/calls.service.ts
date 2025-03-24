@@ -28,18 +28,24 @@ export class DatePipe implements PipeTransform {
   }
 }
 
+export interface Talker {
+  talkerAlias: string | null;
+  source: number | null;
+}
+
 @Pipe({
   name: 'talker',
   standalone: true,
   pure: true,
 })
 export class TalkerPipe implements PipeTransform {
-  transform(call: CallRecord, args?: any): string | null {
-    if (call.talkerAlias != null) {
-      return call.talkerAlias;
-    }
+  transform(call: CallRecord, args?: any): Talker {
+    let r = <Talker>{
+      talkerAlias: call.talkerAlias,
+      source: call.source,
+    };
 
-    return null;
+    return r;
   }
 }
 

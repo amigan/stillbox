@@ -225,15 +225,20 @@
       <th mat-header-cell *matHeaderCellDef>Source</th>
       <td mat-cell *matCellDef="let call">
         @let tlkAlias = call | talker;
-        @if (tlkAlias) {
+        @if (tlkAlias.talkerAlias) {
           <a
             href="javascript:void(0)"
             class="srcFilter"
-            (click)="searchSrcFilter(tlkAlias)"
-            >{{ tlkAlias }}</a
+            (click)="searchSrcFilter(tlkAlias.talkerAlias)"
+            [title]="tlkAlias.source ? tlkAlias.source : null"
+            >{{ tlkAlias.talkerAlias }}</a
           >
         } @else {
-          &mdash;
+          @if (tlkAlias.source) {
+            <em class="uid">{{ tlkAlias.source }}</em>
+          } @else {
+            &mdash;
+          }
         }
       </td>
     </ng-container>
