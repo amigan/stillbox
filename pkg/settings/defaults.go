@@ -16,5 +16,6 @@ func MustMarshal(s any) json.RawMessage {
 var ConfigDefaults = Defaults{
 	prefsName("stillbox"): MustMarshal(Defaults{
 		"calls.view.showSourceAlias": false,
+		"calls.view.showTranscripts": false,
 	}),
 }
