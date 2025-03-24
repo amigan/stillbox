@@ -22,7 +22,7 @@ import { PrefsService } from '../prefs/prefs.service';
 import { MatIconModule } from '@angular/material/icon';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import {
   CallsListParams,
@@ -122,6 +122,7 @@ export class CallsComponent {
 
   curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };
   curLen = 0;
+  showTranscripts!: Observable<boolean>;
   currentSet!: CallRecord[];
   currentServerPage = 0; // page is never 0, forces load
   isLoading = true;
@@ -351,6 +352,7 @@ export class CallsComponent {
         }
       }),
     );
+    this.showTranscripts = this.prefsSvc.get('calls.view.showTranscripts');
     this.subscriptions.add(
       this.fetchCalls
         .pipe(
