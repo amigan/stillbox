@@ -106,6 +106,7 @@ c.duration,
 c.system system_id,
 c.talkgroup tgid,
 c.talker_alias,
+c.source,
 (CASE
 	WHEN sqlc.narg('transcript_search')::TEXT = '' THEN c.transcript
 	WHEN @transcript_search IS NOT NULL THEN 
