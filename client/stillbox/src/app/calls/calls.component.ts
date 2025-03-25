@@ -382,7 +382,7 @@ export class CallsComponent {
     this.subscriptions.add(
       this.callsResult.subscribe((cr) => {
         this.curLen = cr.length;
-        this.playerSvc.results = cr;
+        this.playerSvc.setQueue(cr);
       }),
     );
   }
