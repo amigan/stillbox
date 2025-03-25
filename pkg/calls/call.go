@@ -56,10 +56,7 @@ type CallAudio struct {
 	AudioBlob []byte         `json:"audioBlob"`
 }
 
-// The tags here are snake_case for compatibility with sqlc generated
-// struct tags in ListCallsPRow. This allows the heavier-weight calls
-// queries/endpoints to render DB output directly to the wire without
-// further transformation. relayOut exists for compatibility with http
+// relayOut exists for compatibility with http
 // source CallUploadRequest as used in the relay sink.
 type Call struct {
 	ID             uuid.UUID     `json:"id" relayOut:"id"`
@@ -68,7 +65,7 @@ type Call struct {
 	AudioType      string        `json:"audioType,omitempty" relayOut:"audioType,omitempty"`
 	AudioURL       *string       `json:"audioURL,omitempty" relayOut:"audioURL,omitempty"`
 	Duration       CallDuration  `json:"duration,omitempty" relayOut:"duration,omitempty"`
-	DateTime       time.Time     `json:"callDate,omitempty" relayOut:"dateTime,omitempty"`
+	DateTime       time.Time     `json:"callDate,omitzero" relayOut:"dateTime,omitzero"`
 	Frequencies    []int         `json:"frequencies,omitempty" relayOut:"frequencies,omitempty"`
 	Frequency      int           `json:"frequency,omitempty" relayOut:"frequency,omitempty"`
 	Patches        []int         `json:"patches,omitempty" relayOut:"patches,omitempty"`
