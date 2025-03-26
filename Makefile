@@ -1,7 +1,9 @@
 VPKG=dynatron.me/x/stillbox/internal/version
 VER!=git describe --tags --always --dirty
 BUILDDATE!=date '+%Y%m%d'
-LDFLAGS=-ldflags="-X '${VPKG}.Version=${VER}' -X '${VPKG}.Built=${BUILDDATE}'"
+
+VERSION_LDF=-X '${VPKG}.Version=${VER}' -X '${VPKG}.Built=${BUILDDATE}
+LDFLAGS=-ldflags="${VERSION_LDF}"
 GOFLAGS=-v
 
 all: client/stillbox/dist
@@ -54,5 +56,5 @@ test:
 run:
 	go run -v ./cmd/stillbox/ serve
 
-buildtranscribed:
-	go build -o transcribed ${GOFLAGS} ${LDFLAGS} ./cmd/transcribed/
+transcribe:
+	@sh cmd/transcribed/build.sh ${VER} ${BUILDDATE}
