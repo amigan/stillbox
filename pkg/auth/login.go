@@ -62,7 +62,7 @@ func (a *Auth) Login(ctx context.Context, username, password, source string) (to
 	ust := users.FromCtx(ctx)
 	user, err := ust.GetUser(ctx, username)
 	if err != nil || user == nil {
-		log.Error().Err(err).Msg("getUsers failed")
+		log.Error().Str("username", username).Err(err).Msg("getUsers failed")
 		_ = bcrypt.CompareHashAndPassword([]byte("thisPreventsTimingAttacks"), []byte(password))
 		return "", ErrLoginFailed
 	}
