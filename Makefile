@@ -1,9 +1,7 @@
 VPKG=dynatron.me/x/stillbox/internal/version
 VER!=git describe --tags --always --dirty
 BUILDDATE!=date '+%Y%m%d'
-
-VERSION_LDF=-X '${VPKG}.Version=${VER}' -X '${VPKG}.Built=${BUILDDATE}
-LDFLAGS=-ldflags="${VERSION_LDF}"
+LDFLAGS=-ldflags="-X '${VPKG}.Version=${VER}' -X '${VPKG}.Built=${BUILDDATE}'"
 GOFLAGS=-v
 
 all: client/stillbox/dist
