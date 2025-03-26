@@ -34,7 +34,7 @@ func (o *options) marshalMultipartForm(src any, dest *multipart.Writer) error {
 
 func (o *options) marIterFields(srcVal reflect.Value, dest *multipart.Writer) error {
 	structType := srcVal.Type()
-	for i := 0; i < structType.NumField(); i++ {
+	for i := range structType.NumField() {
 		srcFieldVal := srcVal.Field(i)
 		fieldType := structType.Field(i)
 		if !fieldType.IsExported() && !fieldType.Anonymous {
@@ -57,7 +57,7 @@ func (o *options) marIterFields(srcVal reflect.Value, dest *multipart.Writer) er
 			tAr = strings.Split(formTag, ",")
 			formField = tAr[0]
 			for _, v := range tAr[1:] {
-				if v == "omitempty" {
+				if v == "omitempty" || v == "omitzero" {
 					omitEmpty = true
 					break
 				}

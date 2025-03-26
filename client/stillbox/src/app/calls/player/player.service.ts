@@ -38,13 +38,17 @@ export class PlayerService {
   public playing = signal<CallRecord | null>(null);
   public paused = signal<boolean>(false);
   stack = new Stack<CallRecord>();
-  results = <CallRecord[]>[];
+  private results = <CallRecord[]>[];
 
   constructor(private callsSvc: CallsService) {
     this.au = new Audio();
     this.playSub = fromEvent(this.au, 'ended').subscribe((ev) =>
       this.playNext(),
     );
+  }
+
+  setQueue(c: CallRecord[]) {
+    this.results = c;
   }
 
   playNext() {

@@ -1,9 +1,11 @@
 import {
   Component,
+  computed,
   ElementRef,
   inject,
   Sanitizer,
   SecurityContext,
+  signal,
   Signal,
   ViewChild,
 } from '@angular/core';
@@ -20,7 +22,7 @@ import { PrefsService } from '../prefs/prefs.service';
 import { MatIconModule } from '@angular/material/icon';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import {
   CallsListParams,
@@ -63,6 +65,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PlayerService } from './player/player.service';
 import { DomSanitizer } from '@angular/platform-browser';
+
+const debounceInterval = 300;
 
 const reqPageSize = 200;
 @Component({
@@ -115,14 +119,10 @@ export class CallsComponent {
     'transcript',
     'duration',
   ];
-  getColumns(): string[] {
-    if (this.txSearchSet()) {
-      return this.columns;
-    }
-    return this.columns.filter((tx) => tx != 'transcript');
-  }
+
   curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };
   curLen = 0;
+  showTranscripts!: Observable<boolean>;
   currentSet!: CallRecord[];
   currentServerPage = 0; // page is never 0, forces load
   isLoading = true;
@@ -135,10 +135,21 @@ export class CallsComponent {
     end: new FormControl(null),
     filter: new FormControl(''),
     sourceFilter: new FormControl(''),
-    transcriptSearch: new FormControl<string|null>(null),
+    transcriptSearch: new FormControl<string | null>(null),
     duration: new FormControl(0),
     tagsAny: new FormControl<string[]>([]),
     tagsNot: new FormControl<string[]>([]),
+  });
+  transcriptFilter = toSignal(
+    this.form.controls.transcriptSearch.valueChanges.pipe(
+      debounceTime(debounceInterval),
+    ),
+  );
+  getColumns = computed(() => {
+    if (this.txSearchSet()) {
+      return this.columns;
+    }
+    return this.columns.filter((tx) => tx != 'transcript');
   });
   tableFG = new FormGroup({
     downloadMode: new FormControl<boolean>(false),
@@ -184,7 +195,8 @@ export class CallsComponent {
   }
 
   txSearchSet(): boolean {
-    return this.form.controls['transcriptSearch'].value !== null;
+    let tf = this.transcriptFilter();
+    return tf != null && tf.length > 0;
   }
 
   searchTGFilter(filt: string | null) {
@@ -314,10 +326,12 @@ export class CallsComponent {
   }
 
   ngOnInit() {
-    this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
-      this.currentServerPage = 0;
-      this.setPage(this.zeroPage(), true);
-    });
+    this.form.valueChanges
+      .pipe(debounceTime(debounceInterval))
+      .subscribe(() => {
+        this.currentServerPage = 0;
+        this.setPage(this.zeroPage(), true);
+      });
 
     this.subscriptions.add(
       this.prefsSvc.get('callsPerPage').subscribe((cpp) => {
@@ -338,6 +352,7 @@ export class CallsComponent {
         }
       }),
     );
+    this.showTranscripts = this.prefsSvc.get('calls.view.showTranscripts');
     this.subscriptions.add(
       this.fetchCalls
         .pipe(
@@ -367,7 +382,7 @@ export class CallsComponent {
     this.subscriptions.add(
       this.callsResult.subscribe((cr) => {
         this.curLen = cr.length;
-        this.playerSvc.results = cr;
+        this.playerSvc.setQueue(cr);
       }),
     );
   }

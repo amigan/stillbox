@@ -54,5 +54,5 @@ test:
 run:
 	go run -v ./cmd/stillbox/ serve
 
-buildtranscribed:
-	go build -o transcribed ${GOFLAGS} ${LDFLAGS} ./cmd/transcribed/
+transcribe:
+	@sh cmd/transcribed/build.sh ${VER} ${BUILDDATE}

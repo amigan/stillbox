@@ -368,6 +368,7 @@ c.duration,
 c.system system_id,
 c.talkgroup tgid,
 c.talker_alias,
+c.source,
 (CASE
 	WHEN $1::TEXT = '' THEN c.transcript
 	WHEN $1 IS NOT NULL THEN 
@@ -436,7 +437,8 @@ type ListCallsPRow struct {
 	SystemID      int                `json:"systemId"`
 	TGID          int                `json:"tgid"`
 	TalkerAlias   *string            `json:"talkerAlias,omitempty"`
-	Transcript    interface{}        `json:"transcript"`
+	Source        int                `json:"source,omitzero"`
+	Transcript    interface{}        `json:"transcript,omitempty"`
 	Incidents     int64              `json:"incidents,omitempty,omitzero"`
 	HasTranscript bool               `json:"hasTranscript,omitzero"`
 }
@@ -470,6 +472,7 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 			&i.SystemID,
 			&i.TGID,
 			&i.TalkerAlias,
+			&i.Source,
 			&i.Transcript,
 			&i.Incidents,
 			&i.HasTranscript,

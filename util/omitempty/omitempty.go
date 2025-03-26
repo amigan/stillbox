@@ -25,20 +25,25 @@ const (
 var filePaths = FileMap{
 	"./pkg/database/models.go": AllFields(OmitEmpty),
 	"./pkg/database/calls.sql.go": FieldMap{
-		"TalkerAlias":   OmitEmpty,
-		"Incidents":     OmitEmpty | OmitZero,
-		"HasTranscript": OmitZero,
+		"TalkerAlias":              OmitEmpty,
+		"Incidents":                OmitEmpty | OmitZero,
+		"HasTranscript":            OmitZero,
+		"ListCallsPRow:Source":     OmitZero,
+		"ListCallsPRow:Transcript": OmitEmpty,
 	},
 }
 
 type FieldDecider interface {
-	Check(fields []*ast.Ident) FieldTag
+	Check(typeName string, fields []*ast.Ident) FieldTag
 }
 
 type FieldMap map[string]FieldTag
 
-func (fm FieldMap) Check(f []*ast.Ident) FieldTag {
+func (fm FieldMap) Check(typeName string, f []*ast.Ident) FieldTag {
 	for _, v := range f {
+		if v != nil && fm[typeName+":"+v.Name] != NotSet {
+			return fm[typeName+":"+v.Name]
+		}
 		if v != nil && fm[v.Name] != NotSet {
 			return fm[v.Name]
 		}
@@ -49,7 +54,7 @@ func (fm FieldMap) Check(f []*ast.Ident) FieldTag {
 
 type AllFields FieldTag
 
-func (a AllFields) Check(_ []*ast.Ident) FieldTag {
+func (a AllFields) Check(_ string, _ []*ast.Ident) FieldTag {
 	return FieldTag(a)
 }
 
@@ -68,11 +73,14 @@ func process(filePath string, fd FieldDecider) {
 	}
 
 	// Modify the AST
+	var lastTypeName string
 	ast.Inspect(f, func(n ast.Node) bool {
 		switch x := n.(type) {
+		case *ast.TypeSpec:
+			lastTypeName = x.Name.Name
 		case *ast.StructType:
 			for _, field := range x.Fields.List {
-				res := fd.Check(field.Names)
+				res := fd.Check(lastTypeName, field.Names)
 				if res == NotSet {
 					continue
 				}

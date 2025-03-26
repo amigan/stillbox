@@ -10,6 +10,11 @@ Primary differences:
  - [x] Backend written as if Go is actually a typed language
 
    I never would have started this project if existing projects were this way, as modifying them would have been far easier.
+   
+ - [x] Call transcription using whisper.cpp.
+
+   Just setup `transcribed` on a machine with a GPU (even the same machine) and point stillbox to it for call transcriptions.
+   Then, use full-text search on the transcriptions in the database!
 
  - [x] No directory watch source, for now
  

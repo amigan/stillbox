@@ -89,7 +89,15 @@ form {
 }
 
 .filterBox {
-  flex: 1 0 80px;
+  flex: 1 1 80px;
+}
+
+.filterBox:focus-within {
+  flex: 10 0 80px;
+}
+
+.uid {
+  font-family: monospace;
 }
 
 .durationFilter {
