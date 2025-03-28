@@ -181,7 +181,7 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 (CASE WHEN @unknown_tg::BOOLEAN = TRUE THEN (
 	tgs.tgid IS NULL
 	) ELSE TRUE END) AND
-(CASE WHEN sqlc.narg('transcript_search')::TEXT IS NOT NULL THEN (
+(CASE WHEN sqlc.narg('transcript_search')::TEXT IS NOT NULL AND @transcript_search != '' THEN (
 	to_tsvector('english', transcript) @@ websearch_to_tsquery('english', @transcript_search)
 	) ELSE TRUE END)
 ;

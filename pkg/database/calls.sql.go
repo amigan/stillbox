@@ -326,7 +326,7 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 (CASE WHEN $8::BOOLEAN = TRUE THEN (
 	tgs.tgid IS NULL
 	) ELSE TRUE END) AND
-(CASE WHEN $9::TEXT IS NOT NULL THEN (
+(CASE WHEN $9::TEXT IS NOT NULL AND $9 != '' THEN (
 	to_tsvector('english', transcript) @@ websearch_to_tsquery('english', $9)
 	) ELSE TRUE END)
 `
