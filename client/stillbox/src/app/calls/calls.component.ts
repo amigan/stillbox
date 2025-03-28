@@ -66,7 +66,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { PlayerService } from './player/player.service';
 import { DomSanitizer } from '@angular/platform-browser';
 
-const debounceInterval = 300;
+const DEBOUNCE_INTERVAL = 300;
+const PER_PAGE_DEFAULT = 25;
 
 const reqPageSize = 200;
 @Component({
@@ -105,7 +106,7 @@ export class CallsComponent {
   count = 0;
   dialog = inject(MatDialog);
   page = 0;
-  perPage = 25;
+  perPage = PER_PAGE_DEFAULT;
   pageSizeOptions = [25, 50, 75, 100, 200];
   columns = [
     'select',
@@ -120,7 +121,7 @@ export class CallsComponent {
     'duration',
   ];
 
-  curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };
+  curPage = <PageEvent>{ pageIndex: 0, pageSize: PER_PAGE_DEFAULT };
   curLen = 0;
   showTranscripts!: Observable<boolean>;
   currentSet!: CallRecord[];
@@ -142,7 +143,7 @@ export class CallsComponent {
   });
   transcriptFilter = toSignal(
     this.form.controls.transcriptSearch.valueChanges.pipe(
-      debounceTime(debounceInterval),
+      debounceTime(DEBOUNCE_INTERVAL),
     ),
   );
   getColumns = computed(() => {
@@ -264,11 +265,14 @@ export class CallsComponent {
   }
 
   setPage(p: PageEvent, force?: boolean, dontClear?: boolean) {
+    if (p.pageSize == 0) {
+      p.pageSize = this.curPage.pageSize;
+    }
     if (!dontClear) {
       this.selection.clear();
     }
     this.curPage = p;
-    if (p && p!.pageSize != this.perPage) {
+    if (p !== null && p!.pageSize != this.perPage) {
       this.perPage = p!.pageSize;
       this.prefsSvc.set('callsPerPage', p!.pageSize);
     }
@@ -327,7 +331,7 @@ export class CallsComponent {
 
   ngOnInit() {
     this.form.valueChanges
-      .pipe(debounceTime(debounceInterval))
+      .pipe(debounceTime(DEBOUNCE_INTERVAL))
       .subscribe(() => {
         this.currentServerPage = 0;
         this.setPage(this.zeroPage(), true);
@@ -335,6 +339,9 @@ export class CallsComponent {
 
     this.subscriptions.add(
       this.prefsSvc.get('callsPerPage').subscribe((cpp) => {
+        if (this.perPage == 0) {
+          this.perPage = PER_PAGE_DEFAULT;
+        }
         if (cpp && cpp != this.perPage) {
           this.perPage = cpp;
 
