@@ -212,6 +212,17 @@ export class CallsComponent {
     }
   }
 
+  transcriptSearchString(v: string|null): string|null {
+    if (v == ' ') {
+      return '';
+    }
+    if (v != '') {
+      return v;
+    }
+
+    return null
+  }
+
   buildParams(p: PageEvent, serverPage: number): CallsListParams {
     const par: CallsListParams = {
       start: new Date(this.form.controls['start'].value!),
@@ -238,10 +249,7 @@ export class CallsComponent {
         this.form.controls['sourceFilter'].value != ''
           ? this.form.controls['sourceFilter'].value
           : null,
-      transcriptSearch:
-        this.form.controls['transcriptSearch'].value != ''
-          ? this.form.controls['transcriptSearch'].value
-          : null,
+      transcriptSearch: this.transcriptSearchString(this.form.controls['transcriptSearch'].value),
       atLeastSeconds:
         this.form.controls['duration'].value != null &&
         this.form.controls['duration'].value > 0
