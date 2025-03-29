@@ -92,7 +92,6 @@ export class CallsTableComponent {
   @Output() searchSrcFilter: EventEmitter<string | null> = new EventEmitter();
   @Output() setPage: EventEmitter<PageEvent> = new EventEmitter();
   curPage = input<PageEvent>();
-  isLoading = input<boolean>();
   showTranscripts = input<boolean | null>();
   searched = input<boolean>();
   @ViewChild('callsTable', { read: ElementRef }) callsTable!: ElementRef;
