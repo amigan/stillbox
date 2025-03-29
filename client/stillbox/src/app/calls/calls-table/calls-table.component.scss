@@ -1,0 +1,81 @@
+table,
+.callsTable {
+  width: 100%;
+  overflow: scroll;
+}
+
+.tableCont {
+  overflow: scroll;
+  flex: 1 0 0;
+}
+
+.pagFoot {
+  flex: 0 0 0;
+}
+
+.duration {
+  justify-content: center;
+}
+
+tr.mat-mdc-row {
+  height: 2.3rem !important;
+  font-size: 12pt;
+}
+
+.mat-column-select,
+.mat-column-time,
+.mat-column-play,
+.mat-column-download,
+.mat-column-duration {
+  width: 10px;
+  padding: 0 1px;
+}
+
+.mat-column-date {
+  width: 10px;
+  padding: 0 6px;
+}
+
+.mat-column-group {
+  flex: 0 1.1 20%;
+}
+
+@media screen and (max-width: 768px) {
+  tr.mat-mdc-row {
+    font-size: 12pt;
+    height: 2rem !important;
+  }
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
+    padding: 0 4px;
+  }
+
+  .mat-column-group,
+  .mat-column-system,
+  .mat-column-transcript,
+  .mat-column-date {
+    display: none;
+  }
+
+  .tabFootContainer {
+    padding: 0;
+  }
+}
+
+form {
+  flex: 1 0;
+  display: flex;
+}
+
+.uid {
+  font-family: monospace;
+}
+
+.in-incident {
+  background-color: rgb(59, 0, 59);
+}
+
+a.tgFilter:hover,
+a.srcFilter:hover {
+  text-decoration: underline;
+}

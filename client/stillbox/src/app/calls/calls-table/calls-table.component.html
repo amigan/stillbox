@@ -1,0 +1,157 @@
+<div class="tableCont">
+  <table
+    [formGroup]="tableFG"
+    #callsTable
+    class="callsTable"
+    mat-table
+    [dataSource]="callsResult()!"
+  >
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox
+          (change)="$event ? masterToggle() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+        >
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+        >
+        </mat-checkbox>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="play">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox title="Download mode" formControlName="downloadMode">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let call; let i = index">
+        <call-player
+          [download]="downloadMode()"
+          [index]="i"
+          [call]="call"
+        ></call-player>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="date">
+      <th mat-header-cell *matHeaderCellDef>Date</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call.callDate | grabDate }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="time">
+      <th mat-header-cell *matHeaderCellDef>Time</th>
+      <td mat-cell *matCellDef="let call" [title]="call.callDate">
+        {{ call.callDate | time: true }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="system">
+      <th mat-header-cell *matHeaderCellDef>System</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call | talkgroup: "system" | async }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="group">
+      <th mat-header-cell *matHeaderCellDef>Group</th>
+      <td mat-cell *matCellDef="let call">
+        {{ call | talkgroup: "group" | async }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="talkgroup">
+      <th mat-header-cell *matHeaderCellDef>Talkgroup</th>
+      <td
+        mat-cell
+        *matCellDef="let call"
+        [title]="call.systemId + ':' + call.tgid"
+      >
+        @let tgAlpha = call | talkgroup: "alpha" | async;
+        @if (searched()) {
+          <a
+            href="javascript:void(0)"
+            class="tgFilter"
+            (click)="searchTGFilter.emit(tgAlpha)"
+            >{{ tgAlpha }}</a
+          >
+        } @else {
+          {{ tgAlpha }}
+        }
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="talker">
+      <th mat-header-cell *matHeaderCellDef>Source</th>
+      <td mat-cell *matCellDef="let call">
+        @let tlkAlias = call | talker;
+        @if (tlkAlias.talkerAlias) {
+          @if (searched()) {
+            <a
+              href="javascript:void(0)"
+              class="srcFilter"
+              (click)="searchSrcFilter.emit(tlkAlias.talkerAlias)"
+              [title]="tlkAlias.source ? tlkAlias.source : null"
+              >{{ tlkAlias.talkerAlias }}</a
+            >
+          } @else {
+            {{ tlkAlias.talkerAlias }}
+          }
+        } @else {
+          @if (tlkAlias.source) {
+            <em class="uid">{{ tlkAlias.source }}</em>
+          } @else {
+            &mdash;
+          }
+        }
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="transcript">
+      <th mat-header-cell *matHeaderCellDef>Transcript</th>
+      <td mat-cell *matCellDef="let call">
+        @let txcript = call | transcript;
+        @if (txcript) {
+          <span [innerHTML]="sanitize(txcript)"></span>
+        } @else {
+          &mdash;
+        }
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="duration">
+      <th mat-header-cell *matHeaderCellDef class="durationHdr">
+        <mat-icon>timer_outline</mat-icon>
+      </th>
+      <td
+        mat-cell
+        [title]="call.duration / 1000 + 's'"
+        *matCellDef="let call"
+        class="duration"
+      >
+        {{ call.duration | fixedPoint: 1000 : 0 }}s
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="getColumns(); sticky: true"></tr>
+    <tr
+      mat-row
+      *matRowDef="let row; columns: getColumns()"
+      [ngClass]="{ 'in-incident': row.incidents > 0 }"
+    ></tr>
+  </table>
+</div>
+<div *ngIf="isLoading()" class="spinner">
+  <mat-spinner></mat-spinner>
+</div>
+<div class="pagFoot">
+  <mat-paginator
+    #paginator
+    class="paginator"
+    (page)="setPage.emit($event)"
+    [length]="count"
+    showFirstLastButtons="true"
+    [pageSize]="curPage()!.pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    [pageIndex]="curPage()!.pageIndex"
+    aria-label="Select page"
+  >
+  </mat-paginator>
+</div>
