@@ -15,7 +15,7 @@ import {
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import {
   MatPaginator,
   MatPaginatorModule,
@@ -53,6 +53,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { PlayerService } from '../player/player.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { IncidentCall } from '../../incidents';
 
 export const PER_PAGE_DEFAULT = 25;
 
@@ -87,7 +88,7 @@ export const PER_PAGE_DEFAULT = 25;
 })
 export class CallsTableComponent {
   @ViewChild('paginator') paginator!: MatPaginator;
-  callsResult = input<CallRecord[] | null>();
+  callsResult = input<CallRecord[] | MatTableDataSource<IncidentCall>| null>();
   @Output() searchTGFilter: EventEmitter<string | null> = new EventEmitter();
   @Output() searchSrcFilter: EventEmitter<string | null> = new EventEmitter();
   @Output() setPage: EventEmitter<PageEvent> = new EventEmitter();
@@ -143,9 +144,13 @@ export class CallsTableComponent {
   }
 
   masterToggle() {
-    let cr: CallRecord[] | null | undefined = this.callsResult();
+    let cr: CallRecord[] | MatTableDataSource<IncidentCall> | null | undefined = this.callsResult();
     if (this.isAllSelected() || cr === undefined || cr === null) {
       this.selection.clear();
+      return;
+    }
+    if (cr instanceof MatTableDataSource) {
+      cr.data.forEach((row) => this.selection.select(row));
       return;
     }
     cr.forEach((row) => this.selection.select(row));

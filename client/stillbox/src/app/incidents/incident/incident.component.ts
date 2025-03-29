@@ -43,6 +43,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { Share } from '../../shares';
 import { ShareService } from '../../share/share.service';
 import { TalkgroupService } from '../../talkgroups/talkgroups.service';
+import { CallsTableComponent, PER_PAGE_DEFAULT } from '../../calls/calls-table/calls-table.component';
+import { PageEvent } from '@angular/material/paginator';
 
 export interface EditDialogData {
   incID: string;
@@ -151,6 +153,7 @@ export class IncidentEditDialogComponent {
     FmtDatePipe,
     MatTableModule,
     MatMenuModule,
+    CallsTableComponent,
   ],
   templateUrl: './incident.component.html',
   styleUrl: './incident.component.scss',
@@ -176,6 +179,7 @@ export class IncidentComponent {
   ];
   callsResult = new MatTableDataSource<IncidentCall>();
   selection = new SelectionModel<IncidentCall>(true, []);
+  curPage = <PageEvent>{ pageIndex: 0, pageSize: PER_PAGE_DEFAULT };
 
   constructor(
     private route: ActivatedRoute,
