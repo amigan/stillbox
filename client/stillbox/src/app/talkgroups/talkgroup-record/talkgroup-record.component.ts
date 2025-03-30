@@ -136,13 +136,19 @@ export class TalkgroupRecordComponent {
   }
 
   addTag(tag: string) {
-    const idx = this.tg.tags.indexOf(tag);
-    if (idx > -1) {
-      return;
+    if (this.tg.tags != undefined) {
+      const idx = this.tg.tags.indexOf(tag);
+      if (idx > -1) {
+        return;
+      }
     }
 
     if (tag) {
-      this.tg.tags = [...this.tg.tags, tag];
+      if (this.tg.tags == null) {
+        this.tg.tags = [tag];
+      } else {
+        this.tg.tags = [...this.tg.tags, tag];
+      }
     }
   }
 
@@ -158,6 +164,7 @@ export class TalkgroupRecordComponent {
       .getTalkgroup(Number(this.tgid.sys), Number(this.tgid.tg))
       .pipe(
         tap((tg) => {
+          this.tg = tg;
           tg.alertRules = tg.alertRules
             ? tg.alertRules.map((x) => Object.assign(new AlertRule(), x))
             : [];
