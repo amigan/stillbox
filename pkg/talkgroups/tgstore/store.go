@@ -81,6 +81,12 @@ type Store interface {
 	// Weight returns the final weight of this talkgroup, including its static and rules-derived weight.
 	Weight(ctx context.Context, id tgsp.ID, t time.Time) float64
 
+	// RegisterFilter registers a filter with the cache so it may be updated if referenced tags change.
+	RegisterFilter(Filter)
+
+	// UnregisterFilter unregisters a filter.
+	UnregisterFilter(Filter)
+
 	// Hupper
 	HUP(*config.Config)
 }
@@ -203,11 +209,22 @@ func (t *cache) invalidate() {
 	clear(t.systems)
 }
 
+type Filter interface {
+	Recompile(ctx context.Context) error
+	TagRefs() []string
+}
+
+type filterMap map[string]map[Filter]struct{}
+
 type cache struct {
 	sync.RWMutex
 	tgs     tgMap
 	systems map[int]string
 	db      database.Store
+
+	// filters is a map of tags->maps of filters->time of last recompile
+	filtMtx sync.RWMutex
+	filters filterMap
 }
 
 // NewCache returns a new cache Store.
@@ -216,6 +233,7 @@ func NewCache(db database.Store) *cache {
 		tgs:     make(tgMap),
 		systems: make(map[int]string),
 		db:      db,
+		filters: make(filterMap),
 	}
 
 	return tgc
@@ -543,7 +561,28 @@ func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) 
 	return n, has
 }
 
+func (t *cache) RecompileFilters(ctx context.Context, tags []string) error {
+	t.filtMtx.Lock()
+	defer t.filtMtx.Unlock()
+
+	for _, ct := range tags {
+		if fm, hasTag := t.filters[ct]; hasTag {
+			for flt := range fm {
+				err := flt.Recompile(ctx)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupParams) (*tgsp.Talkgroup, error) {
+	if input.TGID == nil || input.SystemID == nil {
+		return nil, tgsp.ErrBadTG
+	}
 	user, err := users.UserCheck(ctx, new(tgsp.Talkgroup), "update")
 	if err != nil {
 		return nil, err
@@ -554,16 +593,25 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 		return nil, ErrNoSuchSystem
 	}
 
+	var affectedTags []string
+	// any compiled filter's talkgroups by definition will be in cache
+	otg, has := t.get(tgsp.ID{System: uint32(*input.SystemID), Talkgroup: uint32(*input.TGID)})
+	if has {
+		affectedTags = append(affectedTags, otg.Tags...)
+	}
+
 	db := t.db
 	var tg database.Talkgroup
 	err = db.InTx(ctx, func(db database.Store) error {
 		var oerr error
+
 		tg, oerr = db.UpdateTalkgroup(ctx, input)
 		if oerr != nil {
 			return oerr
 		}
 		versionBatch := db.StoreTGVersion(ctx, []database.StoreTGVersionParams{{
 			Submitter: user.ID.Int32Ptr(),
+			SystemID:  *input.SystemID,
 			TGID:      *input.TGID,
 		}})
 		defer versionBatch.Close()
@@ -587,6 +635,17 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 		System:    database.System{ID: int(tg.SystemID), Name: sysName},
 	}
 	t.add(record)
+
+	if len(tg.Tags) > 0 {
+		affectedTags = append(affectedTags, tg.Tags...)
+	}
+
+	if len(affectedTags) > 0 {
+		err := t.RecompileFilters(ctx, affectedTags)
+		if err != nil {
+			log.Error().Strs("tags", affectedTags).Err(err).Msg("failed to recompile filters")
+		}
+	}
 
 	return record, nil
 }
@@ -706,19 +765,31 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 
 	tgs := make([]*tgsp.Talkgroup, 0, len(input))
 
+	affectedTags := make(map[string]struct{})
+
 	err = db.InTx(ctx, func(db database.Store) error {
+		var oerr error
+
 		versionParams := make([]database.StoreTGVersionParams, 0, len(input))
 		for i := range input {
+			id := tgsp.ID{System: uint32(input[i].SystemID), Talkgroup: uint32(input[i].TGID)}
+			exist, has := t.get(id)
+			if has {
+				for _, etg := range exist.Tags {
+					affectedTags[etg] = struct{}{}
+				}
+			}
+
 			// normalize tags
 			for j, tag := range input[i].Tags {
-				input[i].Tags[j] = strings.ToLower(tag)
+				lctag := strings.ToLower(tag)
+				affectedTags[lctag] = struct{}{}
+				input[i].Tags[j] = lctag
 			}
 
 			input[i].SystemID = int32(system)
 			input[i].Learned = common.PtrTo(false)
 		}
-
-		var oerr error
 
 		tgUpsertBatch := db.UpsertTalkgroup(ctx, input)
 		defer tgUpsertBatch.Close()
@@ -766,6 +837,18 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 		t.add(tg)
 	}
 
+	if len(affectedTags) > 0 {
+		atags := make([]string, 0, len(affectedTags))
+		for k := range affectedTags {
+			atags = append(atags, k)
+		}
+
+		err = t.RecompileFilters(ctx, atags)
+		if err != nil {
+			log.Error().Strs("tags", atags).Err(err).Msg("failed to recompile filters")
+		}
+	}
+
 	return tgs, nil
 }
 
@@ -781,6 +864,31 @@ func (t *cache) CreateSystem(ctx context.Context, id int, name string) error {
 	t.addSysNoLock(id, name)
 
 	return t.db.CreateSystem(ctx, id, name)
+}
+
+func (t *cache) RegisterFilter(f Filter) {
+	t.filtMtx.Lock()
+	defer t.filtMtx.Unlock()
+
+	tags := f.TagRefs()
+
+	for _, tag := range tags {
+		if t.filters[tag] == nil {
+			t.filters[tag] = make(map[Filter]struct{})
+		}
+
+		t.filters[tag][f] = struct{}{}
+	}
+}
+
+func (t *cache) UnregisterFilter(f Filter) {
+	t.filtMtx.Lock()
+	defer t.filtMtx.Unlock()
+
+	// XXX: this does not scale well, may want to store a filter->tags mapping?
+	for tag := range t.filters {
+		delete(t.filters[tag], f)
+	}
 }
 
 func (t *cache) Tags(ctx context.Context) ([]string, error) {
