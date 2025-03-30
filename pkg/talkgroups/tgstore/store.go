@@ -222,7 +222,7 @@ type cache struct {
 	systems map[int]string
 	db      database.Store
 
-	// filters is a map of tags->maps of filters->time of last recompile
+	// filters is a map of tags->maps of filters
 	filtMtx sync.RWMutex
 	filters filterMap
 }
@@ -594,9 +594,8 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 	}
 
 	var affectedTags []string
-	// any compiled filter's talkgroups by definition will be in cache
-	otg, has := t.get(tgsp.ID{System: uint32(*input.SystemID), Talkgroup: uint32(*input.TGID)})
-	if has {
+	otg, err := t.TG(ctx, tgsp.ID{System: uint32(*input.SystemID), Talkgroup: uint32(*input.TGID)})
+	if err == nil {
 		affectedTags = append(affectedTags, otg.Tags...)
 	}
 
@@ -766,6 +765,18 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 	tgs := make([]*tgsp.Talkgroup, 0, len(input))
 
 	affectedTags := make(map[string]struct{})
+
+	// prime tg cache
+	ids := make(tgsp.IDs, 0, len(input))
+	for _, v := range input {
+		id := tgsp.ID{System: uint32(v.SystemID), Talkgroup: uint32(v.TGID)}
+		ids = append(ids, id)
+	}
+
+	_, err = t.TGs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
 
 	err = db.InTx(ctx, func(db database.Store) error {
 		var oerr error
