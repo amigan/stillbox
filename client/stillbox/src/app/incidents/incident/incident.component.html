@@ -42,10 +42,11 @@
     {{ inc?.description }}
   </div>
   <calls-table
-  #callsTable
- [searched]="false"
-  [callsResult]="callsResult"
-  [showTranscripts]="true"
-  [curPage]="curPage"
+    #callsTable
+    [searched]="false"
+    [callsResult]="callsResult"
+    [showTranscripts]="true"
+    [curPage]="curPage"
+    [forward]="true"
   ></calls-table>
 </mat-card>

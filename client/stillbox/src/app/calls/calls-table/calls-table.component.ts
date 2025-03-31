@@ -3,13 +3,10 @@ import {
   computed,
   ElementRef,
   EventEmitter,
-  inject,
+  Input,
   input,
   Output,
-  Sanitizer,
   SecurityContext,
-  signal,
-  Signal,
   ViewChild,
 } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
@@ -24,11 +21,8 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import {
-  CallsListParams,
-  CallsService,
   DatePipe,
   FixedPointPipe,
   TalkerPipe,
@@ -50,7 +44,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { CallPlayerComponent } from '../player/call-player/call-player.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { PlayerService } from '../player/player.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { IncidentCall } from '../../incidents';
@@ -88,10 +81,11 @@ export const PER_PAGE_DEFAULT = 25;
 })
 export class CallsTableComponent {
   @ViewChild('paginator') paginator!: MatPaginator;
-  callsResult = input<CallRecord[] | MatTableDataSource<IncidentCall>| null>();
+  callsResult = input<CallRecord[] | MatTableDataSource<IncidentCall> | null>();
   @Output() searchTGFilter: EventEmitter<string | null> = new EventEmitter();
   @Output() searchSrcFilter: EventEmitter<string | null> = new EventEmitter();
   @Output() setPage: EventEmitter<PageEvent> = new EventEmitter();
+  @Input() forward: boolean = false;
   curPage = input<PageEvent>();
   showTranscripts = input<boolean | null>();
   searched = input<boolean>();
@@ -111,7 +105,7 @@ export class CallsTableComponent {
     'transcript',
     'duration',
   ];
-  curLen = 0;
+  public curLen = 0;
   tableFG = new FormGroup({
     downloadMode: new FormControl<boolean>(false),
   });
@@ -144,7 +138,8 @@ export class CallsTableComponent {
   }
 
   masterToggle() {
-    let cr: CallRecord[] | MatTableDataSource<IncidentCall> | null | undefined = this.callsResult();
+    let cr: CallRecord[] | MatTableDataSource<IncidentCall> | null | undefined =
+      this.callsResult();
     if (this.isAllSelected() || cr === undefined || cr === null) {
       this.selection.clear();
       return;

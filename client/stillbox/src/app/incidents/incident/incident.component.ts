@@ -29,22 +29,17 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import {
-  FixedPointPipe,
-  TalkgroupPipe,
-  TimePipe,
-  DatePipe,
-  DownloadURLPipe,
-  TalkerPipe,
-} from '../../calls/calls.service';
-import { CallPlayerComponent } from '../../calls/player/call-player/call-player.component';
 import { FmtDatePipe } from '../incidents.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { Share } from '../../shares';
 import { ShareService } from '../../share/share.service';
 import { TalkgroupService } from '../../talkgroups/talkgroups.service';
-import { CallsTableComponent, PER_PAGE_DEFAULT } from '../../calls/calls-table/calls-table.component';
+import {
+  CallsTableComponent,
+  PER_PAGE_DEFAULT,
+} from '../../calls/calls-table/calls-table.component';
 import { PageEvent } from '@angular/material/paginator';
+import { PlayerService } from '../../calls/player/player.service';
 
 export interface EditDialogData {
   incID: string;
@@ -143,13 +138,6 @@ export class IncidentEditDialogComponent {
     MatCheckboxModule,
     MatIconModule,
     MatCardModule,
-    FixedPointPipe,
-    TalkerPipe,
-    TimePipe,
-    DatePipe,
-    TalkgroupPipe,
-    DownloadURLPipe,
-    CallPlayerComponent,
     FmtDatePipe,
     MatTableModule,
     MatMenuModule,
@@ -186,6 +174,7 @@ export class IncidentComponent {
     private incSvc: IncidentsService,
     private location: Location,
     private tgSvc: TalkgroupService,
+    private playerSvc: PlayerService,
   ) {}
 
   saveIncName(ev: Event) {}
@@ -210,6 +199,7 @@ export class IncidentComponent {
       tap((inc) => {
         if (inc && inc.calls) {
           this.callsResult.data = inc.calls;
+          this.playerSvc.setQueue(inc.calls);
         }
       }),
     );

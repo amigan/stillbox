@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { fromEvent, Observable, Subscription } from 'rxjs';
 import { CallRecord } from '../../calls';
 import { CallsService } from '../calls.service';
+import { ErrorsService } from '../../errors/errors.service';
 
 interface IStack<T> {
   push(e: T[]): void;
@@ -27,6 +28,9 @@ class Stack<T> implements IStack<T> {
   cancel(): void {
     this.storage = [];
   }
+  shift(): T | undefined {
+    return this.storage.shift();
+  }
 }
 
 @Injectable({
@@ -39,8 +43,12 @@ export class PlayerService {
   public paused = signal<boolean>(false);
   stack = new Stack<CallRecord>();
   private results = <CallRecord[]>[];
+  private forward = false;
 
-  constructor(private callsSvc: CallsService) {
+  constructor(
+    private callsSvc: CallsService,
+    private errorSvc: ErrorsService,
+  ) {
     this.au = new Audio();
     this.playSub = fromEvent(this.au, 'ended').subscribe((ev) =>
       this.playNext(),
@@ -53,10 +61,12 @@ export class PlayerService {
 
   playNext() {
     if (this.stack.size() > 0) {
-      this.play(this.stack.pop()!);
+      let item = this.forward ? this.stack.shift() : this.stack.pop();
+      if (item) {
+        this.play(item);
+      }
     } else {
-      this.playing.set(null);
-      this.paused.set(false);
+      this.stopAudio();
     }
   }
 
@@ -71,12 +81,16 @@ export class PlayerService {
     this.paused.set(true);
   }
 
-  playAudio(call: CallRecord, index: number) {
+  playAudio(call: CallRecord, index: number, forward: boolean) {
     if (this.playing() != null) {
       this.stopAudio();
     }
+    this.forward = forward;
     this.stack.cancel();
-    this.stack.push(this.results.slice(0, index + 1));
+    let playq = this.forward
+      ? this.results.slice(index)
+      : this.results.slice(0, index + 1);
+    this.stack.push(playq);
     this.playNext();
   }
 
@@ -87,15 +101,20 @@ export class PlayerService {
 
   play(call: CallRecord) {
     this.paused.set(false);
-    this.playing.set(call);
     if (call.audioURL != null) {
       this.au.src = call.audioURL;
     } else {
       this.au.src = this.callsSvc.callAudioURL(call.id);
     }
     this.au.load();
-    this.au.play().then(null, (reason) => {
-      this.playing.set(null);
-    });
+    this.au
+      .play()
+      .then(() => {
+        this.playing.set(call);
+      })
+      .catch((reason) => {
+        this.playing.set(null);
+        this.errorSvc.show(`play failed: ${reason}`);
+      });
   }
 }

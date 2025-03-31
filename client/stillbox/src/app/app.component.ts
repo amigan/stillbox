@@ -15,6 +15,7 @@ import {
 } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { NowPlayingComponent } from './calls/now-playing/now-playing.component';
+import { ErrorsComponent } from './errors/errors.component';
 
 @Component({
   selector: 'app-root',
@@ -25,6 +26,7 @@ import { NowPlayingComponent } from './calls/now-playing/now-playing.component';
     FormsModule,
     NavigationComponent,
     UpdateNagComponent,
+    ErrorsComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],

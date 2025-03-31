@@ -153,5 +153,5 @@
   (searchSrcFilter)="searchSrcFilter($event)"
   (setPage)="setPage($event)"
   [curPage]="curPage"
-  [showTranscripts]="showTranscripts | async"
+  [showTranscripts]="(showTranscripts | async) && txSearchSet()"
 ></calls-table>
