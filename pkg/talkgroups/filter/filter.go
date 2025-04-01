@@ -16,11 +16,11 @@ import (
 )
 
 type TalkgroupFilter struct {
-	Talkgroups       []tgsp.ID `json:"talkgroups,omitempty" form:"talkgroups"`
-	TalkgroupsNot    []tgsp.ID `json:"talkgroupsNot,omitempty" form:"talkgroupsNot"`
-	TalkgroupTagsAll []string  `json:"talkgroupTagsAll,omitempty" form:"talkgroupTagsAll"`
-	TalkgroupTagsAny []string  `json:"talkgroupTagsAny,omitempty" form:"talkgroupTagsAny"`
-	TalkgroupTagsNot []string  `json:"talkgroupTagsNot,omitempty" form:"talkgroupTagsNot"`
+	Talkgroups       tgsp.IDs `json:"talkgroups,omitempty" form:"talkgroups"`
+	TalkgroupsNot    tgsp.IDs `json:"talkgroupsNot,omitempty" form:"talkgroupsNot"`
+	TalkgroupTagsAll []string `json:"talkgroupTagsAll,omitempty" form:"talkgroupTagsAll"`
+	TalkgroupTagsAny []string `json:"talkgroupTagsAny,omitempty" form:"talkgroupTagsAny"`
+	TalkgroupTagsNot []string `json:"talkgroupTagsNot,omitempty" form:"talkgroupTagsNot"`
 
 	sync.RWMutex
 	talkgroups map[tgsp.ID]bool `json:"-"`

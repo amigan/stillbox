@@ -49,7 +49,7 @@ type Store interface {
 	TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.Talkgroup, error)
 
 	// TGsByTags gets talkgroups by tags any, all, and not.
-	TGsByTags(ctx context.Context, tagsAll, tagsAny, tagsNot []string) ([]tgsp.ID, error)
+	TGsByTags(ctx context.Context, tagsAll, tagsAny, tagsNot []string) (tgsp.IDs, error)
 
 	// LearnTG learns the talkgroup from a Call.
 	LearnTG(ctx context.Context, call *calls.Call) (*tgsp.Talkgroup, error)
@@ -911,7 +911,7 @@ func (t *cache) Tags(ctx context.Context) ([]string, error) {
 	return t.db.GetAllTalkgroupTags(ctx)
 }
 
-func (t *cache) TGsByTags(ctx context.Context, tagsAll, tagsAny, tagsNot []string) ([]tgsp.ID, error) {
+func (t *cache) TGsByTags(ctx context.Context, tagsAll, tagsAny, tagsNot []string) (tgsp.IDs, error) {
 	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
@@ -933,7 +933,7 @@ func (t *cache) TGsByTags(ctx context.Context, tagsAll, tagsAny, tagsNot []strin
 		return nil, err
 	}
 
-	res := make([]tgsp.ID, 0, len(tgs))
+	res := make(tgsp.IDs, 0, len(tgs))
 	for _, tg := range tgs {
 		res = append(res, tgsp.ID{
 			System:    uint32(tg.SystemID),

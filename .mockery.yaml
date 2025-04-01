@@ -16,3 +16,7 @@ packages:
     config:
     interfaces:
       RBAC:
+  dynatron.me/x/stillbox/pkg/talkgroups/tgstore:
+    config:
+    interfaces:
+      Store:
