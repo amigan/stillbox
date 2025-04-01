@@ -38,21 +38,24 @@ class Stack<T> implements IStack<T> {
 })
 export class PlayerService {
   playSub!: Subscription;
-  au!: HTMLAudioElement;
   public playing = signal<CallRecord | null>(null);
   public paused = signal<boolean>(false);
   stack = new Stack<CallRecord>();
   private results = <CallRecord[]>[];
   private forward = false;
+  au = new Audio();
 
   constructor(
     private callsSvc: CallsService,
     private errorSvc: ErrorsService,
   ) {
-    this.au = new Audio();
-    this.playSub = fromEvent(this.au, 'ended').subscribe((ev) =>
-      this.playNext(),
-    );
+    this.createMedia();
+  }
+
+  createMedia() {
+    this.playSub = fromEvent(this.au, 'ended').subscribe((ev) => {
+      this.playNext();
+    });
   }
 
   setQueue(c: CallRecord[]) {
@@ -113,6 +116,16 @@ export class PlayerService {
         this.playing.set(call);
       })
       .catch((reason) => {
+        // cannot figure out why we need to do this
+        if (
+          reason instanceof Error &&
+          (reason as Error).message.indexOf(
+            'media was removed from the document',
+          ) > -1
+        ) {
+          this.playing.set(call);
+          return;
+        }
         this.playing.set(null);
         this.errorSvc.show(`play failed: ${reason}`);
       });
