@@ -138,8 +138,12 @@ export class CallsTableComponent {
   }
 
   masterToggle() {
-    let cr: CallRecord[] | MatTableDataSource<IncidentCall> | null | undefined =
-      this.callsResult();
+    let cr:
+      | CallRecord[]
+      | IncidentCall[]
+      | MatTableDataSource<IncidentCall>
+      | null
+      | undefined = this.callsResult();
     if (this.isAllSelected() || cr === undefined || cr === null) {
       this.selection.clear();
       return;

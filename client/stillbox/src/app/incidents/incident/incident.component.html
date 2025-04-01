@@ -21,6 +21,13 @@
       </button>
       <mat-menu #moreMenu="matMenu">
         <button
+          [ngClass]="{ hidden: !callsTable.selection.hasValue() }"
+          mat-menu-item
+          (click)="removeSelectedCalls()"
+        >
+          Remove selected calls
+        </button>
+        <button
           class="deleteItem"
           mat-menu-item
           (click)="deleteIncident(incID)"
