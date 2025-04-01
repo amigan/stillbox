@@ -7,12 +7,15 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/rs/zerolog/log"
 )
 
 type Nexus struct {
 	sync.RWMutex
+
+	tgst tgstore.Store
 
 	clients map[*client]struct{}
 
@@ -27,10 +30,11 @@ type Registry interface {
 	Unregister(Client)
 }
 
-func New() *Nexus {
+func New(tgst tgstore.Store) *Nexus {
 	n := &Nexus{
 		clients: make(map[*client]struct{}),
 		callCh:  make(chan *calls.Call),
+		tgst:    tgst,
 	}
 
 	n.wsManager = newWsManager(n)
@@ -95,6 +99,10 @@ func (n *Nexus) Unregister(c Client) {
 	defer n.Unlock()
 
 	cl := c.(*client)
+	if cl.filter != nil {
+		n.tgst.UnregisterFilter(cl.filter)
+	}
+
 	delete(n.clients, cl)
 }
 

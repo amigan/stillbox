@@ -1,5 +1,6 @@
 #!/bin/sh
 
+VPKG=dynatron.me/x/stillbox/internal/version
 VER=$1
 BUILDDATE=$2
 
