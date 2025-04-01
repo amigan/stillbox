@@ -282,6 +282,7 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 				System:      v.SystemID,
 				Submitter:   sub,
 				Talkgroup:   v.TGID,
+				Transcript:  v.Transcript,
 			},
 			Notes: v.Notes,
 		})

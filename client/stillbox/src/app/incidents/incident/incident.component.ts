@@ -1,4 +1,4 @@
-import { Component, inject, Input } from '@angular/core';
+import { Component, inject, Input, ViewChild } from '@angular/core';
 import { tap } from 'rxjs/operators';
 import { CommonModule, Location } from '@angular/common';
 import { BehaviorSubject, merge, Subject, Subscription } from 'rxjs';
@@ -14,7 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
-import { IncidentsService } from '../incidents.service';
+import { CallIncidentParams, IncidentsService } from '../incidents.service';
 import { IncidentCall, IncidentRecord } from '../../incidents';
 import { MatCardModule } from '@angular/material/card';
 import {
@@ -29,20 +29,18 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import {
-  FixedPointPipe,
-  TalkgroupPipe,
-  TimePipe,
-  DatePipe,
-  DownloadURLPipe,
-  TalkerPipe,
-} from '../../calls/calls.service';
-import { CallPlayerComponent } from '../../calls/player/call-player/call-player.component';
 import { FmtDatePipe } from '../incidents.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { Share } from '../../shares';
 import { ShareService } from '../../share/share.service';
 import { TalkgroupService } from '../../talkgroups/talkgroups.service';
+import {
+  CallsTableComponent,
+  PER_PAGE_DEFAULT,
+} from '../../calls/calls-table/calls-table.component';
+import { PageEvent } from '@angular/material/paginator';
+import { PlayerService } from '../../calls/player/player.service';
+import { ErrorsService } from '../../errors/errors.service';
 
 export interface EditDialogData {
   incID: string;
@@ -141,16 +139,10 @@ export class IncidentEditDialogComponent {
     MatCheckboxModule,
     MatIconModule,
     MatCardModule,
-    FixedPointPipe,
-    TalkerPipe,
-    TimePipe,
-    DatePipe,
-    TalkgroupPipe,
-    DownloadURLPipe,
-    CallPlayerComponent,
     FmtDatePipe,
     MatTableModule,
     MatMenuModule,
+    CallsTableComponent,
   ],
   templateUrl: './incident.component.html',
   styleUrl: './incident.component.scss',
@@ -159,6 +151,7 @@ export class IncidentComponent {
   incPrime = new Subject<IncidentRecord>();
   inc$!: Observable<IncidentRecord>;
   @Input() share?: Share;
+  @ViewChild('callsTable') callsTable!: CallsTableComponent;
   subscriptions: Subscription = new Subscription();
   dialog = inject(MatDialog);
   incID!: string;
@@ -176,12 +169,15 @@ export class IncidentComponent {
   ];
   callsResult = new MatTableDataSource<IncidentCall>();
   selection = new SelectionModel<IncidentCall>(true, []);
+  curPage = <PageEvent>{ pageIndex: 0, pageSize: PER_PAGE_DEFAULT };
 
   constructor(
     private route: ActivatedRoute,
     private incSvc: IncidentsService,
     private location: Location,
     private tgSvc: TalkgroupService,
+    private playerSvc: PlayerService,
+    private errorsSvc: ErrorsService,
   ) {}
 
   saveIncName(ev: Event) {}
@@ -206,6 +202,8 @@ export class IncidentComponent {
       tap((inc) => {
         if (inc && inc.calls) {
           this.callsResult.data = inc.calls;
+          this.callsTable.curLen = inc.calls.length;
+          this.playerSvc.setQueue(inc.calls);
         }
       }),
     );
@@ -235,19 +233,25 @@ export class IncidentComponent {
     }
   }
 
+  removeSelectedCalls() {
+    this.incSvc
+      .addRemoveCalls(this.incID, <CallIncidentParams>{
+        remove: this.callsTable.selection.selected.map((call) => call.id),
+      })
+      .subscribe({
+        next: () => {
+          this.callsResult.data = this.callsResult.data.filter(
+            (ca) => !this.callsTable.selection.selected.includes(ca),
+          );
+          this.callsTable.selection.clear();
+        },
+        error: (err) => {
+          this.errorsSvc.show(err);
+        },
+      });
+  }
+
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
-  }
-
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.callsResult.data.length;
-    return numSelected === numRows;
-  }
-
-  masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.callsResult.data.forEach((row) => this.selection.select(row));
   }
 }

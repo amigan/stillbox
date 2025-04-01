@@ -118,6 +118,7 @@ func (c *client) Live(ctx context.Context, cmd *pb.Live) error {
 		}
 
 		c.filter = filter
+		tgstore.FromCtx(ctx).RegisterFilter(c.filter)
 	}
 
 	return nil

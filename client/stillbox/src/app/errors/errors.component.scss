@@ -1,0 +1,28 @@
+@media screen and (max-width: 768px) {
+  .errorBox {
+    width: 100%;
+  }
+}
+
+@media not screen and (max-width: 768px) {
+  .errorBox {
+    width: 400px;
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    height: 80px;
+    z-index: 1000;
+  }
+}
+
+.errorBox {
+  display: flex;
+  align-items: center;
+  background-color: red;
+  color: white;
+}
+
+.errorBox p {
+  flex: 2 0;
+  margin-left: 20px;
+}

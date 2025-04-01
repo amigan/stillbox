@@ -1,14 +1,4 @@
-import {
-  Component,
-  computed,
-  ElementRef,
-  inject,
-  Sanitizer,
-  SecurityContext,
-  signal,
-  Signal,
-  ViewChild,
-} from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -20,20 +10,10 @@ import {
 } from '@angular/material/paginator';
 import { PrefsService } from '../prefs/prefs.service';
 import { MatIconModule } from '@angular/material/icon';
-import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
-import {
-  CallsListParams,
-  CallsService,
-  DatePipe,
-  FixedPointPipe,
-  TalkerPipe,
-  TalkgroupPipe,
-  TimePipe,
-  TranscriptPipe,
-} from './calls.service';
+import { switchMap } from 'rxjs/operators';
+import { CallsListParams, CallsService } from './calls.service';
 import { CallRecord } from '../calls';
 
 import { TalkgroupService } from '../talkgroups/talkgroups.service';
@@ -48,7 +28,6 @@ import { MatInputModule } from '@angular/material/input';
 import { debounceTime } from 'rxjs/operators';
 import { ToolbarContextService } from '../navigation/toolbar-context.service';
 import { MatSelectModule } from '@angular/material/select';
-import { CallPlayerComponent } from './player/call-player/call-player.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -64,22 +43,18 @@ import { SelectIncidentDialogComponent } from '../incidents/select-incident-dial
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PlayerService } from './player/player.service';
-import { DomSanitizer } from '@angular/platform-browser';
+import {
+  PER_PAGE_DEFAULT,
+  CallsTableComponent,
+} from './calls-table/calls-table.component';
 
 const DEBOUNCE_INTERVAL = 300;
-const PER_PAGE_DEFAULT = 25;
 
 const reqPageSize = 200;
 @Component({
   selector: 'app-calls',
   imports: [
     MatIconModule,
-    FixedPointPipe,
-    TalkgroupPipe,
-    TalkerPipe,
-    TranscriptPipe,
-    TimePipe,
-    DatePipe,
     MatPaginatorModule,
     MatTableModule,
     AsyncPipe,
@@ -92,45 +67,25 @@ const reqPageSize = 200;
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatSelectModule,
-    CallPlayerComponent,
     MatMenuModule,
     MatTooltipModule,
+    CallsTableComponent,
   ],
   templateUrl: './calls.component.html',
   styleUrl: './calls.component.scss',
 })
 export class CallsComponent {
+  @ViewChild('callsTable') callsTable!: CallsTableComponent;
   callsResult = new BehaviorSubject(new Array<CallRecord>(0));
-  @ViewChild('paginator') paginator!: MatPaginator;
-  @ViewChild('callsTable', { read: ElementRef }) callsTable!: ElementRef;
-  count = 0;
   dialog = inject(MatDialog);
-  page = 0;
-  perPage = PER_PAGE_DEFAULT;
-  pageSizeOptions = [25, 50, 75, 100, 200];
-  columns = [
-    'select',
-    'play',
-    'date',
-    'time',
-    'system',
-    'group',
-    'talkgroup',
-    'talker',
-    'transcript',
-    'duration',
-  ];
-
-  curPage = <PageEvent>{ pageIndex: 0, pageSize: PER_PAGE_DEFAULT };
-  curLen = 0;
   showTranscripts!: Observable<boolean>;
   currentSet!: CallRecord[];
-  currentServerPage = 0; // page is never 0, forces load
-  isLoading = true;
+
+  curPage = <PageEvent>{ pageIndex: 0, pageSize: PER_PAGE_DEFAULT };
   queryInProgress = false;
+  currentServerPage = 0; // page is never 0, forces load
 
-  selection = new SelectionModel<CallRecord>(true, []);
-
+  perPage = PER_PAGE_DEFAULT;
   form = new FormGroup({
     start: new FormControl(this.lTime(new Date())),
     end: new FormControl(null),
@@ -141,29 +96,10 @@ export class CallsComponent {
     tagsAny: new FormControl<string[]>([]),
     tagsNot: new FormControl<string[]>([]),
   });
+  isLoading = true;
   transcriptFilter = toSignal(
     this.form.controls.transcriptSearch.valueChanges.pipe(
       debounceTime(DEBOUNCE_INTERVAL),
-    ),
-  );
-  getColumns = computed(() => {
-    if (this.txSearchSet()) {
-      return this.columns;
-    }
-    return this.columns.filter((tx) => tx != 'transcript');
-  });
-  tableFG = new FormGroup({
-    downloadMode: new FormControl<boolean>(false),
-  });
-  downloadMode = toSignal(
-    this.tableFG.controls.downloadMode.valueChanges.pipe(
-      map((v) => {
-        if (v == true) {
-          return true;
-        }
-
-        return false;
-      }),
     ),
   );
 
@@ -176,23 +112,12 @@ export class CallsComponent {
   constructor(
     private callsSvc: CallsService,
     private prefsSvc: PrefsService,
-    private sanitizer: DomSanitizer,
     public tcSvc: ToolbarContextService,
     public tgSvc: TalkgroupService,
     public incSvc: IncidentsService,
     public playerSvc: PlayerService,
   ) {
     this.tcSvc.showFilterButton();
-  }
-
-  sanitize(s: string): string | null {
-    return this.sanitizer.sanitize(SecurityContext.HTML, s);
-  }
-
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.curLen;
-    return numSelected === numRows;
   }
 
   txSearchSet(): boolean {
@@ -212,7 +137,7 @@ export class CallsComponent {
     }
   }
 
-  transcriptSearchString(v: string|null): string|null {
+  transcriptSearchString(v: string | null): string | null {
     if (v == ' ') {
       return '';
     }
@@ -220,7 +145,7 @@ export class CallsComponent {
       return v;
     }
 
-    return null
+    return null;
   }
 
   buildParams(p: PageEvent, serverPage: number): CallsListParams {
@@ -249,7 +174,9 @@ export class CallsComponent {
         this.form.controls['sourceFilter'].value != ''
           ? this.form.controls['sourceFilter'].value
           : null,
-      transcriptSearch: this.transcriptSearchString(this.form.controls['transcriptSearch'].value),
+      transcriptSearch: this.transcriptSearchString(
+        this.form.controls['transcriptSearch'].value,
+      ),
       atLeastSeconds:
         this.form.controls['duration'].value != null &&
         this.form.controls['duration'].value > 0
@@ -258,12 +185,6 @@ export class CallsComponent {
     };
 
     return par;
-  }
-
-  masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.callsResult.value.forEach((row) => this.selection.select(row));
   }
 
   lTime(now: Date): string {
@@ -277,7 +198,7 @@ export class CallsComponent {
       p.pageSize = this.curPage.pageSize;
     }
     if (!dontClear) {
-      this.selection.clear();
+      this.callsTable.selection.clear();
     }
     this.curPage = p;
     if (p !== null && p!.pageSize != this.perPage) {
@@ -296,7 +217,7 @@ export class CallsComponent {
   }
 
   refresh() {
-    this.selection.clear();
+    this.callsTable.selection.clear();
     this.getCalls(this.curPage, true);
   }
 
@@ -363,7 +284,9 @@ export class CallsComponent {
     this.subscriptions.add(
       this.prefsSvc.get('calls.view.showSourceAlias').subscribe((v) => {
         if (v != true) {
-          this.columns = this.columns.filter((e) => e != 'talker');
+          this.callsTable.columns = this.callsTable.columns.filter(
+            (e) => e != 'talker',
+          );
         }
       }),
     );
@@ -379,10 +302,10 @@ export class CallsComponent {
         .subscribe((calls) => {
           this.isLoading = false;
           this.stopSpinBar();
-          this.count = calls.count;
+          this.callsTable.count = calls.count;
           this.currentSet = calls.calls;
           if (this.callsTable) {
-            this.callsTable.nativeElement.scrollIntoView(true);
+            this.callsTable.callsTable.nativeElement.scrollIntoView(true);
           }
           this.callsResult.next(
             this.currentSet
@@ -396,7 +319,9 @@ export class CallsComponent {
     );
     this.subscriptions.add(
       this.callsResult.subscribe((cr) => {
-        this.curLen = cr.length;
+        if (this.callsTable != undefined) {
+          this.callsTable.curLen = cr.length;
+        }
         this.playerSvc.setQueue(cr);
       }),
     );
@@ -418,11 +343,11 @@ export class CallsComponent {
     dialogRef.afterClosed().subscribe((res: IncidentRecord) => {
       this.incSvc
         .addRemoveCalls(res.id, <CallIncidentParams>{
-          add: this.selection.selected.map((s) => s.id),
+          add: this.callsTable.selection.selected.map((s) => s.id),
         })
         .subscribe({
           next: () => {
-            this.selection.clear();
+            this.callsTable.selection.clear();
           },
           error: (err) => {
             alert(err);
@@ -439,14 +364,14 @@ export class CallsComponent {
       }
       this.incSvc
         .addRemoveCalls(res, <CallIncidentParams>{
-          add: this.selection.selected.map((s, i, a) => {
+          add: this.callsTable.selection.selected.map((s, i, a) => {
             s.incidents++;
             return s.id;
           }),
         })
         .subscribe({
           next: () => {
-            this.selection.clear();
+            this.callsTable.selection.clear();
           },
           error: (err) => {
             alert(err);

@@ -100,7 +100,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		conf:      cfg,
 		db:        db,
 		r:         r,
-		nex:       nexus.New(),
+		nex:       nexus.New(tgCache),
 		logger:    logger,
 		alerter:   alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
 		notifier:  notifier,
@@ -144,7 +144,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	srv.relayer = relayer
 
-	transcriber, err := sinks.NewTranscriptionManager(srv.sinks, authenticator, cfg.Transcription)
+	transcriber, err := sinks.NewTranscriptionManager(srv.sinks, authenticator, srv.tgs, cfg.Transcription)
 	if err != nil {
 		return nil, err
 	}

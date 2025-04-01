@@ -40,7 +40,7 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Preset: PresetUpdateSubmitter},
 					&restrict.Permission{Preset: PresetDeleteSubmitter},
-					&restrict.Permission{Preset: PresetShareSubmitter},
+					&restrict.Permission{Action: entities.ActionShare},
 					&restrict.Permission{Preset: PresetTranscribeSubmitter},
 				},
 				entities.ResourceTalkgroup: {

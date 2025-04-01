@@ -12,14 +12,12 @@ import { PlayerService } from '../player.service';
   styleUrl: './call-player.component.scss',
 })
 export class CallPlayerComponent {
+  @Input() forward: boolean = false;
   @Input() call!: CallRecord;
   @Input() index!: number;
   download = input<boolean>();
 
-  constructor(
-    private callsSvc: CallsService,
-    public playSvc: PlayerService,
-  ) {}
+  constructor(public playSvc: PlayerService) {}
 
   playing: Signal<boolean> = computed(
     () => this.playSvc.playing()?.id == this.call.id,
@@ -32,6 +30,6 @@ export class CallPlayerComponent {
   }
 
   playAudio(ev: Event) {
-    this.playSvc.playAudio(this.call, this.index);
+    this.playSvc.playAudio(this.call, this.index, this.forward);
   }
 }

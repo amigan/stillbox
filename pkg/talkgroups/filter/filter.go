@@ -3,6 +3,7 @@ package filter
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
@@ -15,12 +16,13 @@ import (
 )
 
 type TalkgroupFilter struct {
-	Talkgroups       []tgsp.ID `json:"talkgroups,omitempty" form:"talkgroups"`
-	TalkgroupsNot    []tgsp.ID `json:"talkgroupsNot,omitempty" form:"talkgroupsNot"`
-	TalkgroupTagsAll []string  `json:"talkgroupTagsAll,omitempty" form:"talkgroupTagsAll"`
-	TalkgroupTagsAny []string  `json:"talkgroupTagsAny,omitempty" form:"talkgroupTagsAny"`
-	TalkgroupTagsNot []string  `json:"talkgroupTagsNot,omitempty" form:"talkgroupTagsNot"`
+	Talkgroups       tgsp.IDs `json:"talkgroups,omitempty" form:"talkgroups"`
+	TalkgroupsNot    tgsp.IDs `json:"talkgroupsNot,omitempty" form:"talkgroupsNot"`
+	TalkgroupTagsAll []string `json:"talkgroupTagsAll,omitempty" form:"talkgroupTagsAll"`
+	TalkgroupTagsAny []string `json:"talkgroupTagsAny,omitempty" form:"talkgroupTagsAny"`
+	TalkgroupTagsNot []string `json:"talkgroupTagsNot,omitempty" form:"talkgroupTagsNot"`
 
+	sync.RWMutex
 	talkgroups map[tgsp.ID]bool `json:"-"`
 }
 
@@ -30,6 +32,8 @@ func (f *TalkgroupFilter) TGs(ctx context.Context) (tgsp.IDs, error) {
 		return nil, err
 	}
 
+	f.RLock()
+	defer f.RUnlock()
 	r := make(tgsp.IDs, 0, len(f.talkgroups))
 	for tg := range f.talkgroups {
 		r = append(r, tg)
@@ -44,6 +48,8 @@ func (f *TalkgroupFilter) Tuples(ctx context.Context) (database.TGTuples, error)
 		return database.TGTuples{}, err
 	}
 
+	f.RLock()
+	defer f.RUnlock()
 	sys := make([]uint32, len(f.talkgroups))
 	tgs := make([]uint32, len(f.talkgroups))
 
@@ -64,16 +70,27 @@ func (f *TalkgroupFilter) ensureCompiled(ctx context.Context) error {
 	return nil
 }
 
-func (tgf *TalkgroupFilter) IsEmpty() bool {
-	if tgf == nil {
+func (f *TalkgroupFilter) Recompile(ctx context.Context) error {
+	return f.compile(ctx)
+}
+
+func (f *TalkgroupFilter) TagRefs() []string {
+	return append(f.TalkgroupTagsAll, append(f.TalkgroupTagsNot, f.TalkgroupTagsAny...)...)
+}
+
+func (f *TalkgroupFilter) IsEmpty() bool {
+	if f == nil {
 		return true
 	}
 
-	if len(tgf.Talkgroups) > 0 ||
-		len(tgf.TalkgroupsNot) > 0 ||
-		len(tgf.TalkgroupTagsAll) > 0 ||
-		len(tgf.TalkgroupTagsAny) > 0 ||
-		len(tgf.TalkgroupsNot) > 0 {
+	f.RLock()
+	defer f.RUnlock()
+
+	if len(f.Talkgroups) > 0 ||
+		len(f.TalkgroupsNot) > 0 ||
+		len(f.TalkgroupTagsAll) > 0 ||
+		len(f.TalkgroupTagsAny) > 0 ||
+		len(f.TalkgroupsNot) > 0 {
 		return false
 	}
 
@@ -137,11 +154,10 @@ func (f *TalkgroupFilter) hasTags() bool {
 	return len(f.TalkgroupTagsAny) > 0 || len(f.TalkgroupTagsAll) > 0 || len(f.TalkgroupTagsNot) > 0
 }
 
-func (f *TalkgroupFilter) GetFinalTalkgroups() map[tgsp.ID]bool {
-	return f.talkgroups
-}
-
 func (f *TalkgroupFilter) compile(ctx context.Context) error {
+	f.Lock()
+	defer f.Unlock()
+
 	f.talkgroups = make(map[tgsp.ID]bool)
 	for _, tg := range f.Talkgroups {
 		f.talkgroups[tg] = true
@@ -176,6 +192,9 @@ func (f *TalkgroupFilter) Test(ctx context.Context, call *calls.Call) bool {
 	if err != nil {
 		panic(err)
 	}
+
+	f.RLock()
+	defer f.RUnlock()
 
 	tg := call.TalkgroupTuple()
 
