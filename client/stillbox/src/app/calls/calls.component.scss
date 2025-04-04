@@ -12,6 +12,15 @@ calls-table {
   flex: 0 0 0;
 }
 
+.tsCheck {
+  display: none;
+}
+
+input[type="checkbox"]:checked + button {
+  color: #f00;
+  font-style: normal;
+}
+
 .toolbarButtons button,
 .toolbarButtons form,
 .toolbarButtons form button {

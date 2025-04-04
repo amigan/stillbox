@@ -8,10 +8,10 @@ import (
 )
 
 type NexusSink struct {
-	nexus *nexus.Nexus
+	nexus nexus.Nexus
 }
 
-func NewNexusSink(nexus *nexus.Nexus) *NexusSink {
+func NewNexusSink(nexus nexus.Nexus) *NexusSink {
 	ns := &NexusSink{
 		nexus: nexus,
 	}
@@ -24,6 +24,6 @@ func (ns *NexusSink) SinkType() string {
 }
 
 func (ns *NexusSink) Call(ctx context.Context, call *calls.Call) error {
-	ns.nexus.BroadcastCall(call)
+	ns.nexus.Broadcast(call)
 	return nil
 }

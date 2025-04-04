@@ -4,15 +4,16 @@ import (
 	"context"
 	"sync"
 
-	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
-type Nexus struct {
+type nexus struct {
 	sync.RWMutex
 
 	tgst tgstore.Store
@@ -21,8 +22,16 @@ type Nexus struct {
 
 	*wsManager
 
-	callCh chan *calls.Call
+	bcastChan chan Message
 }
+
+type Nexus interface {
+	Broadcast(Message)
+	PrivateRoutes(chi.Router)
+	Go(ctx context.Context)
+}
+
+var _ Nexus = (*nexus)(nil)
 
 type Registry interface {
 	NewClient(Connection, entities.Subject) Client
@@ -30,11 +39,11 @@ type Registry interface {
 	Unregister(Client)
 }
 
-func New(tgst tgstore.Store) *Nexus {
-	n := &Nexus{
-		clients: make(map[*client]struct{}),
-		callCh:  make(chan *calls.Call),
-		tgst:    tgst,
+func New(tgst tgstore.Store) *nexus {
+	n := &nexus{
+		clients:   make(map[*client]struct{}),
+		bcastChan: make(chan Message),
+		tgst:      tgst,
 	}
 
 	n.wsManager = newWsManager(n)
@@ -42,16 +51,16 @@ func New(tgst tgstore.Store) *Nexus {
 	return n
 }
 
-func (n *Nexus) Go(ctx context.Context) {
+func (n *nexus) Go(ctx context.Context) {
 	ctx = entities.CtxWithServiceSubject(ctx, "nexus")
 	for {
 		select {
-		case call, ok := <-n.callCh:
+		case msg, ok := <-n.bcastChan:
 			if !ok {
 				return
 			}
 
-			n.broadcastCallToClients(ctx, call)
+			n.broadcastToClients(ctx, msg)
 		case <-ctx.Done():
 			n.Shutdown()
 			return
@@ -59,20 +68,29 @@ func (n *Nexus) Go(ctx context.Context) {
 	}
 }
 
-func (n *Nexus) BroadcastCall(call *calls.Call) {
-	n.callCh <- call
+type Message interface {
+	ToPBMessage() *pb.Message
+	BroadcastType() broadcast.Type
+	broadcast.Envelope
 }
 
-func (n *Nexus) broadcastCallToClients(ctx context.Context, call *calls.Call) {
-	message := &pb.Message{
-		ToClientMessage: &pb.Message_Call{Call: call.ToPB()},
-	}
+func (n *nexus) Broadcast(msg Message) {
+	n.bcastChan <- msg
+}
+
+func (n *nexus) broadcastToClients(ctx context.Context, msg Message) {
 	n.Lock()
 	defer n.Unlock()
 
+	message := msg.ToPBMessage()
+	bcType := msg.BroadcastType()
+
 	for cl := range n.clients {
-		clientCtx := entities.CtxWithSubject(ctx, cl.subject)
-		if !cl.filter.Test(clientCtx, call) {
+		cl.RLock()
+
+		if !cl.subscriptions.Has(bcType) ||
+			!cl.filter.Test(entities.CtxWithSubject(ctx, cl.subject), msg) {
+			cl.RUnlock()
 			continue
 		}
 
@@ -84,17 +102,18 @@ func (n *Nexus) broadcastCallToClients(ctx context.Context, call *calls.Call) {
 		default:
 			log.Error().Err(err).Msg("broadcast send failed")
 		}
+		cl.RUnlock()
 	}
 }
 
-func (n *Nexus) Register(c Client) {
+func (n *nexus) Register(c Client) {
 	n.Lock()
 	defer n.Unlock()
 
 	n.clients[c.(*client)] = struct{}{}
 }
 
-func (n *Nexus) Unregister(c Client) {
+func (n *nexus) Unregister(c Client) {
 	n.Lock()
 	defer n.Unlock()
 
@@ -106,11 +125,11 @@ func (n *Nexus) Unregister(c Client) {
 	delete(n.clients, cl)
 }
 
-func (n *Nexus) Shutdown() {
+func (n *nexus) Shutdown() {
 	n.Lock()
 	defer n.Unlock()
 
-	close(n.callCh)
+	close(n.bcastChan)
 
 	for c := range n.clients {
 		c.Shutdown()

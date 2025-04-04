@@ -3914,21 +3914,31 @@ func (_c *Store_SetAppPrefs_Call) RunAndReturn(run func(context.Context, string,
 }
 
 // SetCallTranscript provides a mock function with given fields: ctx, iD, transcript
-func (_m *Store) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error {
+func (_m *Store) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) (database.SetCallTranscriptRow, error) {
 	ret := _m.Called(ctx, iD, transcript)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SetCallTranscript")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *string) error); ok {
+	var r0 database.SetCallTranscriptRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *string) (database.SetCallTranscriptRow, error)); ok {
+		return rf(ctx, iD, transcript)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, *string) database.SetCallTranscriptRow); ok {
 		r0 = rf(ctx, iD, transcript)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(database.SetCallTranscriptRow)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, *string) error); ok {
+		r1 = rf(ctx, iD, transcript)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // Store_SetCallTranscript_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetCallTranscript'
@@ -3951,12 +3961,12 @@ func (_c *Store_SetCallTranscript_Call) Run(run func(ctx context.Context, iD uui
 	return _c
 }
 
-func (_c *Store_SetCallTranscript_Call) Return(_a0 error) *Store_SetCallTranscript_Call {
-	_c.Call.Return(_a0)
+func (_c *Store_SetCallTranscript_Call) Return(_a0 database.SetCallTranscriptRow, _a1 error) *Store_SetCallTranscript_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Store_SetCallTranscript_Call) RunAndReturn(run func(context.Context, uuid.UUID, *string) error) *Store_SetCallTranscript_Call {
+func (_c *Store_SetCallTranscript_Call) RunAndReturn(run func(context.Context, uuid.UUID, *string) (database.SetCallTranscriptRow, error)) *Store_SetCallTranscript_Call {
 	_c.Call.Return(run)
 	return _c
 }

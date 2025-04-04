@@ -57,8 +57,9 @@ FROM swept_calls sc
 WHERE sc.id = @id
 ;
 
--- name: SetCallTranscript :exec
-UPDATE calls SET transcript = $2 WHERE id = $1;
+-- name: SetCallTranscript :one
+UPDATE calls SET transcript = $2 WHERE id = $1
+RETURNING call_date, system, talkgroup, patches;
 
 -- name: AddAlert :exec
 INSERT INTO alerts (time, tgid, system_id, weight, score, orig_score, notified, metadata)

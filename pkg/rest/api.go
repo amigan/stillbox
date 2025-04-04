@@ -7,6 +7,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
@@ -30,6 +31,7 @@ type APIRoot interface {
 
 type api struct {
 	baseURL   *url.URL
+	nex       nexus.Nexus
 	shares    *shareAPI
 	tgs       *talkgroupAPI
 	calls     *callsAPI
@@ -42,11 +44,12 @@ func (a *api) ShareRouter() http.Handler {
 	return a.shares.RootRouter()
 }
 
-func New(baseURL url.URL) *api {
+func New(baseURL url.URL, nex nexus.Nexus) *api {
 	s := &api{
 		baseURL:   &baseURL,
+		nex:       nex,
 		tgs:       new(talkgroupAPI),
-		calls:     new(callsAPI),
+		calls:     newCallsAPI(nex),
 		incidents: newIncidentsAPI(&baseURL),
 		users:     new(usersAPI),
 		prefs:     new(prefsAPI),

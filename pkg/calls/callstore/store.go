@@ -46,7 +46,7 @@ type Store interface {
 	BackfillTrending(ctx context.Context, scorer *trending.Scorer[talkgroups.ID], stepClock func(time.Time), since, until time.Time) (count int, err error)
 
 	// UpdateTranscription updates a call's transcription.
-	UpdateTranscription(ctx context.Context, id uuid.UUID, text string) error
+	UpdateTranscription(ctx context.Context, id uuid.UUID, text string) (*calls.CallTranscription, error)
 }
 
 type postgresStore struct {
@@ -333,18 +333,29 @@ func (s *postgresStore) CallStats(ctx context.Context, interval calls.StatsInter
 	return cs, nil
 }
 
-func (s *postgresStore) UpdateTranscription(ctx context.Context, id uuid.UUID, text string) error {
+func (s *postgresStore) UpdateTranscription(ctx context.Context, id uuid.UUID, text string) (*calls.CallTranscription, error) {
 	c, err := s.getCallOwner(ctx, id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_, err = rbac.Check(ctx, &c, rbac.WithActions(entities.ActionTranscribe))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return database.FromCtx(ctx).SetCallTranscript(ctx, id, &text)
+	sts, err := database.FromCtx(ctx).SetCallTranscript(ctx, id, &text)
+	if err != nil {
+		return nil, err
+	}
+
+	tsc := &calls.CallTranscription{
+		TG:         talkgroups.TG(sts.System, sts.Talkgroup),
+		Patches:    sts.Patches,
+		Transcript: text,
+	}
+
+	return tsc, nil
 }
 
 func (s *postgresStore) BackfillTrending(ctx context.Context, scorer *trending.Scorer[talkgroups.ID], stepClock func(time.Time), since, until time.Time) (count int, err error) {

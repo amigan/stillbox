@@ -9,6 +9,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	tgfilter "dynatron.me/x/stillbox/pkg/talkgroups/filter"
@@ -38,7 +39,9 @@ type client struct {
 
 	subject entities.Subject
 
-	nexus *Nexus
+	subscriptions broadcast.Type
+
+	nexus *nexus
 }
 
 type ToClient interface {
@@ -58,7 +61,7 @@ type Connection interface {
 	Send(ToClient) error
 }
 
-func (n *Nexus) NewClient(conn Connection, subject entities.Subject) Client {
+func (n *nexus) NewClient(conn Connection, subject entities.Subject) Client {
 	sess := &client{
 		Connection: conn,
 		nexus:      n,

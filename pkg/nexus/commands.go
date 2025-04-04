@@ -3,6 +3,7 @@ package nexus
 import (
 	"context"
 
+	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	tgfilter "dynatron.me/x/stillbox/pkg/talkgroups/filter"
@@ -119,7 +120,12 @@ func (c *client) Live(ctx context.Context, cmd *pb.Live) error {
 
 		c.filter = filter
 		tgstore.FromCtx(ctx).RegisterFilter(c.filter)
+	} else {
+		c.filter = nil
 	}
+
+	c.subscriptions.Subscribe(cmd.Calls, broadcast.BcastCall)
+	c.subscriptions.Subscribe(cmd.Transcripts, broadcast.BcastTranscription)
 
 	return nil
 }

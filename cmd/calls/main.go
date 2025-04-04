@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"golang.org/x/term"
@@ -168,13 +169,27 @@ func main() {
 					if v.Call.TalkerAlias != nil {
 						talker = " from " + *v.Call.TalkerAlias
 					}
-					log.Printf("call tg %d%s (%s) [Q: %d]", v.Call.Talkgroup, talker, timeLength(v.Call.Duration), play.Queue())
+					log.Printf("call tg %d:%d%s (%s) [Q: %d]", v.Call.System, v.Call.Talkgroup, talker, timeLength(v.Call.Duration), play.Queue())
 					play.Play(v.Call.Audio, v.Call.AudioType)
+				case *pb.Message_Transcription:
+					log.Printf("callTx tg %d:%d [Q: %d]: %s", v.Transcription.System, v.Transcription.Talkgroup, play.Queue(), v.Transcription.Transcript)
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
 				case *pb.Message_Hello:
 					si := v.Hello.ServerInfo
 					log.Printf("server says: welcome to %s %s built %s for %s database size %s", si.ServerName, si.Version, si.Built, si.Platform, si.DbSize)
+					msg := &pb.Command{
+						Command: &pb.Command_LiveCommand{
+							LiveCommand: &pb.Live{
+								State: common.PtrTo(pb.LiveState_LS_LIVE),
+							},
+						},
+					}
+					mm, err := proto.Marshal(msg)
+					if err != nil {
+						panic(err)
+					}
+					c.WriteMessage(websocket.BinaryMessage, mm)
 				default:
 					log.Printf("received other message not known")
 				}

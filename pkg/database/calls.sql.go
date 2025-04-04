@@ -487,13 +487,28 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 	return items, nil
 }
 
-const setCallTranscript = `-- name: SetCallTranscript :exec
+const setCallTranscript = `-- name: SetCallTranscript :one
 UPDATE calls SET transcript = $2 WHERE id = $1
+RETURNING call_date, system, talkgroup, patches
 `
 
-func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) error {
-	_, err := q.db.Exec(ctx, setCallTranscript, iD, transcript)
-	return err
+type SetCallTranscriptRow struct {
+	CallDate  pgtype.Timestamptz `json:"callDate"`
+	System    int                `json:"system"`
+	Talkgroup int                `json:"talkgroup"`
+	Patches   []int              `json:"patches"`
+}
+
+func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) (SetCallTranscriptRow, error) {
+	row := q.db.QueryRow(ctx, setCallTranscript, iD, transcript)
+	var i SetCallTranscriptRow
+	err := row.Scan(
+		&i.CallDate,
+		&i.System,
+		&i.Talkgroup,
+		&i.Patches,
+	)
+	return i, err
 }
 
 const sweepCalls = `-- name: SweepCalls :execrows

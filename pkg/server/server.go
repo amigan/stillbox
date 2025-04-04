@@ -45,7 +45,7 @@ type Server struct {
 	sinks       sinks.Sinks
 	relayer     *sinks.RelayManager
 	transcriber *sinks.TranscriptionManager
-	nex         *nexus.Nexus
+	nex         nexus.Nexus
 	logger      *Logger
 	alerter     alerting.Alerter
 	notifier    notify.Notifier
@@ -93,14 +93,16 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	callStore := callstore.NewStore(db)
 	statsSvc := stats.NewStats(callStore, stats.DefaultExpiration)
-	api := rest.New(cfg.BaseURL.URL())
+
+	nex := nexus.New(tgCache)
+	api := rest.New(cfg.BaseURL.URL(), nex)
 
 	srv := &Server{
 		auth:      authenticator,
 		conf:      cfg,
 		db:        db,
 		r:         r,
-		nex:       nexus.New(tgCache),
+		nex:       nex,
 		logger:    logger,
 		alerter:   alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
 		notifier:  notifier,

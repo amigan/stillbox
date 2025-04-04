@@ -119,13 +119,33 @@
       </mat-select>
     </mat-form-field>
     <div class="toolbarButtons">
-      <button class="sbButton" (click)="resetFilter()">
+      <input
+        *ngIf="showTranscripts | async"
+        class="tsCheck"
+        type="checkbox"
+        formControlName="showTranscripts"
+        name="showTranscripts"
+      />
+      <button
+        *ngIf="showTranscripts | async"
+        title="Always show transcripts"
+        class="sbButton"
+        (click)="
+          this.form.controls.showTranscripts.setValue(
+            !this.form.controls.showTranscripts.value
+          )
+        "
+      >
+        <mat-icon>subtitles</mat-icon>
+      </button>
+      <button class="sbButton" matIconButton (click)="resetFilter()">
         <mat-icon class="material-symbols-outlined">reset_settings</mat-icon>
       </button>
-      <button class="sbButton" (click)="refresh()">
+      <button class="sbButton" matIconButton (click)="refresh()">
         <mat-icon>refresh</mat-icon>
       </button>
       <button
+        matIconButton
         [ngClass]="{ sbButton: true, hidden: !callsTable.selection.hasValue() }"
         [matMenuTriggerFor]="callMenu"
       >

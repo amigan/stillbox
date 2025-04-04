@@ -9,6 +9,7 @@ import (
 	"dynatron.me/x/stillbox/internal/audio"
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
+	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
@@ -56,6 +57,43 @@ type CallAudio struct {
 	AudioBlob []byte         `json:"audioBlob"`
 }
 
+// CallTranscription is a skinny Call used for transcription responses.
+type CallTranscription struct {
+	ID         uuid.UUID     `json:"id"`
+	TG         talkgroups.ID `json:"tg"`
+	Patches    []int         `json:"patches"`
+	Transcript string        `json:"transcript"`
+}
+
+func (*CallTranscription) BroadcastType() broadcast.Type {
+	return broadcast.BcastTranscription
+}
+
+func (ct *CallTranscription) ToPBMessage() *pb.Message {
+	return &pb.Message{
+		ToClientMessage: &pb.Message_Transcription{
+			Transcription: ct.ToPB(),
+		},
+	}
+}
+
+func (ct *CallTranscription) ToPB() *pb.CallTranscription {
+	return &pb.CallTranscription{
+		Id:         ct.ID.String(),
+		System:     int32(ct.TG.System),
+		Talkgroup:  int32(ct.TG.Talkgroup),
+		Transcript: ct.Transcript,
+	}
+}
+
+func (ct *CallTranscription) TalkgroupTuple() talkgroups.ID {
+	return ct.TG
+}
+
+func (ct *CallTranscription) PatchTGs() []int {
+	return ct.Patches
+}
+
 // relayOut exists for compatibility with http
 // source CallUploadRequest as used in the relay sink.
 type Call struct {
@@ -81,6 +119,10 @@ type Call struct {
 	Transcript     *string       `json:"transcript" relayOut:"transcript,omitempty"`
 
 	shouldStore bool `json:"-"`
+}
+
+func (*Call) BroadcastType() broadcast.Type {
+	return broadcast.BcastCall
 }
 
 func (c *Call) GetResourceName() string {
@@ -144,6 +186,12 @@ func toInt32Slice(s []int) []int32 {
 	return n
 }
 
+func (c *Call) ToPBMessage() *pb.Message {
+	return &pb.Message{
+		ToClientMessage: &pb.Message_Call{Call: c.ToPB()},
+	}
+}
+
 func (c *Call) ToPB() *pb.Call {
 	return &pb.Call{
 		Id:          c.ID.String(),
@@ -153,7 +201,6 @@ func (c *Call) ToPB() *pb.Call {
 		System:      int32(c.System),
 		Talkgroup:   int32(c.Talkgroup),
 		TalkerAlias: c.TalkerAlias,
-
 		Source:      int32(c.Source),
 		Frequency:   int64(c.Frequency),
 		Frequencies: toInt64Slice(c.Frequencies),
@@ -188,4 +235,8 @@ func (c *Call) computeLength() (err error) {
 
 func (c *Call) TalkgroupTuple() talkgroups.ID {
 	return talkgroups.TG(c.System, c.Talkgroup)
+}
+
+func (c *Call) PatchTGs() []int {
+	return c.Patches
 }

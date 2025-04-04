@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
@@ -183,7 +183,7 @@ func (f *TalkgroupFilter) compile(ctx context.Context) error {
 	return nil
 }
 
-func (f *TalkgroupFilter) Test(ctx context.Context, call *calls.Call) bool {
+func (f *TalkgroupFilter) Test(ctx context.Context, msgEnvelope broadcast.Envelope) bool {
 	if f == nil { // no filter means all calls
 		return true
 	}
@@ -196,14 +196,14 @@ func (f *TalkgroupFilter) Test(ctx context.Context, call *calls.Call) bool {
 	f.RLock()
 	defer f.RUnlock()
 
-	tg := call.TalkgroupTuple()
+	tg := msgEnvelope.TalkgroupTuple()
 
 	tgRes, have := f.talkgroups[tg]
 	if have {
 		return tgRes
 	}
 
-	for _, patch := range call.Patches {
+	for _, patch := range msgEnvelope.PatchTGs() {
 		tg.Talkgroup = uint32(patch)
 		tgRes, have := f.talkgroups[tg]
 		if have {

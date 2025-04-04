@@ -47,6 +47,8 @@ import {
   PER_PAGE_DEFAULT,
   CallsTableComponent,
 } from './calls-table/calls-table.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 const DEBOUNCE_INTERVAL = 300;
 
@@ -56,6 +58,8 @@ const reqPageSize = 200;
   imports: [
     MatIconModule,
     MatPaginatorModule,
+    MatButtonToggleModule,
+    MatCheckboxModule,
     MatTableModule,
     AsyncPipe,
     MatFormFieldModule,
@@ -66,6 +70,7 @@ const reqPageSize = 200;
     CommonModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,
+    MatButtonModule,
     MatSelectModule,
     MatMenuModule,
     MatTooltipModule,
@@ -95,12 +100,16 @@ export class CallsComponent {
     duration: new FormControl(0),
     tagsAny: new FormControl<string[]>([]),
     tagsNot: new FormControl<string[]>([]),
+    showTranscripts: new FormControl(false),
   });
   isLoading = true;
   transcriptFilter = toSignal(
     this.form.controls.transcriptSearch.valueChanges.pipe(
       debounceTime(DEBOUNCE_INTERVAL),
     ),
+  );
+  showTranscriptsControl = toSignal(
+    this.form.controls.showTranscripts.valueChanges,
   );
 
   subscriptions = new Subscription();
@@ -122,7 +131,8 @@ export class CallsComponent {
 
   txSearchSet(): boolean {
     let tf = this.transcriptFilter();
-    return tf != null && tf.length > 0;
+    let stt = this.showTranscriptsControl();
+    return (tf != null && tf.length > 0) || (stt != null && stt);
   }
 
   searchTGFilter(filt: string | null) {
@@ -141,8 +151,12 @@ export class CallsComponent {
     if (v == ' ') {
       return '';
     }
-    if (v != '') {
+    if (v != '' && v != null) {
       return v;
+    }
+
+    if (this.form.controls.showTranscripts.value) {
+      return '';
     }
 
     return null;

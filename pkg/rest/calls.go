@@ -15,6 +15,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/stats"
 
 	"github.com/go-chi/chi/v5"
@@ -31,6 +32,11 @@ var (
 )
 
 type callsAPI struct {
+	nex nexus.Nexus
+}
+
+func newCallsAPI(nex nexus.Nexus) *callsAPI {
+	return &callsAPI{nex: nex}
 }
 
 func (ca *callsAPI) Subrouter() http.Handler {
@@ -88,11 +94,13 @@ func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = callstore.FromCtx(ctx).UpdateTranscription(ctx, p.CallID, strings.Trim(string(xsc), " \t"))
+	tsc, err := callstore.FromCtx(ctx).UpdateTranscription(ctx, p.CallID, strings.Trim(string(xsc), " \t"))
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
 	}
+
+	ca.nex.Broadcast(tsc)
 
 	w.WriteHeader(http.StatusNoContent)
 }
