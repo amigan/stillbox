@@ -40,7 +40,7 @@ func (c *client) HandleCommand(ctx context.Context, cmd *pb.Command) {
 	case *pb.Command_TgCommand:
 		err = c.Talkgroup(ctx, cc.TgCommand)
 	default:
-		log.Error().Msgf("unknown command %T", cmd)
+		log.Error().Msgf("unknown command %#v", cmd)
 	}
 
 	if err != nil {
