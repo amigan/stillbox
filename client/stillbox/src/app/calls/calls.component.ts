@@ -334,7 +334,7 @@ export class CallsComponent {
     this.subscriptions.add(
       this.callsResult.subscribe((cr) => {
         if (this.callsTable != undefined) {
-          this.callsTable.curLen = cr.length;
+          this.callsSvc.curLen = cr.length;
         }
         this.playerSvc.setQueue(cr);
       }),

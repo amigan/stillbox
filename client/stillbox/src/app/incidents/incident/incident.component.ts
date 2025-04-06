@@ -42,6 +42,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { PlayerService } from '../../calls/player/player.service';
 import { ErrorsService } from '../../errors/errors.service';
 import { MarkdownModule } from 'ngx-markdown';
+import { CallsService } from '../../calls/calls.service';
 
 export interface EditDialogData {
   incID: string;
@@ -180,6 +181,7 @@ export class IncidentComponent {
     private tgSvc: TalkgroupService,
     private playerSvc: PlayerService,
     private errorsSvc: ErrorsService,
+    private callsSvc: CallsService,
   ) {}
 
   saveIncName(ev: Event) {}
@@ -204,7 +206,7 @@ export class IncidentComponent {
       tap((inc) => {
         if (inc && inc.calls) {
           this.callsResult.data = inc.calls;
-          this.callsTable.curLen = inc.calls.length;
+          this.callsSvc.curLen = inc.calls.length;
           this.playerSvc.setQueue(inc.calls);
         }
       }),

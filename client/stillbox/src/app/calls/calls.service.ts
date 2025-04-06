@@ -216,6 +216,7 @@ export interface CallsPaginated {
 })
 export class CallsService {
   constructor(private http: HttpClient) {}
+  public curLen = 0;
 
   getCalls(p: CallsListParams): Observable<CallsPaginated> {
     return this.http.post<CallsPaginated>('/api/call/', p);
