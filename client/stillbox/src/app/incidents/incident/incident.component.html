@@ -45,9 +45,7 @@
     <div class="field field-end field-label">End</div>
     <div class="field field-data field-end">{{ inc?.endTime | fmtDate }}</div>
   </div>
-  <div class="inc-description">
-    {{ inc?.description }}
-  </div>
+  <div markdown [data]="inc?.description" class="inc-description"></div>
   <calls-table
     #callsTable
     [searched]="false"
