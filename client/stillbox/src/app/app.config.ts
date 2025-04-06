@@ -15,6 +15,7 @@ import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideServiceWorker } from '@angular/service-worker';
+import { provideMarkdown } from 'ngx-markdown';
 export function apiBaseInterceptor(
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
@@ -50,5 +51,6 @@ export const appConfig: ApplicationConfig = {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
     }),
+    provideMarkdown(),
   ],
 };

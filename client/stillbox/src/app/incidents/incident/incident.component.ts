@@ -41,6 +41,7 @@ import {
 import { PageEvent } from '@angular/material/paginator';
 import { PlayerService } from '../../calls/player/player.service';
 import { ErrorsService } from '../../errors/errors.service';
+import { MarkdownModule } from 'ngx-markdown';
 
 export interface EditDialogData {
   incID: string;
@@ -143,6 +144,7 @@ export class IncidentEditDialogComponent {
     MatTableModule,
     MatMenuModule,
     CallsTableComponent,
+    MarkdownModule,
   ],
   templateUrl: './incident.component.html',
   styleUrl: './incident.component.scss',
