@@ -23,6 +23,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { map } from 'rxjs/operators';
 import {
+  CallsService,
   DatePipe,
   FixedPointPipe,
   TalkerPipe,
@@ -105,7 +106,6 @@ export class CallsTableComponent {
     'transcript',
     'duration',
   ];
-  public curLen = 0;
   tableFG = new FormGroup({
     downloadMode: new FormControl<boolean>(false),
   });
@@ -129,11 +129,14 @@ export class CallsTableComponent {
     return this.columns.filter((tx) => tx != 'transcript');
   });
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(
+    private sanitizer: DomSanitizer,
+    private callsSvc: CallsService,
+  ) {}
 
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.curLen;
+    const numRows = this.callsSvc.curLen;
     return numSelected === numRows;
   }
 
