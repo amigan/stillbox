@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 
 	"github.com/rs/zerolog/log"
@@ -70,12 +71,28 @@ type RateLimit struct {
 }
 
 type Alerting struct {
-	Enable         bool                `yaml:"enable" form:"enable"`
-	LookbackDays   uint                `yaml:"lookbackDays" form:"lookbackDays"`
-	HalfLife       jsontypes.Duration  `yaml:"halfLife" form:"halfLife"`
-	Recent         jsontypes.Duration  `yaml:"recent" form:"recent"`
-	AlertThreshold float64             `yaml:"alertThreshold" form:"alertThreshold"`
-	Renotify       *jsontypes.Duration `yaml:"renotify,omitempty" form:"renotify,omitempty"`
+	Enable              bool                `yaml:"enable" form:"enable"`
+	LookbackDays        uint                `yaml:"lookbackDays" form:"lookbackDays"`
+	HalfLife            jsontypes.Duration  `yaml:"halfLife" form:"halfLife"`
+	Recent              jsontypes.Duration  `yaml:"recent" form:"recent"`
+	AlertThreshold      float64             `yaml:"alertThreshold" form:"alertThreshold"`
+	Renotify            *jsontypes.Duration `yaml:"renotify,omitempty" form:"renotify,omitempty"`
+	Transcripts         uint                `yaml:"transcripts" form:"transcripts"`
+	MaxContext          uint                `yaml:"maxContext" form:"maxContext"`
+	CallLengthThreshold *jsontypes.Duration `yaml:"callLengthThreshold" form:"callLengthThreshold"`
+	ContextLookback     *jsontypes.Duration `yaml:"lookback" form:"contextLookback"`
+}
+
+func (a *Alerting) FillDefaults() {
+	if a.MaxContext > 0 {
+		if a.CallLengthThreshold == nil {
+			a.CallLengthThreshold = common.PtrTo(jsontypes.Duration(4 * time.Second))
+		}
+
+		if a.ContextLookback == nil {
+			a.ContextLookback = common.PtrTo(jsontypes.Duration(10 * time.Minute))
+		}
+	}
 }
 
 type Relay struct {

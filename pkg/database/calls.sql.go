@@ -298,6 +298,56 @@ func (q *Queries) GetDatabaseSize(ctx context.Context) (string, error) {
 	return pg_size_pretty, err
 }
 
+const getTranscriptsContext = `-- name: GetTranscriptsContext :many
+SELECT c.call_date, c.transcript FROM calls c
+WHERE
+(c.system, c.talkgroup) = ($1, $2) AND
+c.call_date >= NOW() - $3::interval AND
+c.transcript IS NOT NULL AND
+c.duration > $4
+ORDER BY c.call_date DESC
+LIMIT $5
+`
+
+type GetTranscriptsContextParams struct {
+	System         int             `json:"system"`
+	Talkgroup      int             `json:"talkgroup"`
+	Lookback       pgtype.Interval `json:"lookback"`
+	DurationMs     *int32          `json:"durationMs"`
+	NumTranscripts int32           `json:"numTranscripts"`
+}
+
+type GetTranscriptsContextRow struct {
+	CallDate   pgtype.Timestamptz `json:"callDate"`
+	Transcript *string            `json:"transcript"`
+}
+
+func (q *Queries) GetTranscriptsContext(ctx context.Context, arg GetTranscriptsContextParams) ([]GetTranscriptsContextRow, error) {
+	rows, err := q.db.Query(ctx, getTranscriptsContext,
+		arg.System,
+		arg.Talkgroup,
+		arg.Lookback,
+		arg.DurationMs,
+		arg.NumTranscripts,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTranscriptsContextRow
+	for rows.Next() {
+		var i GetTranscriptsContextRow
+		if err := rows.Scan(&i.CallDate, &i.Transcript); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCallsCount = `-- name: ListCallsCount :one
 SELECT
 COUNT(*)

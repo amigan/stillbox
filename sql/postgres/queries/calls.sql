@@ -193,6 +193,16 @@ DELETE FROM calls WHERE id = @id;
 -- name: GetCallSubmitter :one
 SELECT submitter FROM calls WHERE id = @id;
 
+-- name: GetTranscriptsContext :many
+SELECT c.call_date, c.transcript FROM calls c
+WHERE
+(c.system, c.talkgroup) = (@system, @talkgroup) AND
+c.call_date >= NOW() - @lookback::interval AND
+c.transcript IS NOT NULL AND
+c.duration > @duration_ms
+ORDER BY c.call_date DESC
+LIMIT @num_transcripts;
+
 -- name: GetCall :one
 SELECT
 	id,

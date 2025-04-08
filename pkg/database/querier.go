@@ -62,6 +62,7 @@ type Querier interface {
 	GetTalkgroupsWithLearnedBySystemP(ctx context.Context, arg GetTalkgroupsWithLearnedBySystemPParams) ([]GetTalkgroupsWithLearnedBySystemPRow, error)
 	GetTalkgroupsWithLearnedCount(ctx context.Context, filter *string) (int64, error)
 	GetTalkgroupsWithLearnedP(ctx context.Context, arg GetTalkgroupsWithLearnedPParams) ([]GetTalkgroupsWithLearnedPRow, error)
+	GetTranscriptsContext(ctx context.Context, arg GetTranscriptsContextParams) ([]GetTranscriptsContextRow, error)
 	GetUserByID(ctx context.Context, id int) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUsers(ctx context.Context) ([]User, error)

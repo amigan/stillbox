@@ -3210,6 +3210,65 @@ func (_c *Store_GetTalkgroupsWithLearnedP_Call) RunAndReturn(run func(context.Co
 	return _c
 }
 
+// GetTranscriptsContext provides a mock function with given fields: ctx, arg
+func (_m *Store) GetTranscriptsContext(ctx context.Context, arg database.GetTranscriptsContextParams) ([]database.GetTranscriptsContextRow, error) {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTranscriptsContext")
+	}
+
+	var r0 []database.GetTranscriptsContextRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetTranscriptsContextParams) ([]database.GetTranscriptsContextRow, error)); ok {
+		return rf(ctx, arg)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetTranscriptsContextParams) []database.GetTranscriptsContextRow); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetTranscriptsContextRow)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, database.GetTranscriptsContextParams) error); ok {
+		r1 = rf(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetTranscriptsContext_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTranscriptsContext'
+type Store_GetTranscriptsContext_Call struct {
+	*mock.Call
+}
+
+// GetTranscriptsContext is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.GetTranscriptsContextParams
+func (_e *Store_Expecter) GetTranscriptsContext(ctx interface{}, arg interface{}) *Store_GetTranscriptsContext_Call {
+	return &Store_GetTranscriptsContext_Call{Call: _e.mock.On("GetTranscriptsContext", ctx, arg)}
+}
+
+func (_c *Store_GetTranscriptsContext_Call) Run(run func(ctx context.Context, arg database.GetTranscriptsContextParams)) *Store_GetTranscriptsContext_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(database.GetTranscriptsContextParams))
+	})
+	return _c
+}
+
+func (_c *Store_GetTranscriptsContext_Call) Return(_a0 []database.GetTranscriptsContextRow, _a1 error) *Store_GetTranscriptsContext_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetTranscriptsContext_Call) RunAndReturn(run func(context.Context, database.GetTranscriptsContextParams) ([]database.GetTranscriptsContextRow, error)) *Store_GetTranscriptsContext_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetUserByID provides a mock function with given fields: ctx, id
 func (_m *Store) GetUserByID(ctx context.Context, id int) (database.User, error) {
 	ret := _m.Called(ctx, id)

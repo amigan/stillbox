@@ -88,6 +88,13 @@ func (d *Duration) UnmarshalYAML(n *yaml.Node) error {
 	return nil
 }
 
+func (d *Duration) PGInterval() pgtype.Interval {
+	return pgtype.Interval{
+		Microseconds: d.Duration().Microseconds(),
+		Valid:        true,
+	}
+}
+
 func (d *Duration) UnmarshalText(text []byte) error {
 	dur, err := time.ParseDuration(string(text))
 	if err != nil {

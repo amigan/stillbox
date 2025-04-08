@@ -95,6 +95,8 @@ func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerte
 		return &noopAlerter{}
 	}
 
+	cfg.FillDefaults()
+
 	as := &alerter{
 		cfg:        cfg,
 		alertCache: make(map[talkgroups.ID]alert.Alert),
@@ -212,6 +214,13 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 				}
 
 				if !a.Suppressed {
+					if as.cfg.MaxContext > 0 {
+						err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, *as.cfg.CallLengthThreshold, *as.cfg.ContextLookback)
+						if err != nil {
+							log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("fill transcript context")
+						}
+					}
+
 					notifications = append(notifications, a)
 				}
 			}
@@ -225,12 +234,36 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	ridx := rand.Intn(len(as.scores))
-	a, err := alert.Make(ctx, as.scores[ridx], 1.0)
+	var tgsc talkgroups.ID
+	var tg trending.Score[talkgroups.ID]
+	tgst := r.URL.Query().Get("tg")
+	err := tgsc.UnmarshalText([]byte(tgst))
+	if err == nil {
+		for _, s := range as.scores {
+			if s.ID == tgsc {
+				tg = s
+				break
+			}
+		}
+	}
+
+	if tg == (trending.Score[talkgroups.ID]{}) {
+		ridx := rand.Intn(len(as.scores))
+		tg = as.scores[ridx]
+	}
+
+	a, err := alert.Make(ctx, tg, 1.0)
 	if err != nil {
 		log.Error().Err(err).Msg("test notify make alert fail")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if as.cfg.MaxContext > 0 {
+		err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, *as.cfg.CallLengthThreshold, *as.cfg.ContextLookback)
+		if err != nil {
+			log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("fill transcript context")
+		}
 	}
 
 	alerts, err := as.eval(ctx, time.Now(), true)

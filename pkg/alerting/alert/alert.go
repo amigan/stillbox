@@ -5,13 +5,20 @@ import (
 	"fmt"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/internal/trending"
+	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type TxCtx struct {
+	Date       time.Time
+	Transcript string
+}
 
 type Alert struct {
 	ID         int
@@ -22,6 +29,7 @@ type Alert struct {
 	OrigScore  float64
 	Weight     float32
 	Suppressed bool
+	Context    []TxCtx
 }
 
 func (a *Alert) ToAddAlertParams() database.AddAlertParams {
@@ -42,6 +50,27 @@ func (a *Alert) ToAddAlertParams() database.AddAlertParams {
 		OrigScore: origScore,
 		Notified:  !a.Suppressed,
 	}
+}
+
+func (a *Alert) FillTranscriptContext(ctx context.Context, count uint, threshold, lookback jsontypes.Duration) error {
+	cs := callstore.FromCtx(ctx)
+	tc, err := cs.TranscriptContext(ctx, a.Score.ID, count, threshold, lookback)
+	if err != nil {
+		return err
+	}
+
+	for _, c := range tc {
+		if c.Transcript == nil {
+			continue
+		}
+
+		a.Context = append(a.Context, TxCtx{
+			Date:       c.CallDate.Time,
+			Transcript: *c.Transcript,
+		})
+	}
+
+	return nil
 }
 
 // Make creates an alert for later rendering or storage.
