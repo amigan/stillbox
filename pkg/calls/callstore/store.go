@@ -47,6 +47,9 @@ type Store interface {
 
 	// UpdateTranscription updates a call's transcription.
 	UpdateTranscription(ctx context.Context, id uuid.UUID, text string) (*calls.CallTranscription, error)
+
+	// TranscriptContext gets a talkgroup's last recent calls with length greater than threshold and since lookback ago.
+	TranscriptContext(ctx context.Context, tg talkgroups.ID, count uint, threshold jsontypes.Duration, lookback jsontypes.Duration) ([]database.GetTranscriptsContextRow, error)
 }
 
 type postgresStore struct {
@@ -392,4 +395,20 @@ func (s *postgresStore) BackfillTrending(ctx context.Context, scorer *trending.S
 	}
 
 	return count, nil
+}
+
+func (s *postgresStore) TranscriptContext(ctx context.Context, tg talkgroups.ID, count uint, threshold jsontypes.Duration, lookback jsontypes.Duration) ([]database.GetTranscriptsContextRow, error) {
+	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceCall), rbac.WithActions(entities.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
+	db := database.FromCtx(ctx)
+	return db.GetTranscriptsContext(ctx, database.GetTranscriptsContextParams{
+		System:         int(tg.System),
+		Talkgroup:      int(tg.Talkgroup),
+		DurationMs:     common.PtrTo(int32(threshold.Duration().Milliseconds())),
+		NumTranscripts: int32(count),
+		Lookback:       lookback.PGInterval(),
+	})
 }

@@ -46,13 +46,21 @@ func highest(a []alert.Alert) string {
 	return top.TGName
 }
 
+func fmtTime(fmt string, t time.Time) string {
+	return t.Format(fmt)
+}
+
 var alertFm = template.FuncMap{
 	"highest": highest,
+	"fmtTime": fmtTime,
 }
 
 const (
 	defaultBodyTemplStr = `{{ range . -}}
 {{ .TGName }}{{ if (and .Talkgroup .Talkgroup.AlphaTag) }} ({{ .Talkgroup.StringTag false -}}){{ end }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
+{{- range .Context }}
+{{ .Date | fmtTime "03:04:05" }} {{ .Transcript }}
+{{- end }}
 
 {{ end -}}`
 	defaultSubjectTemplStr = `Stillbox Alert ({{ highest . }})`

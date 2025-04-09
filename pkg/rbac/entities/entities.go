@@ -36,6 +36,8 @@ const (
 	ActionShare            = "share"
 	ActionUpdatePrivileged = "updatePrivileged"
 	ActionTranscribe       = "updateTranscription"
+	ActionSimulate         = "simulate"
+	ActionTestNotify       = "testNotify"
 )
 
 func SubjectFrom(ctx context.Context) Subject {

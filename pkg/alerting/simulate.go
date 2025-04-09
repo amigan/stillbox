@@ -13,6 +13,8 @@ import (
 	"dynatron.me/x/stillbox/internal/trending"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
@@ -115,9 +117,22 @@ func (s *Simulation) Simulate(ctx context.Context) (trending.Scores[talkgroups.I
 // simulateHandler is the POST endpoint handler.
 func (as *alerter) simulateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceAlert), rbac.WithActions(entities.ActionSimulate))
+	if rbac.IsErrAccessDenied(err) != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if err != nil {
+		log.Error().Err(err).Msg("rbac check failed")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	s := new(Simulation)
 
-	err := forms.Unmarshal(r, s, forms.WithAcceptBlank(), forms.WithParseLocalTime())
+	err = forms.Unmarshal(r, s, forms.WithAcceptBlank(), forms.WithParseLocalTime())
 	if err != nil {
 		err = fmt.Errorf("simulate unmarshal: %w", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)

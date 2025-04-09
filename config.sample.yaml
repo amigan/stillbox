@@ -50,12 +50,22 @@ alerting:
   recent: 2h
   alertThreshold: 0.3
   renotify: 30m
+
+  # if maxContext is >0, it specifies the number of transcripts to search for in alerts
+  maxContext: 3
+  # callLengthThreshold specifies the minimum call length to get transcripts for; default is 4 seconds
+  callLengthThreshold: 4s
+  # contextLookback specifies how far back to look for transcripts
+  contextLookback: 20m
 notify:
   - provider: slackwebhook
 #   subjectTemplate: "Stillbox Alert ({{ highest . }})"
 #   bodyTemplate: |
 #     {{ range . -}}
 #     {{ .TGName }}{{ if (and .Talkgroup .Talkgroup.AlphaTag) }} ({{ .Talkgroup.StringTag false -}}){{ end }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
+#     {{- range .Context }}
+#     {{ .Date | fmtTime "03:04:05" }} {{ .Transcript }}
+#     {{- end -}}
 #
 #     {{ end -}}
     config:
