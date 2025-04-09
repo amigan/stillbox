@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/notify"
+	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
@@ -234,35 +236,28 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var tgsc talkgroups.ID
-	var tg trending.Score[talkgroups.ID]
-	tgst := r.URL.Query().Get("tg")
-	err := tgsc.UnmarshalText([]byte(tgst))
-	if err == nil {
-		for _, s := range as.scores {
-			if s.ID == tgsc {
-				tg = s
-				break
-			}
-		}
-	}
-
-	if tg == (trending.Score[talkgroups.ID]{}) {
-		ridx := rand.Intn(len(as.scores))
-		tg = as.scores[ridx]
-	}
-
-	a, err := alert.Make(ctx, tg, 1.0)
-	if err != nil {
-		log.Error().Err(err).Msg("test notify make alert fail")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceAlert), rbac.WithActions(entities.ActionTestNotify))
+	if rbac.IsErrAccessDenied(err) != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	if as.cfg.MaxContext > 0 {
-		err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, *as.cfg.CallLengthThreshold, *as.cfg.ContextLookback)
-		if err != nil {
-			log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("fill transcript context")
+	if err != nil {
+		log.Error().Err(err).Msg("rbac check failed")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	var tgs trending.Scores[talkgroups.ID]
+	tgst := r.URL.Query().Get("tg")
+	for v := range strings.SplitSeq(tgst, ",") {
+		var tgsc talkgroups.ID
+		err := tgsc.UnmarshalText([]byte(v))
+		if err == nil {
+			tgs = append(tgs, trending.Score[talkgroups.ID]{
+				ID:    tgsc,
+				Score: 1.1234,
+			})
 		}
 	}
 
@@ -273,7 +268,28 @@ func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alerts = append(alerts, a)
+	if tgs == nil {
+		ridx := rand.Intn(len(as.scores))
+		tgs = append(tgs, as.scores[ridx])
+	}
+
+	for _, v := range tgs {
+		a, err := alert.Make(ctx, v, 1.0)
+		if err != nil {
+			log.Error().Err(err).Msg("test notify make alert fail")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if as.cfg.MaxContext > 0 {
+			err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, *as.cfg.CallLengthThreshold, *as.cfg.ContextLookback)
+			if err != nil {
+				log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("fill transcript context")
+			}
+		}
+
+		alerts = append(alerts, a)
+	}
 
 	err = as.notifier.Send(ctx, alerts)
 	if err != nil {
