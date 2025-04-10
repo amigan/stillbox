@@ -82,8 +82,8 @@ func (s *Server) WithCtxStores() func(next http.Handler) http.Handler {
 }
 
 func (s *Server) rateLimit(r chi.Router) {
-	if s.conf.RateLimit.Verify() {
-		r.Use(rateLimiter(&s.conf.RateLimit))
+	if s.conf.Server.RateLimit.Verify() {
+		r.Use(rateLimiter(&s.conf.Server.RateLimit))
 	}
 }
 

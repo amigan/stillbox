@@ -38,19 +38,23 @@ func (o *ServeOptions) Options(_ *cli.Context) error {
 }
 
 func (o *ServeOptions) Execute() error {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancelCause(context.Background())
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 	defer func() {
 		signal.Stop(sig)
-		cancel()
+		cancel(nil)
 	}()
+
+	shutReq := make(chan error, 1)
 
 	go func() {
 		select {
+		case err := <-shutReq:
+			cancel(err)
 		case <-sig:
-			cancel()
+			cancel(nil)
 		case <-ctx.Done():
 		}
 	}()
@@ -60,5 +64,5 @@ func (o *ServeOptions) Execute() error {
 		return err
 	}
 
-	return srv.Go(ctx)
+	return srv.Go(ctx, shutReq)
 }

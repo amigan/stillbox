@@ -1,25 +1,26 @@
+server:
+  cors:
+    allowedOrigins:
+      - 'http://localhost:*'
+  listen: ':3051'
+  public: true
+  rateLimit:
+    enable: true
+    requests: 200
+    over: 2m
 db:
   connect: 'postgres://stillbox:somepassword@stillbox:5432/stillbox?sslmode=disable'
   logQueries: true
-cors:
-  allowedOrigins:
-    - 'http://localhost:*'
 auth:
   jwtsecret: 'somesecret'
   domain: xenon
   allowInsecureFor:
     "localhost": true
     "stillbox": true
-listen: ':3051'
-public: true
 log:
   - level: debug
   - level: error
     file: error.log
-rateLimit:
-  enable: true
-  requests: 200
-  over: 2m
 alerting:
   enable: true
   lookbackDays: 7

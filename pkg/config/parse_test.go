@@ -12,14 +12,23 @@ import (
 )
 
 var expCfg = &Config{
+	Server: Server{
+		CORS: CORS{
+			AllowedOrigins: []string{
+				"http://localhost:*",
+			},
+		},
+		Listen: ":3051",
+		Public: true,
+		RateLimit: RateLimit{
+			Enable:   true,
+			Requests: 200,
+			Over:     2 * time.Minute,
+		},
+	},
 	DB: DB{
 		Connect:    "postgres://stillbox:somepassword@stillbox:5432/stillbox?sslmode=disable",
 		LogQueries: true,
-	},
-	CORS: CORS{
-		AllowedOrigins: []string{
-			"http://localhost:*",
-		},
 	},
 	Auth: Auth{
 		JWTSecret: "somesecret",
@@ -45,13 +54,7 @@ var expCfg = &Config{
 			File:  common.PtrTo("error.log"),
 		},
 	},
-	Listen: ":3051",
-	Public: true,
-	RateLimit: RateLimit{
-		Enable:   true,
-		Requests: 200,
-		Over:     2 * time.Minute,
-	},
+
 	Notify: Notify{
 		NotifyService{
 			Provider: "slackwebhook",

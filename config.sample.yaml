@@ -1,6 +1,18 @@
-# this is used to compose URLs, for example in M3U responses.
-# set it to what users access the instance as.
-baseURL: "https://stillbox.example.com"
+server:
+  # this is used to compose URLs, for example in M3U responses.
+  # set it to what users access the instance as.
+  baseURL: "https://stillbox.example.com"
+  listen: ':3050'
+  public: true
+  rateLimit:
+    enable: true
+    requests: 200
+    over: 2m
+  cors:
+    allowedOrigins:
+      - 'http://localhost:*'
+      - 'https://stillbox.server'
+
 db:
   connect: 'postgres://postgres:password@localhost:5432/example'
   partition:
@@ -16,10 +28,7 @@ db:
     drop: true
     # number of partitions to prepare ahead
     preProvision: 3
-cors:
-  allowedOrigins:
-    - 'http://localhost:*'
-    - 'https://stillbox.server'
+
 auth:
   jwtsecret: 'super secret string'
   # this is the JWT cookie domain
@@ -30,8 +39,7 @@ auth:
   # this instead changes the meaning of allowInsecureFor to the cookie being marked
   # Secure, but SameSite will be set to None
   sameSiteNoneForInsecure: false
-listen: ':3050'
-public: true
+
 log:
   # level logs at or above the specified level
   # levels are trace, debug, info, warn, error, fatal, panic
@@ -39,10 +47,7 @@ log:
   - level: debug
   - level: error
     file: error.log
-rateLimit:
-  enable: true
-  requests: 200
-  over: 2m
+
 alerting:
   enable: true
   lookbackDays: 7
@@ -50,13 +55,13 @@ alerting:
   recent: 2h
   alertThreshold: 0.3
   renotify: 30m
-
   # if maxContext is >0, it specifies the number of transcripts to search for in alerts
   maxContext: 3
   # callLengthThreshold specifies the minimum call length to get transcripts for; default is 4 seconds
   callLengthThreshold: 4s
   # contextLookback specifies how far back to look for transcripts
   contextLookback: 20m
+
 notify:
   - provider: slackwebhook
 #   subjectTemplate: "Stillbox Alert ({{ highest . }})"
@@ -65,11 +70,12 @@ notify:
 #     {{ .TGName }}{{ if (and .Talkgroup .Talkgroup.AlphaTag) }} ({{ .Talkgroup.StringTag false -}}){{ end }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
 #     {{- range .Context }}
 #     {{ .Date | fmtTime "03:04:05" }} {{ .Transcript }}
-#     {{- end -}}
+#     {{- end }}
 #
 #     {{ end -}}
     config:
       webhookURL: "http://somewhere"
+
 # configure upstream relays here
 relay:
     # `url` is the root of the instance
@@ -78,7 +84,8 @@ relay:
     # `required` specifies whether we should report failure (i.e. HTTP 500 for rdio-http) to the source
     # if the relay call submission fails
 #   required: false
-#transcription:
+
+transcription:
 # - type: http
 #   atLeastSeconds: 2
 #   filter:
