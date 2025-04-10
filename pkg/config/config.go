@@ -4,7 +4,6 @@ import (
 	"sync"
 	"time"
 
-	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 
 	"github.com/rs/zerolog/log"
@@ -83,20 +82,8 @@ type Alerting struct {
 	Renotify            *jsontypes.Duration `yaml:"renotify,omitempty" form:"renotify,omitempty"`
 	Transcripts         uint                `yaml:"transcripts" form:"transcripts"`
 	MaxContext          uint                `yaml:"maxContext" form:"maxContext"`
-	CallLengthThreshold *jsontypes.Duration `yaml:"callLengthThreshold" form:"callLengthThreshold"`
-	ContextLookback     *jsontypes.Duration `yaml:"lookback" form:"contextLookback"`
-}
-
-func (a *Alerting) FillDefaults() {
-	if a.MaxContext > 0 {
-		if a.CallLengthThreshold == nil {
-			a.CallLengthThreshold = common.PtrTo(jsontypes.Duration(4 * time.Second))
-		}
-
-		if a.ContextLookback == nil {
-			a.ContextLookback = common.PtrTo(jsontypes.Duration(10 * time.Minute))
-		}
-	}
+	CallLengthThreshold jsontypes.Duration  `yaml:"callLengthThreshold" form:"callLengthThreshold" default:"4s"`
+	ContextLookback     jsontypes.Duration  `yaml:"contextLookback" form:"contextLookback" default:"10m"`
 }
 
 type Relay struct {

@@ -28,6 +28,7 @@ alerting:
   recent: 2h
   alertThreshold: 0.3
   renotify: 30m
+  contextLookback: 30m
 notify:
   - provider: slackwebhook
     config:

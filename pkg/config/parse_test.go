@@ -38,12 +38,14 @@ var expCfg = &Config{
 		},
 	},
 	Alerting: Alerting{
-		Enable:         true,
-		LookbackDays:   7,
-		HalfLife:       jsontypes.Duration(30 * time.Minute),
-		Recent:         jsontypes.Duration(2 * time.Hour),
-		AlertThreshold: 0.3,
-		Renotify:       common.PtrTo(jsontypes.Duration(30 * time.Minute)),
+		Enable:              true,
+		LookbackDays:        7,
+		HalfLife:            jsontypes.Duration(30 * time.Minute),
+		Recent:              jsontypes.Duration(2 * time.Hour),
+		AlertThreshold:      0.3,
+		Renotify:            common.PtrTo(jsontypes.Duration(30 * time.Minute)),
+		ContextLookback:     jsontypes.Duration(30 * time.Minute),
+		CallLengthThreshold: jsontypes.Duration(4 * time.Second),
 	},
 	Log: []Logger{
 		{

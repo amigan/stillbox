@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"dynatron.me/x/stillbox/internal/common"
@@ -29,6 +30,52 @@ func (c *Configuration) ReadConfig() error {
 	return c.read()
 }
 
+func Defaults(keyTag, defaultTag string) mapstructure.DecodeHookFunc {
+	return func(from reflect.Value, to reflect.Value) (any, error) {
+		toType := to.Type()
+
+		if toType.Kind() == reflect.Struct {
+			for i := range toType.NumField() {
+				setDefault(from, toType.Field(i), keyTag, defaultTag)
+			}
+		}
+
+		return from.Interface(), nil
+	}
+}
+
+func setDefault(from reflect.Value, to reflect.StructField, keyTag, defaultTag string) {
+	if from.Kind() != reflect.Map {
+		return
+	}
+
+	defVal, ok := to.Tag.Lookup(defaultTag)
+	if !ok {
+		return
+	}
+
+	key := strings.Split(to.Tag.Get(keyTag), ",")[0]
+
+	for _, e := range from.MapKeys() {
+		// key set, no value required
+		if key == e.String() {
+			return
+		}
+	}
+
+	fromVal := reflect.ValueOf(defVal)
+	toType := to.Type
+	if toType.Kind() == reflect.Struct {
+		fromVal = reflect.ValueOf(map[string]any{})
+		for i := range toType.NumField() {
+			setDefault(fromVal, toType.Field(i), keyTag, defaultTag)
+		}
+	}
+
+	from.SetMapIndex(reflect.ValueOf(key), fromVal)
+
+}
+
 func (c *Configuration) read() error {
 	k := koanf.New(".")
 	err := k.Load(file.Provider(c.configPath), yaml.Parser())
@@ -51,6 +98,7 @@ func (c *Configuration) read() error {
 				Result:           &c.Config,
 				WeaklyTypedInput: true,
 				DecodeHook: mapstructure.ComposeDecodeHookFunc(
+					Defaults("yaml", "default"),
 					mapstructure.StringToTimeDurationHookFunc(),
 					mapstructure.TextUnmarshallerHookFunc(),
 				),
