@@ -29,10 +29,18 @@ type Config struct {
 type Server struct {
 	BaseURL    jsontypes.URL `yaml:"baseURL"`
 	DumpRoutes bool          `yaml:"dumpRoutes"`
-	Listen     string        `yaml:"listen"`
+	Listen     string        `yaml:"listen" default:":3051"`
 	Public     bool          `yaml:"public"`
 	RateLimit  RateLimit     `yaml:"rateLimit"`
 	CORS       CORS          `yaml:"cors"`
+}
+
+type RateLimit struct {
+	Enable   bool          `yaml:"enable" default:"true"`
+	Requests int           `yaml:"requests" default:"200"`
+	Over     time.Duration `yaml:"over" default:"2m"`
+
+	verifyError sync.Once
 }
 
 type Auth struct {
@@ -63,14 +71,6 @@ type Partition struct {
 type Logger struct {
 	File  *string `yaml:"file"`
 	Level *string `yaml:"level"`
-}
-
-type RateLimit struct {
-	Enable   bool          `yaml:"enable"`
-	Requests int           `yaml:"requests"`
-	Over     time.Duration `yaml:"over"`
-
-	verifyError sync.Once
 }
 
 type Alerting struct {
