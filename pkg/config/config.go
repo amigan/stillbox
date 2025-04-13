@@ -4,7 +4,6 @@ import (
 	"sync"
 	"time"
 
-	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 
 	"github.com/rs/zerolog/log"
@@ -17,19 +16,31 @@ type Configuration struct {
 }
 
 type Config struct {
-	BaseURL       jsontypes.URL   `yaml:"baseURL"`
-	DumpRoutes    bool            `yaml:"dumpRoutes"`
+	Server        Server          `yaml:"server"`
 	DB            DB              `yaml:"db"`
-	CORS          CORS            `yaml:"cors"`
 	Auth          Auth            `yaml:"auth"`
 	Alerting      Alerting        `yaml:"alerting"`
 	Log           []Logger        `yaml:"log"`
-	Listen        string          `yaml:"listen"`
-	Public        bool            `yaml:"public"`
-	RateLimit     RateLimit       `yaml:"rateLimit"`
 	Notify        Notify          `yaml:"notify"`
 	Relay         []Relay         `yaml:"relay"`
 	Transcription []Transcription `yaml:"transcription"`
+}
+
+type Server struct {
+	BaseURL    jsontypes.URL `yaml:"baseURL"`
+	DumpRoutes bool          `yaml:"dumpRoutes"`
+	Listen     string        `yaml:"listen" default:":3051"`
+	Public     bool          `yaml:"public"`
+	RateLimit  RateLimit     `yaml:"rateLimit"`
+	CORS       CORS          `yaml:"cors"`
+}
+
+type RateLimit struct {
+	Enable   bool          `yaml:"enable" default:"true"`
+	Requests int           `yaml:"requests" default:"200"`
+	Over     time.Duration `yaml:"over" default:"2m"`
+
+	verifyError sync.Once
 }
 
 type Auth struct {
@@ -62,14 +73,6 @@ type Logger struct {
 	Level *string `yaml:"level"`
 }
 
-type RateLimit struct {
-	Enable   bool          `yaml:"enable"`
-	Requests int           `yaml:"requests"`
-	Over     time.Duration `yaml:"over"`
-
-	verifyError sync.Once
-}
-
 type Alerting struct {
 	Enable              bool                `yaml:"enable" form:"enable"`
 	LookbackDays        uint                `yaml:"lookbackDays" form:"lookbackDays"`
@@ -79,20 +82,8 @@ type Alerting struct {
 	Renotify            *jsontypes.Duration `yaml:"renotify,omitempty" form:"renotify,omitempty"`
 	Transcripts         uint                `yaml:"transcripts" form:"transcripts"`
 	MaxContext          uint                `yaml:"maxContext" form:"maxContext"`
-	CallLengthThreshold *jsontypes.Duration `yaml:"callLengthThreshold" form:"callLengthThreshold"`
-	ContextLookback     *jsontypes.Duration `yaml:"lookback" form:"contextLookback"`
-}
-
-func (a *Alerting) FillDefaults() {
-	if a.MaxContext > 0 {
-		if a.CallLengthThreshold == nil {
-			a.CallLengthThreshold = common.PtrTo(jsontypes.Duration(4 * time.Second))
-		}
-
-		if a.ContextLookback == nil {
-			a.ContextLookback = common.PtrTo(jsontypes.Duration(10 * time.Minute))
-		}
-	}
+	CallLengthThreshold jsontypes.Duration  `yaml:"callLengthThreshold" form:"callLengthThreshold" default:"4s"`
+	ContextLookback     jsontypes.Duration  `yaml:"contextLookback" form:"contextLookback" default:"10m"`
 }
 
 type Relay struct {

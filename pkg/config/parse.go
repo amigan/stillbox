@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"reflect"
+	"strconv"
 	"strings"
 
 	"dynatron.me/x/stillbox/internal/common"
@@ -29,6 +31,80 @@ func (c *Configuration) ReadConfig() error {
 	return c.read()
 }
 
+func Defaults(keyTag, defaultTag string) mapstructure.DecodeHookFunc {
+	return func(from reflect.Value, to reflect.Value) (any, error) {
+		toType := to.Type()
+
+		if toType.Kind() == reflect.Struct {
+			for i := range toType.NumField() {
+				setDefault(from, toType.Field(i), keyTag, defaultTag)
+			}
+		}
+
+		return from.Interface(), nil
+	}
+}
+
+func setDefault(from reflect.Value, to reflect.StructField, keyTag, defaultTag string) {
+	var defVal string
+	if from.Kind() != reflect.Map {
+		return
+	}
+
+	fromM := from.Interface().(map[string]any)
+
+	defVal, defaultSet := to.Tag.Lookup(defaultTag)
+	key := strings.Split(to.Tag.Get(keyTag), ",")[0]
+	if key == "" {
+		return
+	}
+
+	toKind := to.Type.Kind()
+
+	fromElem, hasFrom := fromM[key]
+
+	var fromVal reflect.Value
+
+	switch toKind {
+	case reflect.Struct:
+		if !hasFrom {
+			fromVal = reflect.ValueOf(map[string]any{})
+		} else {
+			fromVal = reflect.ValueOf(fromElem)
+		}
+
+		for i := range to.Type.NumField() {
+			field := to.Type.Field(i)
+
+			if !field.IsExported() {
+				continue
+			}
+
+			setDefault(fromVal, field, keyTag, defaultTag)
+		}
+	default:
+		if hasFrom || !defaultSet {
+			return
+		}
+		fromVal = reflect.ValueOf(defVal)
+		if !hasFrom && toKind != reflect.Struct {
+			if dvI, err := strconv.Atoi(defVal); err == nil {
+				fromVal = reflect.ValueOf(dvI)
+			} else if dvB, err := strconv.ParseBool(defVal); err == nil {
+				fromVal = reflect.ValueOf(dvB)
+			} else if dvF, err := strconv.ParseFloat(defVal, 64); err == nil {
+				fromVal = reflect.ValueOf(dvF)
+			}
+		}
+	}
+
+	if !hasFrom {
+		from.SetMapIndex(reflect.ValueOf(key), fromVal)
+	}
+
+	return
+}
+
 func (c *Configuration) read() error {
 	k := koanf.New(".")
 	err := k.Load(file.Provider(c.configPath), yaml.Parser())
@@ -51,6 +127,7 @@ func (c *Configuration) read() error {
 				Result:           &c.Config,
 				WeaklyTypedInput: true,
 				DecodeHook: mapstructure.ComposeDecodeHookFunc(
+					Defaults("yaml", "default"),
 					mapstructure.StringToTimeDurationHookFunc(),
 					mapstructure.TextUnmarshallerHookFunc(),
 				),

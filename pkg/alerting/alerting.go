@@ -97,8 +97,6 @@ func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerte
 		return &noopAlerter{}
 	}
 
-	cfg.FillDefaults()
-
 	as := &alerter{
 		cfg:        cfg,
 		alertCache: make(map[talkgroups.ID]alert.Alert),
@@ -217,7 +215,7 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 
 				if !a.Suppressed {
 					if as.cfg.MaxContext > 0 {
-						err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, *as.cfg.CallLengthThreshold, *as.cfg.ContextLookback)
+						err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, as.cfg.CallLengthThreshold, as.cfg.ContextLookback)
 						if err != nil {
 							log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("fill transcript context")
 						}
@@ -282,9 +280,9 @@ func (as *alerter) testNotifyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if as.cfg.MaxContext > 0 {
-			err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, *as.cfg.CallLengthThreshold, *as.cfg.ContextLookback)
+			err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, as.cfg.CallLengthThreshold, as.cfg.ContextLookback)
 			if err != nil {
-				log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("fill transcript context")
+				log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("test notify fill transcript context")
 			}
 		}
 

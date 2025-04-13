@@ -95,7 +95,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	statsSvc := stats.NewStats(callStore, stats.DefaultExpiration)
 
 	nex := nexus.New(tgCache)
-	api := rest.New(cfg.BaseURL.URL(), nex)
+	api := rest.New(cfg.Server.BaseURL.URL(), nex)
 
 	srv := &Server{
 		auth:      authenticator,
@@ -158,7 +158,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	r.Use(RequestLogger())
 	r.Use(ServerHeaderAdd)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   srv.conf.CORS.AllowedOrigins,
+		AllowedOrigins:   srv.conf.Server.CORS.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Upgrade"},
 		ExposedHeaders:   []string{"Link"},
@@ -194,7 +194,7 @@ func (s *Server) fillCtx(ctx context.Context) context.Context {
 	return ctx
 }
 
-func (s *Server) Go(ctx context.Context) error {
+func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	defer database.Close(s.db)
 
 	s.installHupHandler()
@@ -202,9 +202,16 @@ func (s *Server) Go(ctx context.Context) error {
 	ctx = s.fillCtx(ctx)
 
 	httpSrv := &http.Server{
-		Addr:    s.conf.Listen,
+		Addr:    s.conf.Server.Listen,
 		Handler: s.r,
 	}
+	var err error
+	go func() {
+		err = httpSrv.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			shutReq <- err
+		}
+	}()
 
 	go s.nex.Go(ctx)
 	go s.alerter.Go(ctx)
@@ -214,10 +221,6 @@ func (s *Server) Go(ctx context.Context) error {
 		go pm.Go(ctx)
 	}
 
-	var err error
-	go func() {
-		err = httpSrv.ListenAndServe()
-	}()
 	<-ctx.Done()
 
 	s.sinks.Shutdown()

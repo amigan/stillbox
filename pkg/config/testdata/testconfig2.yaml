@@ -2,8 +2,10 @@ server:
   cors:
     allowedOrigins:
       - 'http://localhost:*'
-  listen: ':3051'
   public: true
+  rateLimit:
+    enable: false
+    requests: 500
 db:
   connect: 'postgres://stillbox:somepassword@stillbox:5432/stillbox?sslmode=disable'
   logQueries: true
