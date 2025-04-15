@@ -32,13 +32,13 @@ func UsernameFrom(ctx context.Context) *string {
 	return &username
 }
 
-func (a *Auth) Authenticated(r *http.Request) (claims, bool) {
+func (a *authenticator) Authenticated(r *http.Request) (claims, bool) {
 	// TODO: check IP against ACL, or conf.Public, and against map of routes
 	tok, cl, err := jwtauth.FromContext(r.Context())
 	return cl, err != nil && tok != nil
 }
 
-func (a *Auth) VerifyMiddleware() func(http.Handler) http.Handler {
+func (a *authenticator) VerifyMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -50,7 +50,7 @@ func (a *Auth) VerifyMiddleware() func(http.Handler) http.Handler {
 	}
 }
 
-func (a *Auth) SubjectMiddleware(requireToken bool) func(http.Handler) http.Handler {
+func (a *authenticator) SubjectMiddleware(requireToken bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
 			token, _, err := jwtauth.FromContext(r.Context())
@@ -131,14 +131,14 @@ func TokenFromCookie(r *http.Request) string {
 	return cookie.Value
 }
 
-func (a *Auth) initJWT() {
+func (a *authenticator) initJWT() {
 	if string(a.cfg.JWTSecret) == "super secret string" {
 		log.Fatal().Msg("JWT secret is the default!")
 	}
 	a.jwt = jwtauth.New("HS256", []byte(a.cfg.JWTSecret), nil)
 }
 
-func (a *Auth) NewAccessToken(username string) string {
+func (a *authenticator) NewAccessToken(username string) string {
 	claims := claims{
 		"sub": username,
 	}
@@ -150,7 +150,7 @@ func (a *Auth) NewAccessToken(username string) string {
 	return tokenString
 }
 
-func (a *Auth) NewCallToken(callID string) string {
+func (a *authenticator) NewCallToken(callID string) string {
 	claims := claims{
 		"sub":   callID,
 		"realm": CallRealm,

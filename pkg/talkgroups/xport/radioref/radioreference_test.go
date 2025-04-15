@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/database/mocks"
 	"dynatron.me/x/stillbox/pkg/authz"
 	rbacmocks "dynatron.me/x/stillbox/pkg/authz/mocks"
+	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/database/mocks"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport"

@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
-	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/database"
 )
 
 type UserID int

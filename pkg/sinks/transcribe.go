@@ -30,7 +30,7 @@ var (
 type TranscriptionManager struct {
 	xp     *http.Transport
 	client *http.Client
-	auth   *authn.Auth
+	auth   authn.Authenticator
 	tgst   tgstore.Store
 
 	transcribers []*Transcriber
@@ -46,7 +46,7 @@ type Transcriber struct {
 	Name string
 }
 
-func NewTranscriptionManager(s Sinks, a *authn.Auth, tgst tgstore.Store, cfgs []config.Transcription) (*TranscriptionManager, error) {
+func NewTranscriptionManager(s Sinks, a authn.Authenticator, tgst tgstore.Store, cfgs []config.Transcription) (*TranscriptionManager, error) {
 	xp := http.DefaultTransport.(*http.Transport).Clone()
 	xp.MaxIdleConnsPerHost = 10
 

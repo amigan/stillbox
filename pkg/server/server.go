@@ -9,6 +9,8 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/alerting"
 	"dynatron.me/x/stillbox/pkg/authn"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/policy"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
@@ -16,8 +18,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
-	"dynatron.me/x/stillbox/pkg/authz"
-	"dynatron.me/x/stillbox/pkg/authz/policy"
 	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/settings"
@@ -37,7 +37,7 @@ import (
 const shutdownTimeout = 5 * time.Second
 
 type Server struct {
-	auth        *authn.Auth
+	auth        authn.Authenticator
 	conf        *config.Configuration
 	db          database.Store
 	r           *chi.Mux

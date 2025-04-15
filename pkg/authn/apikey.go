@@ -6,8 +6,8 @@ import (
 	"encoding/base64"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/database"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -19,7 +19,7 @@ type apiKeyAuth interface {
 	CheckAPIKey(ctx context.Context, key string) (entities.Subject, error)
 }
 
-func (a *Auth) CheckAPIKey(ctx context.Context, key string) (entities.Subject, error) {
+func (a *authenticator) CheckAPIKey(ctx context.Context, key string) (entities.Subject, error) {
 	keyUuid, err := uuid.Parse(key)
 	if err != nil {
 		log.Error().Str("apikey", key).Msg("cannot parse key")

@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"dynatron.me/x/stillbox/internal/common"
-	"dynatron.me/x/stillbox/pkg/calls"
-	"dynatron.me/x/stillbox/pkg/incidents"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/authz/policy"
+	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/incidents"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/el-mike/restrict/v2"
