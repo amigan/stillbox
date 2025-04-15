@@ -55,7 +55,7 @@ func (a *Auth) Refresh(ctx context.Context, username, source string) (token stri
 		log.Error().Str("username", username).Str("source", source).Err(err).Msg("record refresh failed")
 	}
 
-	return a.newToken(username), nil
+	return a.NewAccessToken(username), nil
 }
 
 func (a *Auth) Login(ctx context.Context, username, password, source string) (token string, err error) {
@@ -77,7 +77,7 @@ func (a *Auth) Login(ctx context.Context, username, password, source string) (to
 		log.Error().Str("username", username).Str("source", source).Err(err).Msg("record login failed")
 	}
 
-	return a.newToken(user.Username), nil
+	return a.NewAccessToken(user.Username), nil
 }
 
 func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {

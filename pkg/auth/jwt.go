@@ -138,7 +138,7 @@ func (a *Auth) initJWT() {
 	a.jwt = jwtauth.New("HS256", []byte(a.cfg.JWTSecret), nil)
 }
 
-func (a *Auth) newToken(username string) string {
+func (a *Auth) NewAccessToken(username string) string {
 	claims := claims{
 		"sub": username,
 	}
