@@ -1,11 +1,11 @@
-package auth
+package authn
 
 import (
 	"context"
 	"net/http"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/go-chi/jwtauth/v5"

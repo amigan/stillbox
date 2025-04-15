@@ -1,7 +1,7 @@
 package policy
 
 import (
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 
 	"github.com/el-mike/restrict/v2"
 )

@@ -14,8 +14,8 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/mocks"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	rbacmocks "dynatron.me/x/stillbox/pkg/rbac/mocks"
+	"dynatron.me/x/stillbox/pkg/authz"
+	rbacmocks "dynatron.me/x/stillbox/pkg/authz/mocks"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
@@ -60,12 +60,12 @@ func TestRadioRef(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			dbMock := mocks.NewStore(t)
 			rbacMock := rbacmocks.NewRBAC(t)
-			rbacMock.EXPECT().Check(mock.AnythingOfType("*context.valueCtx"), rbac.UseResource("Talkgroup"), mock.AnythingOfType("rbac.CheckOption")).Return(&subject, nil)
+			rbacMock.EXPECT().Check(mock.AnythingOfType("*context.valueCtx"), authz.UseResource("Talkgroup"), mock.AnythingOfType("rbac.CheckOption")).Return(&subject, nil)
 			if tc.expectErr == nil {
 				dbMock.EXPECT().GetSystemName(mock.AnythingOfType("*context.valueCtx"), tc.sysID).Return(tc.sysName, nil)
 			}
 			ctx := database.CtxWithDB(context.Background(), dbMock)
-			ctx = rbac.CtxWithRBAC(ctx, rbacMock)
+			ctx = authz.CtxWithRBAC(ctx, rbacMock)
 			ctx = tgstore.CtxWithStore(ctx, tgstore.NewCache(dbMock))
 			ij := &xport.ImportJob{
 				Type:     xport.Format(tc.impType),

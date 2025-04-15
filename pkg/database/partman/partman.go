@@ -14,7 +14,7 @@ import (
 	"dynatron.me/x/stillbox/internal/isoweek"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"

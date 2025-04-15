@@ -1,4 +1,4 @@
-package auth
+package authn
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	_ "embed"
 
 	"dynatron.me/x/stillbox/pkg/config"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
@@ -55,7 +55,7 @@ var (
 // ErrorResponse writes the error and appropriate HTTP response code.
 func ErrorResponse(w http.ResponseWriter, err error) {
 	switch err {
-	case ErrLoginFailed, ErrUnauthorized, rbac.ErrBadSubject:
+	case ErrLoginFailed, ErrUnauthorized, authz.ErrBadSubject:
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 	case ErrBadRequest:
 		http.Error(w, err.Error(), http.StatusBadRequest)

@@ -8,8 +8,8 @@ import (
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 )
 
 type UserID int
@@ -39,7 +39,7 @@ func From(ctx context.Context) (*User, error) {
 
 func UserCheck(ctx context.Context, rsc entities.Resource, actions string) (*User, error) {
 	acts := strings.Split(actions, "+")
-	subj, err := rbac.FromCtx(ctx).Check(ctx, rsc, rbac.WithActions(acts...))
+	subj, err := authz.FromCtx(ctx).Check(ctx, rsc, authz.WithActions(acts...))
 	if err != nil {
 		return nil, err
 	}
@@ -49,12 +49,12 @@ func UserCheck(ctx context.Context, rsc entities.Resource, actions string) (*Use
 
 func FromSubject(sub entities.Subject) (*User, error) {
 	if sub == nil {
-		return nil, rbac.ErrBadSubject
+		return nil, authz.ErrBadSubject
 	}
 
 	user, isUser := sub.(*User)
 	if !isUser || user == nil || !user.ID.IsValid() {
-		return nil, rbac.ErrBadSubject
+		return nil, authz.ErrBadSubject
 	}
 
 	return user, nil

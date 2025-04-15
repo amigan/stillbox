@@ -11,7 +11,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	tgfilter "dynatron.me/x/stillbox/pkg/talkgroups/filter"
 
 	"github.com/rs/zerolog/log"

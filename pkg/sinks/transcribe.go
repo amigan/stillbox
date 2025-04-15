@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/version"
-	"dynatron.me/x/stillbox/pkg/auth"
+	"dynatron.me/x/stillbox/pkg/authn"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/pb"
@@ -30,7 +30,7 @@ var (
 type TranscriptionManager struct {
 	xp     *http.Transport
 	client *http.Client
-	auth   *auth.Auth
+	auth   *authn.Auth
 	tgst   tgstore.Store
 
 	transcribers []*Transcriber
@@ -46,7 +46,7 @@ type Transcriber struct {
 	Name string
 }
 
-func NewTranscriptionManager(s Sinks, a *auth.Auth, tgst tgstore.Store, cfgs []config.Transcription) (*TranscriptionManager, error) {
+func NewTranscriptionManager(s Sinks, a *authn.Auth, tgst tgstore.Store, cfgs []config.Transcription) (*TranscriptionManager, error) {
 	xp := http.DefaultTransport.(*http.Transport).Clone()
 	xp.MaxIdleConnsPerHost = 10
 

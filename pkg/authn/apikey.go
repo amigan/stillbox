@@ -1,4 +1,4 @@
-package auth
+package authn
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"

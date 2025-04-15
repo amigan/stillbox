@@ -8,8 +8,8 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 
 	"dynatron.me/x/stillbox/internal/common"
@@ -40,8 +40,8 @@ func (as *noopAlerter) PrivateRoutes(r chi.Router) {}
 
 func (as *alerter) tgStatsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceAlert), rbac.WithActions(entities.ActionRead))
-	if rbac.IsErrAccessDenied(err) != nil {
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceAlert), authz.WithActions(entities.ActionRead))
+	if authz.IsErrAccessDenied(err) != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}

@@ -8,8 +8,8 @@ import (
 	"dynatron.me/x/stillbox/internal/cache"
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/services"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -97,7 +97,7 @@ func (s *postgresStore) UpdateUser(ctx context.Context, username string, user Us
 // userPrivMask masks privileged fields if the subject is not permitted to read them.
 // It copies the user it is passed.
 func userPrivMask(ctx context.Context, user *User) *User {
-	_, err := rbac.Check(ctx, user, rbac.WithActions(entities.ActionReadPrivileged))
+	_, err := authz.Check(ctx, user, authz.WithActions(entities.ActionReadPrivileged))
 	switch err {
 	case nil: // privileged
 		user = &User{

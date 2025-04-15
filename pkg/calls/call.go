@@ -11,7 +11,7 @@ import (
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
 

@@ -1,4 +1,4 @@
-package rbac_test
+package authz_test
 
 import (
 	"context"
@@ -9,9 +9,9 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/incidents"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
-	"dynatron.me/x/stillbox/pkg/rbac/policy"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/authz/policy"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/el-mike/restrict/v2"
@@ -215,9 +215,9 @@ func TestRBAC(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := entities.CtxWithSubject(context.Background(), tc.subject)
-			rb, err := rbac.New(policy.Policy)
+			rb, err := authz.New(policy.Policy)
 			require.NoError(t, err)
-			sub, err := rb.Check(ctx, tc.resource, rbac.WithActions(tc.action))
+			sub, err := rb.Check(ctx, tc.resource, authz.WithActions(tc.action))
 			if tc.expectErr != nil {
 				assert.Equal(t, tc.expectErr.Error(), err.Error())
 			} else {

@@ -8,7 +8,7 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/nexus"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
@@ -165,10 +165,10 @@ var statusMapping = map[error]errResponder{
 	ErrTGIDMismatch:           badRequestErrText,
 	ErrSysMismatch:            badRequestErrText,
 	tgstore.ErrReference:      constraintErrText,
-	rbac.ErrBadSubject:        unauthErrText,
+	authz.ErrBadSubject:        unauthErrText,
 	ErrBadAppName:             unauthErrText,
 	common.ErrPageOutOfRange:  badRequestErrText,
-	rbac.ErrNotAuthorized:     unauthErrText,
+	authz.ErrNotAuthorized:     unauthErrText,
 	shares.ErrNoShare:         notFoundErrText,
 	ErrBadShare:               notFoundErrText,
 	shares.ErrBadType:         badRequestErrText,
@@ -187,7 +187,7 @@ func autoError(err error) render.Renderer {
 		}
 	}
 
-	if rbac.IsErrAccessDenied(err) != nil {
+	if authz.IsErrAccessDenied(err) != nil {
 		return forbiddenErrText(err)
 	}
 

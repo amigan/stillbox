@@ -1,10 +1,10 @@
-package rbac
+package authz
 
 import (
 	"context"
 	"errors"
 
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/services"
 
 	"github.com/el-mike/restrict/v2"
