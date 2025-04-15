@@ -9,7 +9,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/shares"
 
 	"github.com/go-chi/chi/v5"

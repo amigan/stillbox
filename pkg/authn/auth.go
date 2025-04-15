@@ -1,4 +1,4 @@
-package auth
+package authn
 
 import (
 	"errors"
@@ -7,8 +7,8 @@ import (
 
 	_ "embed"
 
+	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/config"
-	"dynatron.me/x/stillbox/pkg/rbac"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
@@ -17,11 +17,16 @@ import (
 
 // Authenticator performs API key and user JWT authentication.
 type Authenticator interface {
+	HUP(*config.Config)
 	loginJWTAuth
 	apiKeyAuth
+	AuthorizedSubjectMiddleware() func(http.Handler) http.Handler
+	PublicSubjectMiddleware() func(http.Handler) http.Handler
+	NewCallToken(callID string) string
+	NewAccessToken(username string) string
 }
 
-type Auth struct {
+type authenticator struct {
 	rl  *httprate.RateLimiter
 	jwt *jwtauth.JWTAuth
 	ust users.Store
@@ -29,8 +34,8 @@ type Auth struct {
 }
 
 // NewAuthenticator creates a new Authenticator with the provided config.
-func NewAuthenticator(cfg config.Auth, ust users.Store) *Auth {
-	a := &Auth{
+func NewAuthenticator(cfg config.Auth, ust users.Store) *authenticator {
+	a := &authenticator{
 		rl:  httprate.NewRateLimiter(5, 5*time.Minute),
 		cfg: cfg,
 		ust: ust,
@@ -40,7 +45,7 @@ func NewAuthenticator(cfg config.Auth, ust users.Store) *Auth {
 	return a
 }
 
-func (a *Auth) HUP(cfg *config.Config) {
+func (a *authenticator) HUP(cfg *config.Config) {
 	a.cfg = cfg.Auth
 	a.initJWT()
 }
@@ -55,7 +60,7 @@ var (
 // ErrorResponse writes the error and appropriate HTTP response code.
 func ErrorResponse(w http.ResponseWriter, err error) {
 	switch err {
-	case ErrLoginFailed, ErrUnauthorized, rbac.ErrBadSubject:
+	case ErrLoginFailed, ErrUnauthorized, authz.ErrBadSubject:
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 	case ErrBadRequest:
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -66,12 +71,12 @@ func ErrorResponse(w http.ResponseWriter, err error) {
 	}
 }
 
-func (a *Auth) PublicRoutes(r chi.Router) {
+func (a *authenticator) PublicRoutes(r chi.Router) {
 	r.Post("/api/login", a.routeLogin)
 	r.Get("/api/login", a.routeLoginPage)
 }
 
-func (a *Auth) PrivateRoutes(r chi.Router) {
+func (a *authenticator) PrivateRoutes(r chi.Router) {
 	r.Get("/api/refresh", a.routeRefresh)
 	r.Get("/api/logout", a.routeLogout)
 }
@@ -79,15 +84,15 @@ func (a *Auth) PrivateRoutes(r chi.Router) {
 //go:embed login.html
 var loginPage []byte
 
-func (a *Auth) routeLoginPage(w http.ResponseWriter, r *http.Request) {
+func (a *authenticator) routeLoginPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
 	_, _ = w.Write(loginPage)
 }
 
-func (a *Auth) PublicSubjectMiddleware() func(http.Handler) http.Handler {
+func (a *authenticator) PublicSubjectMiddleware() func(http.Handler) http.Handler {
 	return a.SubjectMiddleware(false)
 }
 
-func (a *Auth) AuthorizedSubjectMiddleware() func(http.Handler) http.Handler {
+func (a *authenticator) AuthorizedSubjectMiddleware() func(http.Handler) http.Handler {
 	return a.SubjectMiddleware(true)
 }

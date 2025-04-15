@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/services"
 	tgsp "dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
@@ -350,7 +350,7 @@ func addToRowList[T rowType](t *cache, tgRecords []T) []*tgsp.Talkgroup {
 }
 
 func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.Talkgroup, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -453,7 +453,7 @@ func (t *cache) Weight(ctx context.Context, id tgsp.ID, tm time.Time) float64 {
 }
 
 func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...Option) ([]*tgsp.Talkgroup, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -509,7 +509,7 @@ func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...Option) ([]
 }
 
 func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -536,7 +536,7 @@ func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
 }
 
 func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return "", false
 	}
@@ -651,7 +651,7 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 
 func (t *cache) DeleteSystem(ctx context.Context, id int) error {
 	// talkgroups don't have owners, so we can use a generic Resource
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionDelete))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}
@@ -673,7 +673,7 @@ func (t *cache) DeleteSystem(ctx context.Context, id int) error {
 }
 
 func (t *cache) DeleteTG(ctx context.Context, id tgsp.ID) error {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionDelete))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}
@@ -709,7 +709,7 @@ func (t *cache) DeleteTG(ctx context.Context, id tgsp.ID) error {
 }
 
 func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionCreate, entities.ActionUpdate))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionCreate, entities.ActionUpdate))
 	if err != nil {
 		return nil, err
 	}
@@ -864,7 +864,7 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 }
 
 func (t *cache) CreateSystem(ctx context.Context, id int, name string) error {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionCreate))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionCreate))
 	if err != nil {
 		return err
 	}
@@ -903,7 +903,7 @@ func (t *cache) UnregisterFilter(f Filter) {
 }
 
 func (t *cache) Tags(ctx context.Context) ([]string, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -912,7 +912,7 @@ func (t *cache) Tags(ctx context.Context) ([]string, error) {
 }
 
 func (t *cache) TGsByTags(ctx context.Context, tagsAll, tagsAny, tagsNot []string) (tgsp.IDs, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceTalkgroup), rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}

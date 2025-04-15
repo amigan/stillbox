@@ -1,4 +1,4 @@
-package auth
+package authn
 
 import (
 	"context"
@@ -43,7 +43,7 @@ type loginJWTAuth interface {
 	PrivateRoutes(chi.Router)
 }
 
-func (a *Auth) Refresh(ctx context.Context, username, source string) (token string, err error) {
+func (a *authenticator) Refresh(ctx context.Context, username, source string) (token string, err error) {
 	ust := users.FromCtx(ctx)
 	user, err := ust.GetUser(ctx, username)
 	if err != nil || user == nil {
@@ -55,10 +55,10 @@ func (a *Auth) Refresh(ctx context.Context, username, source string) (token stri
 		log.Error().Str("username", username).Str("source", source).Err(err).Msg("record refresh failed")
 	}
 
-	return a.newToken(username), nil
+	return a.NewAccessToken(username), nil
 }
 
-func (a *Auth) Login(ctx context.Context, username, password, source string) (token string, err error) {
+func (a *authenticator) Login(ctx context.Context, username, password, source string) (token string, err error) {
 	ust := users.FromCtx(ctx)
 	user, err := ust.GetUser(ctx, username)
 	if err != nil || user == nil {
@@ -77,10 +77,10 @@ func (a *Auth) Login(ctx context.Context, username, password, source string) (to
 		log.Error().Str("username", username).Str("source", source).Err(err).Msg("record login failed")
 	}
 
-	return a.newToken(user.Username), nil
+	return a.NewAccessToken(user.Username), nil
 }
 
-func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
+func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	jwToken, _, err := jwtauth.FromContext(ctx)
 	if err != nil {
@@ -129,7 +129,7 @@ func (a *Auth) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
-func (a *Auth) routeLogin(w http.ResponseWriter, r *http.Request) {
+func (a *authenticator) routeLogin(w http.ResponseWriter, r *http.Request) {
 	var creds struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -192,7 +192,7 @@ func (a *Auth) routeLogin(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
-func (a *Auth) routeLogout(w http.ResponseWriter, r *http.Request) {
+func (a *authenticator) routeLogout(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Name:     CookieName,
 		Value:    "",
@@ -219,13 +219,13 @@ func (a *Auth) routeLogout(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
-func (a *Auth) allowInsecureCookie(r *http.Request) bool {
+func (a *authenticator) allowInsecureCookie(r *http.Request) bool {
 	host := strings.Split(r.Host, ":")
 	v, has := a.cfg.AllowInsecure[host[0]]
 	return has && v
 }
 
-func (a *Auth) setInsecureCookie(cookie *http.Cookie) {
+func (a *authenticator) setInsecureCookie(cookie *http.Cookie) {
 	if a.cfg.SameSiteNoneWhenInsecure {
 		cookie.Secure = true
 		cookie.SameSite = http.SameSiteNoneMode

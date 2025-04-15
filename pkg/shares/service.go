@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"github.com/rs/zerolog/log"
 )
 

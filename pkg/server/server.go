@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/alerting"
-	"dynatron.me/x/stillbox/pkg/auth"
+	"dynatron.me/x/stillbox/pkg/authn"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/policy"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
@@ -16,8 +18,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/policy"
 	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/settings"
@@ -37,7 +37,7 @@ import (
 const shutdownTimeout = 5 * time.Second
 
 type Server struct {
-	auth        *auth.Auth
+	auth        authn.Authenticator
 	conf        *config.Configuration
 	db          database.Store
 	r           *chi.Mux
@@ -57,7 +57,7 @@ type Server struct {
 	calls       callstore.Store
 	incidents   incstore.Store
 	share       shares.Service
-	rbac        rbac.RBAC
+	rbac        authz.RBAC
 	stats       stats.Stats
 	settings    settings.Store
 }
@@ -77,7 +77,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	ust := users.NewStore(db)
 
-	authenticator := auth.NewAuthenticator(cfg.Auth, ust)
+	authenticator := authn.NewAuthenticator(cfg.Auth, ust)
 
 	notifier, err := notify.New(cfg.Notify)
 	if err != nil {
@@ -86,7 +86,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	tgCache := tgstore.NewCache(db)
 
-	rbacSvc, err := rbac.New(policy.Policy)
+	rbacSvc, err := authz.New(policy.Policy)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,7 @@ func (s *Server) fillCtx(ctx context.Context) context.Context {
 	ctx = callstore.CtxWithStore(ctx, s.calls)
 	ctx = incstore.CtxWithStore(ctx, s.incidents)
 	ctx = shares.CtxWithStore(ctx, s.share)
-	ctx = rbac.CtxWithRBAC(ctx, s.rbac)
+	ctx = authz.CtxWithRBAC(ctx, s.rbac)
 	ctx = stats.CtxWithStats(ctx, s.stats)
 	ctx = settings.CtxWithStore(ctx, s.settings)
 

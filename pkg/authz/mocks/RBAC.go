@@ -5,10 +5,10 @@ package mocks
 import (
 	context "context"
 
-	entities "dynatron.me/x/stillbox/pkg/rbac/entities"
+	entities "dynatron.me/x/stillbox/pkg/authz/entities"
 	mock "github.com/stretchr/testify/mock"
 
-	rbac "dynatron.me/x/stillbox/pkg/rbac"
+	rbac "dynatron.me/x/stillbox/pkg/authz"
 
 	restrict "github.com/el-mike/restrict/v2"
 )

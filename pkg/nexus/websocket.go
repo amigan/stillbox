@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"

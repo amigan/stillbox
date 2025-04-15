@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"dynatron.me/x/stillbox/pkg/auth"
-	"dynatron.me/x/stillbox/pkg/rbac"
+	"dynatron.me/x/stillbox/pkg/authn"
+	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/users"
 
@@ -34,10 +34,10 @@ func (pa *prefsAPI) Subrouter() http.Handler {
 func (pa *prefsAPI) getPrefs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	username := auth.UsernameFrom(ctx)
+	username := authn.UsernameFrom(ctx)
 
 	if username == nil {
-		wErr(w, r, autoError(rbac.ErrBadSubject))
+		wErr(w, r, autoError(authz.ErrBadSubject))
 		return
 	}
 
@@ -83,10 +83,10 @@ func (pa *prefsAPI) getPrefs(w http.ResponseWriter, r *http.Request) {
 func (pa *prefsAPI) putPrefs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	username := auth.UsernameFrom(ctx)
+	username := authn.UsernameFrom(ctx)
 
 	if username == nil {
-		wErr(w, r, autoError(rbac.ErrBadSubject))
+		wErr(w, r, autoError(authz.ErrBadSubject))
 		return
 	}
 

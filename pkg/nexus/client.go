@@ -8,10 +8,10 @@ import (
 	"sync"
 
 	"dynatron.me/x/stillbox/internal/version"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	tgfilter "dynatron.me/x/stillbox/pkg/talkgroups/filter"
 
 	"github.com/rs/zerolog/log"

@@ -7,10 +7,10 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
-	"dynatron.me/x/stillbox/pkg/auth"
+	"dynatron.me/x/stillbox/pkg/authn"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
@@ -18,7 +18,7 @@ import (
 
 // RdioHTTP is an source that accepts calls using the rdio-scanner HTTP interface.
 type RdioHTTP struct {
-	auth auth.Authenticator
+	auth authn.Authenticator
 	ing  Ingestor
 }
 
@@ -27,7 +27,7 @@ func (r *RdioHTTP) SourceType() string {
 }
 
 // NewHTTPIngestor creates a new HTTPIngestor. It requires an Authenticator.
-func NewRdioHTTP(auth auth.Authenticator, ing Ingestor) *RdioHTTP {
+func NewRdioHTTP(auth authn.Authenticator, ing Ingestor) *RdioHTTP {
 	return &RdioHTTP{
 		auth: auth,
 		ing:  ing,
@@ -105,13 +105,13 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 
 	submitterSub, err := h.auth.CheckAPIKey(ctx, r.Form.Get("key"))
 	if err != nil {
-		auth.ErrorResponse(w, err)
+		authn.ErrorResponse(w, err)
 		return
 	}
 
 	submitter, err := users.FromSubject(submitterSub)
 	if err != nil {
-		auth.ErrorResponse(w, err)
+		authn.ErrorResponse(w, err)
 		return
 	}
 
@@ -136,7 +136,7 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	err = h.ing.Ingest(entities.CtxWithSubject(ctx, submitterSub), call)
 	if err != nil {
-		if rbac.IsErrAccessDenied(err) != nil {
+		if authz.IsErrAccessDenied(err) != nil {
 			log.Error().Err(err).Msg("ingest failed")
 			http.Error(w, "Call ingest failed.", http.StatusForbidden)
 		}

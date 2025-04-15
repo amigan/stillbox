@@ -9,10 +9,10 @@ import (
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/internal/trending"
 
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
@@ -103,7 +103,7 @@ func toAddCallParams(call *calls.Call) database.AddCallParams {
 }
 
 func (s *postgresStore) AddCall(ctx context.Context, call *calls.Call) error {
-	_, err := rbac.Check(ctx, call, rbac.WithActions(entities.ActionCreate))
+	_, err := authz.Check(ctx, call, authz.WithActions(entities.ActionCreate))
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func (s *postgresStore) AddCall(ctx context.Context, call *calls.Call) error {
 }
 
 func (s *postgresStore) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {
-	_, err := rbac.Check(ctx, &calls.Call{ID: id}, rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, &calls.Call{ID: id}, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (s *postgresStore) CallAudio(ctx context.Context, id uuid.UUID) (*calls.Cal
 }
 
 func (s *postgresStore) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
-	_, err := rbac.Check(ctx, &calls.Call{ID: id}, rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, &calls.Call{ID: id}, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +216,7 @@ type CallsParams struct {
 }
 
 func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
-	_, err = rbac.Check(ctx, rbac.UseResource(entities.ResourceCall), rbac.WithActions(entities.ActionRead))
+	_, err = authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -285,7 +285,7 @@ func (s *postgresStore) Delete(ctx context.Context, id uuid.UUID) error {
 		return err
 	}
 
-	_, err = rbac.Check(ctx, &callOwn, rbac.WithActions(entities.ActionDelete))
+	_, err = authz.Check(ctx, &callOwn, authz.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}
@@ -313,7 +313,7 @@ func (s *postgresStore) CallStats(ctx context.Context, interval calls.StatsInter
 		Interval: interval,
 	}
 
-	_, err := rbac.Check(ctx, cs, rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, cs, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +342,7 @@ func (s *postgresStore) UpdateTranscription(ctx context.Context, id uuid.UUID, t
 		return nil, err
 	}
 
-	_, err = rbac.Check(ctx, &c, rbac.WithActions(entities.ActionTranscribe))
+	_, err = authz.Check(ctx, &c, authz.WithActions(entities.ActionTranscribe))
 	if err != nil {
 		return nil, err
 	}
@@ -363,7 +363,7 @@ func (s *postgresStore) UpdateTranscription(ctx context.Context, id uuid.UUID, t
 
 func (s *postgresStore) BackfillTrending(ctx context.Context, scorer *trending.Scorer[talkgroups.ID], stepClock func(time.Time), since, until time.Time) (count int, err error) {
 	// We can do this through stats grants
-	_, err = rbac.Check(ctx, &calls.Stats{}, rbac.WithActions(entities.ActionRead))
+	_, err = authz.Check(ctx, &calls.Stats{}, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return 0, err
 	}
@@ -398,7 +398,7 @@ func (s *postgresStore) BackfillTrending(ctx context.Context, scorer *trending.S
 }
 
 func (s *postgresStore) TranscriptContext(ctx context.Context, tg talkgroups.ID, count uint, threshold jsontypes.Duration, lookback jsontypes.Duration) ([]database.GetTranscriptsContextRow, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceCall), rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}

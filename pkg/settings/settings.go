@@ -6,9 +6,9 @@ import (
 	"errors"
 
 	"dynatron.me/x/stillbox/internal/cache"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/users"
 )
@@ -89,7 +89,7 @@ func prefsName(appName string) string {
 }
 
 func (s *postgresStore) Get(ctx context.Context, name string) (Setting, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceSetting), rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceSetting), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (s *postgresStore) Get(ctx context.Context, name string) (Setting, error) {
 }
 
 func (s *postgresStore) GetPrefs(ctx context.Context, appName string) (json.RawMessage, error) {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceSetting), rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceSetting), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func (s *postgresStore) SetPrefs(ctx context.Context, appName string, val Settin
 }
 
 func (s *postgresStore) Set(ctx context.Context, name string, val Setting) error {
-	subj, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceSetting), rbac.WithActions(entities.ActionCreate, entities.ActionUpdate))
+	subj, err := authz.Check(ctx, authz.UseResource(entities.ResourceSetting), authz.WithActions(entities.ActionCreate, entities.ActionUpdate))
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (s *postgresStore) Set(ctx context.Context, name string, val Setting) error
 
 		uid = u.ID.Int32Ptr()
 	default:
-		return rbac.ErrBadSubject
+		return authz.ErrBadSubject
 	}
 
 	db := database.FromCtx(ctx)
@@ -191,7 +191,7 @@ func (s *postgresStore) Set(ctx context.Context, name string, val Setting) error
 }
 
 func (s *postgresStore) Delete(ctx context.Context, name string) error {
-	_, err := rbac.Check(ctx, rbac.UseResource(entities.ResourceSetting), rbac.WithActions(entities.ActionDelete))
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceSetting), authz.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}

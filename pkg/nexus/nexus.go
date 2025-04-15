@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"

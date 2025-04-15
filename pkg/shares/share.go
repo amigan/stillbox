@@ -7,10 +7,10 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/google/uuid"
@@ -94,7 +94,7 @@ func (s *service) checkEntity(ctx context.Context, sh *CreateShareParams) (*time
 		if err != nil {
 			return nil, err
 		}
-		_, err = rbac.Check(ctx, &i, rbac.WithActions(entities.ActionShare))
+		_, err = authz.Check(ctx, &i, authz.WithActions(entities.ActionShare))
 		if err != nil {
 			return nil, err
 		}

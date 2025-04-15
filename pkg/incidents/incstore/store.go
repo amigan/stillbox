@@ -6,11 +6,11 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/incidents"
-	"dynatron.me/x/stillbox/pkg/rbac"
-	"dynatron.me/x/stillbox/pkg/rbac/entities"
 	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
@@ -149,7 +149,7 @@ func (s *postgresStore) AddRemoveIncidentCalls(ctx context.Context, incidentID u
 		return err
 	}
 
-	_, err = rbac.Check(ctx, &inc, rbac.WithActions(entities.ActionUpdate))
+	_, err = authz.Check(ctx, &inc, authz.WithActions(entities.ActionUpdate))
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (s *postgresStore) AddRemoveIncidentCalls(ctx context.Context, incidentID u
 }
 
 func (s *postgresStore) Incidents(ctx context.Context, p IncidentsParams) (incs []Incident, totalCount int, err error) {
-	_, err = rbac.Check(ctx, new(incidents.Incident), rbac.WithActions(entities.ActionRead))
+	_, err = authz.Check(ctx, new(incidents.Incident), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -292,7 +292,7 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 }
 
 func (s *postgresStore) Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error) {
-	_, err := rbac.Check(ctx, &incidents.Incident{ID: id}, rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, &incidents.Incident{ID: id}, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +348,7 @@ func (s *postgresStore) UpdateIncident(ctx context.Context, id uuid.UUID, p Upda
 		return nil, err
 	}
 
-	_, err = rbac.Check(ctx, &ckinc, rbac.WithActions(entities.ActionUpdate))
+	_, err = authz.Check(ctx, &ckinc, authz.WithActions(entities.ActionUpdate))
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +371,7 @@ func (s *postgresStore) DeleteIncident(ctx context.Context, id uuid.UUID) error 
 		return err
 	}
 
-	_, err = rbac.Check(ctx, &inc, rbac.WithActions(entities.ActionDelete))
+	_, err = authz.Check(ctx, &inc, authz.WithActions(entities.ActionDelete))
 	if err != nil {
 		return err
 	}
@@ -394,7 +394,7 @@ func (s *postgresStore) CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUI
 }
 
 func (s *postgresStore) TGsIn(ctx context.Context, id uuid.UUID) (talkgroups.PresenceMap, error) {
-	_, err := rbac.Check(ctx, &incidents.Incident{ID: id}, rbac.WithActions(entities.ActionRead))
+	_, err := authz.Check(ctx, &incidents.Incident{ID: id}, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
 	}
