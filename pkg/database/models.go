@@ -146,7 +146,7 @@ type SweptCall struct {
 	AudioName   *string            `json:"audioName,omitempty"`
 	AudioBlob   []byte             `json:"audioBlob,omitempty"`
 	Duration    *int32             `json:"duration,omitempty"`
-	AudioType   *string            `json:"audioType,omitempty"`
+	AudioType   NullAudioMIME      `json:"audioType,omitempty"`
 	AudioUrl    *string            `json:"audioUrl,omitempty"`
 	Frequency   int                `json:"frequency,omitempty"`
 	Frequencies []int              `json:"frequencies,omitempty"`

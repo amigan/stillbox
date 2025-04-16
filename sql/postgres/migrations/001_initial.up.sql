@@ -125,7 +125,7 @@ CREATE TABLE swept_calls (
 	audio_name TEXT,
 	audio_blob BYTEA,
 	duration INTEGER,
-	audio_type TEXT,
+	audio_type audio_mime,
 	audio_url TEXT,
 	frequency INTEGER NOT NULL,
 	frequencies INTEGER[],
