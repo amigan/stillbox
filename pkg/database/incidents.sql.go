@@ -222,7 +222,7 @@ type GetIncidentCallsRow struct {
 	Notes       []byte             `json:"notes"`
 	Submitter   *int32             `json:"submitter"`
 	AudioName   *string            `json:"audioName"`
-	AudioType   *string            `json:"audioType"`
+	AudioType   NullAudioMIME      `json:"audioType"`
 	AudioUrl    *string            `json:"audioUrl"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`

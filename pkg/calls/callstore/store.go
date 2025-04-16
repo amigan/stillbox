@@ -79,6 +79,17 @@ func FromCtx(ctx context.Context) Store {
 	return s
 }
 
+func audioMimeFromString(s string) database.NullAudioMIME {
+	if s == "" {
+		return database.NullAudioMIME{}
+	}
+
+	return database.NullAudioMIME{
+		AudioMIME: database.AudioMIME(s),
+		Valid:     true,
+	}
+}
+
 func toAddCallParams(call *calls.Call) database.AddCallParams {
 	return database.AddCallParams{
 		ID:          call.ID,
@@ -88,7 +99,7 @@ func toAddCallParams(call *calls.Call) database.AddCallParams {
 		CallDate:    pgtype.Timestamptz{Time: call.DateTime, Valid: true},
 		AudioName:   common.NilIfZero(call.AudioName),
 		AudioBlob:   call.Audio,
-		AudioType:   common.NilIfZero(call.AudioType),
+		AudioType:   audioMimeFromString(call.AudioType),
 		AudioUrl:    call.AudioURL,
 		Duration:    call.Duration.MsInt32Ptr(),
 		Frequency:   call.Frequency,
@@ -153,10 +164,18 @@ func (s *postgresStore) CallAudio(ctx context.Context, id uuid.UUID) (*calls.Cal
 		return nil, err
 	}
 
+	audioMime := func(a database.NullAudioMIME) *string {
+		if a.Valid {
+			return common.PtrTo(string(a.AudioMIME))
+		}
+
+		return nil
+	}
+
 	return &calls.CallAudio{
 		CallDate:  jsontypes.Time(dbCall.CallDate.Time),
 		AudioName: dbCall.AudioName,
-		AudioType: dbCall.AudioType,
+		AudioType: audioMime(dbCall.AudioType),
 		AudioBlob: dbCall.AudioBlob,
 	}, nil
 }
@@ -186,7 +205,7 @@ func (s *postgresStore) Call(ctx context.Context, id uuid.UUID) (*calls.Call, er
 		Talkgroup:      c.Talkgroup,
 		DateTime:       c.CallDate.Time,
 		AudioName:      common.ZeroIfNil(c.AudioName),
-		AudioType:      common.ZeroIfNil(c.AudioType),
+		AudioType:      string(c.AudioType.AudioMIME),
 		AudioURL:       c.AudioUrl,
 		Duration:       calls.CallDuration(time.Duration(common.ZeroIfNil(c.Duration)) * time.Millisecond),
 		Frequency:      c.Frequency,

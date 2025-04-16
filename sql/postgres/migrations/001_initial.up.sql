@@ -82,6 +82,8 @@ CREATE TABLE IF NOT EXISTS alerts(
 	metadata JSONB
 );
 
+CREATE TYPE audio_mime AS ENUM ('audio/mpeg', 'audio/wav');
+
 CREATE TABLE IF NOT EXISTS calls(
 	id UUID,
 	submitter INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
@@ -91,7 +93,7 @@ CREATE TABLE IF NOT EXISTS calls(
 	audio_name TEXT,
 	audio_blob BYTEA,
 	duration INTEGER,
-	audio_type TEXT,
+	audio_type audio_mime,
 	audio_url TEXT,
 	frequency INTEGER NOT NULL,
 	frequencies INTEGER[],

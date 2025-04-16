@@ -5,10 +5,11 @@ package mocks
 import (
 	context "context"
 
-	entities "dynatron.me/x/stillbox/pkg/authz/entities"
-	mock "github.com/stretchr/testify/mock"
+	authz "dynatron.me/x/stillbox/pkg/authz"
 
-	rbac "dynatron.me/x/stillbox/pkg/authz"
+	entities "dynatron.me/x/stillbox/pkg/authz/entities"
+
+	mock "github.com/stretchr/testify/mock"
 
 	restrict "github.com/el-mike/restrict/v2"
 )
@@ -27,7 +28,7 @@ func (_m *RBAC) EXPECT() *RBAC_Expecter {
 }
 
 // Check provides a mock function with given fields: ctx, res, opts
-func (_m *RBAC) Check(ctx context.Context, res restrict.Resource, opts ...rbac.CheckOption) (entities.Subject, error) {
+func (_m *RBAC) Check(ctx context.Context, res restrict.Resource, opts ...authz.CheckOption) (entities.Subject, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -43,10 +44,10 @@ func (_m *RBAC) Check(ctx context.Context, res restrict.Resource, opts ...rbac.C
 
 	var r0 entities.Subject
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, restrict.Resource, ...rbac.CheckOption) (entities.Subject, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, restrict.Resource, ...authz.CheckOption) (entities.Subject, error)); ok {
 		return rf(ctx, res, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, restrict.Resource, ...rbac.CheckOption) entities.Subject); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, restrict.Resource, ...authz.CheckOption) entities.Subject); ok {
 		r0 = rf(ctx, res, opts...)
 	} else {
 		if ret.Get(0) != nil {
@@ -54,7 +55,7 @@ func (_m *RBAC) Check(ctx context.Context, res restrict.Resource, opts ...rbac.C
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, restrict.Resource, ...rbac.CheckOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, restrict.Resource, ...authz.CheckOption) error); ok {
 		r1 = rf(ctx, res, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -71,18 +72,18 @@ type RBAC_Check_Call struct {
 // Check is a helper method to define mock.On call
 //   - ctx context.Context
 //   - res restrict.Resource
-//   - opts ...rbac.CheckOption
+//   - opts ...authz.CheckOption
 func (_e *RBAC_Expecter) Check(ctx interface{}, res interface{}, opts ...interface{}) *RBAC_Check_Call {
 	return &RBAC_Check_Call{Call: _e.mock.On("Check",
 		append([]interface{}{ctx, res}, opts...)...)}
 }
 
-func (_c *RBAC_Check_Call) Run(run func(ctx context.Context, res restrict.Resource, opts ...rbac.CheckOption)) *RBAC_Check_Call {
+func (_c *RBAC_Check_Call) Run(run func(ctx context.Context, res restrict.Resource, opts ...authz.CheckOption)) *RBAC_Check_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]rbac.CheckOption, len(args)-2)
+		variadicArgs := make([]authz.CheckOption, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(rbac.CheckOption)
+				variadicArgs[i] = a.(authz.CheckOption)
 			}
 		}
 		run(args[0].(context.Context), args[1].(restrict.Resource), variadicArgs...)
@@ -95,7 +96,7 @@ func (_c *RBAC_Check_Call) Return(_a0 entities.Subject, _a1 error) *RBAC_Check_C
 	return _c
 }
 
-func (_c *RBAC_Check_Call) RunAndReturn(run func(context.Context, restrict.Resource, ...rbac.CheckOption) (entities.Subject, error)) *RBAC_Check_Call {
+func (_c *RBAC_Check_Call) RunAndReturn(run func(context.Context, restrict.Resource, ...authz.CheckOption) (entities.Subject, error)) *RBAC_Check_Call {
 	_c.Call.Return(run)
 	return _c
 }
