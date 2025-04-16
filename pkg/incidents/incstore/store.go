@@ -270,7 +270,7 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 			Call: calls.Call{
 				ID:          v.CallID,
 				AudioName:   common.ZeroIfNil(v.AudioName),
-				AudioType:   common.ZeroIfNil(v.AudioType),
+				AudioType:   string(v.AudioType.AudioMIME),
 				AudioURL:    v.AudioUrl,
 				Duration:    dur,
 				DateTime:    v.CallDate.Time,

@@ -12,7 +12,7 @@ packages:
     interfaces:
       Store:
       DBTX:
-  dynatron.me/x/stillbox/pkg/rbac:
+  dynatron.me/x/stillbox/pkg/authz:
     config:
     interfaces:
       RBAC:

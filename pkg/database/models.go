@@ -5,6 +5,8 @@
 package database
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"net/netip"
 	"time"
 
@@ -13,6 +15,48 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type AudioMIME string
+
+const (
+	AudioMIMEAudioMPEG AudioMIME = "audio/mpeg"
+	AudioMIMEAudioWAV  AudioMIME = "audio/wav"
+)
+
+func (e *AudioMIME) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AudioMIME(s)
+	case string:
+		*e = AudioMIME(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AudioMIME: %T", src)
+	}
+	return nil
+}
+
+type NullAudioMIME struct {
+	AudioMIME AudioMIME `json:"audioMime,omitempty"`
+	Valid     bool      `json:"valid,omitempty"` // Valid is true if AudioMIME is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAudioMIME) Scan(value interface{}) error {
+	if value == nil {
+		ns.AudioMIME, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AudioMIME.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAudioMIME) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AudioMIME), nil
+}
 
 type Alert struct {
 	ID        int                `json:"id,omitempty"`
@@ -44,7 +88,7 @@ type Call struct {
 	AudioName   *string            `json:"audioName,omitempty"`
 	AudioBlob   []byte             `json:"audioBlob,omitempty"`
 	Duration    *int32             `json:"duration,omitempty"`
-	AudioType   *string            `json:"audioType,omitempty"`
+	AudioType   NullAudioMIME      `json:"audioType,omitempty"`
 	AudioUrl    *string            `json:"audioUrl,omitempty"`
 	Frequency   int                `json:"frequency,omitempty"`
 	Frequencies []int              `json:"frequencies,omitempty"`

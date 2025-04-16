@@ -102,7 +102,7 @@ type AddCallParams struct {
 	CallDate    pgtype.Timestamptz `json:"callDate"`
 	AudioName   *string            `json:"audioName"`
 	AudioBlob   []byte             `json:"audioBlob"`
-	AudioType   *string            `json:"audioType"`
+	AudioType   NullAudioMIME      `json:"audioType"`
 	AudioUrl    *string            `json:"audioUrl"`
 	Duration    *int32             `json:"duration"`
 	Frequency   int                `json:"frequency"`
@@ -199,7 +199,7 @@ type GetCallRow struct {
 	Talkgroup   int                `json:"talkgroup"`
 	CallDate    pgtype.Timestamptz `json:"callDate"`
 	AudioName   *string            `json:"audioName"`
-	AudioType   *string            `json:"audioType"`
+	AudioType   NullAudioMIME      `json:"audioType"`
 	AudioUrl    *string            `json:"audioUrl"`
 	Duration    *int32             `json:"duration"`
 	Frequency   int                `json:"frequency"`
@@ -260,7 +260,7 @@ WHERE sc.id = $1
 type GetCallAudioByIDRow struct {
 	CallDate  pgtype.Timestamptz `json:"callDate"`
 	AudioName *string            `json:"audioName"`
-	AudioType *string            `json:"audioType"`
+	AudioType NullAudioMIME      `json:"audioType"`
 	AudioBlob []byte             `json:"audioBlob"`
 }
 

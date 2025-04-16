@@ -16,6 +16,9 @@ sql:
           - id
           - tgid
           - tg
+          - mime
+          - mpeg
+          - wav
         emit_pointers_for_null_types: true
         overrides:
           - db_type: "uuid"

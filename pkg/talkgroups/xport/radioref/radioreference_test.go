@@ -60,7 +60,7 @@ func TestRadioRef(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			dbMock := mocks.NewStore(t)
 			rbacMock := rbacmocks.NewRBAC(t)
-			rbacMock.EXPECT().Check(mock.AnythingOfType("*context.valueCtx"), authz.UseResource("Talkgroup"), mock.AnythingOfType("rbac.CheckOption")).Return(&subject, nil)
+			rbacMock.EXPECT().Check(mock.AnythingOfType("*context.valueCtx"), authz.UseResource("Talkgroup"), mock.AnythingOfType("authz.CheckOption")).Return(&subject, nil)
 			if tc.expectErr == nil {
 				dbMock.EXPECT().GetSystemName(mock.AnythingOfType("*context.valueCtx"), tc.sysID).Return(tc.sysName, nil)
 			}
