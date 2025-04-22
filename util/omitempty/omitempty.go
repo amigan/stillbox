@@ -18,7 +18,7 @@ type FieldTag int
 
 const (
 	NotSet    FieldTag = 0
-	OmitEmpty FieldTag = iota << 1
+	OmitEmpty FieldTag = 1 << iota
 	OmitZero
 )
 

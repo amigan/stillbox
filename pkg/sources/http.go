@@ -18,7 +18,7 @@ import (
 
 // RdioHTTP is an source that accepts calls using the rdio-scanner HTTP interface.
 type RdioHTTP struct {
-	auth authn.Authenticator
+	auth authn.Authn
 	ing  Ingestor
 }
 
@@ -27,7 +27,7 @@ func (r *RdioHTTP) SourceType() string {
 }
 
 // NewHTTPIngestor creates a new HTTPIngestor. It requires an Authenticator.
-func NewRdioHTTP(auth authn.Authenticator, ing Ingestor) *RdioHTTP {
+func NewRdioHTTP(auth authn.Authn, ing Ingestor) *RdioHTTP {
 	return &RdioHTTP{
 		auth: auth,
 		ing:  ing,
@@ -36,7 +36,7 @@ func NewRdioHTTP(auth authn.Authenticator, ing Ingestor) *RdioHTTP {
 
 // InstallPublicRoutes installs the HTTP source's routes to the provided chi Router.
 func (h *RdioHTTP) InstallPublicRoutes(r chi.Router) {
-	r.Post("/api/call-upload", h.routeCallUpload)
+	r.With(h.auth.APIKeyMiddleware("key")).Post("/api/call-upload", h.routeCallUpload)
 }
 
 type CallUploadRequest struct {
@@ -103,7 +103,7 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	submitterSub, err := h.auth.CheckAPIKey(ctx, r.Form.Get("key"))
+	submitterSub, err := authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionCreate))
 	if err != nil {
 		authn.ErrorResponse(w, err)
 		return

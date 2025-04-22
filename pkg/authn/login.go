@@ -43,7 +43,7 @@ type loginJWTAuth interface {
 	PrivateRoutes(chi.Router)
 }
 
-func (a *authenticator) Refresh(ctx context.Context, username, source string) (token string, err error) {
+func (a *authn) Refresh(ctx context.Context, username, source string) (token string, err error) {
 	ust := users.FromCtx(ctx)
 	user, err := ust.GetUser(ctx, username)
 	if err != nil || user == nil {
@@ -58,7 +58,7 @@ func (a *authenticator) Refresh(ctx context.Context, username, source string) (t
 	return a.NewAccessToken(username), nil
 }
 
-func (a *authenticator) Login(ctx context.Context, username, password, source string) (token string, err error) {
+func (a *authn) Login(ctx context.Context, username, password, source string) (token string, err error) {
 	ust := users.FromCtx(ctx)
 	user, err := ust.GetUser(ctx, username)
 	if err != nil || user == nil {
@@ -80,7 +80,7 @@ func (a *authenticator) Login(ctx context.Context, username, password, source st
 	return a.NewAccessToken(user.Username), nil
 }
 
-func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
+func (a *authn) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	jwToken, _, err := jwtauth.FromContext(ctx)
 	if err != nil {
@@ -129,7 +129,7 @@ func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
-func (a *authenticator) routeLogin(w http.ResponseWriter, r *http.Request) {
+func (a *authn) routeLogin(w http.ResponseWriter, r *http.Request) {
 	var creds struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -192,7 +192,7 @@ func (a *authenticator) routeLogin(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
-func (a *authenticator) routeLogout(w http.ResponseWriter, r *http.Request) {
+func (a *authn) routeLogout(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Name:     CookieName,
 		Value:    "",
@@ -219,13 +219,13 @@ func (a *authenticator) routeLogout(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
-func (a *authenticator) allowInsecureCookie(r *http.Request) bool {
+func (a *authn) allowInsecureCookie(r *http.Request) bool {
 	host := strings.Split(r.Host, ":")
 	v, has := a.cfg.AllowInsecure[host[0]]
 	return has && v
 }
 
-func (a *authenticator) setInsecureCookie(cookie *http.Cookie) {
+func (a *authn) setInsecureCookie(cookie *http.Cookie) {
 	if a.cfg.SameSiteNoneWhenInsecure {
 		cookie.Secure = true
 		cookie.SameSite = http.SameSiteNoneMode
