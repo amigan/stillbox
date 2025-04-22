@@ -95,10 +95,6 @@ var (
 
 // ErrorResponse writes the error and appropriate HTTP response code.
 func ErrorResponse(w http.ResponseWriter, err error) {
-	if authz.IsErrAccessDenied(err) != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
 	switch err {
 	case ErrLoginFailed, ErrUnauthorized, authz.ErrBadSubject:
 		http.Error(w, err.Error(), http.StatusUnauthorized)

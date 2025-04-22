@@ -105,7 +105,7 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 
 	submitterSub, err := authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionCreate))
 	if err != nil {
-		authn.ErrorResponse(w, err)
+		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
 
