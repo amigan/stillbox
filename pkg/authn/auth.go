@@ -12,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
+	"github.com/rs/zerolog/log"
 )
 
 // Authn performs API key and user JWT authentication.
@@ -103,7 +104,8 @@ func ErrorResponse(w http.ResponseWriter, err error) {
 	case ErrInternal:
 		fallthrough
 	default:
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error().Err(err).Msg("authn error")
+		http.Error(w, ErrInternal.Error(), http.StatusInternalServerError)
 	}
 }
 
