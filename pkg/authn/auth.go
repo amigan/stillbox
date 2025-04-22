@@ -1,7 +1,6 @@
 package authn
 
 import (
-	"context"
 	_ "embed"
 	"errors"
 	"net/http"
@@ -18,13 +17,29 @@ import (
 // Authn performs API key and user JWT authentication.
 type Authn interface {
 	HUP(*config.Config)
-	AuthorizedSubjectMiddleware() func(http.Handler) http.Handler
-	PublicSubjectMiddleware() func(http.Handler) http.Handler
-	NewCallToken(callID string) string
-	NewAccessToken(username string) string
+
+	// VerifyMiddleware will verify any JWT provided with the request.
 	VerifyMiddleware() func(http.Handler) http.Handler
+
+	// AuthorizedSubjectMiddleware requires a JWT be set.
+	AuthorizedSubjectMiddleware() func(http.Handler) http.Handler
+
+	// PublicSubjectMiddleware allows a Public subject to be set.
+	PublicSubjectMiddleware() func(http.Handler) http.Handler
+
+	// NewCallToken creates a call-specific token for transcription use.
+	NewCallToken(callID string) string
+
+	// NewAccessToken generates a new access token.
+	NewAccessToken(username string) string
+
+	// APIKeyMiddleware requires a multipart/form-data API key be set.
 	APIKeyMiddleware(formKey string) func(http.Handler) http.Handler
+
+	// PrivateRoutes installs auth-specific private routes to the Router.
 	PrivateRoutes(r chi.Router)
+
+	// PublicRoutes installs auth-specific public routes to the Router.
 	PublicRoutes(r chi.Router)
 }
 
@@ -33,19 +48,6 @@ type authn struct {
 	rl  *httprate.RateLimiter
 	cfg config.Auth
 	ust users.Store
-}
-
-type Authenticator interface {
-	Init(cfg config.Auth)
-	Authenticate(context.Context, *http.Request) (entities.Subject, error)
-	VerifyMiddleware() func(http.Handler) http.Handler
-}
-
-type Provider interface {
-	Init() error
-	// Authenticated returns whether a request is authenticated, and any claims resulting.
-	Authenticated(r *http.Request) (claims, bool)
-	PublicRoutes() http.Handler
 }
 
 func NewAuthn(cfg config.Auth, ust users.Store) (*authn, error) {
