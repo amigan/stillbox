@@ -39,8 +39,9 @@ func (a *authn) apiKeySubject(ctx context.Context, key string) (entities.Subject
 	return a.ust.GetUser(ctx, apik.Username)
 }
 
-// CheckAPIKey validates the provided key and returns the API owner's users.UserID.
-// An error is returned if validation fails for any reason.
+// APIKeyMiddleware validates the provided key and sets the Subject in context with the resolved User.
+// This is only for use when multipart/form-data is expected. It ideally has one use, and that is for the
+// Rdio HTTP source.
 func (a *authn) APIKeyMiddleware(formKey string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
