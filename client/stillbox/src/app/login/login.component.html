@@ -3,13 +3,7 @@
     <div>
       <mat-form-field class="loginField">
         <mat-label>Username</mat-label>
-        <input
-          matInput
-          name="username"
-          type="text"
-          [(ngModel)]="username"
-          (keyup.enter)="onSubmit()"
-        />
+        <input matInput name="username" type="text" [(ngModel)]="username" />
       </mat-form-field>
     </div>
     <div>
@@ -20,7 +14,6 @@
           name="password"
           type="password"
           [(ngModel)]="password"
-          (keyup.enter)="onSubmit()"
         />
       </mat-form-field>
     </div>
