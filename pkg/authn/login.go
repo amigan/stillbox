@@ -83,7 +83,7 @@ func (a *authn) Login(ctx context.Context, username, password, source string) (t
 		log.Error().Str("username", username).Str("source", source).Err(err).Msg("record login failed")
 	}
 
-	return a.NewAccessToken(user.Username), nil
+	return a.NewRefreshToken(user.Username), nil
 }
 
 func (a *authn) routeRefresh(w http.ResponseWriter, r *http.Request) {
@@ -180,14 +180,17 @@ func (a *authn) routeLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tok, err := a.Login(r.Context(), creds.Username, creds.Password, r.RemoteAddr)
+	refreshTok, err := a.Login(r.Context(), creds.Username, creds.Password, r.RemoteAddr)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
+
+	accessTok := a.NewAccessToken(creds.Username)
+
 	cookie := &http.Cookie{
 		Name:     CookieName,
-		Value:    tok,
+		Value:    accessTok,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
@@ -202,9 +205,11 @@ func (a *authn) routeLogin(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, cookie)
 
 	jr := struct {
-		JWT string `json:"jwt"`
+		AccessToken  string `json:"accessToken"`
+		RefreshToken string `json:"refreshToken"`
 	}{
-		JWT: tok,
+		AccessToken:  accessTok,
+		RefreshToken: refreshTok,
 	}
 
 	render.JSON(w, r, &jr)
