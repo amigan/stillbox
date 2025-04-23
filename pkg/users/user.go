@@ -61,6 +61,7 @@ func FromSubject(sub entities.Subject) (*User, error) {
 	return user, nil
 }
 
+// A User is a user record.
 type User struct {
 	ID            UserID
 	Username      string
@@ -97,7 +98,14 @@ func (u *User) GetRoles() []string {
 	return r
 }
 
-func fromDBUser(dbu database.User) *User {
+func (u *User) Mask() *User {
+	return &User{
+		ID:       u.ID,
+		Username: u.Username,
+	}
+}
+
+func FromDBUser(dbu database.User) *User {
 	var lastLoginAt *jsontypes.Time
 	if dbu.LastLoginAt.Valid {
 		lastLoginAt = (*jsontypes.Time)(&dbu.LastLoginAt.Time)
