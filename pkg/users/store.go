@@ -9,6 +9,7 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/services"
 
@@ -43,6 +44,9 @@ type Store interface {
 
 	// GetUserByAPIKey gets a user by API key.
 	GetAPIKey(ctx context.Context, key string) (database.GetAPIKeyRow, error)
+
+	// HUP invalidates the cache.
+	HUP(*config.Config)
 }
 
 type postgresStore struct {
@@ -76,6 +80,10 @@ func FromCtx(ctx context.Context) Store {
 
 func (s *postgresStore) Invalidate() {
 	s.Clear()
+}
+
+func (s *postgresStore) HUP(_ *config.Config) {
+	s.Invalidate()
 }
 
 type UserUpdate struct {

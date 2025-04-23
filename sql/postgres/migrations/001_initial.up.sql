@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users(
 	is_admin BOOLEAN NOT NULL,
 	last_login_at TIMESTAMPTZ,
 	last_login_from INET,
+	password_set_at TIMESTAMPTZ NOT NULL,
 	prefs JSONB
 );
 

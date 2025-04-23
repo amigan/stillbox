@@ -118,11 +118,27 @@ func (a *jwtAuthenticator) NewAccessToken(username string) string {
 	claims := claims{
 		"sub": username,
 	}
-	jwtauth.SetExpiryIn(claims, time.Hour*24*30) // one month
+	jwtauth.SetExpiryIn(claims, time.Hour)
 	_, tokenString, err := a.jwt.Encode(claims)
 	if err != nil {
 		panic(err)
 	}
+	return tokenString
+}
+
+func (a *jwtAuthenticator) NewRefreshToken(username string) string {
+	claims := claims{
+		"sub": username,
+	}
+
+	jwtauth.SetIssuedNow(claims)
+	jwtauth.SetExpiryIn(claims, time.Hour*24*7) // seven days
+
+	_, tokenString, err := a.jwt.Encode(claims)
+	if err != nil {
+		panic(err)
+	}
+
 	return tokenString
 }
 

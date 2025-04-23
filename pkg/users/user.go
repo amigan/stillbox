@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/netip"
 	"strings"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/authz"
@@ -69,6 +70,7 @@ type User struct {
 	LastLoginAt   *jsontypes.Time
 	LastLoginFrom *netip.Addr
 	Prefs         json.RawMessage
+	PasswordSetAt time.Time
 }
 
 func (*User) GetResourceName() string {
@@ -110,5 +112,6 @@ func fromDBUser(dbu database.User) *User {
 		Prefs:         dbu.Prefs,
 		LastLoginAt:   lastLoginAt,
 		LastLoginFrom: dbu.LastLoginFrom,
+		PasswordSetAt: dbu.PasswordSetAt.Time,
 	}
 }

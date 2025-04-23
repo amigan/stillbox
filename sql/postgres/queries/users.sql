@@ -14,15 +14,16 @@ INSERT INTO users (
 		username,
 		password,
 		email,
-		is_admin
-	) VALUES ($1, $2, $3, $4)
+		is_admin,
+		password_set_at
+	) VALUES ($1, $2, $3, $4, NOW())
 RETURNING *;
 
 -- name: DeleteUser :exec
 DELETE FROM users WHERE username = $1;
 
 -- name: UpdatePassword :exec
-UPDATE users SET password = $2 WHERE username = $1;
+UPDATE users SET password = $2, password_set_at = NOW() WHERE username = $1;
 
 -- name: UpdateUser :one
 UPDATE users SET
