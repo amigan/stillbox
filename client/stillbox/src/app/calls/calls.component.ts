@@ -11,7 +11,7 @@ import {
 import { PrefsService } from '../prefs/prefs.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { CallsListParams, CallsService } from './calls.service';
 import { CallRecord } from '../calls';
@@ -81,7 +81,7 @@ const reqPageSize = 200;
 })
 export class CallsComponent {
   @ViewChild('callsTable') callsTable!: CallsTableComponent;
-  callsResult = new BehaviorSubject(new Array<CallRecord>(0));
+  callsResult = new Subject<Array<CallRecord>>();
   dialog = inject(MatDialog);
   showTranscripts!: Observable<boolean>;
   currentSet!: CallRecord[];
@@ -114,9 +114,7 @@ export class CallsComponent {
 
   subscriptions = new Subscription();
   pageWindow = 0;
-  fetchCalls = new BehaviorSubject<CallsListParams>(
-    this.buildParams(this.curPage, this.curPage.pageIndex),
-  );
+  fetchCalls = new Subject<CallsListParams>();
 
   constructor(
     private callsSvc: CallsService,
@@ -339,6 +337,7 @@ export class CallsComponent {
         this.playerSvc.setQueue(cr);
       }),
     );
+    this.fetchCalls.next(this.buildParams(this.curPage, this.curPage.pageIndex));
   }
 
   resetFilter() {
