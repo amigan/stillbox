@@ -4,6 +4,8 @@ server:
   baseURL: "https://stillbox.example.com"
   listen: ':3050'
   public: true
+  # set this to true only when using a reverse proxy that sets this header
+  useXRealIP: false
   rateLimit:
     enable: true
     requests: 200

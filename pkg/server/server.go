@@ -157,7 +157,11 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	srv.transcriber = transcriber
 
 	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
+
+	if cfg.Server.UseXRealIP {
+		r.Use(middleware.RealIP)
+	}
+
 	r.Use(RequestLogger())
 	r.Use(ServerHeaderAdd)
 	r.Use(cors.Handler(cors.Options{
