@@ -101,14 +101,14 @@ func (a *authn) routeRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	iat, ok := claims["iat"].(float64)
+	iatTime, ok := claims["iat"].(time.Time)
 	if !ok {
 		log.Error().Str("remote", r.RemoteAddr).Str("username", existingSubjectUsername).Msg("no issuedAt in refresh token")
 		http.Error(w, "Invalid token", http.StatusBadRequest)
 		return
 	}
 
-	iatTime := time.Unix(int64(iat), 0).UTC()
+	iatTime = iatTime.UTC()
 
 	refreshTok, err := a.Refresh(ctx, existingSubjectUsername, iatTime, r.RemoteAddr)
 	if err != nil {
