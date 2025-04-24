@@ -177,5 +177,5 @@ func (s *postgresStore) RecordLogin(ctx context.Context, username, source string
 		return err
 	}
 
-	return s.db.RecordUserLogin(ctx, username, ts, ip)
+	return s.db.RecordUserLogin(ctx, username, ts, &ip)
 }
