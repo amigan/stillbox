@@ -4,8 +4,10 @@ import (
 	_ "embed"
 	"errors"
 	"net/http"
+	"sync"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/acl"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/config"
@@ -45,10 +47,12 @@ type Authn interface {
 }
 
 type authn struct {
+	sync.RWMutex // protects apiKeyACL
 	jwtAuthenticator
-	rl  *httprate.RateLimiter
-	cfg config.Auth
-	ust users.Store
+	rl        *httprate.RateLimiter
+	cfg       config.Auth
+	ust       users.Store
+	apiKeyACL *acl.IP
 }
 
 func NewAuthn(cfg config.Auth, ust users.Store) (*authn, error) {
@@ -57,12 +61,22 @@ func NewAuthn(cfg config.Auth, ust users.Store) (*authn, error) {
 		cfg: cfg,
 		ust: ust,
 	}
+
+	err := a.initAPIKeyACL(cfg.APIKeyACL)
+	if err != nil {
+		return nil, err
+	}
+
 	a.jwtAuthenticator.Init(cfg)
 	return a, nil
 }
 
 func (a *authn) HUP(cfg *config.Config) {
 	a.jwtAuthenticator.Init(cfg.Auth)
+	err := a.initAPIKeyACL(cfg.Auth.APIKeyACL)
+	if err != nil {
+		log.Error().Err(err).Msg("API key ACL config reload")
+	}
 }
 
 func (a *authn) SubjectMiddleware(requireToken bool) func(http.Handler) http.Handler {

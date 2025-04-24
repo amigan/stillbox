@@ -41,6 +41,23 @@ auth:
   # this instead changes the meaning of allowInsecureFor to the cookie being marked
   # Secure, but SameSite will be set to None
   sameSiteNoneForInsecure: false
+  # only allow API key authenticated requests according to ACL
+  # If this is totally unset, the default is deny
+  apiKeyACL:
+    allow:
+      - 192.168.3.4
+      - 192.168.1.0/24
+      - 2001:dead:beef::4/128
+    deny:
+      - 192.168.1.54
+    # allow, deny means allow entries are evaluated first;
+    # at least one must match, or the request is rejected. Next, all deny entries are evaluated.
+    # If any match, the request is denied. Last, any requests which do not match an allow or a
+    # deny entry are denied by default.
+    # deny, allow means all deny entries are evaluated; if any match, the request is denied
+    # unless it also matches an allow entry. Any requests which do not match any entries are permitted.
+    # Use deny, allow with no list entries if you really want to allow any client to use API key auth.
+    order: deny, allow
 
 log:
   # level logs at or above the specified level

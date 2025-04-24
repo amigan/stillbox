@@ -13,6 +13,10 @@ auth:
   allowInsecureFor:
     "localhost": true
     "stillbox": true
+  apiKeyACL:
+    deny:
+      - 6.4.3.2
+    order: deny, allow
 log:
   - level: debug
   - level: error

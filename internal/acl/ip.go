@@ -26,6 +26,7 @@ func (ipc *IPConfig) IPACL() (*IP, error) {
 }
 
 // IP is an IP ACL.
+// It is immutable after creation, and safe for concurrent use.
 type IP struct {
 	allowed *bart.Lite
 	denied  *bart.Lite

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"sync"
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/authz/entities"
@@ -25,7 +26,8 @@ var (
 )
 
 type jwtAuthenticator struct {
-	jwt *jwtauth.JWTAuth
+	sync.Mutex // protects jwt
+	jwt        *jwtauth.JWTAuth
 }
 
 type claims map[string]any
@@ -68,7 +70,9 @@ func (a *jwtAuthenticator) AuthenticateJWT(ctx context.Context, r *http.Request)
 		return nil, err
 	}
 
+	a.Lock()
 	err = jwt.Validate(token, a.jwt.ValidateOptions()...)
+	a.Unlock()
 	if err != nil {
 		err = jwtauth.ErrorReason(err)
 		return nil, err
@@ -111,6 +115,8 @@ func (a *jwtAuthenticator) Init(cfg config.Auth) {
 	if string(cfg.JWTSecret) == "super secret string" {
 		log.Fatal().Msg("JWT secret is the default!")
 	}
+	a.Lock()
+	defer a.Unlock()
 	a.jwt = jwtauth.New("HS256", []byte(cfg.JWTSecret), nil)
 }
 
@@ -119,6 +125,9 @@ func (a *jwtAuthenticator) NewAccessToken(username string) string {
 		"sub": username,
 	}
 	jwtauth.SetExpiryIn(claims, time.Hour)
+
+	a.Lock()
+	defer a.Unlock()
 	_, tokenString, err := a.jwt.Encode(claims)
 	if err != nil {
 		panic(err)
@@ -134,6 +143,8 @@ func (a *jwtAuthenticator) NewRefreshToken(username string) string {
 	jwtauth.SetIssuedNow(claims)
 	jwtauth.SetExpiryIn(claims, time.Hour*24*7) // seven days
 
+	a.Lock()
+	defer a.Unlock()
 	_, tokenString, err := a.jwt.Encode(claims)
 	if err != nil {
 		panic(err)
@@ -148,6 +159,9 @@ func (a *jwtAuthenticator) NewCallToken(callID string) string {
 		"realm": CallRealm,
 	}
 	jwtauth.SetExpiryIn(claims, time.Hour)
+
+	a.Lock()
+	defer a.Unlock()
 	_, tokenString, err := a.jwt.Encode(claims)
 	if err != nil {
 		panic(err)

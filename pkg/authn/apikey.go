@@ -8,12 +8,27 @@ import (
 	"strings"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/acl"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/database"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
+
+func (a *authn) initAPIKeyACL(cfg *acl.IPConfig) error {
+	a.Lock()
+	defer a.Unlock()
+
+	c, err := cfg.IPACL()
+	if err != nil {
+		return err
+	}
+
+	a.apiKeyACL = c
+
+	return nil
+}
 
 func (a *authn) apiKeySubject(ctx context.Context, key string) (entities.Subject, error) {
 	keyUuid, err := uuid.Parse(key)
@@ -45,6 +60,16 @@ func (a *authn) apiKeySubject(ctx context.Context, key string) (entities.Subject
 func (a *authn) APIKeyMiddleware(formKey string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
+			a.Lock()
+			aclResult := a.apiKeyACL.Allowed(r)
+			a.Unlock()
+
+			if aclResult != nil {
+				log.Error().Err(aclResult).Str("remote_addr", r.RemoteAddr).Msg("api key auth ACL check")
+				ErrorResponse(w, ErrUnauthorized)
+				return
+			}
+
 			if strings.Split(r.Header.Get("Content-Type"), ";")[0] != "multipart/form-data" {
 				ErrorResponse(w, ErrBadRequest)
 				return
