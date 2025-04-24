@@ -9,9 +9,7 @@ export const AuthGuard: CanActivateFn = (route, state) => {
     let success = false;
     authSvc.refresh().subscribe({
       next: (event) => {
-        if (event?.status == 200) {
-          success = true;
-        }
+        success = true;
       },
       error: (err) => {
         router.navigate(['/login']);

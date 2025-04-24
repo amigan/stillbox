@@ -223,7 +223,7 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 	}
 
 	ctx.ResetTimings()
-	if err := ctx.Process(f32le, nil, nil); err != nil {
+	if err := ctx.Process(f32le, nil, nil, nil); err != nil {
 		return nil, err
 	}
 

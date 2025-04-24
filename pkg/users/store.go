@@ -9,6 +9,7 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/services"
 
@@ -43,6 +44,9 @@ type Store interface {
 
 	// GetUserByAPIKey gets a user by API key.
 	GetAPIKey(ctx context.Context, key string) (database.GetAPIKeyRow, error)
+
+	// HUP invalidates the cache.
+	HUP(*config.Config)
 }
 
 type postgresStore struct {
@@ -78,6 +82,10 @@ func (s *postgresStore) Invalidate() {
 	s.Clear()
 }
 
+func (s *postgresStore) HUP(_ *config.Config) {
+	s.Invalidate()
+}
+
 type UserUpdate struct {
 	Email   *string `json:"email"`
 	IsAdmin *bool   `json:"isAdmin"`
@@ -89,7 +97,7 @@ func (s *postgresStore) UpdateUser(ctx context.Context, username string, user Us
 		return err
 	}
 
-	s.Set(username, fromDBUser(dbu))
+	s.Set(username, FromDBUser(dbu))
 
 	return nil
 }
@@ -98,23 +106,8 @@ func (s *postgresStore) UpdateUser(ctx context.Context, username string, user Us
 // It copies the user it is passed.
 func userPrivMask(ctx context.Context, user *User) *User {
 	_, err := authz.Check(ctx, user, authz.WithActions(entities.ActionReadPrivileged))
-	switch err {
-	case nil: // privileged
-		user = &User{
-			ID:            user.ID,
-			Username:      user.Username,
-			Password:      user.Password,
-			Email:         user.Email,
-			IsAdmin:       user.IsAdmin,
-			Prefs:         user.Prefs,
-			LastLoginAt:   user.LastLoginAt,
-			LastLoginFrom: user.LastLoginFrom,
-		}
-	default:
-		user = &User{
-			ID:       user.ID,
-			Username: user.Username,
-		}
+	if err != nil { // mask unprivileged
+		return user.Mask()
 	}
 
 	return user
@@ -135,7 +128,7 @@ func (s *postgresStore) GetUser(ctx context.Context, username string) (*User, er
 		return nil, err
 	}
 
-	u = fromDBUser(dbu)
+	u = FromDBUser(dbu)
 	s.Set(username, u)
 
 	return u, nil
@@ -184,5 +177,5 @@ func (s *postgresStore) RecordLogin(ctx context.Context, username, source string
 		return err
 	}
 
-	return s.db.RecordUserLogin(ctx, username, ts, ip)
+	return s.db.RecordUserLogin(ctx, username, ts, &ip)
 }

@@ -187,7 +187,14 @@ func passwdCommand(cfg *config.Config) *cli.Command {
 			}
 			username := ctx.Args().Get(0)
 
-			return Passwd(database.CtxWithDB(context.Background(), db), username)
+			err = Passwd(database.CtxWithDB(context.Background(), db), username)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Password successfully changed.", "Make sure to send SIGHUP to any running stillbox processes to invalidate any prior sessions!")
+
+			return nil
 		},
 	}
 

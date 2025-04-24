@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/acl"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 
 	"github.com/rs/zerolog/log"
@@ -29,6 +30,7 @@ type Config struct {
 type Server struct {
 	BaseURL    jsontypes.URL `yaml:"baseURL"`
 	DumpRoutes bool          `yaml:"dumpRoutes"`
+	UseXRealIP bool          `yaml:"useXRealIP"`
 	Listen     string        `yaml:"listen" default:":3051"`
 	Public     bool          `yaml:"public"`
 	RateLimit  RateLimit     `yaml:"rateLimit"`
@@ -47,6 +49,7 @@ type Auth struct {
 	JWTSecret                string          `yaml:"jwtsecret"`
 	AllowInsecure            map[string]bool `yaml:"allowInsecureFor"`
 	SameSiteNoneWhenInsecure bool            `yaml:"sameSiteNoneForInsecure"`
+	APIKeyACL                *acl.IPConfig   `yaml:"apiKeyACL"`
 }
 
 type CORS struct {

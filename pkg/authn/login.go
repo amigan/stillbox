@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -43,10 +44,15 @@ type loginJWTAuth interface {
 	PrivateRoutes(chi.Router)
 }
 
-func (a *authenticator) Refresh(ctx context.Context, username, source string) (token string, err error) {
+func (a *authn) Refresh(ctx context.Context, username string, refreshIAT time.Time, source string) (token string, err error) {
 	ust := users.FromCtx(ctx)
 	user, err := ust.GetUser(ctx, username)
 	if err != nil || user == nil {
+		return "", ErrUnauthorized
+	}
+
+	if refreshIAT.Before(user.PasswordSetAt.UTC()) {
+		log.Error().Str("remote", source).Str("username", username).Time("iat", refreshIAT).Time("passwdSetAt", user.PasswordSetAt.UTC()).Msg("token is from before last password reset")
 		return "", ErrUnauthorized
 	}
 
@@ -55,10 +61,10 @@ func (a *authenticator) Refresh(ctx context.Context, username, source string) (t
 		log.Error().Str("username", username).Str("source", source).Err(err).Msg("record refresh failed")
 	}
 
-	return a.NewAccessToken(username), nil
+	return a.NewRefreshToken(username), nil
 }
 
-func (a *authenticator) Login(ctx context.Context, username, password, source string) (token string, err error) {
+func (a *authn) Login(ctx context.Context, username, password, source string) (token string, err error) {
 	ust := users.FromCtx(ctx)
 	user, err := ust.GetUser(ctx, username)
 	if err != nil || user == nil {
@@ -77,35 +83,45 @@ func (a *authenticator) Login(ctx context.Context, username, password, source st
 		log.Error().Str("username", username).Str("source", source).Err(err).Msg("record login failed")
 	}
 
-	return a.NewAccessToken(user.Username), nil
+	return a.NewRefreshToken(user.Username), nil
 }
 
-func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
+func (a *authn) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	jwToken, _, err := jwtauth.FromContext(ctx)
+	jwToken, claims, err := jwtauth.FromContext(ctx)
 	if err != nil {
 		http.Error(w, "Invalid token", http.StatusBadRequest)
 		return
 	}
 
-	// XXX: WE MUST CHECK IF THE SUBJECT IS STILL VALID
-
 	existingSubjectUsername := jwToken.Subject()
 	if existingSubjectUsername == "" {
+		log.Error().Str("remote", r.RemoteAddr).Msg("no subject in token")
 		http.Error(w, "Invalid token", http.StatusBadRequest)
 		return
 	}
 
-	tok, err := a.Refresh(ctx, existingSubjectUsername, r.RemoteAddr)
+	iatTime, ok := claims["iat"].(time.Time)
+	if !ok {
+		log.Error().Str("remote", r.RemoteAddr).Str("username", existingSubjectUsername).Msg("no issuedAt in refresh token")
+		http.Error(w, "Invalid token", http.StatusBadRequest)
+		return
+	}
+
+	iatTime = iatTime.UTC()
+
+	refreshTok, err := a.Refresh(ctx, existingSubjectUsername, iatTime, r.RemoteAddr)
 	if err != nil {
 		log.Error().Err(err).Str("username", existingSubjectUsername).Msg("refresh failed")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
+	accessTok := a.NewAccessToken(existingSubjectUsername)
+
 	cookie := &http.Cookie{
 		Name:     CookieName,
-		Value:    tok,
+		Value:    accessTok,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
@@ -121,15 +137,17 @@ func (a *authenticator) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, cookie)
 
 	jr := struct {
-		JWT string `json:"jwt"`
+		AccessToken  string `json:"accessToken"`
+		RefreshToken string `json:"refreshToken"`
 	}{
-		JWT: tok,
+		AccessToken:  accessTok,
+		RefreshToken: refreshTok,
 	}
 
 	render.JSON(w, r, &jr)
 }
 
-func (a *authenticator) routeLogin(w http.ResponseWriter, r *http.Request) {
+func (a *authn) routeLogin(w http.ResponseWriter, r *http.Request) {
 	var creds struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -162,14 +180,17 @@ func (a *authenticator) routeLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tok, err := a.Login(r.Context(), creds.Username, creds.Password, r.RemoteAddr)
+	refreshTok, err := a.Login(r.Context(), creds.Username, creds.Password, r.RemoteAddr)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
+
+	accessTok := a.NewAccessToken(creds.Username)
+
 	cookie := &http.Cookie{
 		Name:     CookieName,
-		Value:    tok,
+		Value:    accessTok,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
@@ -184,15 +205,17 @@ func (a *authenticator) routeLogin(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, cookie)
 
 	jr := struct {
-		JWT string `json:"jwt"`
+		AccessToken  string `json:"accessToken"`
+		RefreshToken string `json:"refreshToken"`
 	}{
-		JWT: tok,
+		AccessToken:  accessTok,
+		RefreshToken: refreshTok,
 	}
 
 	render.JSON(w, r, &jr)
 }
 
-func (a *authenticator) routeLogout(w http.ResponseWriter, r *http.Request) {
+func (a *authn) routeLogout(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Name:     CookieName,
 		Value:    "",
@@ -219,13 +242,13 @@ func (a *authenticator) routeLogout(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
-func (a *authenticator) allowInsecureCookie(r *http.Request) bool {
+func (a *authn) allowInsecureCookie(r *http.Request) bool {
 	host := strings.Split(r.Host, ":")
 	v, has := a.cfg.AllowInsecure[host[0]]
 	return has && v
 }
 
-func (a *authenticator) setInsecureCookie(cookie *http.Cookie) {
+func (a *authn) setInsecureCookie(cookie *http.Cookie) {
 	if a.cfg.SameSiteNoneWhenInsecure {
 		cookie.Secure = true
 		cookie.SameSite = http.SameSiteNoneMode

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/acl"
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 
@@ -35,6 +36,12 @@ var expCfg = &Config{
 		AllowInsecure: map[string]bool{
 			"localhost": true,
 			"stillbox":  true,
+		},
+		APIKeyACL: &acl.IPConfig{
+			Deny: []string{
+				"6.4.3.2",
+			},
+			Order: acl.OrderDenyAllow,
 		},
 	},
 	Alerting: Alerting{

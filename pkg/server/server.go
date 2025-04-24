@@ -37,7 +37,7 @@ import (
 const shutdownTimeout = 5 * time.Second
 
 type Server struct {
-	auth        authn.Authenticator
+	auth        authn.Authn
 	conf        *config.Configuration
 	db          database.Store
 	r           *chi.Mux
@@ -77,7 +77,10 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	ust := users.NewStore(db)
 
-	authenticator := authn.NewAuthenticator(cfg.Auth, ust)
+	authenticator, err := authn.NewAuthn(cfg.Auth, ust)
+	if err != nil {
+		return nil, err
+	}
 
 	notifier, err := notify.New(cfg.Notify)
 	if err != nil {
@@ -154,7 +157,11 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	srv.transcriber = transcriber
 
 	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
+
+	if cfg.Server.UseXRealIP {
+		r.Use(middleware.RealIP)
+	}
+
 	r.Use(RequestLogger())
 	r.Use(ServerHeaderAdd)
 	r.Use(cors.Handler(cors.Options{

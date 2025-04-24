@@ -209,5 +209,6 @@ type User struct {
 	IsAdmin       bool               `json:"isAdmin,omitempty"`
 	LastLoginAt   pgtype.Timestamptz `json:"lastLoginAt,omitempty"`
 	LastLoginFrom *netip.Addr        `json:"lastLoginFrom,omitempty"`
+	PasswordSetAt pgtype.Timestamptz `json:"passwordSetAt,omitempty"`
 	Prefs         []byte             `json:"prefs,omitempty"`
 }
