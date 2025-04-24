@@ -6,6 +6,7 @@ client/calls/
 !client/calls/.gitkeep
 /gordio
 /stillbox
+/stillbox-pprof
 /calls
 /transcribed
 Session.vim

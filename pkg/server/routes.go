@@ -32,8 +32,8 @@ func (s *Server) setupRoutes() {
 	r := s.r
 	r.Use(s.WithCtxStores())
 
-	s.installPprof()
 	r.Use(s.auth.VerifyMiddleware())
+	s.installPprof()
 
 	r.Group(func(r chi.Router) {
 		r.Use(s.auth.AuthorizedSubjectMiddleware())
