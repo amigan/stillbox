@@ -17,6 +17,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// New creates a new Configuration, but does not read it.
+// configFile is a pointer so that it may be mutated by koanf options.
 func New(configFile *string) *Configuration {
 	if configFile == nil {
 		panic("configFile must not be nil")
