@@ -27,6 +27,7 @@ require (
 	github.com/knadh/koanf/v2 v2.2.0
 	github.com/lestrrat-go/jwx/v2 v2.1.5
 	github.com/matoous/go-nanoid v1.5.1
+	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/nikoksr/notify v1.3.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/pflag v1.0.6
@@ -42,6 +43,7 @@ require (
 
 require (
 	github.com/ajg/form v1.5.1 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
@@ -49,6 +51,7 @@ require (
 	github.com/go-audio/audio v1.0.0 // indirect
 	github.com/go-audio/riff v1.0.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
+	github.com/gorilla/css v1.0.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438 // indirect
@@ -76,6 +79,7 @@ require (
 	golang.org/x/exp/shiny v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
 	golang.org/x/image v0.26.0 // indirect
 	golang.org/x/mobile v0.0.0-20250408133729-978277e7eaf7 // indirect
+	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
 )

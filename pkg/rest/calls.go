@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -20,6 +19,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 const (
@@ -32,11 +32,15 @@ var (
 )
 
 type callsAPI struct {
-	nex nexus.Nexus
+	nex      nexus.Nexus
+	htmlSani *bluemonday.Policy
 }
 
 func newCallsAPI(nex nexus.Nexus) *callsAPI {
-	return &callsAPI{nex: nex}
+	return &callsAPI{
+		nex:      nex,
+		htmlSani: bluemonday.StrictPolicy(),
+	}
 }
 
 func (ca *callsAPI) Subrouter() http.Handler {
@@ -88,13 +92,17 @@ func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	xsc, err := io.ReadAll(r.Body)
-	if err != nil {
-		wErr(w, r, autoError(err))
-		return
+	sani := ca.htmlSani.SanitizeReader(r.Body)
+
+	var txv *string
+	if sani.Len() >= 0 {
+		xsc := strings.Trim(sani.String(), " \t")
+		if xsc != "" {
+			txv = &xsc
+		}
 	}
 
-	tsc, err := callstore.FromCtx(ctx).UpdateTranscription(ctx, p.CallID, strings.Trim(string(xsc), " \t"))
+	tsc, err := callstore.FromCtx(ctx).UpdateTranscription(ctx, p.CallID, txv)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
