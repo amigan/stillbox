@@ -22,7 +22,7 @@ func main() {
 	configFile := DefaultConfig
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: common.TimeFormat})
 
-	cfg := config.New(configFile)
+	cfg := config.New(&configFile)
 	app := &cli.App{
 		Name:                   common.AppName,
 		Usage:                  "a scanner call server",
