@@ -119,7 +119,7 @@ CREATE INDEX IF NOT EXISTS calls_talker_alias ON calls(talker_alias);
 
 CREATE TABLE swept_calls (
 	id UUID PRIMARY KEY,
-	submitter INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
+	submitter INTEGER REFERENCES users(id) ON DELETE SET NULL,
 	system INTEGER NOT NULL,
 	talkgroup INTEGER NOT NULL,
 	call_date TIMESTAMPTZ NOT NULL,

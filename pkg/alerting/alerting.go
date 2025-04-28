@@ -29,8 +29,11 @@ import (
 )
 
 const (
-	ScoreThreshold      = -1
-	CountThreshold      = 1.0
+	ScoreThreshold = -1
+	CountThreshold = 1.0
+
+	IgnoreFailureCountThreshold = 3
+
 	NotificationSubject = "Stillbox Alert"
 	DefaultRenotify     = 30 * time.Minute
 	alerterTickInterval = time.Minute
@@ -58,6 +61,7 @@ type alerter struct {
 	renotify   time.Duration
 	notifier   notify.Notifier
 	tgCache    tgstore.Store
+	ignoreList map[talkgroups.ID]int
 }
 
 type offsetClock time.Duration
@@ -103,6 +107,7 @@ func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerte
 		clock:      timeseries.DefaultClock,
 		renotify:   DefaultRenotify,
 		tgCache:    tgCache,
+		ignoreList: make(map[talkgroups.ID]int),
 	}
 
 	as.reload()
@@ -181,10 +186,20 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 
 	var notifications []alert.Alert
 	for _, s := range as.scores {
+		if as.ignoreList[s.ID] > IgnoreFailureCountThreshold {
+			continue
+		}
+
 		origScore := s.Score
 		tgr, err := as.tgCache.TG(ctx, s.ID)
 		if err != nil {
-			log.Error().Str("tg", s.ID.String()).Err(err).Msg("alerting eval tg get")
+			as.ignoreList[s.ID]++
+			if as.ignoreList[s.ID] > IgnoreFailureCountThreshold {
+				log.Error().Str("tg", s.ID.String()).Err(err).Msgf("alerting eval tg get failed %d times, ignoring", IgnoreFailureCountThreshold)
+			} else {
+				log.Error().Str("tg", s.ID.String()).Err(err).Msg("alerting eval tg get")
+			}
+
 			continue
 		}
 

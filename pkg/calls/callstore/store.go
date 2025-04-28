@@ -148,7 +148,7 @@ func (s *postgresStore) AddCall(ctx context.Context, call *calls.Call) error {
 		}, pgx.TxOptions{})
 	}
 
-	return nil
+	return err
 }
 
 func (s *postgresStore) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {

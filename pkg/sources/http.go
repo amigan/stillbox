@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
@@ -141,8 +143,12 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 
 		status := http.StatusInternalServerError
 
-		if authz.IsErrAccessDenied(err) != nil {
+		switch {
+		case authz.IsErrAccessDenied(err) != nil:
 			status = http.StatusForbidden
+		case errors.Is(err, tgstore.ErrNoSuchSystem):
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
 		http.Error(w, "Call ingest failed.", status)
