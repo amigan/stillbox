@@ -62,7 +62,7 @@ type CallTranscription struct {
 	ID         uuid.UUID     `json:"id"`
 	TG         talkgroups.ID `json:"tg"`
 	Patches    []int         `json:"patches"`
-	Transcript string        `json:"transcript"`
+	Transcript *string       `json:"transcript"`
 }
 
 func (*CallTranscription) BroadcastType() broadcast.Type {
@@ -78,11 +78,15 @@ func (ct *CallTranscription) ToPBMessage() *pb.Message {
 }
 
 func (ct *CallTranscription) ToPB() *pb.CallTranscription {
+	if ct.Transcript == nil {
+		return nil
+	}
+
 	return &pb.CallTranscription{
 		Id:         ct.ID.String(),
 		System:     int32(ct.TG.System),
 		Talkgroup:  int32(ct.TG.Talkgroup),
-		Transcript: ct.Transcript,
+		Transcript: *ct.Transcript,
 	}
 }
 

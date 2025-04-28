@@ -46,7 +46,7 @@ type Store interface {
 	BackfillTrending(ctx context.Context, scorer *trending.Scorer[talkgroups.ID], stepClock func(time.Time), since, until time.Time) (count int, err error)
 
 	// UpdateTranscription updates a call's transcription.
-	UpdateTranscription(ctx context.Context, id uuid.UUID, text string) (*calls.CallTranscription, error)
+	UpdateTranscription(ctx context.Context, id uuid.UUID, text *string) (*calls.CallTranscription, error)
 
 	// TranscriptContext gets a talkgroup's last recent calls with length greater than threshold and since lookback ago.
 	TranscriptContext(ctx context.Context, tg talkgroups.ID, count uint, threshold jsontypes.Duration, lookback jsontypes.Duration) ([]database.GetTranscriptsContextRow, error)
@@ -148,7 +148,7 @@ func (s *postgresStore) AddCall(ctx context.Context, call *calls.Call) error {
 		}, pgx.TxOptions{})
 	}
 
-	return nil
+	return err
 }
 
 func (s *postgresStore) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {
@@ -355,7 +355,7 @@ func (s *postgresStore) CallStats(ctx context.Context, interval calls.StatsInter
 	return cs, nil
 }
 
-func (s *postgresStore) UpdateTranscription(ctx context.Context, id uuid.UUID, text string) (*calls.CallTranscription, error) {
+func (s *postgresStore) UpdateTranscription(ctx context.Context, id uuid.UUID, text *string) (*calls.CallTranscription, error) {
 	c, err := s.getCallOwner(ctx, id)
 	if err != nil {
 		return nil, err
@@ -366,7 +366,7 @@ func (s *postgresStore) UpdateTranscription(ctx context.Context, id uuid.UUID, t
 		return nil, err
 	}
 
-	sts, err := database.FromCtx(ctx).SetCallTranscript(ctx, id, &text)
+	sts, err := database.FromCtx(ctx).SetCallTranscript(ctx, id, text)
 	if err != nil {
 		return nil, err
 	}

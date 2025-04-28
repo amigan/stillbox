@@ -83,9 +83,10 @@ func (sink *sinkInstance) callEmitter(ctx context.Context, call *calls.Call) fun
 	return func() error {
 		err := sink.Call(ctx, call)
 		if err != nil {
-			log.Error().Str("sink", sink.Name).Err(err).Msg("call emit to sink failed")
 			if sink.Required {
 				return err
+			} else {
+				log.Error().Str("sink", sink.Name).Err(err).Msg("call emit to sink failed")
 			}
 		}
 

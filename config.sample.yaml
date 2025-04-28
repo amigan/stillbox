@@ -45,6 +45,8 @@ auth:
   # If this is totally unset, the default is deny
   apiKeyACL:
     allow:
+      - 127.0.0.1
+      - ::1
       - 192.168.3.4
       - 192.168.1.0/24
       - 2001:dead:beef::4/128

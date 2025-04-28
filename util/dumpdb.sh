@@ -20,5 +20,5 @@ filen=`date "+backups/%Y%m%d_%H%M%S.${ext}"`
 
 mkdir -p backups/
 dbstring=`yq -r .db.connect "${config}"`
-pg_dump "${pgformat}" -f "${filen}" -T calls "${dbstring}"
+pg_dump "${pgformat}" -f "${filen}" -T 'calls*' "${dbstring}"
 echo "backed up to ${filen}"
