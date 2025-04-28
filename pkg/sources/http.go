@@ -134,12 +134,18 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	err = h.ing.Ingest(entities.CtxWithSubject(ctx, submitterSub), call)
 	if err != nil {
+		log.Error().Err(err).Msg("ingest failed")
+
+		status := http.StatusInternalServerError
+
 		if authz.IsErrAccessDenied(err) != nil {
-			log.Error().Err(err).Msg("ingest failed")
-			http.Error(w, "Call ingest failed.", http.StatusForbidden)
+			status = http.StatusForbidden
 		}
+
+		http.Error(w, "Call ingest failed.", status)
 		return
 	}
 
