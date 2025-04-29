@@ -24,24 +24,26 @@ const (
 type Logger struct {
 	console io.Writer
 	writers []io.Writer
+	files   []*os.File
 	cfg     []config.Logger
 
 	lastFieldName string
 	noColor       bool
 }
 
-func NewLogger(cfg []config.Logger) (*Logger, error) {
-	l := &Logger{
-		cfg: cfg,
-	}
-	cw := &zerolog.ConsoleWriter{
+func (l *Logger) consoleWriter() *zerolog.ConsoleWriter {
+	return &zerolog.ConsoleWriter{
 		Out:              os.Stderr,
 		TimeFormat:       common.TimeFormat,
 		FormatFieldName:  l.fieldNameFormat,
 		FormatFieldValue: l.fieldValueFormat,
 	}
+}
 
-	l.console = cw
+func NewLogger(cfg []config.Logger) (*Logger, error) {
+	l := &Logger{
+		cfg: cfg,
+	}
 
 	err := l.OpenLogs(cfg)
 	if err != nil {
@@ -73,20 +75,12 @@ func (l *Logger) Install() {
 }
 
 func (l *Logger) Close() {
-	for _, lg := range l.writers {
-		if _, isConsole := lg.(*zerolog.ConsoleWriter); isConsole {
-			continue
-		}
-
-		if cl, isCloser := lg.(io.Closer); isCloser {
-			err := cl.Close()
-			if err != nil {
-				log.Error().Err(err).Msg("closing writer")
-			}
-		}
+	for _, lg := range l.files {
+		lg.Close()
 	}
 
 	l.writers = nil
+	l.files = nil
 }
 
 func (l *Logger) OpenLogs(cfg []config.Logger) error {
@@ -108,12 +102,14 @@ func (l *Logger) OpenLogs(cfg []config.Logger) error {
 
 		switch lc.File {
 		case nil:
-			w.Writer = &zerolog.LevelWriterAdapter{Writer: l.console}
+			w.Writer = &zerolog.LevelWriterAdapter{Writer: l.consoleWriter()}
 		default:
 			f, err := os.OpenFile(*lc.File, os.O_APPEND|os.O_WRONLY|os.O_CREATE, LOGPERM)
 			if err != nil {
 				return err
 			}
+
+			l.files = append(l.files, f)
 
 			w.Writer = &zerolog.LevelWriterAdapter{
 				Writer: f,

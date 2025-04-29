@@ -19,6 +19,10 @@ func NewNexusSink(nexus nexus.Nexus) *NexusSink {
 	return ns
 }
 
+func (ns *NexusSink) Name() string {
+	return "nexus"
+}
+
 func (ns *NexusSink) SinkType() string {
 	return "nexus"
 }

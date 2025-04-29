@@ -64,6 +64,10 @@ type alerter struct {
 	ignoreList map[talkgroups.ID]int
 }
 
+func (a *alerter) Name() string {
+	return "alerter"
+}
+
 type offsetClock time.Duration
 
 func (c *offsetClock) Now() time.Time {
@@ -435,6 +439,7 @@ func (*alerter) Enabled() bool { return true }
 type noopAlerter struct{}
 
 func (*noopAlerter) SinkType() string                            { return "noopAlerter" }
+func (*noopAlerter) Name() string                                { return "noopAlerter" }
 func (*noopAlerter) Call(_ context.Context, _ *calls.Call) error { return nil }
 func (*noopAlerter) Go(_ context.Context)                        {}
 func (*noopAlerter) Enabled() bool                               { return false }

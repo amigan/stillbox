@@ -133,11 +133,11 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		}
 	}
 
-	srv.sinks.Register("database", sinks.NewDatabaseSink(db, tgCache), true)
-	srv.sinks.Register("nexus", sinks.NewNexusSink(srv.nex), false)
+	srv.sinks.Register(sinks.NewDatabaseSink(db, tgCache), true)
+	srv.sinks.Register(sinks.NewNexusSink(srv.nex), false)
 
 	if srv.alerter.Enabled() {
-		srv.sinks.Register("alerting", srv.alerter, false)
+		srv.sinks.Register(srv.alerter, false)
 	}
 
 	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
@@ -204,7 +204,7 @@ func (s *Server) fillCtx(ctx context.Context) context.Context {
 func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	defer database.Close(s.db)
 
-	s.installHupHandler()
+	s.hupHandler()
 
 	ctx = s.fillCtx(ctx)
 

@@ -29,9 +29,13 @@ type RelayManager struct {
 type Relay struct {
 	config.Relay
 	mgr  *RelayManager
-	Name string
+	name string
 
 	url *url.URL
+}
+
+func (r *Relay) Name() string {
+	return r.name
 }
 
 func NewRelayManager(s Sinks, cfgs []config.Relay) (*RelayManager, error) {
@@ -56,7 +60,7 @@ func NewRelayManager(s Sinks, cfgs []config.Relay) (*RelayManager, error) {
 
 		rm.relays = append(rm.relays, rs)
 
-		s.Register(rs.Name, rs, cfg.Required)
+		s.Register(rs, cfg.Required)
 	}
 
 	return rm, nil
@@ -75,7 +79,7 @@ func (rs *RelayManager) newRelay(idx int, cfg config.Relay) (*Relay, error) {
 	u = u.JoinPath("/api/call-upload")
 
 	return &Relay{
-		Name:  fmt.Sprintf("relay%d:%s", idx, u.Host),
+		name:  fmt.Sprintf("relay%d:%s", idx, u.Host),
 		Relay: cfg,
 		url:   u,
 		mgr:   rs,
@@ -108,14 +112,14 @@ func (s *Relay) Call(ctx context.Context, call *calls.Call) error {
 
 	resp, err := s.mgr.client.Do(r)
 	if err != nil {
-		return fmt.Errorf("relay %s: %w", s.Name, err)
+		return fmt.Errorf("relay %s: %w", s.name, err)
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		et, _ := io.ReadAll(r.Body)
-		return fmt.Errorf("relay %s: received HTTP %d (%s)", s.Name, resp.StatusCode, string(et))
+		return fmt.Errorf("relay %s: received HTTP %d (%s)", s.name, resp.StatusCode, string(et))
 	}
 
 	io.Copy(io.Discard, resp.Body)

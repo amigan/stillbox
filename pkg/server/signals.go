@@ -20,10 +20,11 @@ func (s *Server) huppers() []hupper {
 		s.tgs,
 		s.alerter,
 		s.users,
+		s.transcriber,
 	}
 }
 
-func (s *Server) installHupHandler() {
+func (s *Server) hupHandler() {
 	s.hup = make(chan os.Signal, 1)
 	go func() {
 		for sig := range s.hup {

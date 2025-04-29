@@ -20,6 +20,10 @@ func NewDatabaseSink(store database.Store, tgs tgstore.Store) *DatabaseSink {
 	return &DatabaseSink{store, tgs}
 }
 
+func (s *DatabaseSink) Name() string {
+	return s.SinkType()
+}
+
 func (s *DatabaseSink) Call(ctx context.Context, call *calls.Call) error {
 	if !call.ShouldStore() {
 		log.Debug().Str("call", call.String()).Msg("received dontStore call")
