@@ -24,16 +24,18 @@ const (
 )
 
 func (s *Server) setupRoutes() {
+	r := s.r
+
 	clientRoot, err := fs.Sub(client.Client, client.Prefix)
 	if err != nil {
 		panic(err)
 	}
 
-	r := s.r
 	r.Use(s.WithCtxStores())
 
 	r.Use(s.auth.VerifyMiddleware())
 	s.installPprof()
+	s.metrics.InstallRoute(r)
 
 	r.Group(func(r chi.Router) {
 		r.Use(s.auth.AuthorizedSubjectMiddleware())

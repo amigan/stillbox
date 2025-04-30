@@ -112,7 +112,7 @@ func (a *jwtAuthenticator) AuthenticateJWT(ctx context.Context, r *http.Request)
 }
 
 func (a *jwtAuthenticator) Init(cfg config.Auth) {
-	if string(cfg.JWTSecret) == "super secret string" {
+	if cfg.JWTSecret == "super secret string" {
 		log.Fatal().Msg("JWT secret is the default!")
 	}
 	a.Lock()
