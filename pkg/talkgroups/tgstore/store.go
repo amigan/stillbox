@@ -258,19 +258,10 @@ func (t *cache) Hint(ctx context.Context, tgs []tgsp.ID) error {
 
 	t.RLock()
 	var toLoad database.TGTuples
-	if len(t.tgs) > len(tgs)/2 { // TODO: instrument this
-		for _, tg := range tgs {
-			_, ok := t.tgs[tg]
-			if !ok {
-				toLoad.Append(tg.System, tg.Talkgroup)
-			}
-		}
-
-	} else {
-		toLoad[0] = make([]uint32, 0, len(tgs))
-		toLoad[1] = make([]uint32, 0, len(tgs))
-		for _, g := range tgs {
-			toLoad.Append(g.System, g.Talkgroup)
+	for _, tg := range tgs {
+		_, ok := t.tgs[tg]
+		if !ok {
+			toLoad.Append(tg.System, tg.Talkgroup)
 		}
 	}
 
