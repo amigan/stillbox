@@ -8,5 +8,12 @@ import (
 
 func (s *Server) Ingest(ctx context.Context, call *calls.Call) error {
 	ctx = context.WithoutCancel(ctx)
-	return s.sinks.EmitCall(ctx, call)
+	err := s.sinks.EmitCall(ctx, call)
+	if err != nil {
+		return err
+	}
+
+	s.srvMetrics.IngestedCalls.Inc()
+
+	return nil
 }

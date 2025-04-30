@@ -90,6 +90,7 @@ func (a *authn) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	jwToken, claims, err := jwtauth.FromContext(ctx)
 	if err != nil {
+		a.metrics.FailedTokenRefreshes.Inc()
 		http.Error(w, "Invalid token", http.StatusBadRequest)
 		return
 	}
@@ -98,6 +99,7 @@ func (a *authn) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	if existingSubjectUsername == "" {
 		log.Error().Str("remote", r.RemoteAddr).Msg("no subject in token")
 		http.Error(w, "Invalid token", http.StatusBadRequest)
+		a.metrics.FailedTokenRefreshes.Inc()
 		return
 	}
 
@@ -105,6 +107,7 @@ func (a *authn) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		log.Error().Str("remote", r.RemoteAddr).Str("username", existingSubjectUsername).Msg("no issuedAt in refresh token")
 		http.Error(w, "Invalid token", http.StatusBadRequest)
+		a.metrics.FailedTokenRefreshes.Inc()
 		return
 	}
 
@@ -114,10 +117,13 @@ func (a *authn) routeRefresh(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Str("username", existingSubjectUsername).Msg("refresh failed")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		a.metrics.FailedTokenRefreshes.Inc()
 		return
 	}
 
 	accessTok := a.NewAccessToken(existingSubjectUsername)
+
+	a.metrics.TokenRefreshes.Inc()
 
 	cookie := &http.Cookie{
 		Name:     CookieName,
@@ -183,10 +189,13 @@ func (a *authn) routeLogin(w http.ResponseWriter, r *http.Request) {
 	refreshTok, err := a.Login(r.Context(), creds.Username, creds.Password, r.RemoteAddr)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
+		a.metrics.FailedLogins.Inc()
 		return
 	}
 
 	accessTok := a.NewAccessToken(creds.Username)
+
+	a.metrics.SuccessfulLogins.Inc()
 
 	cookie := &http.Cookie{
 		Name:     CookieName,

@@ -14,50 +14,49 @@ import (
 type Sink interface {
 	Call(context.Context, *calls.Call) error
 	SinkType() string
+	Name() string
 }
 
 type sinkInstance struct {
 	Sink
-	Name string
 
 	// whether call ingest should be considered failed if this sink returns error
 	Required bool
 }
 
 type Sinks interface {
-	Register(name string, toAdd Sink, required bool)
-	Unregister(name string)
+	Register(toAdd Sink, required bool)
+	Unregister(Sink)
 	Shutdown()
 	EmitCall(ctx context.Context, call *calls.Call) error
 }
 
 type sinks struct {
 	sync.RWMutex
-	sinks map[string]sinkInstance
+	sinks map[Sink]sinkInstance
 }
 
 func NewSinkManager() *sinks {
 	return &sinks{
-		sinks: make(map[string]sinkInstance),
+		sinks: make(map[Sink]sinkInstance),
 	}
 }
 
-func (s *sinks) Register(name string, toAdd Sink, required bool) {
+func (s *sinks) Register(toAdd Sink, required bool) {
 	s.Lock()
 	defer s.Unlock()
 
-	s.sinks[name] = sinkInstance{
-		Name:     name,
+	s.sinks[toAdd] = sinkInstance{
 		Sink:     toAdd,
 		Required: required,
 	}
 }
 
-func (s *sinks) Unregister(name string) {
+func (s *sinks) Unregister(sink Sink) {
 	s.Lock()
 	defer s.Unlock()
 
-	delete(s.sinks, name)
+	delete(s.sinks, sink)
 }
 
 func (s *sinks) Shutdown() {
@@ -86,7 +85,7 @@ func (sink *sinkInstance) callEmitter(ctx context.Context, call *calls.Call) fun
 			if sink.Required {
 				return err
 			} else {
-				log.Error().Str("sink", sink.Name).Err(err).Msg("call emit to sink failed")
+				log.Error().Str("sink", sink.Name()).Err(err).Msg("call emit to sink failed")
 			}
 		}
 

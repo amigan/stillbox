@@ -25,6 +25,7 @@ type Config struct {
 	Notify        Notify          `yaml:"notify"`
 	Relay         []Relay         `yaml:"relay"`
 	Transcription []Transcription `yaml:"transcription"`
+	Metrics       Metrics         `yaml:"metrics"`
 }
 
 type Server struct {
@@ -74,6 +75,14 @@ type Partition struct {
 type Logger struct {
 	File  *string `yaml:"file"`
 	Level *string `yaml:"level"`
+}
+
+type Metrics struct {
+	Enabled  bool          `yaml:"enabled"`
+	Path     string        `yaml:"path"`
+	Username string        `yaml:"username"`
+	Password string        `yaml:"password"`
+	ACL      *acl.IPConfig `yaml:"acl"`
 }
 
 type Alerting struct {

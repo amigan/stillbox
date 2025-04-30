@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/version"
@@ -18,6 +19,8 @@ import (
 	"dynatron.me/x/stillbox/pkg/talkgroups/filter"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"github.com/go-viper/mapstructure/v2"
+	"github.com/gohugoio/hashstructure"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -27,15 +30,21 @@ var (
 	TranscribeUserAgent = version.HttpString("call-transcribe")
 )
 
+// TranscriptionManager is the Sink that dispatches transcription jobs to Transcribers.
 type TranscriptionManager struct {
+	sync.RWMutex
 	xp     *http.Transport
 	client *http.Client
 	auth   authn.Authn
 	tgst   tgstore.Store
+	sinks  Sinks
+
+	cfgHash uint64
 
 	transcribers []*Transcriber
 }
 
+// Transcriber is a collection of transports that operate on calls matching their Filter.
 type Transcriber struct {
 	Filter  *filter.TalkgroupFilter
 	AtLeast time.Duration
@@ -43,7 +52,28 @@ type Transcriber struct {
 	transport transcribeTransport
 
 	mgr  *TranscriptionManager
-	Name string
+	name string
+}
+
+func (txs *Transcriber) Name() string {
+	return txs.name
+}
+
+func (s *Transcriber) Call(ctx context.Context, call *calls.Call) error {
+	if call.Duration < calls.CallDuration(s.AtLeast) || !s.Filter.Test(ctx, call) || !call.ShouldStore() {
+		return nil
+	}
+
+	err := s.transport.Dispatch(ctx, call)
+	if err != nil {
+		return fmt.Errorf("transcribe:%s: %w", s.name, err)
+	}
+
+	return nil
+}
+
+func (s *Transcriber) SinkType() string {
+	return "transcribe"
 }
 
 func NewTranscriptionManager(s Sinks, a authn.Authn, tgst tgstore.Store, cfgs []config.Transcription) (*TranscriptionManager, error) {
@@ -54,26 +84,45 @@ func NewTranscriptionManager(s Sinks, a authn.Authn, tgst tgstore.Store, cfgs []
 		Transport: xp,
 	}
 
-	tm := &TranscriptionManager{
-		auth:         a,
-		xp:           xp,
-		tgst:         tgst,
-		client:       client,
-		transcribers: make([]*Transcriber, 0, len(cfgs)),
+	cfgHash, err := hashstructure.Hash(cfgs, nil)
+	if err != nil {
+		return nil, err
 	}
+
+	tm := &TranscriptionManager{
+		auth:    a,
+		xp:      xp,
+		tgst:    tgst,
+		client:  client,
+		sinks:   s,
+		cfgHash: cfgHash,
+	}
+	tm.Lock()
+	defer tm.Unlock()
+
+	err = tm.fillTxmsFromCfgs(cfgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return tm, nil
+}
+
+func (tm *TranscriptionManager) fillTxmsFromCfgs(cfgs []config.Transcription) error {
+	tm.transcribers = make([]*Transcriber, 0, len(cfgs))
 
 	for i, cfg := range cfgs {
 		rs, err := tm.newTranscriber(i, cfg)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		tm.transcribers = append(tm.transcribers, rs)
 
-		s.Register(rs.Name, rs, false)
+		tm.sinks.Register(rs, false)
 	}
 
-	return tm, nil
+	return nil
 }
 
 type transcribeTransport interface {
@@ -81,6 +130,7 @@ type transcribeTransport interface {
 	Dispatch(ctx context.Context, call *calls.Call) error
 }
 
+// newTranscriber requires the caller take a lock.
 func (rs *TranscriptionManager) newTranscriber(idx int, cfg config.Transcription) (*Transcriber, error) {
 	t := &Transcriber{
 		AtLeast: time.Second * time.Duration(cfg.AtLeastSeconds),
@@ -98,7 +148,7 @@ func (rs *TranscriptionManager) newTranscriber(idx int, cfg config.Transcription
 		return nil, ErrInvalidTranscriberTransport
 	}
 
-	t.Name = fmt.Sprintf("transcriber%d:%s:%s", idx, cfg.Type, t.transport.String())
+	t.name = fmt.Sprintf("transcriber%d:%s:%s", idx, cfg.Type, t.transport.String())
 
 	if cfg.Filter != nil {
 		filt, err := filter.FromMap(cfg.Filter)
@@ -113,6 +163,39 @@ func (rs *TranscriptionManager) newTranscriber(idx int, cfg config.Transcription
 	return t, nil
 }
 
+func (tm *TranscriptionManager) HUP(cfg *config.Config) {
+	tm.Lock()
+	defer tm.Unlock()
+
+	hash, err := hashstructure.Hash(cfg.Transcription, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("hup transcription config hash")
+		return
+	}
+
+	if hash == tm.cfgHash {
+		return
+	}
+
+	tm.cfgHash = 0 // set to invalid state in case we fail
+
+	log.Info().Msg("reloading transcription config")
+
+	for _, txr := range tm.transcribers {
+		tm.tgst.UnregisterFilter(txr.Filter)
+		tm.sinks.Unregister(txr)
+	}
+
+	err = tm.fillTxmsFromCfgs(cfg.Transcription)
+	if err != nil {
+		log.Error().Err(err).Msg("transcription reload failed")
+		return
+	}
+
+	tm.cfgHash = hash
+}
+
+// httpTranscriberTransport is a transcription worker accepting jobs via HTTP.
 type httpTranscriberTransport struct {
 	URL          string `yaml:"url"`
 	CallbackBase string `yaml:"callbackBase"`
@@ -209,21 +292,4 @@ func (h *httpTranscriberTransport) Dispatch(ctx context.Context, call *calls.Cal
 	io.Copy(io.Discard, resp.Body)
 
 	return nil
-}
-
-func (s *Transcriber) Call(ctx context.Context, call *calls.Call) error {
-	if call.Duration < calls.CallDuration(s.AtLeast) || !s.Filter.Test(ctx, call) {
-		return nil
-	}
-
-	err := s.transport.Dispatch(ctx, call)
-	if err != nil {
-		return fmt.Errorf("transcribe:%s: %w", s.Name, err)
-	}
-
-	return nil
-}
-
-func (s *Transcriber) SinkType() string {
-	return "transcribe"
 }

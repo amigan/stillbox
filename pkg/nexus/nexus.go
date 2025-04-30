@@ -5,11 +5,13 @@ import (
 	"sync"
 
 	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,6 +25,12 @@ type nexus struct {
 	*wsManager
 
 	bcastChan chan Message
+
+	metrics nexMetrics
+}
+
+type nexMetrics struct {
+	ActiveWSConns prometheus.Gauge `help:"Number of active websocket connections."`
 }
 
 type Nexus interface {
@@ -39,7 +47,7 @@ type Registry interface {
 	Unregister(Client)
 }
 
-func New(tgst tgstore.Store) *nexus {
+func New(tgst tgstore.Store, met metrics.Metrics) *nexus {
 	n := &nexus{
 		clients:   make(map[*client]struct{}),
 		bcastChan: make(chan Message),
@@ -47,6 +55,8 @@ func New(tgst tgstore.Store) *nexus {
 	}
 
 	n.wsManager = newWsManager(n)
+
+	met.Register("nexus", &n.metrics)
 
 	return n
 }
@@ -111,6 +121,7 @@ func (n *nexus) Register(c Client) {
 	defer n.Unlock()
 
 	n.clients[c.(*client)] = struct{}{}
+	n.metrics.ActiveWSConns.Inc()
 }
 
 func (n *nexus) Unregister(c Client) {
@@ -123,6 +134,7 @@ func (n *nexus) Unregister(c Client) {
 	}
 
 	delete(n.clients, cl)
+	n.metrics.ActiveWSConns.Dec()
 }
 
 func (n *nexus) Shutdown() {

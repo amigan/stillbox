@@ -4,15 +4,11 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"net/http"
 	"os"
-	"runtime/debug"
-	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/config"
 
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -22,26 +18,27 @@ const (
 )
 
 type Logger struct {
-	console io.Writer
 	writers []io.Writer
+	files   []*os.File
 	cfg     []config.Logger
 
 	lastFieldName string
 	noColor       bool
 }
 
-func NewLogger(cfg []config.Logger) (*Logger, error) {
-	l := &Logger{
-		cfg: cfg,
-	}
-	cw := &zerolog.ConsoleWriter{
+func (l *Logger) consoleWriter() *zerolog.ConsoleWriter {
+	return &zerolog.ConsoleWriter{
 		Out:              os.Stderr,
 		TimeFormat:       common.TimeFormat,
 		FormatFieldName:  l.fieldNameFormat,
 		FormatFieldValue: l.fieldValueFormat,
 	}
+}
 
-	l.console = cw
+func NewLogger(cfg []config.Logger) (*Logger, error) {
+	l := &Logger{
+		cfg: cfg,
+	}
 
 	err := l.OpenLogs(cfg)
 	if err != nil {
@@ -56,7 +53,7 @@ func NewLogger(cfg []config.Logger) (*Logger, error) {
 func (l *Logger) HUP(cfg *config.Config) {
 	l.cfg = cfg.Log
 
-	log.Logger = log.Output(l.console)
+	log.Logger = log.Output(l.consoleWriter())
 	log.Info().Msg("closing and reopening logfiles")
 	l.Close()
 	err := l.OpenLogs(l.cfg)
@@ -73,20 +70,12 @@ func (l *Logger) Install() {
 }
 
 func (l *Logger) Close() {
-	for _, lg := range l.writers {
-		if _, isConsole := lg.(*zerolog.ConsoleWriter); isConsole {
-			continue
-		}
-
-		if cl, isCloser := lg.(io.Closer); isCloser {
-			err := cl.Close()
-			if err != nil {
-				log.Error().Err(err).Msg("closing writer")
-			}
-		}
+	for _, lg := range l.files {
+		lg.Close()
 	}
 
 	l.writers = nil
+	l.files = nil
 }
 
 func (l *Logger) OpenLogs(cfg []config.Logger) error {
@@ -108,12 +97,14 @@ func (l *Logger) OpenLogs(cfg []config.Logger) error {
 
 		switch lc.File {
 		case nil:
-			w.Writer = &zerolog.LevelWriterAdapter{Writer: l.console}
+			w.Writer = &zerolog.LevelWriterAdapter{Writer: l.consoleWriter()}
 		default:
 			f, err := os.OpenFile(*lc.File, os.O_APPEND|os.O_WRONLY|os.O_CREATE, LOGPERM)
 			if err != nil {
 				return err
 			}
+
+			l.files = append(l.files, f)
 
 			w.Writer = &zerolog.LevelWriterAdapter{
 				Writer: f,
@@ -124,36 +115,6 @@ func (l *Logger) OpenLogs(cfg []config.Logger) error {
 	}
 
 	return nil
-}
-
-func RequestLogger() func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			t1 := time.Now()
-			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-			defer func() {
-				if r := recover(); r != nil && r != http.ErrAbortHandler {
-					log.Error().Interface("recover", r).Bytes("stack", debug.Stack()).Msg("incoming_request_panic")
-					ww.WriteHeader(http.StatusInternalServerError)
-				}
-				log.Info().Fields(map[string]any{
-					"remote_addr": r.RemoteAddr,
-					"path":        r.URL.Path,
-					"proto":       r.Proto,
-					"method":      r.Method,
-					"user_agent":  r.UserAgent(),
-					"status":      http.StatusText(ww.Status()),
-					"status_code": ww.Status(),
-					"bytes_in":    r.ContentLength,
-					"bytes_out":   ww.BytesWritten(),
-					"duration":    time.Since(t1).String(),
-					"reqID":       middleware.GetReqID(r.Context()),
-				}).Msg("incoming_request")
-			}()
-			next.ServeHTTP(ww, r)
-		}
-		return http.HandlerFunc(fn)
-	}
 }
 
 //nolint:unused

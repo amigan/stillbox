@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/alerting"
@@ -16,6 +17,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/partman"
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/rest"
@@ -31,6 +33,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
 
@@ -60,10 +63,23 @@ type Server struct {
 	rbac        authz.RBAC
 	stats       stats.Stats
 	settings    settings.Store
+	metrics     metrics.Metrics
+	srvMetrics  srvMetrics
+}
+
+type srvMetrics struct {
+	FailedRequests prometheus.Counter   `help:"Failed requests (4xx-5xx)."`
+	RequestMS      prometheus.Histogram `help:"Request durations." buckets:"1,5,10,30,100,200,500"`
+	IngestedCalls  prometheus.Counter   `help:"Total ingested calls."`
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	logger, err := NewLogger(cfg.Log)
+	if err != nil {
+		return nil, err
+	}
+
+	met, err := metrics.NewMetrics(cfg.Metrics)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +93,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	ust := users.NewStore(db)
 
-	authenticator, err := authn.NewAuthn(cfg.Auth, ust)
+	authenticator, err := authn.NewAuthn(cfg.Auth, met, ust)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +113,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	callStore := callstore.NewStore(db)
 	statsSvc := stats.NewStats(callStore, stats.DefaultExpiration)
 
-	nex := nexus.New(tgCache)
+	nex := nexus.New(tgCache, met)
 	api := rest.New(cfg.Server.BaseURL.URL(), nex)
 
 	srv := &Server{
@@ -114,12 +130,15 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		rest:      api,
 		share:     shares.NewService(),
 		users:     ust,
+		metrics:   met,
 		calls:     callStore,
 		incidents: incstore.NewStore(),
 		rbac:      rbacSvc,
 		stats:     statsSvc,
 		settings:  settings.New(settings.ConfigDefaults),
 	}
+
+	srv.metrics.Register("http", &srv.srvMetrics)
 
 	if cfg.DB.Partition.Enabled {
 		srv.partman, err = partman.New(db, cfg.DB.Partition)
@@ -133,11 +152,11 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		}
 	}
 
-	srv.sinks.Register("database", sinks.NewDatabaseSink(db, tgCache), true)
-	srv.sinks.Register("nexus", sinks.NewNexusSink(srv.nex), false)
+	srv.sinks.Register(sinks.NewDatabaseSink(db, tgCache), true)
+	srv.sinks.Register(sinks.NewNexusSink(srv.nex), false)
 
 	if srv.alerter.Enabled() {
-		srv.sinks.Register("alerting", srv.alerter, false)
+		srv.sinks.Register(srv.alerter, false)
 	}
 
 	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
@@ -162,7 +181,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		r.Use(middleware.RealIP)
 	}
 
-	r.Use(RequestLogger())
+	r.Use(srv.MetricsLogger())
 	r.Use(ServerHeaderAdd)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   srv.conf.Server.CORS.AllowedOrigins,
@@ -201,10 +220,49 @@ func (s *Server) fillCtx(ctx context.Context) context.Context {
 	return ctx
 }
 
+func (s *Server) MetricsLogger() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			t1 := time.Now()
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			defer func() {
+				if r := recover(); r != nil && r != http.ErrAbortHandler {
+					log.Error().Interface("recover", r).Bytes("stack", debug.Stack()).Msg("incoming_request_panic")
+					ww.WriteHeader(http.StatusInternalServerError)
+				}
+				status := ww.Status()
+				dur := time.Since(t1)
+				log.Info().Fields(map[string]any{
+					"remote_addr": r.RemoteAddr,
+					"path":        r.URL.Path,
+					"proto":       r.Proto,
+					"method":      r.Method,
+					"user_agent":  r.UserAgent(),
+					"status":      http.StatusText(status),
+					"status_code": status,
+					"bytes_in":    r.ContentLength,
+					"bytes_out":   ww.BytesWritten(),
+					"duration":    dur.String(),
+					"reqID":       middleware.GetReqID(r.Context()),
+				}).Msg("incoming_request")
+
+				if status >= 400 && status <= 500 {
+					s.srvMetrics.FailedRequests.Inc()
+				}
+
+				// milliseconds
+				s.srvMetrics.RequestMS.Observe(float64(dur.Microseconds()) / 1000)
+			}()
+			next.ServeHTTP(ww, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
 func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	defer database.Close(s.db)
 
-	s.installHupHandler()
+	s.hupHandler()
 
 	ctx = s.fillCtx(ctx)
 

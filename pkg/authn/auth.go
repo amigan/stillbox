@@ -11,9 +11,11 @@ import (
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
 
@@ -53,9 +55,17 @@ type authn struct {
 	cfg       config.Auth
 	ust       users.Store
 	apiKeyACL *acl.IP
+	metrics   authnMetrics
 }
 
-func NewAuthn(cfg config.Auth, ust users.Store) (*authn, error) {
+type authnMetrics struct {
+	SuccessfulLogins     prometheus.Counter `help:"Count of successful logins"`
+	FailedLogins         prometheus.Counter `help:"Count of faile dlogins"`
+	TokenRefreshes       prometheus.Counter `help:"Count of token refreshes"`
+	FailedTokenRefreshes prometheus.Counter `help:"Count of failed token refreshes"`
+}
+
+func NewAuthn(cfg config.Auth, m metrics.Metrics, ust users.Store) (*authn, error) {
 	a := &authn{
 		rl:  httprate.NewRateLimiter(5, 5*time.Minute),
 		cfg: cfg,
@@ -68,6 +78,8 @@ func NewAuthn(cfg config.Auth, ust users.Store) (*authn, error) {
 	}
 
 	a.jwtAuthenticator.Init(cfg)
+
+	m.Register("authn", &a.metrics)
 	return a, nil
 }
 
