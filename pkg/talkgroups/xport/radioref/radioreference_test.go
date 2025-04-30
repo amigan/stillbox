@@ -16,6 +16,7 @@ import (
 	rbacmocks "dynatron.me/x/stillbox/pkg/authz/mocks"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/mocks"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
@@ -66,7 +67,7 @@ func TestRadioRef(t *testing.T) {
 			}
 			ctx := database.CtxWithDB(context.Background(), dbMock)
 			ctx = authz.CtxWithRBAC(ctx, rbacMock)
-			ctx = tgstore.CtxWithStore(ctx, tgstore.NewCache(dbMock))
+			ctx = tgstore.CtxWithStore(ctx, tgstore.NewCache(dbMock, metrics.NewNoOp()))
 			ij := &xport.ImportJob{
 				Type:     xport.Format(tc.impType),
 				SystemID: tc.sysID,

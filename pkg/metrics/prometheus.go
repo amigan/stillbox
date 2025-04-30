@@ -36,6 +36,20 @@ type Metrics interface {
 	InstallRoute(chi.Router)
 }
 
+type noopMetrics struct{}
+
+func (*noopMetrics) Register(subsys string, ms MetricStruct) {
+	initMetricsStruct(subsys, ms, nil)
+}
+func (*noopMetrics) InstallRoute(_ chi.Router) {}
+func (*noopMetrics) Handler() http.Handler {
+	return nil
+}
+
+func NewNoOp() *noopMetrics {
+	return new(noopMetrics)
+}
+
 type MetricStruct any
 
 type metrics struct {
@@ -68,6 +82,10 @@ var gatherRegexp = regexp.MustCompile("([^A-Z]+|[A-Z]+[^A-Z]+|[A-Z]+)")
 var acronymRegexp = regexp.MustCompile("([A-Z]+)([A-Z][^A-Z]+)")
 
 func (m *metrics) Register(subsys string, ms MetricStruct) {
+	initMetricsStruct(subsys, ms, m.reg.Register)
+}
+
+func initMetricsStruct(subsys string, ms MetricStruct, register func(prometheus.Collector) error) {
 	v := reflect.ValueOf(ms)
 
 	for v.Kind() == reflect.Ptr {
@@ -153,7 +171,9 @@ func (m *metrics) Register(subsys string, ms MetricStruct) {
 			panic("unsupported metric type " + ft.Type.Name())
 		}
 
-		m.reg.Register(fv.Interface().(prometheus.Collector))
+		if register != nil {
+			register(fv.Interface().(prometheus.Collector))
+		}
 	}
 }
 

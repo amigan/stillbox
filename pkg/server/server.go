@@ -103,7 +103,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
-	tgCache := tgstore.NewCache(db)
+	tgCache := tgstore.NewCache(db, met)
 
 	rbacSvc, err := authz.New(policy.Policy)
 	if err != nil {

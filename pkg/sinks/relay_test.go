@@ -106,7 +106,7 @@ func TestRelay(t *testing.T) {
 
 type nullSinks struct{}
 
-func (*nullSinks) Register(name string, toAdd Sink, required bool)      {}
-func (*nullSinks) Unregister(name string)                               {}
-func (*nullSinks) Shutdown()                                            {}
-func (*nullSinks) EmitCall(ctx context.Context, call *calls.Call) error { return nil }
+func (*nullSinks) Register(_ Sink, _ bool)                         {}
+func (*nullSinks) Unregister(_ Sink)                               {}
+func (*nullSinks) Shutdown()                                       {}
+func (*nullSinks) EmitCall(_ context.Context, _ *calls.Call) error { return nil }

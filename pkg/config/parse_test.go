@@ -163,7 +163,7 @@ func TestConfigParse(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			c := &Configuration{configPath: "testdata/" + tc.filename}
+			c := &Configuration{configPath: common.PtrTo("testdata/" + tc.filename)}
 
 			err := c.read()
 			require.NoError(t, err)

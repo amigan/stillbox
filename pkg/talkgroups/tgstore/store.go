@@ -13,11 +13,13 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/services"
 	tgsp "dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
 
@@ -221,20 +223,28 @@ type cache struct {
 	tgs     tgMap
 	systems map[int]string
 	db      database.Store
+	metrics tgStoreMetrics
 
 	// filters is a map of tags->maps of filters
 	filtMtx sync.RWMutex
 	filters filterMap
 }
 
+type tgStoreMetrics struct {
+	Hits   prometheus.Counter `help:"Talkgroup cache hits"`
+	Misses prometheus.Counter `help:"Talkgroup cache misses"`
+}
+
 // NewCache returns a new cache Store.
-func NewCache(db database.Store) *cache {
+func NewCache(db database.Store, met metrics.Metrics) *cache {
 	tgc := &cache{
 		tgs:     make(tgMap),
 		systems: make(map[int]string),
 		db:      db,
 		filters: make(filterMap),
 	}
+
+	met.Register("tgstore", &tgc.metrics)
 
 	return tgc
 }
@@ -364,8 +374,10 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 		for _, id := range tgs {
 			rec, has := t.get(id)
 			if has {
+				t.metrics.Hits.Inc()
 				r = append(r, rec)
 			} else {
+				t.metrics.Misses.Inc()
 				toGet = append(toGet, id)
 			}
 		}
@@ -517,9 +529,11 @@ func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
 	rec, has := t.get(tg)
 
 	if has {
+		t.metrics.Hits.Inc()
 		return rec, nil
 	}
 
+	t.metrics.Misses.Inc()
 	record, err := t.db.GetTalkgroupWithLearned(ctx, int32(tg.System), int32(tg.Talkgroup))
 	switch err {
 	case nil:

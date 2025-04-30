@@ -15,6 +15,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
@@ -64,7 +65,7 @@ func (s *Simulation) stepClock(t time.Time) {
 func (s *Simulation) Simulate(ctx context.Context) (trending.Scores[talkgroups.ID], error) {
 	db := database.FromCtx(ctx)
 	now := time.Now()
-	tgc := tgstore.NewCache(db)
+	tgc := tgstore.NewCache(db, metrics.NewNoOp())
 
 	s.Enable = true
 	s.alerter = New(s.Alerting, tgc, WithClock(&s.clock)).(*alerter)
