@@ -23,7 +23,7 @@ const (
 	serverHeader = "Server"
 )
 
-func (s *Server) setupRoutes() {
+func (s *Server) setupRoutes(csrfMW func(http.Handler) http.Handler) {
 	r := s.r
 
 	clientRoot, err := fs.Sub(client.Client, client.Prefix)
@@ -39,6 +39,7 @@ func (s *Server) setupRoutes() {
 
 	r.Group(func(r chi.Router) {
 		r.Use(s.auth.AuthorizedSubjectMiddleware())
+		r.Use(csrfMW)
 		// authenticated routes
 		s.nex.PrivateRoutes(r)
 		s.auth.PrivateRoutes(r)
@@ -93,6 +94,7 @@ func rateLimiter(cfg *config.RateLimit) func(http.Handler) http.Handler {
 	return httprate.LimitByRealIP(cfg.Requests, cfg.Over)
 }
 
+// clientRoute serves the static client assets.
 func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		hfs := http.FS(clientRoot)
