@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
+	"strconv"
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/alerting"
@@ -68,9 +69,9 @@ type Server struct {
 }
 
 type srvMetrics struct {
-	FailedRequests prometheus.Counter   `help:"Failed requests (4xx-5xx)."`
-	RequestMS      prometheus.Histogram `help:"Request durations." buckets:"1,5,10,30,100,200,500"`
-	IngestedCalls  prometheus.Counter   `help:"Total ingested calls."`
+	Requests      *prometheus.CounterVec `help:"Requests" labels:"code,method"`
+	RequestMS     prometheus.Histogram   `help:"Request durations." buckets:"1,5,10,30,100,200,500"`
+	IngestedCalls prometheus.Counter     `help:"Total ingested calls."`
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
@@ -246,9 +247,7 @@ func (s *Server) MetricsLogger() func(next http.Handler) http.Handler {
 					"reqID":       middleware.GetReqID(r.Context()),
 				}).Msg("incoming_request")
 
-				if status >= 400 && status <= 500 {
-					s.srvMetrics.FailedRequests.Inc()
-				}
+				s.srvMetrics.Requests.WithLabelValues(strconv.Itoa(status), r.Method).Inc()
 
 				// milliseconds
 				s.srvMetrics.RequestMS.Observe(float64(dur.Microseconds()) / 1000)
