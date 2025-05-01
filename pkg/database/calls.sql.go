@@ -564,11 +564,11 @@ func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcrip
 const sweepCalls = `-- name: SweepCalls :execrows
 WITH to_sweep AS (
 	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type,
-		audio_url, frequency, frequencies, talker_alias, patches, tg_label, tg_alpha_tag, tg_group, source, transcript
+		audio_url, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= $1 AND calls.call_date < $2
-) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_url, frequency, frequencies, talker_alias, patches, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
+) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_url, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
 `
 
 // This is used to sweep calls that are part of an incident prior to pruning a partition.
