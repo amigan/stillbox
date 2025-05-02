@@ -9,6 +9,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/nexus"
+	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
@@ -171,6 +172,7 @@ var statusMapping = map[error]errResponder{
 	authz.ErrNotAuthorized:    unauthErrText,
 	shares.ErrNoShare:         notFoundErrText,
 	ErrBadShare:               notFoundErrText,
+	settings.ErrNoSetting:     notFoundErrText,
 	shares.ErrBadType:         badRequestErrText,
 	calls.ErrInvalidInterval:  badRequestErrText,
 }

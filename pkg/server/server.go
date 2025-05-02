@@ -12,7 +12,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/alerting"
 	"dynatron.me/x/stillbox/pkg/authn"
 	"dynatron.me/x/stillbox/pkg/authz"
-	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/authz/policy"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
@@ -177,6 +176,8 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	srv.transcriber = transcriber
 
+	ctx = srv.fillCtx(ctx)
+
 	r.Use(middleware.RequestID)
 
 	if cfg.Server.UseXRealIP {
@@ -194,12 +195,10 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	csrfMW, err := srv.CSRFMiddleware(entities.CtxWithServiceSubject(srv.fillCtx(ctx), "stillbox"))
+	err = srv.setupRoutes(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	srv.setupRoutes(csrfMW)
 
 	if os.Getenv("STILLBOX_DUMP_ROUTES") == "true" {
 		_ = chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {

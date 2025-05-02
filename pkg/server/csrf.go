@@ -56,7 +56,18 @@ func (s *Server) CSRFMiddleware(ctx context.Context) (func(http.Handler) http.Ha
 		}
 	}
 
-	mw := csrf.Protect([]byte(key))
+	mw := csrf.Protect([]byte(key),
+		csrf.CookieName("_csrf"),
+		csrf.FieldName("_csrf"),
+		csrf.TrustedOrigins(s.conf.Server.CORS.AllowedOrigins))
+
+	// for AllowInsecureFor hosts
+	insecureMW := csrf.Protect([]byte(key),
+		csrf.CookieName("_csrf"),
+		csrf.FieldName("_csrf"),
+		csrf.Secure(false),
+		csrf.TrustedOrigins(s.conf.Server.CORS.AllowedOrigins))
+
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
 			sbt, ok := r.Context().Value(jwtauth.TokenCtxKey).(authn.Token)
@@ -64,7 +75,12 @@ func (s *Server) CSRFMiddleware(ctx context.Context) (func(http.Handler) http.Ha
 				next.ServeHTTP(w, r)
 				return
 			}
-			mw(next).ServeHTTP(w, r)
+
+			if s.auth.AllowInsecureCookie(r) {
+				insecureMW(next).ServeHTTP(w, r)
+			} else {
+				mw(next).ServeHTTP(w, r)
+			}
 		}
 
 		return http.HandlerFunc(hfn)

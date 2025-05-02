@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"io/fs"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 	"dynatron.me/x/stillbox/client"
 	"dynatron.me/x/stillbox/internal/version"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/config"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
@@ -23,7 +25,12 @@ const (
 	serverHeader = "Server"
 )
 
-func (s *Server) setupRoutes(csrfMW func(http.Handler) http.Handler) {
+func (s *Server) setupRoutes(ctx context.Context) error {
+	csrfMW, err := s.CSRFMiddleware(entities.CtxWithServiceSubject(ctx, "stillbox"))
+	if err != nil {
+		return err
+	}
+
 	r := s.r
 
 	clientRoot, err := fs.Sub(client.Client, client.Prefix)
@@ -38,8 +45,7 @@ func (s *Server) setupRoutes(csrfMW func(http.Handler) http.Handler) {
 	s.metrics.InstallRoute(r)
 
 	r.Group(func(r chi.Router) {
-		r.Use(s.auth.AuthorizedSubjectMiddleware())
-		r.Use(csrfMW)
+		r.Use(s.auth.AuthorizedSubjectMiddleware(), csrfMW)
 		// authenticated routes
 		s.nex.PrivateRoutes(r)
 		s.auth.PrivateRoutes(r)
@@ -71,6 +77,8 @@ func (s *Server) setupRoutes(csrfMW func(http.Handler) http.Handler) {
 
 		s.clientRoute(r, clientRoot)
 	})
+
+	return nil
 }
 
 // WithCtxStores is a middleware that installs all stores in the request context.

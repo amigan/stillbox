@@ -46,6 +46,9 @@ type Authn interface {
 
 	// PublicRoutes installs auth-specific public routes to the Router.
 	PublicRoutes(r chi.Router)
+
+	// AllowInsecureCookie returns whether the request is for a host where we can allow insecure.
+	AllowInsecureCookie(*http.Request) bool
 }
 
 type authn struct {
@@ -60,7 +63,7 @@ type authn struct {
 
 type authnMetrics struct {
 	SuccessfulLogins     prometheus.Counter `help:"Count of successful logins"`
-	FailedLogins         prometheus.Counter `help:"Count of faile dlogins"`
+	FailedLogins         prometheus.Counter `help:"Count of failed logins"`
 	TokenRefreshes       prometheus.Counter `help:"Count of token refreshes"`
 	FailedTokenRefreshes prometheus.Counter `help:"Count of failed token refreshes"`
 }

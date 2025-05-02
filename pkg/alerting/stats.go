@@ -16,6 +16,7 @@ import (
 	"dynatron.me/x/stillbox/internal/trending"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/csrf"
 	"github.com/rs/zerolog/log"
 )
 
@@ -72,15 +73,18 @@ func (as *alerter) tgStatsHandler(w http.ResponseWriter, r *http.Request) {
 		LastScore  time.Time
 		Simulation *Simulation
 		Config     config.Alerting
+		CSRFToken  string
 	}{
 		TGs:        tgMap,
 		Scores:     as.scores,
 		LastScore:  as.lastScore,
 		Config:     as.cfg,
 		Simulation: as.sim,
+		CSRFToken:  csrf.Token(r),
 	}
 
 	w.WriteHeader(http.StatusOK)
+	print(renderData.CSRFToken)
 	err = statTmpl.Execute(w, renderData)
 	if err != nil {
 		log.Error().Err(err).Msg("stat template exec")

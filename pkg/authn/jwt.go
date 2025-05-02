@@ -45,7 +45,7 @@ func UsernameFrom(ctx context.Context) *string {
 }
 
 func VerifyRequest(ja *jwtauth.JWTAuth, r *http.Request) (Token, error) {
-	sbToken := &token{}
+	sbToken := new(token)
 	tokenString := jwtauth.TokenFromHeader(r)
 	if tokenString != "" {
 		sbToken.fromHeader = true
