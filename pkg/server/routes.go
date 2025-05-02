@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"io/fs"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 	"dynatron.me/x/stillbox/client"
 	"dynatron.me/x/stillbox/internal/version"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/config"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
@@ -23,7 +25,12 @@ const (
 	serverHeader = "Server"
 )
 
-func (s *Server) setupRoutes() {
+func (s *Server) setupRoutes(ctx context.Context) error {
+	csrfMW, err := s.CSRFMiddleware(entities.CtxWithServiceSubject(ctx, "stillbox"))
+	if err != nil {
+		return err
+	}
+
 	r := s.r
 
 	clientRoot, err := fs.Sub(client.Client, client.Prefix)
@@ -38,7 +45,7 @@ func (s *Server) setupRoutes() {
 	s.metrics.InstallRoute(r)
 
 	r.Group(func(r chi.Router) {
-		r.Use(s.auth.AuthorizedSubjectMiddleware())
+		r.Use(s.auth.AuthorizedSubjectMiddleware(), csrfMW)
 		// authenticated routes
 		s.nex.PrivateRoutes(r)
 		s.auth.PrivateRoutes(r)
@@ -70,6 +77,8 @@ func (s *Server) setupRoutes() {
 
 		s.clientRoute(r, clientRoot)
 	})
+
+	return nil
 }
 
 // WithCtxStores is a middleware that installs all stores in the request context.
@@ -93,6 +102,7 @@ func rateLimiter(cfg *config.RateLimit) func(http.Handler) http.Handler {
 	return httprate.LimitByRealIP(cfg.Requests, cfg.Over)
 }
 
+// clientRoute serves the static client assets.
 func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		hfs := http.FS(clientRoot)

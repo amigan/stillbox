@@ -140,6 +140,11 @@ func initMetricsStruct(subsys string, ms MetricStruct, register func(prometheus.
 			}
 		}
 
+		var labelNames []string
+		if labelStr, has := ft.Tag.Lookup("labels"); has {
+			labelNames = strings.Split(labelStr, ",")
+		}
+
 		opts := prometheus.Opts{
 			Namespace: common.AppName,
 			Subsystem: subsys,
@@ -147,11 +152,20 @@ func initMetricsStruct(subsys string, ms MetricStruct, register func(prometheus.
 			Help:      help,
 		}
 
-		switch ft.Type.Name() {
+		ftName := ft.Type.Name()
+		if ft.Type.Kind() == reflect.Ptr {
+			ftName = ft.Type.Elem().Name()
+		}
+
+		switch ftName {
 		case "Counter":
 			fv.Set(reflect.ValueOf(prometheus.NewCounter(prometheus.CounterOpts(opts))))
+		case "CounterVec":
+			fv.Set(reflect.ValueOf(prometheus.NewCounterVec(prometheus.CounterOpts(opts), labelNames)))
 		case "Gauge":
 			fv.Set(reflect.ValueOf(prometheus.NewGauge(prometheus.GaugeOpts(opts))))
+		case "GaugeVec":
+			fv.Set(reflect.ValueOf(prometheus.NewGaugeVec(prometheus.GaugeOpts(opts), labelNames)))
 		case "Histogram":
 			fv.Set(reflect.ValueOf(prometheus.NewHistogram(prometheus.HistogramOpts{
 				Namespace: common.AppName,
@@ -168,7 +182,7 @@ func initMetricsStruct(subsys string, ms MetricStruct, register func(prometheus.
 				Help:      help,
 			})))
 		default:
-			panic("unsupported metric type " + ft.Type.Name())
+			panic("unsupported metric type '" + ft.Type.Name() + "'")
 		}
 
 		if register != nil {

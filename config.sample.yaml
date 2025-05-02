@@ -12,8 +12,8 @@ server:
     over: 2m
   cors:
     allowedOrigins:
-      - 'http://localhost:*'
-      - 'https://stillbox.server'
+      - 'localhost:*'
+      - 'stillbox.server'
 
 db:
   connect: 'postgres://postgres:password@localhost:5432/example'
@@ -38,6 +38,7 @@ auth:
   # this allows the JWT cookie to be served over plain HTTP only for these Host: header values
   allowInsecureFor:
     "localhost": true
+    "xenon": true
   # this instead changes the meaning of allowInsecureFor to the cookie being marked
   # Secure, but SameSite will be set to None
   sameSiteNoneForInsecure: false

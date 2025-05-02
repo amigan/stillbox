@@ -44,19 +44,61 @@ func UsernameFrom(ctx context.Context) *string {
 	return &username
 }
 
+func VerifyRequest(ja *jwtauth.JWTAuth, r *http.Request) (Token, error) {
+	sbToken := new(token)
+	tokenString := jwtauth.TokenFromHeader(r)
+	if tokenString != "" {
+		sbToken.fromHeader = true
+	} else {
+		tokenString = tokenFromCookie(r)
+	}
+
+	if tokenString == "" {
+		return nil, jwtauth.ErrNoTokenFound
+	}
+
+	jt, err := jwtauth.VerifyToken(ja, tokenString)
+	if err != nil {
+		return nil, err
+	}
+
+	sbToken.Token = jt
+
+	return sbToken, nil
+}
+
+type tokenFromHeaderKey string
+
+const TokenFromHeaderKey tokenFromHeaderKey = "tokenFromHeader"
+
+type Token interface {
+	jwt.Token
+	FromHeader() bool
+}
+
+type token struct {
+	jwt.Token
+	fromHeader bool
+}
+
+func (t *token) FromHeader() bool {
+	return t.fromHeader
+}
+
 func (a *jwtAuthenticator) VerifyMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			token, err := jwtauth.VerifyRequest(a.jwt, r, jwtauth.TokenFromHeader, TokenFromCookie)
+			token, err := VerifyRequest(a.jwt, r)
 			ctx = jwtauth.NewContext(ctx, token, err)
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 		return http.HandlerFunc(hfn)
 	}
 }
 
-func TokenFromCookie(r *http.Request) string {
+func tokenFromCookie(r *http.Request) string {
 	cookie, err := r.Cookie(CookieName)
 	if err != nil {
 		return ""

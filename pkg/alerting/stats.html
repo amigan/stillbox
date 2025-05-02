@@ -55,12 +55,13 @@
 	<label for="simInterval">Sim Interval</label> <input id="simInterval" name="simInterval" type="text" value="{{ .SimInterval }}" />
 	<label for="scoreStart">Score Start</label> <input id="scoreStart" name="scoreStart" type="datetime-local" value="{{ .ScoreStart }}" />
 	<label for="scoreEnd">Score End</label> <input id="scoreEnd" name="scoreEnd" type="datetime-local" value="{{ .ScoreEnd }}" />
+	<input type="hidden" name="_csrf" value="{{ .CSRFToken }}" />
 	<input type="submit" value="Simulate" />
 	{{end}}
         {{ if .Simulation }}
-	{{ template "simform" dict "Lookback" .Simulation.LookbackDays "HalfLife" .Simulation.HalfLife "Recent" .Simulation.Recent "ScoreStart" (formTime .Simulation.ScoreStart) "ScoreEnd" (formTime .Simulation.ScoreEnd) "SimInterval" .Simulation.SimInterval }}
+	{{ template "simform" dict "Lookback" .Simulation.LookbackDays "HalfLife" .Simulation.HalfLife "Recent" .Simulation.Recent "ScoreStart" (formTime .Simulation.ScoreStart) "ScoreEnd" (formTime .Simulation.ScoreEnd) "SimInterval" .Simulation.SimInterval "CSRFToken" .CSRFToken }}
 	{{ else }}
-	{{ template "simform" dict "Lookback" .Config.LookbackDays "HalfLife" .Config.HalfLife "Recent" .Config.Recent "ScoreStart" (ago "72h") "ScoreEnd" "" "SimInterval" "5m" }}
+	{{ template "simform" dict "Lookback" .Config.LookbackDays "HalfLife" .Config.HalfLife "Recent" .Config.Recent "ScoreStart" (ago "72h") "ScoreEnd" "" "SimInterval" "5m" "CSRFToken" .CSRFToken }}
         {{ end }}
       </form>
     </div>

@@ -11,7 +11,6 @@ import (
 
 	"dynatron.me/x/stillbox/pkg/users"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
 	"github.com/rs/zerolog/log"
@@ -20,29 +19,6 @@ import (
 const (
 	CookieName = "stillboxJwt"
 )
-
-type loginJWTAuth interface {
-	// Authenticated returns whether the request is authenticated. It also returns the claims.
-	Authenticated(r *http.Request) (claims, bool)
-
-	// Login attempts to return a JWT for the provided user and password.
-	Login(ctx context.Context, username, password, source string) (token string, err error)
-
-	// Refresh ensures the subject is still valid and records a login.
-	Refresh(ctx context.Context, username, source string) (token string, err error)
-
-	// InstallVerifyMiddleware installs the JWT verifier middleware to the provided chi Router.
-	VerifyMiddleware() func(http.Handler) http.Handler
-
-	// SubjectMiddleware sets the request context subject from JWT or public.
-	SubjectMiddleware(requireAuth bool) func(http.Handler) http.Handler
-
-	// PublicRoutes installs the auth route to the provided chi Router.
-	PublicRoutes(chi.Router)
-
-	// PublicRoutes installs the refresh route to the provided chi Router.
-	PrivateRoutes(chi.Router)
-}
 
 func (a *authn) Refresh(ctx context.Context, username string, refreshIAT time.Time, source string) (token string, err error) {
 	ust := users.FromCtx(ctx)
@@ -133,12 +109,12 @@ func (a *authn) routeRefresh(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 	}
 
-	if a.allowInsecureCookie(r) {
-		a.setInsecureCookie(cookie)
-	}
+	domain := strings.Split(r.Host, ":")[0]
+
+	a.SetInsecureCookieIfAllowed(domain, cookie)
 
 	if cookie.Secure {
-		cookie.Domain = strings.Split(r.Host, ":")[0]
+		cookie.Domain = domain
 	}
 	http.SetCookie(w, cookie)
 
@@ -206,9 +182,12 @@ func (a *authn) routeLogin(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   60 * 60 * 24 * 30, // one month
 	}
 
-	cookie.Domain = strings.Split(r.Host, ":")[0]
-	if a.allowInsecureCookie(r) {
-		a.setInsecureCookie(cookie)
+	domain := strings.Split(r.Host, ":")[0]
+
+	a.SetInsecureCookieIfAllowed(domain, cookie)
+
+	if cookie.Secure {
+		cookie.Domain = domain
 	}
 
 	http.SetCookie(w, cookie)
@@ -234,10 +213,13 @@ func (a *authn) routeLogout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	}
 
-	cookie.Domain = strings.Split(r.Host, ":")[0]
-	if a.allowInsecureCookie(r) {
-		cookie.Secure = true
-		cookie.SameSite = http.SameSiteNoneMode
+
+	domain := strings.Split(r.Host, ":")[0]
+
+	a.SetInsecureCookieIfAllowed(domain, cookie)
+
+	if cookie.Secure {
+		cookie.Domain = domain
 	}
 
 	http.SetCookie(w, cookie)
@@ -251,10 +233,19 @@ func (a *authn) routeLogout(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
-func (a *authn) allowInsecureCookie(r *http.Request) bool {
-	host := strings.Split(r.Host, ":")
-	v, has := a.cfg.AllowInsecure[host[0]]
+func (a *authn) AllowInsecureCookie(r *http.Request) bool {
+	return a.domainInsecureCookieAllowed(strings.Split(r.Host, ":")[0])
+}
+
+func (a *authn) domainInsecureCookieAllowed(domain string) bool {
+	v, has := a.cfg.AllowInsecure[domain]
 	return has && v
+}
+
+func (a *authn) SetInsecureCookieIfAllowed(domain string, cookie *http.Cookie) {
+	if a.domainInsecureCookieAllowed(domain) {
+		a.setInsecureCookie(cookie)
+	}
 }
 
 func (a *authn) setInsecureCookie(cookie *http.Cookie) {
