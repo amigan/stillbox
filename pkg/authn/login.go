@@ -109,12 +109,12 @@ func (a *authn) routeRefresh(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 	}
 
-	if a.AllowInsecureCookie(r) {
-		a.setInsecureCookie(cookie)
-	}
+	domain := strings.Split(r.Host, ":")[0]
+
+	a.SetInsecureCookieIfAllowed(domain, cookie)
 
 	if cookie.Secure {
-		cookie.Domain = strings.Split(r.Host, ":")[0]
+		cookie.Domain = domain
 	}
 	http.SetCookie(w, cookie)
 
@@ -182,9 +182,12 @@ func (a *authn) routeLogin(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   60 * 60 * 24 * 30, // one month
 	}
 
-	cookie.Domain = strings.Split(r.Host, ":")[0]
-	if a.AllowInsecureCookie(r) {
-		a.setInsecureCookie(cookie)
+	domain := strings.Split(r.Host, ":")[0]
+
+	a.SetInsecureCookieIfAllowed(domain, cookie)
+
+	if cookie.Secure {
+		cookie.Domain = domain
 	}
 
 	http.SetCookie(w, cookie)
@@ -210,10 +213,13 @@ func (a *authn) routeLogout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	}
 
-	cookie.Domain = strings.Split(r.Host, ":")[0]
-	if a.AllowInsecureCookie(r) {
-		cookie.Secure = true
-		cookie.SameSite = http.SameSiteNoneMode
+
+	domain := strings.Split(r.Host, ":")[0]
+
+	a.SetInsecureCookieIfAllowed(domain, cookie)
+
+	if cookie.Secure {
+		cookie.Domain = domain
 	}
 
 	http.SetCookie(w, cookie)
@@ -228,9 +234,18 @@ func (a *authn) routeLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *authn) AllowInsecureCookie(r *http.Request) bool {
-	host := strings.Split(r.Host, ":")
-	v, has := a.cfg.AllowInsecure[host[0]]
+	return a.domainInsecureCookieAllowed(strings.Split(r.Host, ":")[0])
+}
+
+func (a *authn) domainInsecureCookieAllowed(domain string) bool {
+	v, has := a.cfg.AllowInsecure[domain]
 	return has && v
+}
+
+func (a *authn) SetInsecureCookieIfAllowed(domain string, cookie *http.Cookie) {
+	if a.domainInsecureCookieAllowed(domain) {
+		a.setInsecureCookie(cookie)
+	}
 }
 
 func (a *authn) setInsecureCookie(cookie *http.Cookie) {
