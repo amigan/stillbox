@@ -35,6 +35,7 @@ func genCSRFKey() string {
 	}
 }
 
+// CSRFMiddleware returns a middleware to generate and validate CSRF tokens.
 func (s *Server) CSRFMiddleware(ctx context.Context) (func(http.Handler) http.Handler, error) {
 	var key string
 	keySetting, err := s.settings.Get(ctx, CSRFKeySetting)
