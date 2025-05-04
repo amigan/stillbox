@@ -233,6 +233,7 @@ func (a *authn) routeLogout(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &jr)
 }
 
+// AllowInsecureCookie returns whether the request's host is allowed to use insecure cookies per config.
 func (a *authn) AllowInsecureCookie(r *http.Request) bool {
 	return a.domainInsecureCookieAllowed(strings.Split(r.Host, ":")[0])
 }
