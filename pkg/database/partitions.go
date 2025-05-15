@@ -31,9 +31,9 @@ type partitionsQuerier interface {
 
 func (q *Queries) GetTablePartitions(ctx context.Context, schemaName, tableName string) (partitions []PartitionResult, err error) {
 	query := fmt.Sprintf(`
-	WITH parts as (
+	WITH parts AS (
 		SELECT
-		   relnamespace::regnamespace as schema,
+		   relnamespace::regnamespace AS schema,
 		   c.oid::pg_catalog.regclass AS part_name,
 		   regexp_match(pg_get_expr(c.relpartbound, c.oid),
 			  'FOR VALUES FROM \(''(.*)''\) TO \(''(.*)''\)') AS bounds
@@ -44,8 +44,8 @@ func (q *Queries) GetTablePartitions(ctx context.Context, schemaName, tableName 
 	)
 	SELECT
 		schema,
-		part_name as name,
-		'%s' as parentTable,
+		part_name AS name,
+		'%s' AS parentTable,
 		bounds[1]::text AS lowerBound,
 		bounds[2]::text AS upperBound
 	FROM parts
@@ -83,23 +83,27 @@ func (q *Queries) DetachPartition(ctx context.Context, parentTable, partitionNam
 }
 
 func (partition PartitionResult) ParseBounds() (lowerBound time.Time, upperBound time.Time, err error) {
+	checkOrder := func(lower, upper time.Time) error {
+		if lower.After(upper) {
+			return fmt.Errorf("%w: FROM '%s' TO '%s'", ErrLowerBoundAfterUpperBound, lower.String(), upper.String())
+		}
+
+		return nil
+	}
+
 	lowerBound, upperBound, err = parseBoundAsDate(partition)
 	if err == nil {
-		return lowerBound, upperBound, nil
+		return lowerBound, upperBound, checkOrder(lowerBound, upperBound)
 	}
 
 	lowerBound, upperBound, err = parseBoundAsDateTime(partition)
 	if err == nil {
-		return lowerBound, upperBound, nil
+		return lowerBound, upperBound, checkOrder(lowerBound, upperBound)
 	}
 
 	lowerBound, upperBound, err = parseBoundAsDateTimeWithTimezone(partition)
 	if err == nil {
-		return lowerBound, upperBound, nil
-	}
-
-	if lowerBound.After(lowerBound) {
-		return time.Time{}, time.Time{}, ErrLowerBoundAfterUpperBound
+		return lowerBound, upperBound, checkOrder(lowerBound, upperBound)
 	}
 
 	return time.Time{}, time.Time{}, ErrCantDecodePartitionBounds

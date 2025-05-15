@@ -246,8 +246,8 @@ func TestPartman(t *testing.T) {
 			extant: []database.PartitionResult{
 				partResult("calls_p_2024_q3", "2024-07-01", "2024-10-01"),
 				partResult("calls_p_2024_q4", "2024-10-01", "2025-01-01"),
-				partResult("calls_p_2025_q1", "2025-01-01", "2024-04-01"),
-				partResult("calls_p_2025_q2", "2025-04-01", "2024-07-01"),
+				partResult("calls_p_2025_q1", "2025-01-01", "2025-04-01"),
+				partResult("calls_p_2025_q2", "2025-04-01", "2025-07-01"),
 			},
 			expectDrop: []string{
 				"public.calls_p_2024_q3",
@@ -270,6 +270,25 @@ func TestPartman(t *testing.T) {
 				"public.calls_p_2024_q3",
 				"public.calls_p_2024_q4",
 			},
+		},
+		{
+			name: "quarterly base bad bounds",
+			now:  timeInUTC("2025-07-28 11:37:04"), // q3
+			cfg: config.Partition{
+				Enabled:      true,
+				Schema:       "public",
+				Interval:     "quarterly",
+				Retain:       2,
+				Drop:         true,
+				PreProvision: common.PtrTo(2),
+			},
+			extant: []database.PartitionResult{
+				partResult("calls_p_2024_q3", "2024-07-01", "2024-10-01"),
+				partResult("calls_p_2024_q4", "2024-10-01", "2025-01-01"),
+				partResult("calls_p_2025_q1", "2025-01-01", "2024-04-01"),
+				partResult("calls_p_2025_q2", "2025-04-01", "2024-07-01"),
+			},
+			expectErr: database.ErrLowerBoundAfterUpperBound,
 		},
 		{
 			name: "yearly base",
