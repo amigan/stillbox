@@ -1750,6 +1750,65 @@ func (_c *Store_GetCallSubmitter_Call) RunAndReturn(run func(context.Context, uu
 	return _c
 }
 
+// GetCalls provides a mock function with given fields: ctx, ids
+func (_m *Store) GetCalls(ctx context.Context, ids []uuid.UUID) ([]database.GetCallsRow, error) {
+	ret := _m.Called(ctx, ids)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCalls")
+	}
+
+	var r0 []database.GetCallsRow
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []uuid.UUID) ([]database.GetCallsRow, error)); ok {
+		return rf(ctx, ids)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []uuid.UUID) []database.GetCallsRow); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetCallsRow)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []uuid.UUID) error); ok {
+		r1 = rf(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetCalls_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCalls'
+type Store_GetCalls_Call struct {
+	*mock.Call
+}
+
+// GetCalls is a helper method to define mock.On call
+//   - ctx context.Context
+//   - ids []uuid.UUID
+func (_e *Store_Expecter) GetCalls(ctx interface{}, ids interface{}) *Store_GetCalls_Call {
+	return &Store_GetCalls_Call{Call: _e.mock.On("GetCalls", ctx, ids)}
+}
+
+func (_c *Store_GetCalls_Call) Run(run func(ctx context.Context, ids []uuid.UUID)) *Store_GetCalls_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *Store_GetCalls_Call) Return(_a0 []database.GetCallsRow, _a1 error) *Store_GetCalls_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetCalls_Call) RunAndReturn(run func(context.Context, []uuid.UUID) ([]database.GetCallsRow, error)) *Store_GetCalls_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetDatabaseSize provides a mock function with given fields: ctx
 func (_m *Store) GetDatabaseSize(ctx context.Context) (string, error) {
 	ret := _m.Called(ctx)

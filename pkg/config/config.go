@@ -17,15 +17,15 @@ type Configuration struct {
 }
 
 type Config struct {
-	Server        Server          `yaml:"server"`
-	DB            DB              `yaml:"db"`
-	Auth          Auth            `yaml:"auth"`
-	Alerting      Alerting        `yaml:"alerting"`
-	Log           []Logger        `yaml:"log"`
-	Notify        Notify          `yaml:"notify"`
-	Relay         []Relay         `yaml:"relay"`
-	Transcription []Transcription `yaml:"transcription"`
-	Metrics       Metrics         `yaml:"metrics"`
+	Server        Server        `yaml:"server"`
+	DB            DB            `yaml:"db"`
+	Auth          Auth          `yaml:"auth"`
+	Alerting      Alerting      `yaml:"alerting"`
+	Log           []Logger      `yaml:"log"`
+	Notify        Notify        `yaml:"notify"`
+	Relay         []Relay       `yaml:"relay"`
+	Transcription Transcription `yaml:"transcription"`
+	Metrics       Metrics       `yaml:"metrics"`
 }
 
 type Server struct {
@@ -116,10 +116,13 @@ type NotifyService struct {
 type ConfigMap map[string]any
 
 type Transcription struct {
-	Type           string    `yaml:"type"`
 	Filter         ConfigMap `yaml:"filter,omitempty"`
 	AtLeastSeconds int       `yaml:"atLeastSeconds"`
-	Config         ConfigMap `yaml:"config,omitempty"`
+	Workers        []Worker  `yaml:"workers"`
+}
+type Worker struct {
+	Type   string    `yaml:"type"`
+	Config ConfigMap `yaml:"config,omitempty"`
 }
 
 func (rl *RateLimit) Verify() bool {

@@ -225,3 +225,6 @@ SELECT
 	transcript
 FROM calls
 WHERE id = @id;
+
+-- name: GetCalls :many
+SELECT sqlc.embed(calls) FROM calls WHERE id = ANY(@ids::UUID[]);

@@ -11,14 +11,17 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
+	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/nexus"
+	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/stats"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-multierror"
 	"github.com/microcosm-cc/bluemonday"
 )
 
@@ -32,14 +35,16 @@ var (
 )
 
 type callsAPI struct {
-	nex      nexus.Nexus
-	htmlSani *bluemonday.Policy
+	nex         nexus.Nexus
+	htmlSani    *bluemonday.Policy
+	transcripts sinks.Transcriber
 }
 
-func newCallsAPI(nex nexus.Nexus) *callsAPI {
+func newCallsAPI(nex nexus.Nexus, transcripts sinks.Transcriber) *callsAPI {
 	return &callsAPI{
-		nex:      nex,
-		htmlSani: bluemonday.StrictPolicy(),
+		nex:         nex,
+		htmlSani:    bluemonday.StrictPolicy(),
+		transcripts: transcripts,
 	}
 }
 
@@ -50,6 +55,7 @@ func (ca *callsAPI) Subrouter() http.Handler {
 	r.Get(`/{call:[a-f0-9-]+}/info`, ca.getCallInfoRoute)
 	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.getAudioRoute)
 	r.Put(`/{call:[a-f0-9-]+}/transcript`, ca.transcriptRoute)
+	r.Post(`/transcribe`, ca.dispatchTranscriptRoute)
 	r.Post(`/`, ca.listCalls)
 	r.Get(`/stats/{interval}`, ca.getCallStats)
 
@@ -71,6 +77,42 @@ func (ca *callsAPI) getAudioRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ca.getAudio(p, w, r)
+}
+
+func (ca *callsAPI) dispatchTranscriptRoute(w http.ResponseWriter, r *http.Request) {
+	p := &struct {
+		Calls jsontypes.UUIDs `json:"calls"`
+	}{}
+
+	err := forms.Unmarshal(r, &p)
+	if err != nil {
+		wErr(w, r, badRequest(err))
+		return
+	}
+
+	ctx := r.Context()
+	callst := callstore.FromCtx(ctx)
+	calls, err := callst.CompleteCalls(ctx, p.Calls)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	var errs multierror.Error
+
+	for _, c := range calls {
+		err := ca.transcripts.UnfilteredCall(ctx, c)
+		if err != nil {
+			errs.Errors = append(errs.Errors, fmt.Errorf("%s: %w", c.ID.String(), err))
+		}
+	}
+
+	if errs.Errors != nil {
+		http.Error(w, errs.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {

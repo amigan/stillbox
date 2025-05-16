@@ -213,7 +213,6 @@ func (a *authn) routeLogout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	}
 
-
 	domain := strings.Split(r.Host, ":")[0]
 
 	a.SetInsecureCookieIfAllowed(domain, cookie)

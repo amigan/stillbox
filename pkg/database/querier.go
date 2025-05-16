@@ -40,6 +40,7 @@ type Querier interface {
 	GetCallStatsByInterval(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]GetCallStatsByIntervalRow, error)
 	GetCallStatsByTalkgroup(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]GetCallStatsByTalkgroupRow, error)
 	GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, error)
+	GetCalls(ctx context.Context, ids []uuid.UUID) ([]GetCallsRow, error)
 	GetDatabaseSize(ctx context.Context) (string, error)
 	GetIncident(ctx context.Context, id uuid.UUID) (Incident, error)
 	GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetIncidentCallsRow, error)

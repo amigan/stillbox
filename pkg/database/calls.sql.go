@@ -287,6 +287,54 @@ func (q *Queries) GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, e
 	return submitter, err
 }
 
+const getCalls = `-- name: GetCalls :many
+SELECT calls.id, calls.submitter, calls.system, calls.talkgroup, calls.call_date, calls.audio_name, calls.audio_blob, calls.duration, calls.audio_type, calls.audio_url, calls.frequency, calls.frequencies, calls.patches, calls.talker_alias, calls.tg_label, calls.tg_alpha_tag, calls.tg_group, calls.source, calls.transcript FROM calls WHERE id = ANY($1::UUID[])
+`
+
+type GetCallsRow struct {
+	Call Call `json:"call"`
+}
+
+func (q *Queries) GetCalls(ctx context.Context, ids []uuid.UUID) ([]GetCallsRow, error) {
+	rows, err := q.db.Query(ctx, getCalls, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCallsRow
+	for rows.Next() {
+		var i GetCallsRow
+		if err := rows.Scan(
+			&i.Call.ID,
+			&i.Call.Submitter,
+			&i.Call.System,
+			&i.Call.Talkgroup,
+			&i.Call.CallDate,
+			&i.Call.AudioName,
+			&i.Call.AudioBlob,
+			&i.Call.Duration,
+			&i.Call.AudioType,
+			&i.Call.AudioUrl,
+			&i.Call.Frequency,
+			&i.Call.Frequencies,
+			&i.Call.Patches,
+			&i.Call.TalkerAlias,
+			&i.Call.TGLabel,
+			&i.Call.TGAlphaTag,
+			&i.Call.TGGroup,
+			&i.Call.Source,
+			&i.Call.Transcript,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getDatabaseSize = `-- name: GetDatabaseSize :one
 SELECT pg_size_pretty(pg_database_size(current_database()))
 `
