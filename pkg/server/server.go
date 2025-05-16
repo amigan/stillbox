@@ -48,7 +48,7 @@ type Server struct {
 	sources     sources.Sources
 	sinks       sinks.Sinks
 	relayer     *sinks.RelayManager
-	transcriber *sinks.TranscriptionManager
+	transcriber sinks.Transcriber
 	nex         nexus.Nexus
 	logger      *Logger
 	alerter     alerting.Alerter
@@ -115,7 +115,6 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	statsSvc := stats.NewStats(callStore, stats.DefaultExpiration)
 
 	nex := nexus.New(tgCache, met)
-	api := rest.New(cfg.Server.BaseURL.URL(), nex)
 
 	srv := &Server{
 		auth:      authenticator,
@@ -128,7 +127,6 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		notifier:  notifier,
 		tgs:       tgCache,
 		sinks:     sinks.NewSinkManager(),
-		rest:      api,
 		share:     shares.NewService(),
 		users:     ust,
 		metrics:   met,
@@ -138,6 +136,14 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		stats:     statsSvc,
 		settings:  settings.New(settings.ConfigDefaults),
 	}
+
+	transcriber, err := sinks.NewTranscriber(srv.sinks, authenticator, srv.tgs, cfg.Transcription)
+	if err != nil {
+		return nil, err
+	}
+
+	api := rest.New(cfg.Server.BaseURL.URL(), nex, transcriber)
+	srv.rest = api
 
 	srv.metrics.Register("http", &srv.srvMetrics)
 
@@ -155,6 +161,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	srv.sinks.Register(sinks.NewDatabaseSink(db, tgCache), true)
 	srv.sinks.Register(sinks.NewNexusSink(srv.nex), false)
+	srv.sinks.Register(transcriber, false)
 
 	if srv.alerter.Enabled() {
 		srv.sinks.Register(srv.alerter, false)
@@ -168,13 +175,6 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	}
 
 	srv.relayer = relayer
-
-	transcriber, err := sinks.NewTranscriptionManager(srv.sinks, authenticator, srv.tgs, cfg.Transcription)
-	if err != nil {
-		return nil, err
-	}
-
-	srv.transcriber = transcriber
 
 	ctx = srv.fillCtx(ctx)
 

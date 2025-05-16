@@ -36,6 +36,9 @@ type Store interface {
 	// Call returns the call's metadata.
 	Call(ctx context.Context, id uuid.UUID) (*calls.Call, error)
 
+	// CompleteCalls returns calls with audio and metadata.
+	CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*calls.Call, error)
+
 	// Calls gets paginated Calls.
 	Calls(ctx context.Context, p CallsParams) (calls []database.ListCallsPRow, totalCount int, err error)
 
@@ -178,6 +181,51 @@ func (s *postgresStore) CallAudio(ctx context.Context, id uuid.UUID) (*calls.Cal
 		AudioType: audioMime(dbCall.AudioType),
 		AudioBlob: dbCall.AudioBlob,
 	}, nil
+}
+
+func (s *postgresStore) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*calls.Call, error) {
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
+	db := database.FromCtx(ctx)
+
+	c, err := db.GetCalls(ctx, ids.UUIDs())
+	if err != nil {
+		return nil, err
+	}
+
+	cs := make([]*calls.Call, 0, len(c))
+	for _, dbc := range c {
+		c := dbc.Call
+		var sub *users.UserID
+		if c.Submitter != nil {
+			sub = common.PtrTo(users.UserID(*c.Submitter))
+		}
+		cs = append(cs, &calls.Call{
+			ID:             c.ID,
+			Submitter:      sub,
+			System:         c.System,
+			Talkgroup:      c.Talkgroup,
+			DateTime:       c.CallDate.Time,
+			Audio:          c.AudioBlob,
+			AudioName:      common.ZeroIfNil(c.AudioName),
+			AudioType:      string(c.AudioType.AudioMIME),
+			AudioURL:       c.AudioUrl,
+			Duration:       calls.CallDuration(time.Duration(common.ZeroIfNil(c.Duration)) * time.Millisecond),
+			Frequency:      c.Frequency,
+			Frequencies:    c.Frequencies,
+			Patches:        c.Patches,
+			TalkerAlias:    c.TalkerAlias,
+			TalkgroupLabel: c.TGLabel,
+			TalkgroupGroup: c.TGGroup,
+			TGAlphaTag:     c.TGAlphaTag,
+			Transcript:     c.Transcript,
+		})
+	}
+
+	return cs, nil
 }
 
 func (s *postgresStore) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {

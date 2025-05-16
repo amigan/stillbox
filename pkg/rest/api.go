@@ -11,6 +11,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/shares"
+	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/go-chi/chi/v5"
@@ -45,12 +46,12 @@ func (a *api) ShareRouter() http.Handler {
 	return a.shares.RootRouter()
 }
 
-func New(baseURL url.URL, nex nexus.Nexus) *api {
+func New(baseURL url.URL, nex nexus.Nexus, transcriber sinks.Transcriber) *api {
 	s := &api{
 		baseURL:   &baseURL,
 		nex:       nex,
 		tgs:       new(talkgroupAPI),
-		calls:     newCallsAPI(nex),
+		calls:     newCallsAPI(nex, transcriber),
 		incidents: newIncidentsAPI(&baseURL),
 		users:     new(usersAPI),
 		prefs:     new(prefsAPI),

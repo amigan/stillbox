@@ -9,8 +9,8 @@ import (
 type UUID uuid.UUID
 type UUIDs []UUID
 
-func (u *UUIDs) UUIDs() []uuid.UUID {
-	r := make([]uuid.UUID, 0, len(*u))
+func (u *UUIDs) UUIDs() uuid.UUIDs {
+	r := make(uuid.UUIDs, 0, len(*u))
 
 	for _, v := range *u {
 		r = append(r, v.UUID())
