@@ -84,6 +84,10 @@ func (t *transcriber) Go(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case rq := <-t.ch:
+			if len(rq.Call.Audio) == 0 {
+				continue
+			}
+
 			transcription, err := t.transcribe(rq.Call)
 			if err != nil {
 				log.Println(err)
