@@ -18,7 +18,7 @@ func (t *Type) Subscribe(sif bool, bct Type) {
 	if sif {
 		*t |= bct
 	} else {
-		*t ^= bct
+		*t &^= bct
 	}
 }
 
