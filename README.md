@@ -32,7 +32,7 @@ Primary differences:
 
    REST is used for the admin interface, and WebSockets/protobuf are used for listener apps, including *Calls* (both Flutter and terminal versions).
 
- - [x] Uses protobuf instead of JSON for the WebSocket API (no slices of integers for call audio!)
+ - [x] Uses protobuf instead of JSON for the WebSocket API (no JSON arrays of numbers for call audio!)
 
    Another thing that originally spawned the project.
 
