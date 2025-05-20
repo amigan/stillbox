@@ -186,7 +186,10 @@ func initMetricsStruct(subsys string, ms MetricStruct, register func(prometheus.
 		}
 
 		if register != nil {
-			register(fv.Interface().(prometheus.Collector))
+			err := register(fv.Interface().(prometheus.Collector))
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }

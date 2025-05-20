@@ -122,7 +122,7 @@ func (s *Relay) Call(ctx context.Context, call *calls.Call) error {
 		return fmt.Errorf("relay %s: received HTTP %d (%s)", s.name, resp.StatusCode, string(et))
 	}
 
-	io.Copy(io.Discard, resp.Body)
+	_, _ = io.Copy(io.Discard, resp.Body)
 
 	return nil
 }

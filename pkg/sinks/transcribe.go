@@ -292,7 +292,7 @@ func (h *httpTranscriberTransport) Dispatch(ctx context.Context, call *calls.Cal
 		return fmt.Errorf("received HTTP %d body %s", resp.StatusCode, string(et))
 	}
 
-	io.Copy(io.Discard, resp.Body)
+	_, _ = io.Copy(io.Discard, resp.Body)
 
 	return nil
 }

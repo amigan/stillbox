@@ -19,7 +19,10 @@ func main() {
 	f.BoolP("nocb", "c", false, "don't callback requests")
 	f.StringP("model", "m", "models/ggml-large-v3-turbo.bin", "model file")
 	f.StringP("listen", "l", ":3053", "listen address")
-	f.Parse(os.Args[1:])
+	err := f.Parse(os.Args[1:])
+	if err != nil {
+		panic(err)
+	}
 
 	k := koanf.New(".")
 	if err := k.Load(posflag.Provider(f, ".", k), nil); err != nil {

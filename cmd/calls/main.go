@@ -189,7 +189,10 @@ func main() {
 					if err != nil {
 						panic(err)
 					}
-					c.WriteMessage(websocket.BinaryMessage, mm)
+					err = c.WriteMessage(websocket.BinaryMessage, mm)
+					if err != nil {
+						log.Println(err)
+					}
 				default:
 					log.Printf("received other message not known")
 				}

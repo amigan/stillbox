@@ -107,8 +107,6 @@ func setDefault(from reflect.Value, to reflect.StructField, keyTag, defaultTag s
 	if !hasFrom {
 		from.SetMapIndex(reflect.ValueOf(key), fromVal)
 	}
-
-	return
 }
 
 func (c *Configuration) read() error {

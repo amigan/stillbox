@@ -28,12 +28,11 @@ var (
 )
 
 type transcriber struct {
-	calllbackEndpoint string
-	model             whisper.Model
-	ch                chan txRq
-	cli               *http.Client
-	noCallback        bool
-	thresh            float64
+	model      whisper.Model
+	ch         chan txRq
+	cli        *http.Client
+	noCallback bool
+	thresh     float64
 }
 
 type Transcriber interface {
@@ -173,7 +172,7 @@ func (t *transcriber) txCallback(rq *pb.CallTranscribeRequest, tx *Transcription
 		return fmt.Errorf("got status %d: %s", resp.StatusCode, string(et))
 	}
 
-	io.Copy(io.Discard, resp.Body)
+	_, _ = io.Copy(io.Discard, resp.Body)
 
 	return nil
 }
@@ -217,7 +216,10 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 			frs.Close()
 
 		} else {
-			f32w.Write(data)
+			_, err := f32w.Write(data)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		f32le = f32w.Buffer()

@@ -213,6 +213,7 @@ order: deny, allow
 		IPC *acl.IPConfig
 	}{}
 	err := yaml.Unmarshal([]byte(""), &st)
+	assert.NoError(t, err)
 	assert.Nil(t, st.IPC)
 
 	ipa, err := st.IPC.IPACL()
