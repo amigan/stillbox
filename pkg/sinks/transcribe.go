@@ -120,15 +120,17 @@ func NewTranscriber(s Sinks, a authn.Authn, tgst tgstore.Store, cfg config.Trans
 }
 
 func (t *transcriber) initFilter(cfg config.Transcription) error {
-	if cfg.Filter != nil {
-		filt, err := filter.FromMap(cfg.Filter)
-		if err != nil {
-			return err
-		}
-
-		t.Filter = filt
-		t.tgst.RegisterFilter(t.Filter)
+	if cfg.Filter == nil {
+		return nil
 	}
+
+	filt, err := filter.FromMap(cfg.Filter)
+	if err != nil {
+		return err
+	}
+
+	t.Filter = filt
+	t.tgst.RegisterFilter(t.Filter)
 
 	return nil
 }
