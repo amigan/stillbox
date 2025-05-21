@@ -58,7 +58,7 @@ func (q *Queries) GetTablePartitions(ctx context.Context, schemaName, tableName 
 
 	partitions, err = pgx.CollectRows(rows, pgx.RowToStructByName[PartitionResult])
 	if err != nil {
-		return nil, fmt.Errorf("failed to cast list: %w", err)
+		return nil, fmt.Errorf("failed to collect partition list: %w", err)
 	}
 
 	return partitions, nil
