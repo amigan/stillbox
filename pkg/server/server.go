@@ -137,12 +137,12 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		settings:  settings.New(settings.ConfigDefaults),
 	}
 
-	transcriber, err := sinks.NewTranscriber(srv.sinks, authenticator, srv.tgs, cfg.Transcription)
+	srv.transcriber, err = sinks.NewTranscriber(srv.sinks, authenticator, srv.tgs, cfg.Transcription)
 	if err != nil {
 		return nil, err
 	}
 
-	api := rest.New(cfg.Server.BaseURL.URL(), nex, transcriber)
+	api := rest.New(cfg.Server.BaseURL.URL(), nex, srv.transcriber)
 	srv.rest = api
 
 	srv.metrics.Register("http", &srv.srvMetrics)
@@ -161,7 +161,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	srv.sinks.Register(sinks.NewDatabaseSink(db, tgCache), true)
 	srv.sinks.Register(sinks.NewNexusSink(srv.nex), false)
-	srv.sinks.Register(transcriber, false)
+	srv.sinks.Register(srv.transcriber, false)
 
 	if srv.alerter.Enabled() {
 		srv.sinks.Register(srv.alerter, false)
