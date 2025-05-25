@@ -267,6 +267,10 @@ func MakeBackends(ctx context.Context, fc tgstore.FilterCache, cfg []config.Call
 			return nil, fmt.Errorf("blank name invalid")
 		}
 
+		if _, exists := ab.backends[cf.Name]; exists {
+			return nil, fmt.Errorf("backend with duplicate name '%s'", cf.Name)
+		}
+
 		var filt *filter.Filter
 		var err error
 		var be AudioBackend

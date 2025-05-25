@@ -117,6 +117,14 @@ callStorage:
   # updated.
   - name: s3
     backend: s3
+    # if this backend fails:
+    # fail - fail the ingest (default)
+    # next - try next backend (including filter) or ultimately the DB
+    # db - immediately fail to DB
+    requireForIngest: fail
+    # readOnly specifies whether this is not to be used to store calls
+    # but exists to serve requests for calls referencing this backend in the DB
+    readOnly: false
     # filter is same as below, or can be null or unspecified
 #   filter:
 #     talkgroups:
@@ -136,7 +144,7 @@ callStorage:
       externalHost: 'garage.example.com'
       # if externalHost is set, externalSecure specified whether to use https for presigned URLs
       externalSecure: true
-      # timeout is the amount of time for S3 request deadline before storing in DB
+      # timeout is the amount of time for S3 request deadline before next action (store in DB or fail)
       timeout: 10s
       keyID: 'GK7894947fffaacacd83664923'
       secretKey: 'bacba7892843792347987293874923847293487239487234987234bababababa'
