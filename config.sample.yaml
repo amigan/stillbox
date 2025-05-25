@@ -107,6 +107,38 @@ relay:
     # if the relay call submission fails
 #   required: false
 
+# callStorage backends have filters tested until one matches, then that one wins for storage of new calls
+# null filter always matches
+# readOnly never matches, and will only be used for call retrieval
+# if none are configured/evaluate, calls are simply stored as blobs in the DB
+callStorage:
+  # name of the backend ends up being stored in the DB and
+  # should not change once chosen, otherwise every record must be
+  # updated.
+  - name: s3
+    backend: s3
+    # filter is same as below, or can be null or unspecified
+#   filter:
+#     talkgroups:
+#       - "197:10101"
+#     talkgroupTagsAny:
+#       - fire dispatch
+#       - law dispatch
+    config:
+      bucket: 'stillbox'
+      # secure is whether to use https when accessing the endpoint.
+      secure: false
+      # endpoint is how stillbox will access the object server
+      endpoint: 'garage:3900'
+      region: 'garage'
+      # if externalHost is set, this host will be used to generate presigned URLs
+      # for call audio redirect to clients rather than endpoint above
+      externalHost: 'garage.example.com'
+      # if externalHost is set, externalSecure specified whether to use https for presigned URLs
+      externalSecure: true
+      keyID: 'GK7894947fffaacacd83664923'
+      secretKey: 'bacba7892843792347987293874923847293487239487234987234bababababa'
+
 transcription:
 # - type: http
 #   atLeastSeconds: 2
