@@ -111,7 +111,11 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
-	callStore := callstore.NewStore(db)
+	callStore, err := callstore.NewStore(ctx, db, tgCache, cfg.CallStorage)
+	if err != nil {
+		return nil, err
+	}
+
 	statsSvc := stats.NewStats(callStore, stats.DefaultExpiration)
 
 	nex := nexus.New(tgCache, met)
@@ -159,12 +163,12 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		}
 	}
 
-	srv.sinks.Register(sinks.NewDatabaseSink(db, tgCache), true)
-	srv.sinks.Register(sinks.NewNexusSink(srv.nex), false)
-	srv.sinks.Register(srv.transcriber, false)
+	srv.sinks.Register(sinks.NewCallstoreSink(callStore, tgCache), sinks.RequiredFlag)
+	srv.sinks.Register(sinks.NewNexusSink(srv.nex))
+	srv.sinks.Register(srv.transcriber)
 
 	if srv.alerter.Enabled() {
-		srv.sinks.Register(srv.alerter, false)
+		srv.sinks.Register(srv.alerter)
 	}
 
 	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
@@ -277,6 +281,7 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	}
 	var err error
 	go func() {
+		log.Info().Str("addr", s.conf.Server.Listen).Msg("listening")
 		err = httpSrv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			shutReq <- err

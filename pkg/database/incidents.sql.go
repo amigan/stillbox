@@ -169,7 +169,7 @@ SELECT
 	c.submitter,
 	c.audio_name,
 	c.audio_type,
-	c.audio_url,
+	c.audio_ref,
 	c.frequency,
 	c.frequencies,
 	c.talker_alias,
@@ -184,7 +184,7 @@ FROM incidents_calls ic, LATERAL (
 	ca.audio_name,
 	ca.duration,
 	ca.audio_type,
-	ca.audio_url,
+	ca.audio_ref,
 	ca.frequency,
 	ca.frequencies,
 	ca.talker_alias,
@@ -200,7 +200,7 @@ FROM incidents_calls ic, LATERAL (
 	sc.audio_name,
 	sc.duration,
 	sc.audio_type,
-	sc.audio_url,
+	sc.audio_ref,
 	sc.frequency,
 	sc.frequencies,
 	sc.talker_alias,
@@ -223,7 +223,7 @@ type GetIncidentCallsRow struct {
 	Submitter   *int32             `json:"submitter"`
 	AudioName   *string            `json:"audioName"`
 	AudioType   NullAudioMIME      `json:"audioType"`
-	AudioUrl    *string            `json:"audioUrl"`
+	AudioRef    []byte             `json:"audioRef"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
 	TalkerAlias *string            `json:"talkerAlias"`
@@ -251,7 +251,7 @@ func (q *Queries) GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetInci
 			&i.Submitter,
 			&i.AudioName,
 			&i.AudioType,
-			&i.AudioUrl,
+			&i.AudioRef,
 			&i.Frequency,
 			&i.Frequencies,
 			&i.TalkerAlias,

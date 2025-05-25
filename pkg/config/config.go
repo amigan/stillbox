@@ -23,6 +23,7 @@ type Config struct {
 	Alerting      Alerting      `yaml:"alerting"`
 	Log           []Logger      `yaml:"log"`
 	Notify        Notify        `yaml:"notify"`
+	CallStorage   []CallStorage `yaml:"callStorage"`
 	Relay         []Relay       `yaml:"relay"`
 	Transcription Transcription `yaml:"transcription"`
 	Metrics       Metrics       `yaml:"metrics"`
@@ -114,6 +115,14 @@ type NotifyService struct {
 }
 
 type ConfigMap map[string]any
+
+type CallStorage struct {
+	Name     string    `yaml:"name"`
+	ReadOnly bool      `yaml:"readOnly"`
+	Backend  string    `yaml:"backend"`
+	Filter   ConfigMap `yaml:"filter"`
+	Config   ConfigMap `yaml:"config"`
+}
 
 type Transcription struct {
 	Filter         ConfigMap `yaml:"filter,omitempty"`

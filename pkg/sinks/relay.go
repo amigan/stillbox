@@ -60,7 +60,12 @@ func NewRelayManager(s Sinks, cfgs []config.Relay) (*RelayManager, error) {
 
 		rm.relays = append(rm.relays, rs)
 
-		s.Register(rs, cfg.Required)
+		var flags []Flags
+		if cfg.Required {
+			flags = []Flags{RequiredFlag}
+		}
+
+		s.Register(rs, flags...)
 	}
 
 	return rm, nil

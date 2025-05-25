@@ -193,6 +193,16 @@ func (ca *callsAPI) getAudio(p getAudioParams, w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	if call.AudioBlob == nil {
+		if call.AudioURL == nil {
+			wErr(w, r, autoError(ErrNoCall))
+			return
+		}
+
+		http.Redirect(w, r, call.AudioURL.String(), http.StatusFound)
+		return
+	}
+
 	octetStream := "application/octet-stream"
 	var ext string
 	if call.AudioType == nil && call.AudioName != nil {

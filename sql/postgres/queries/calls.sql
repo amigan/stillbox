@@ -8,7 +8,7 @@ call_date,
 audio_name,
 audio_blob,
 audio_type,
-audio_url,
+audio_ref,
 duration,
 frequency,
 frequencies,
@@ -27,7 +27,7 @@ source
 @audio_name,
 @audio_blob,
 @audio_type,
-@audio_url,
+@audio_ref,
 @duration,
 @frequency,
 @frequencies,
@@ -44,6 +44,7 @@ SELECT
 	c.call_date,
 	c.audio_name,
 	c.audio_type,
+	c.audio_ref,
 	c.audio_blob
 FROM calls c
 WHERE c.id = @id
@@ -52,10 +53,14 @@ SELECT
 	sc.call_date,
 	sc.audio_name,
 	sc.audio_type,
+	sc.audio_ref,
 	sc.audio_blob
 FROM swept_calls sc
 WHERE sc.id = @id
 ;
+
+-- name: SetCallAudio :exec
+UPDATE calls SET audio_ref = @audio_ref, audio_blob = @audio_blob;
 
 -- name: SetCallTranscript :one
 UPDATE calls SET transcript = $2 WHERE id = $1
@@ -82,7 +87,7 @@ SELECT pg_size_pretty(pg_database_size(current_database()));
 -- This is used to sweep calls that are part of an incident prior to pruning a partition.
 WITH to_sweep AS (
 	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type,
-		audio_url, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript
+		audio_ref, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= @range_start AND calls.call_date < @range_end
@@ -212,7 +217,7 @@ SELECT
 	call_date,
 	audio_name,
 	audio_type,
-	audio_url,
+	audio_ref,
 	duration,
 	frequency,
 	frequencies,

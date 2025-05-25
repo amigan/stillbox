@@ -62,7 +62,7 @@ call_date,
 audio_name,
 audio_blob,
 audio_type,
-audio_url,
+audio_ref,
 duration,
 frequency,
 frequencies,
@@ -103,7 +103,7 @@ type AddCallParams struct {
 	AudioName   *string            `json:"audioName"`
 	AudioBlob   []byte             `json:"audioBlob"`
 	AudioType   NullAudioMIME      `json:"audioType"`
-	AudioUrl    *string            `json:"audioUrl"`
+	AudioRef    []byte             `json:"audioRef"`
 	Duration    *int32             `json:"duration"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
@@ -125,7 +125,7 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) error {
 		arg.AudioName,
 		arg.AudioBlob,
 		arg.AudioType,
-		arg.AudioUrl,
+		arg.AudioRef,
 		arg.Duration,
 		arg.Frequency,
 		arg.Frequencies,
@@ -177,7 +177,7 @@ SELECT
 	call_date,
 	audio_name,
 	audio_type,
-	audio_url,
+	audio_ref,
 	duration,
 	frequency,
 	frequencies,
@@ -200,7 +200,7 @@ type GetCallRow struct {
 	CallDate    pgtype.Timestamptz `json:"callDate"`
 	AudioName   *string            `json:"audioName"`
 	AudioType   NullAudioMIME      `json:"audioType"`
-	AudioUrl    *string            `json:"audioUrl"`
+	AudioRef    []byte             `json:"audioRef"`
 	Duration    *int32             `json:"duration"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
@@ -224,7 +224,7 @@ func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 		&i.CallDate,
 		&i.AudioName,
 		&i.AudioType,
-		&i.AudioUrl,
+		&i.AudioRef,
 		&i.Duration,
 		&i.Frequency,
 		&i.Frequencies,
@@ -244,6 +244,7 @@ SELECT
 	c.call_date,
 	c.audio_name,
 	c.audio_type,
+	c.audio_ref,
 	c.audio_blob
 FROM calls c
 WHERE c.id = $1
@@ -252,6 +253,7 @@ SELECT
 	sc.call_date,
 	sc.audio_name,
 	sc.audio_type,
+	sc.audio_ref,
 	sc.audio_blob
 FROM swept_calls sc
 WHERE sc.id = $1
@@ -261,6 +263,7 @@ type GetCallAudioByIDRow struct {
 	CallDate  pgtype.Timestamptz `json:"callDate"`
 	AudioName *string            `json:"audioName"`
 	AudioType NullAudioMIME      `json:"audioType"`
+	AudioRef  []byte             `json:"audioRef"`
 	AudioBlob []byte             `json:"audioBlob"`
 }
 
@@ -271,6 +274,7 @@ func (q *Queries) GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAu
 		&i.CallDate,
 		&i.AudioName,
 		&i.AudioType,
+		&i.AudioRef,
 		&i.AudioBlob,
 	)
 	return i, err
@@ -288,7 +292,7 @@ func (q *Queries) GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, e
 }
 
 const getCalls = `-- name: GetCalls :many
-SELECT calls.id, calls.submitter, calls.system, calls.talkgroup, calls.call_date, calls.audio_name, calls.audio_blob, calls.duration, calls.audio_type, calls.audio_url, calls.frequency, calls.frequencies, calls.patches, calls.talker_alias, calls.tg_label, calls.tg_alpha_tag, calls.tg_group, calls.source, calls.transcript FROM calls WHERE id = ANY($1::UUID[])
+SELECT calls.id, calls.submitter, calls.system, calls.talkgroup, calls.call_date, calls.audio_name, calls.audio_blob, calls.duration, calls.audio_type, calls.audio_ref, calls.frequency, calls.frequencies, calls.patches, calls.talker_alias, calls.tg_label, calls.tg_alpha_tag, calls.tg_group, calls.source, calls.transcript FROM calls WHERE id = ANY($1::UUID[])
 `
 
 type GetCallsRow struct {
@@ -314,7 +318,7 @@ func (q *Queries) GetCalls(ctx context.Context, ids []uuid.UUID) ([]GetCallsRow,
 			&i.Call.AudioBlob,
 			&i.Call.Duration,
 			&i.Call.AudioType,
-			&i.Call.AudioUrl,
+			&i.Call.AudioRef,
 			&i.Call.Frequency,
 			&i.Call.Frequencies,
 			&i.Call.Patches,
@@ -585,6 +589,15 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 	return items, nil
 }
 
+const setCallAudio = `-- name: SetCallAudio :exec
+UPDATE calls SET audio_ref = $1, audio_blob = $2
+`
+
+func (q *Queries) SetCallAudio(ctx context.Context, audioRef []byte, audioBlob []byte) error {
+	_, err := q.db.Exec(ctx, setCallAudio, audioRef, audioBlob)
+	return err
+}
+
 const setCallTranscript = `-- name: SetCallTranscript :one
 UPDATE calls SET transcript = $2 WHERE id = $1
 RETURNING call_date, system, talkgroup, patches
@@ -612,11 +625,11 @@ func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcrip
 const sweepCalls = `-- name: SweepCalls :execrows
 WITH to_sweep AS (
 	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type,
-		audio_url, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript
+		audio_ref, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= $1 AND calls.call_date < $2
-) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_url, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
+) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_ref, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
 `
 
 // This is used to sweep calls that are part of an incident prior to pruning a partition.

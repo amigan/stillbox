@@ -76,6 +76,7 @@ type Querier interface {
 	RemoveFromIncident(ctx context.Context, iD uuid.UUID, callIds []uuid.UUID) error
 	RestoreTalkgroupVersion(ctx context.Context, versionIds int) (Talkgroup, error)
 	SetAppPrefs(ctx context.Context, appName string, prefs []byte, uid int) error
+	SetCallAudio(ctx context.Context, audioRef []byte, audioBlob []byte) error
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) (SetCallTranscriptRow, error)
 	SetSetting(ctx context.Context, name string, updatedBy *int32, value []byte) error
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error

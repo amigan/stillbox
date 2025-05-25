@@ -3,10 +3,10 @@ package nexus
 import (
 	"context"
 
+	tgfilter "dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
-	tgfilter "dynatron.me/x/stillbox/pkg/talkgroups/filter"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
 	"github.com/rs/zerolog/log"

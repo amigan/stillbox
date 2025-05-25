@@ -21,11 +21,11 @@ type sinkInstance struct {
 	Sink
 
 	// whether call ingest should be considered failed if this sink returns error
-	Required bool
+	Flags Flags
 }
 
 type Sinks interface {
-	Register(toAdd Sink, required bool)
+	Register(toAdd Sink, flags ...Flags)
 	Unregister(Sink)
 	Shutdown()
 	EmitCall(ctx context.Context, call *calls.Call) error
@@ -42,13 +42,18 @@ func NewSinkManager() *sinks {
 	}
 }
 
-func (s *sinks) Register(toAdd Sink, required bool) {
+func (s *sinks) Register(toAdd Sink, flags ...Flags) {
 	s.Lock()
 	defer s.Unlock()
 
+	var f Flags
+	for _, ft := range flags {
+		f |= ft
+	}
+
 	s.sinks[toAdd] = sinkInstance{
-		Sink:     toAdd,
-		Required: required,
+		Sink:  toAdd,
+		Flags: f,
 	}
 }
 
@@ -72,17 +77,34 @@ func (s *sinks) EmitCall(ctx context.Context, call *calls.Call) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	for _, sink := range s.sinks {
-		g.Go(sink.callEmitter(ctx, call))
+		if sink.Flags.Has(AsyncFlag) {
+			go sink.callEmitter(ctx, call)
+		} else {
+			g.Go(sink.callEmitter(ctx, call))
+		}
 	}
 
 	return g.Wait()
 }
 
+type Flags int
+
+func (f Flags) Has(h Flags) bool {
+	return f&h != 0
+}
+
+const (
+	NoneFlag Flags = 0
+
+	RequiredFlag Flags = 1 << iota
+	AsyncFlag
+)
+
 func (sink *sinkInstance) callEmitter(ctx context.Context, call *calls.Call) func() error {
 	return func() error {
 		err := sink.Call(ctx, call)
 		if err != nil {
-			if sink.Required {
+			if sink.Flags.Has(RequiredFlag) {
 				return err
 			} else {
 				log.Error().Str("sink", sink.Name()).Err(err).Msg("call emit to sink failed")

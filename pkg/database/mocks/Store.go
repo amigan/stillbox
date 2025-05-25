@@ -4031,6 +4031,54 @@ func (_c *Store_SetAppPrefs_Call) RunAndReturn(run func(context.Context, string,
 	return _c
 }
 
+// SetCallAudio provides a mock function with given fields: ctx, audioRef, audioBlob
+func (_m *Store) SetCallAudio(ctx context.Context, audioRef []byte, audioBlob []byte) error {
+	ret := _m.Called(ctx, audioRef, audioBlob)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetCallAudio")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, []byte) error); ok {
+		r0 = rf(ctx, audioRef, audioBlob)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_SetCallAudio_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetCallAudio'
+type Store_SetCallAudio_Call struct {
+	*mock.Call
+}
+
+// SetCallAudio is a helper method to define mock.On call
+//   - ctx context.Context
+//   - audioRef []byte
+//   - audioBlob []byte
+func (_e *Store_Expecter) SetCallAudio(ctx interface{}, audioRef interface{}, audioBlob interface{}) *Store_SetCallAudio_Call {
+	return &Store_SetCallAudio_Call{Call: _e.mock.On("SetCallAudio", ctx, audioRef, audioBlob)}
+}
+
+func (_c *Store_SetCallAudio_Call) Run(run func(ctx context.Context, audioRef []byte, audioBlob []byte)) *Store_SetCallAudio_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]byte), args[2].([]byte))
+	})
+	return _c
+}
+
+func (_c *Store_SetCallAudio_Call) Return(_a0 error) *Store_SetCallAudio_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_SetCallAudio_Call) RunAndReturn(run func(context.Context, []byte, []byte) error) *Store_SetCallAudio_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetCallTranscript provides a mock function with given fields: ctx, iD, transcript
 func (_m *Store) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) (database.SetCallTranscriptRow, error) {
 	ret := _m.Called(ctx, iD, transcript)

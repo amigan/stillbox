@@ -54,7 +54,8 @@ type CallAudio struct {
 	CallDate  jsontypes.Time `json:"callDate"`
 	AudioName *string        `json:"audioName"`
 	AudioType *string        `json:"audioType"`
-	AudioBlob []byte         `json:"audioBlob"`
+	AudioURL  *url.URL       `json:"audioURL,omitempty"`
+	AudioBlob []byte         `json:"audioBlob,omitempty"`
 }
 
 // CallTranscription is a skinny Call used for transcription responses.

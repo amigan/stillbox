@@ -83,14 +83,18 @@ type Store interface {
 	// Weight returns the final weight of this talkgroup, including its static and rules-derived weight.
 	Weight(ctx context.Context, id tgsp.ID, t time.Time) float64
 
+	FilterCache
+
+	// Hupper
+	HUP(*config.Config)
+}
+
+type FilterCache interface {
 	// RegisterFilter registers a filter with the cache so it may be updated if referenced tags change.
 	RegisterFilter(Filter)
 
 	// UnregisterFilter unregisters a filter.
 	UnregisterFilter(Filter)
-
-	// Hupper
-	HUP(*config.Config)
 }
 
 type options struct {

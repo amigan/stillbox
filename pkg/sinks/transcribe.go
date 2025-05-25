@@ -15,9 +15,9 @@ import (
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/authn"
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/pb"
-	"dynatron.me/x/stillbox/pkg/talkgroups/filter"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/gohugoio/hashstructure"
@@ -50,7 +50,7 @@ func (*transcriber) Name() string {
 }
 
 type transcriber struct {
-	Filter  *filter.TalkgroupFilter
+	Filter  *filter.Filter
 	AtLeast time.Duration
 
 	sync.RWMutex

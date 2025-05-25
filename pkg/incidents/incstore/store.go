@@ -268,10 +268,10 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 		sub := common.PtrTo(users.UserID(common.ZeroIfNil(v.Submitter)))
 		r = append(r, incidents.IncidentCall{
 			Call: calls.Call{
-				ID:          v.CallID,
-				AudioName:   common.ZeroIfNil(v.AudioName),
-				AudioType:   string(v.AudioType.AudioMIME),
-				AudioURL:    v.AudioUrl,
+				ID:        v.CallID,
+				AudioName: common.ZeroIfNil(v.AudioName),
+				AudioType: string(v.AudioType.AudioMIME),
+				//				AudioURL:    v.AudioUrl,
 				Duration:    dur,
 				DateTime:    v.CallDate.Time,
 				Frequencies: v.Frequencies,

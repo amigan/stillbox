@@ -15,7 +15,7 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 )
 
-type TalkgroupFilter struct {
+type Filter struct {
 	Talkgroups       tgsp.IDs `json:"talkgroups,omitempty" form:"talkgroups"`
 	TalkgroupsNot    tgsp.IDs `json:"talkgroupsNot,omitempty" form:"talkgroupsNot"`
 	TalkgroupTagsAll []string `json:"talkgroupTagsAll,omitempty" form:"talkgroupTagsAll"`
@@ -26,7 +26,7 @@ type TalkgroupFilter struct {
 	talkgroups map[tgsp.ID]bool `json:"-"`
 }
 
-func (f *TalkgroupFilter) TGs(ctx context.Context) (tgsp.IDs, error) {
+func (f *Filter) TGs(ctx context.Context) (tgsp.IDs, error) {
 	err := f.ensureCompiled(ctx)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (f *TalkgroupFilter) TGs(ctx context.Context) (tgsp.IDs, error) {
 	return r, nil
 }
 
-func (f *TalkgroupFilter) Tuples(ctx context.Context) (database.TGTuples, error) {
+func (f *Filter) Tuples(ctx context.Context) (database.TGTuples, error) {
 	err := f.ensureCompiled(ctx)
 	if err != nil {
 		return database.TGTuples{}, err
@@ -62,7 +62,7 @@ func (f *TalkgroupFilter) Tuples(ctx context.Context) (database.TGTuples, error)
 	return database.TGTuples{sys, tgs}, nil
 }
 
-func (f *TalkgroupFilter) ensureCompiled(ctx context.Context) error {
+func (f *Filter) ensureCompiled(ctx context.Context) error {
 	if f.talkgroups == nil {
 		return f.compile(ctx)
 	}
@@ -70,15 +70,15 @@ func (f *TalkgroupFilter) ensureCompiled(ctx context.Context) error {
 	return nil
 }
 
-func (f *TalkgroupFilter) Recompile(ctx context.Context) error {
+func (f *Filter) Recompile(ctx context.Context) error {
 	return f.compile(ctx)
 }
 
-func (f *TalkgroupFilter) TagRefs() []string {
+func (f *Filter) TagRefs() []string {
 	return append(f.TalkgroupTagsAll, append(f.TalkgroupTagsNot, f.TalkgroupTagsAny...)...)
 }
 
-func (f *TalkgroupFilter) IsEmpty() bool {
+func (f *Filter) IsEmpty() bool {
 	if f == nil {
 		return true
 	}
@@ -97,11 +97,11 @@ func (f *TalkgroupFilter) IsEmpty() bool {
 	return true
 }
 
-func FromMap(m map[string]any) (*TalkgroupFilter, error) {
-	filter := new(TalkgroupFilter)
+func FromMap(m map[string]any) (*Filter, error) {
+	filter := new(Filter)
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Metadata:         nil,
-		Result:           &filter,
+		Result:           filter,
 		TagName:          "yaml",
 		WeaklyTypedInput: true,
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
@@ -120,8 +120,8 @@ func FromMap(m map[string]any) (*TalkgroupFilter, error) {
 	return filter, nil
 }
 
-func FromProtobuf(ctx context.Context, p *pb.Filter) (*TalkgroupFilter, error) {
-	tgf := &TalkgroupFilter{
+func FromProtobuf(ctx context.Context, p *pb.Filter) (*Filter, error) {
+	tgf := &Filter{
 		TalkgroupTagsAll: p.TalkgroupTagsAll,
 		TalkgroupTagsAny: p.TalkgroupTagsAny,
 		TalkgroupTagsNot: p.TalkgroupTagsNot,
@@ -150,11 +150,11 @@ func FromProtobuf(ctx context.Context, p *pb.Filter) (*TalkgroupFilter, error) {
 	return tgf, tgf.compile(ctx)
 }
 
-func (f *TalkgroupFilter) hasTags() bool {
+func (f *Filter) hasTags() bool {
 	return len(f.TalkgroupTagsAny) > 0 || len(f.TalkgroupTagsAll) > 0 || len(f.TalkgroupTagsNot) > 0
 }
 
-func (f *TalkgroupFilter) compile(ctx context.Context) error {
+func (f *Filter) compile(ctx context.Context) error {
 	f.Lock()
 	defer f.Unlock()
 
@@ -183,7 +183,7 @@ func (f *TalkgroupFilter) compile(ctx context.Context) error {
 	return nil
 }
 
-func (f *TalkgroupFilter) Test(ctx context.Context, msgEnvelope broadcast.Envelope) bool {
+func (f *Filter) Test(ctx context.Context, msgEnvelope broadcast.Envelope) bool {
 	if f == nil { // no filter means all calls
 		return true
 	}

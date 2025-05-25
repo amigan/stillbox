@@ -3,6 +3,7 @@ package callstore
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
@@ -12,6 +13,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
@@ -21,6 +23,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/rs/zerolog/log"
 )
 
 type Store interface {
@@ -55,14 +58,21 @@ type Store interface {
 	TranscriptContext(ctx context.Context, tg talkgroups.ID, count uint, threshold jsontypes.Duration, lookback jsontypes.Duration) ([]database.GetTranscriptsContextRow, error)
 }
 
-type postgresStore struct {
-	db database.Store
+type store struct {
+	db            database.Store
+	audioBackends AudioBackends
 }
 
-func NewStore(db database.Store) *postgresStore {
-	return &postgresStore{
-		db: db,
+func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, audioBE []config.CallStorage) (*store, error) {
+	be, err := MakeBackends(ctx, tgc, audioBE)
+	if err != nil {
+		return nil, fmt.Errorf("call storage: %w", err)
 	}
+
+	return &store{
+		db:            db,
+		audioBackends: be,
+	}, nil
 }
 
 type storeCtxKey string
@@ -93,7 +103,9 @@ func audioMimeFromString(s string) database.NullAudioMIME {
 	}
 }
 
-func toAddCallParams(call *calls.Call) database.AddCallParams {
+type AudioRefJSON []byte
+
+func toAddCallParams(call *calls.Call, audioRef AudioRefJSON, audioBlob []byte) database.AddCallParams {
 	return database.AddCallParams{
 		ID:          call.ID,
 		Submitter:   call.Submitter.Int32Ptr(),
@@ -101,9 +113,9 @@ func toAddCallParams(call *calls.Call) database.AddCallParams {
 		Talkgroup:   call.Talkgroup,
 		CallDate:    pgtype.Timestamptz{Time: call.DateTime, Valid: true},
 		AudioName:   common.NilIfZero(call.AudioName),
-		AudioBlob:   call.Audio,
+		AudioBlob:   audioBlob,
 		AudioType:   audioMimeFromString(call.AudioType),
-		AudioUrl:    call.AudioURL,
+		AudioRef:    audioRef,
 		Duration:    call.Duration.MsInt32Ptr(),
 		Frequency:   call.Frequency,
 		Frequencies: call.Frequencies,
@@ -116,13 +128,21 @@ func toAddCallParams(call *calls.Call) database.AddCallParams {
 	}
 }
 
-func (s *postgresStore) AddCall(ctx context.Context, call *calls.Call) error {
+func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
 	_, err := authz.Check(ctx, call, authz.WithActions(entities.ActionCreate))
 	if err != nil {
 		return err
 	}
 
-	params := toAddCallParams(call)
+	blob := call.Audio
+	audioRef, err := s.audioBackends.Store(ctx, call)
+	if err != nil {
+		log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, storing in DB")
+	} else if audioRef != nil {
+		blob = nil
+	}
+
+	params := toAddCallParams(call, audioRef, blob)
 	db := database.FromCtx(ctx)
 	tgs := tgstore.FromCtx(ctx)
 
@@ -154,7 +174,7 @@ func (s *postgresStore) AddCall(ctx context.Context, call *calls.Call) error {
 	return err
 }
 
-func (s *postgresStore) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {
+func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {
 	_, err := authz.Check(ctx, &calls.Call{ID: id}, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
@@ -165,6 +185,15 @@ func (s *postgresStore) CallAudio(ctx context.Context, id uuid.UUID) (*calls.Cal
 	dbCall, err := db.GetCallAudioByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+
+	blob := dbCall.AudioBlob
+	var audioUrl *url.URL
+	if ref := dbCall.AudioRef; blob == nil && ref != nil {
+		blob, audioUrl, err = s.audioBackends.CallAudio(ctx, dbCall.AudioName, ref, false)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	audioMime := func(a database.NullAudioMIME) *string {
@@ -179,11 +208,12 @@ func (s *postgresStore) CallAudio(ctx context.Context, id uuid.UUID) (*calls.Cal
 		CallDate:  jsontypes.Time(dbCall.CallDate.Time),
 		AudioName: dbCall.AudioName,
 		AudioType: audioMime(dbCall.AudioType),
-		AudioBlob: dbCall.AudioBlob,
+		AudioBlob: blob,
+		AudioURL:  audioUrl,
 	}, nil
 }
 
-func (s *postgresStore) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*calls.Call, error) {
+func (s *store) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*calls.Call, error) {
 	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
@@ -203,16 +233,22 @@ func (s *postgresStore) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) 
 		if c.Submitter != nil {
 			sub = common.PtrTo(users.UserID(*c.Submitter))
 		}
+
+		if c.AudioBlob == nil {
+			// XXX
+			panic("not impl")
+		}
+
 		cs = append(cs, &calls.Call{
-			ID:             c.ID,
-			Submitter:      sub,
-			System:         c.System,
-			Talkgroup:      c.Talkgroup,
-			DateTime:       c.CallDate.Time,
-			Audio:          c.AudioBlob,
-			AudioName:      common.ZeroIfNil(c.AudioName),
-			AudioType:      string(c.AudioType.AudioMIME),
-			AudioURL:       c.AudioUrl,
+			ID:        c.ID,
+			Submitter: sub,
+			System:    c.System,
+			Talkgroup: c.Talkgroup,
+			DateTime:  c.CallDate.Time,
+			Audio:     c.AudioBlob,
+			AudioName: common.ZeroIfNil(c.AudioName),
+			AudioType: string(c.AudioType.AudioMIME),
+			//			AudioURL:       c.AudioUrl,
 			Duration:       calls.CallDuration(time.Duration(common.ZeroIfNil(c.Duration)) * time.Millisecond),
 			Frequency:      c.Frequency,
 			Frequencies:    c.Frequencies,
@@ -228,7 +264,7 @@ func (s *postgresStore) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) 
 	return cs, nil
 }
 
-func (s *postgresStore) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
+func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 	_, err := authz.Check(ctx, &calls.Call{ID: id}, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
@@ -247,14 +283,14 @@ func (s *postgresStore) Call(ctx context.Context, id uuid.UUID) (*calls.Call, er
 	}
 
 	return &calls.Call{
-		ID:             c.ID,
-		Submitter:      sub,
-		System:         c.System,
-		Talkgroup:      c.Talkgroup,
-		DateTime:       c.CallDate.Time,
-		AudioName:      common.ZeroIfNil(c.AudioName),
-		AudioType:      string(c.AudioType.AudioMIME),
-		AudioURL:       c.AudioUrl,
+		ID:        c.ID,
+		Submitter: sub,
+		System:    c.System,
+		Talkgroup: c.Talkgroup,
+		DateTime:  c.CallDate.Time,
+		AudioName: common.ZeroIfNil(c.AudioName),
+		AudioType: string(c.AudioType.AudioMIME),
+		//AudioURL:       c.AudioUrl,
 		Duration:       calls.CallDuration(time.Duration(common.ZeroIfNil(c.Duration)) * time.Millisecond),
 		Frequency:      c.Frequency,
 		Frequencies:    c.Frequencies,
@@ -282,7 +318,7 @@ type CallsParams struct {
 	TranscriptSearch *string           `json:"transcriptSearch"`
 }
 
-func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
+func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
 	_, err = authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, 0, err
@@ -346,7 +382,7 @@ func (s *postgresStore) Calls(ctx context.Context, p CallsParams) (rows []databa
 	return rows, int(count), err
 }
 
-func (s *postgresStore) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *store) Delete(ctx context.Context, id uuid.UUID) error {
 	callOwn, err := s.getCallOwner(ctx, id)
 	if err != nil {
 		return err
@@ -360,7 +396,7 @@ func (s *postgresStore) Delete(ctx context.Context, id uuid.UUID) error {
 	return database.FromCtx(ctx).DeleteCall(ctx, id)
 }
 
-func (s *postgresStore) getCallOwner(ctx context.Context, id uuid.UUID) (calls.Call, error) {
+func (s *store) getCallOwner(ctx context.Context, id uuid.UUID) (calls.Call, error) {
 	subInt, err := database.FromCtx(ctx).GetCallSubmitter(ctx, id)
 
 	var sub *users.UserID
@@ -371,7 +407,7 @@ func (s *postgresStore) getCallOwner(ctx context.Context, id uuid.UUID) (calls.C
 	return calls.Call{ID: id, Submitter: sub}, err
 }
 
-func (s *postgresStore) CallStats(ctx context.Context, interval calls.StatsInterval, start, end jsontypes.Time) (*calls.Stats, error) {
+func (s *store) CallStats(ctx context.Context, interval calls.StatsInterval, start, end jsontypes.Time) (*calls.Stats, error) {
 	if !interval.IsValid() {
 		return nil, calls.ErrInvalidInterval
 	}
@@ -403,7 +439,7 @@ func (s *postgresStore) CallStats(ctx context.Context, interval calls.StatsInter
 	return cs, nil
 }
 
-func (s *postgresStore) UpdateTranscription(ctx context.Context, id uuid.UUID, text *string) (*calls.CallTranscription, error) {
+func (s *store) UpdateTranscription(ctx context.Context, id uuid.UUID, text *string) (*calls.CallTranscription, error) {
 	c, err := s.getCallOwner(ctx, id)
 	if err != nil {
 		return nil, err
@@ -428,7 +464,7 @@ func (s *postgresStore) UpdateTranscription(ctx context.Context, id uuid.UUID, t
 	return tsc, nil
 }
 
-func (s *postgresStore) BackfillTrending(ctx context.Context, scorer *trending.Scorer[talkgroups.ID], stepClock func(time.Time), since, until time.Time) (count int, err error) {
+func (s *store) BackfillTrending(ctx context.Context, scorer *trending.Scorer[talkgroups.ID], stepClock func(time.Time), since, until time.Time) (count int, err error) {
 	// We can do this through stats grants
 	_, err = authz.Check(ctx, &calls.Stats{}, authz.WithActions(entities.ActionRead))
 	if err != nil {
@@ -464,7 +500,7 @@ func (s *postgresStore) BackfillTrending(ctx context.Context, scorer *trending.S
 	return count, nil
 }
 
-func (s *postgresStore) TranscriptContext(ctx context.Context, tg talkgroups.ID, count uint, threshold jsontypes.Duration, lookback jsontypes.Duration) ([]database.GetTranscriptsContextRow, error) {
+func (s *store) TranscriptContext(ctx context.Context, tg talkgroups.ID, count uint, threshold jsontypes.Duration, lookback jsontypes.Duration) ([]database.GetTranscriptsContextRow, error) {
 	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
