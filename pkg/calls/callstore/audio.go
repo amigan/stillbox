@@ -67,14 +67,15 @@ func newFSbackend(cfg config.ConfigMap) (*fsBackend, error) {
 }
 
 type s3Backend struct {
-	Bucket         string  `yaml:"bucket"`
-	Secure         bool    `yaml:"secure"`
-	Endpoint       string  `yaml:"endpoint"`
-	ExternalHost   *string `yaml:"externalHost"`
-	ExternalSecure bool    `yaml:"externalSecure"`
-	Region         string  `yaml:"region"`
-	KeyID          string  `yaml:"keyID"`
-	SecretKey      string  `yaml:"secretKey"`
+	Bucket         string        `yaml:"bucket"`
+	Secure         bool          `yaml:"secure"`
+	Endpoint       string        `yaml:"endpoint"`
+	ExternalHost   *string       `yaml:"externalHost"`
+	ExternalSecure bool          `yaml:"externalSecure"`
+	Region         string        `yaml:"region"`
+	KeyID          string        `yaml:"keyID"`
+	SecretKey      string        `yaml:"secretKey"`
+	Timeout        time.Duration `yaml:"timeout"`
 
 	nameGen
 	cli *minio.Client
@@ -91,7 +92,11 @@ type objectPath string
 
 func (sb *s3Backend) StoreCall(ctx context.Context, call *calls.Call) (AudioRef, error) {
 	key := sb.objectName(call)
-	_, err := sb.cli.PutObject(ctx, sb.Bucket, key, bytes.NewReader(call.Audio), int64(len(call.Audio)), minio.PutObjectOptions{ContentType: call.AudioType})
+
+	dctx, cancel := sb.ctxTimeout(ctx)
+	defer cancel()
+
+	_, err := sb.cli.PutObject(dctx, sb.Bucket, key, bytes.NewReader(call.Audio), int64(len(call.Audio)), minio.PutObjectOptions{ContentType: call.AudioType})
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +105,10 @@ func (sb *s3Backend) StoreCall(ctx context.Context, call *calls.Call) (AudioRef,
 }
 
 func (sb *s3Backend) getBlob(ctx context.Context, objKey string) ([]byte, error) {
-	b, err := sb.cli.GetObject(ctx, sb.Bucket, objKey, minio.GetObjectOptions{})
+	dctx, cancel := sb.ctxTimeout(ctx)
+	defer cancel()
+
+	b, err := sb.cli.GetObject(dctx, sb.Bucket, objKey, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +157,14 @@ func (sb *s3Backend) GetCall(ctx context.Context, audioName *string, ref AudioRe
 	}
 
 	return
+}
+
+func (sb *s3Backend) ctxTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
+	if sb.Timeout == 0 {
+		return ctx, func() {}
+	}
+
+	return context.WithTimeout(ctx, sb.Timeout)
 }
 
 func newS3backend(_ context.Context, cfg config.ConfigMap) (*s3Backend, error) {
