@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -112,7 +113,13 @@ func (sb *s3Backend) getURL(ctx context.Context, audioName *string, objKey strin
 	if audioName != nil {
 		par.Set("response-content-disposition", fmt.Sprintf(`attachment; filename="%s"`, *audioName))
 	}
-	ur, err := sb.cli.PresignedGetObject(ctx, sb.Bucket, objKey, time.Hour, par)
+
+	hdr := make(http.Header)
+	if sb.ExternalHost != nil {
+		hdr.Set("Host", *sb.ExternalHost)
+	}
+
+	ur, err := sb.cli.PresignHeader(ctx, "GET", sb.Bucket, objKey, time.Hour, par, hdr)
 	if err != nil {
 		return nil, err
 	}
