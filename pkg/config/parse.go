@@ -32,6 +32,7 @@ func (c *Configuration) Before(ctx *cli.Context) error {
 }
 
 func (c *Configuration) ReadConfig() error {
+	c.Config = Config{} // zero for hup change detection
 	log.Info().Str("configPath", *c.configPath).Msg("read config")
 
 	return c.read()

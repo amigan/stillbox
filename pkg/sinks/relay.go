@@ -143,6 +143,8 @@ func (rs *RelayManager) HUP(cfg *config.Config) {
 		return
 	}
 
+	rs.cfgHash = newHash
+
 	rs.unregister()
 	rs.register(relays)
 }
@@ -169,6 +171,7 @@ func (rs *RelayManager) newRelay(idx int, cfg config.Relay) (*Relay, error) {
 
 func (s *Relay) Call(ctx context.Context, call *calls.Call) (err error) {
 	defer func() {
+		// metrics for failed disposition
 		if err != nil {
 			s.mgr.metrics.RelayedFailed.WithLabelValues(s.URL).Inc()
 		}

@@ -17,10 +17,12 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/gohugoio/hashstructure"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 )
@@ -63,27 +65,51 @@ type transcriber struct {
 	cfgHash uint64
 
 	workers workers
+	metrics transcriberMetrics
+}
+
+type transcriberMetrics struct {
+	TranscribeDispatched *prometheus.CounterVec `help:"Dispatched transcriptions." labels:"type,id"`
+	TranscribeFailed     *prometheus.CounterVec `help:"Failed transcription dispatches." labels:"type,id"`
 }
 
 func (s *transcriber) Call(ctx context.Context, call *calls.Call) error {
+	s.RLock()
+	defer s.RUnlock()
+
 	if s.workers == nil || call.Duration < calls.CallDuration(s.AtLeast) || !s.Filter.Test(ctx, call) || !call.ShouldStore() {
 		return nil
 	}
 
-	s.RLock()
-	defer s.RUnlock()
+	return s.dispatch(ctx, call)
+}
 
-	return s.workers.Next().Dispatch(ctx, call)
+// dispatch requires transcriber be locked!
+func (s *transcriber) dispatch(ctx context.Context, call *calls.Call) error {
+	wrk := s.workers.Next()
+	err := wrk.Dispatch(ctx, call)
+	if err != nil {
+		s.metrics.TranscribeFailed.WithLabelValues(wrk.Type(), wrk.String()).Inc()
+		return err
+	}
+
+	s.metrics.TranscribeDispatched.WithLabelValues(wrk.Type(), wrk.String()).Inc()
+
+	return nil
 }
 
 func (s *transcriber) UnfilteredCall(ctx context.Context, call *calls.Call) error {
 	s.RLock()
 	defer s.RUnlock()
 
-	return s.workers.Next().Dispatch(ctx, call)
+	if s.workers == nil {
+		return nil
+	}
+
+	return s.dispatch(ctx, call)
 }
 
-func NewTranscriber(s Sinks, a authn.Authn, tgst tgstore.Store, cfg config.Transcription) (*transcriber, error) {
+func NewTranscriber(s Sinks, a authn.Authn, tgst tgstore.Store, met metrics.Metrics, cfg config.Transcription) (*transcriber, error) {
 	xp := http.DefaultTransport.(*http.Transport).Clone()
 	xp.MaxIdleConnsPerHost = 10
 
@@ -116,6 +142,8 @@ func NewTranscriber(s Sinks, a authn.Authn, tgst tgstore.Store, cfg config.Trans
 		return nil, err
 	}
 
+	met.Register("transcribe", &t.metrics)
+
 	return t, nil
 }
 
@@ -137,6 +165,7 @@ func (t *transcriber) initFilter(cfg config.Transcription) error {
 
 type transcribeTransport interface {
 	fmt.Stringer
+	Type() string
 	Dispatch(ctx context.Context, call *calls.Call) error
 }
 
@@ -205,13 +234,16 @@ type httpTranscriberTransport struct {
 	URL          string `yaml:"url"`
 	CallbackBase string `yaml:"callbackBase"`
 
+	id           string
 	url          *url.URL
 	callbackBase *url.URL
 	mgr          *transcriber
 }
 
+func (*httpTranscriberTransport) Type() string { return "http" }
+
 func (h *httpTranscriberTransport) String() string {
-	return h.url.String()
+	return h.id
 }
 
 func newHttpTranscriber(mgr *transcriber, cfg config.ConfigMap) (transcribeTransport, error) {
@@ -250,6 +282,7 @@ func newHttpTranscriber(mgr *transcriber, cfg config.ConfigMap) (transcribeTrans
 
 	htt.url = u
 	htt.callbackBase = cbBase
+	htt.id = u.String()
 
 	return htt, nil
 }

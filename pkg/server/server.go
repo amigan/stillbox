@@ -141,7 +141,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		settings:  settings.New(settings.ConfigDefaults),
 	}
 
-	srv.transcriber, err = sinks.NewTranscriber(srv.sinks, authenticator, srv.tgs, cfg.Transcription)
+	srv.transcriber, err = sinks.NewTranscriber(srv.sinks, authenticator, srv.tgs, met, cfg.Transcription)
 	if err != nil {
 		return nil, err
 	}
