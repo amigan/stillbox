@@ -118,10 +118,11 @@ callStorage:
   - name: s3
     backend: s3
     # if this backend fails:
-    # fail - fail the ingest (default)
-    # next - try next backend (including filter) or ultimately the DB
-    # db - immediately fail to DB
-    requireForIngest: fail
+    # next-then-fail (default) - try next backend (including filter), if no other backends store then fail ingest
+    # next-then-db - try next backend (including filter) or ultimately the DB
+    # fail - fail the ingest immediately
+    # db - stop processing backends, store in DB
+    onError: next-then-fail
     # readOnly specifies whether this is not to be used to store calls
     # but exists to serve requests for calls referencing this backend in the DB
     readOnly: false

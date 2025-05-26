@@ -27,13 +27,10 @@ type s3Backend struct {
 	SecretKey      string        `yaml:"secretKey"`
 	Timeout        time.Duration `yaml:"timeout"`
 
-	nameGen
 	cli *minio.Client
 }
 
-type nameGen struct{}
-
-func (nameGen) objectName(call *calls.Call) string {
+func objectName(call *calls.Call) string {
 	u := call.ID.String()
 	return string(u[0]) + "/" + string(u[1:2]) + "/" + u + "/" + call.AudioName
 }
@@ -41,7 +38,7 @@ func (nameGen) objectName(call *calls.Call) string {
 type objectPath string
 
 func (sb *s3Backend) StoreCall(ctx context.Context, call *calls.Call) (AudioRef, error) {
-	key := sb.objectName(call)
+	key := objectName(call)
 
 	dctx, cancel := sb.ctxTimeout(ctx)
 	defer cancel()

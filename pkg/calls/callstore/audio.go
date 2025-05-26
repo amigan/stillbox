@@ -10,6 +10,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"github.com/goccy/go-json"
+	"github.com/rs/zerolog/log"
 )
 
 type AudioRef any
@@ -38,13 +39,13 @@ type audioBackends struct {
 }
 
 type audioStorageBackend struct {
-	Name   string
-	Filter *filter.Filter
+	Name    string
+	Filter  *filter.Filter
+	OnError config.StorageDisposition
 	AudioBackend
 }
 
 type fsBackend struct {
-	nameGen
 }
 
 func (fsb *fsBackend) GetCall(_ context.Context, _ *string, _ AudioRef, _ bool) ([]byte, *url.URL, error) {
@@ -99,7 +100,21 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj Audio
 		var ref AudioRef
 		ref, err = be.StoreCall(ctx, call)
 		if err != nil {
-			return nil, fmt.Errorf("backend '%s': %w", beName, err)
+			switch be.OnError {
+			case config.OnErrorFail:
+				return nil, fmt.Errorf("backend '%s': %w", beName, err)
+			case config.OnErrorDB:
+				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, storing in DB")
+				return nil, nil
+			case config.OnErrorNextThenDB:
+				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, trying next then storing in DB")
+				err = nil // so if nobody else stores, it stores in DB
+				continue
+			case config.OnErrorNextThenFail: // default
+				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, trying next")
+				continue
+			}
+
 		}
 
 		refMap := map[string]AudioRef{
@@ -153,10 +168,11 @@ func MakeBackends(ctx context.Context, fc tgstore.FilterCache, cfg []config.Call
 		ab.backends[cf.Name] = &audioStorageBackend{
 			Name:         cf.Name,
 			Filter:       filt,
+			OnError:      cf.OnError,
 			AudioBackend: be,
 		}
 
-		if !cf.ReadOnly {
+		if !cf.ReadOnly { // readonly backends simply don't get added to the list for store calls
 			ab.storeList = append(ab.storeList, cf.Name)
 		}
 	}

@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -117,11 +119,38 @@ type NotifyService struct {
 type ConfigMap map[string]any
 
 type CallStorage struct {
-	Name     string    `yaml:"name"`
-	ReadOnly bool      `yaml:"readOnly"`
-	Backend  string    `yaml:"backend"`
-	Filter   ConfigMap `yaml:"filter"`
-	Config   ConfigMap `yaml:"config"`
+	Name     string             `yaml:"name"`
+	ReadOnly bool               `yaml:"readOnly"`
+	Backend  string             `yaml:"backend"`
+	Filter   ConfigMap          `yaml:"filter"`
+	Config   ConfigMap          `yaml:"config"`
+	OnError  StorageDisposition `yaml:"onError"`
+}
+
+type StorageDisposition int
+
+const (
+	OnErrorNextThenFail StorageDisposition = iota
+	OnErrorNextThenDB
+	OnErrorFail
+	OnErrorDB
+)
+
+func (sd *StorageDisposition) UnmarshalText(s []byte) error {
+	t := strings.ToLower(string(s))
+	d, h := map[string]StorageDisposition{
+		"next-then-fail": OnErrorNextThenFail,
+		"next-then-db":   OnErrorNextThenDB,
+		"fail":           OnErrorFail,
+		"db":             OnErrorDB,
+	}[t]
+	if !h {
+		return fmt.Errorf("invalid storage disposition '%s'", t)
+	}
+
+	*sd = d
+
+	return nil
 }
 
 type Transcription struct {

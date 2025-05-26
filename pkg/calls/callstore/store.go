@@ -23,7 +23,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/rs/zerolog/log"
 )
 
 type Store interface {
@@ -137,7 +136,7 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
 	blob := call.Audio
 	audioRef, err := s.audioBackends.Store(ctx, call)
 	if err != nil {
-		log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, storing in DB")
+		return fmt.Errorf("add call: %w", err)
 	} else if audioRef != nil {
 		blob = nil
 	}
