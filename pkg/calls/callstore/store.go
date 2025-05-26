@@ -15,6 +15,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
@@ -62,8 +63,8 @@ type store struct {
 	audioBackends AudioBackends
 }
 
-func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, audioBE []config.CallStorage) (*store, error) {
-	be, err := MakeBackends(ctx, tgc, audioBE)
+func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, audioBE []config.CallStorage) (*store, error) {
+	be, err := MakeBackends(ctx, tgc, met, audioBE)
 	if err != nil {
 		return nil, fmt.Errorf("call storage: %w", err)
 	}

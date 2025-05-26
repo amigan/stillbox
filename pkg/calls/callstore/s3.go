@@ -37,6 +37,8 @@ func objectName(call *calls.Call) string {
 
 type objectPath string
 
+func (*s3Backend) Type() string { return "s3" }
+
 func (sb *s3Backend) StoreCall(ctx context.Context, call *calls.Call) (AudioRef, error) {
 	key := objectName(call)
 

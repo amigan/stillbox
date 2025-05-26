@@ -8,8 +8,10 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"github.com/goccy/go-json"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,6 +20,8 @@ type AudioRef any
 type AudioBackend interface {
 	StoreCall(context.Context, *calls.Call) (AudioRef, error)
 	GetCall(ctx context.Context, audioName *string, audioRef AudioRef, resolveBlob bool) (blob []byte, audioURL *url.URL, err error)
+
+	Type() string
 }
 
 type AudioBackends interface {
@@ -36,6 +40,7 @@ type audioBackends struct {
 	storeList []string // in config order
 
 	backends map[string]*audioStorageBackend
+	metrics  audioStorageMetrics
 }
 
 type audioStorageBackend struct {
@@ -43,10 +48,18 @@ type audioStorageBackend struct {
 	Filter  *filter.Filter
 	OnError config.StorageDisposition
 	AudioBackend
+	met audioStorageMetrics
+}
+
+type audioStorageMetrics struct {
+	TotalStores  *prometheus.CounterVec `help:"Total call stores." labels:"backend,type"`
+	FailedStores *prometheus.CounterVec `help:"Failed call storage attempts by backend." labels:"backend,type"`
 }
 
 type fsBackend struct {
 }
+
+func (*fsBackend) Type() string { return "fs" }
 
 func (fsb *fsBackend) GetCall(_ context.Context, _ *string, _ AudioRef, _ bool) ([]byte, *url.URL, error) {
 	return nil, nil, fmt.Errorf("FS backend not implemented")
@@ -100,6 +113,8 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj Audio
 		var ref AudioRef
 		ref, err = be.StoreCall(ctx, call)
 		if err != nil {
+			ab.metrics.FailedStores.WithLabelValues(beName, be.Type()).Inc()
+
 			switch be.OnError {
 			case config.OnErrorFail:
 				return nil, fmt.Errorf("backend '%s': %w", beName, err)
@@ -114,7 +129,8 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj Audio
 				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, trying next")
 				continue
 			}
-
+		} else if ref != nil {
+			ab.metrics.TotalStores.WithLabelValues(beName, be.Type()).Inc()
 		}
 
 		refMap := map[string]AudioRef{
@@ -127,7 +143,7 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj Audio
 	return
 }
 
-func MakeBackends(ctx context.Context, fc tgstore.FilterCache, cfg []config.CallStorage) (*audioBackends, error) {
+func MakeBackends(ctx context.Context, fc tgstore.FilterCache, met metrics.Metrics, cfg []config.CallStorage) (*audioBackends, error) {
 	ab := &audioBackends{
 		storeList: make([]string, 0, len(cfg)),
 		backends:  make(map[string]*audioStorageBackend, len(cfg)),
@@ -176,6 +192,8 @@ func MakeBackends(ctx context.Context, fc tgstore.FilterCache, cfg []config.Call
 			ab.storeList = append(ab.storeList, cf.Name)
 		}
 	}
+
+	met.Register("callaudio", &ab.metrics)
 
 	return ab, nil
 }

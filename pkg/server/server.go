@@ -111,7 +111,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
-	callStore, err := callstore.NewStore(ctx, db, tgCache, cfg.CallStorage)
+	callStore, err := callstore.NewStore(ctx, db, tgCache, met, cfg.CallStorage)
 	if err != nil {
 		return nil, err
 	}
