@@ -21,6 +21,7 @@ func (s *Server) huppers() []hupper {
 		s.alerter,
 		s.users,
 		s.transcriber,
+		s.relayer,
 	}
 }
 

@@ -173,7 +173,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
 
-	relayer, err := sinks.NewRelayManager(srv.sinks, cfg.Relay)
+	relayer, err := sinks.NewRelayManager(srv.sinks, met, cfg.Relay)
 	if err != nil {
 		return nil, err
 	}
