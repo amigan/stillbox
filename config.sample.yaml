@@ -63,7 +63,7 @@ auth:
     order: deny, allow
 
 log:
-  # level logs at or above the specified level
+  # level logs at or above the specifies level
   # levels are trace, debug, info, warn, error, fatal, panic
   # an entry without a file: property indicates stderr
   - level: debug
