@@ -69,8 +69,8 @@ type transcriber struct {
 }
 
 type transcriberMetrics struct {
-	TranscribeDispatched *prometheus.CounterVec `help:"Dispatched transcriptions." labels:"type,id"`
-	TranscribeFailed     *prometheus.CounterVec `help:"Failed transcription dispatches." labels:"type,id"`
+	TranscribeDispatched *prometheus.CounterVec `help:"Dispatched transcriptions" labels:"type,id"`
+	TranscribeFailed     *prometheus.CounterVec `help:"Failed transcription dispatches" labels:"type,id"`
 }
 
 func (s *transcriber) Call(ctx context.Context, call *calls.Call) error {

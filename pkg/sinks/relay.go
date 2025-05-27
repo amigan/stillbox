@@ -38,8 +38,8 @@ type RelayManager struct {
 }
 
 type relayManagerMetrics struct {
-	RelayedSuccess *prometheus.CounterVec `help:"Calls successfully relayed." labels:"url"`
-	RelayedFailed  *prometheus.CounterVec `help:"Failed relay attempts." labels:"url"`
+	RelayedSuccess *prometheus.CounterVec `help:"Calls successfully relayed" labels:"url"`
+	RelayedFailed  *prometheus.CounterVec `help:"Failed relay attempts" labels:"url"`
 }
 
 type Relay struct {

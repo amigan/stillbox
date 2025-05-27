@@ -52,8 +52,8 @@ type audioStorageBackend struct {
 }
 
 type audioStorageMetrics struct {
-	TotalStores  *prometheus.CounterVec `help:"Total call stores." labels:"backend,type"`
-	FailedStores *prometheus.CounterVec `help:"Failed call storage attempts by backend." labels:"backend,type"`
+	TotalStores  *prometheus.CounterVec `help:"Total call stores" labels:"backend,type"`
+	FailedStores *prometheus.CounterVec `help:"Failed call storage attempts by backend" labels:"backend,type"`
 }
 
 var _ AudioBackends = (*audioBackends)(nil)

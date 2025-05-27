@@ -70,8 +70,8 @@ type Server struct {
 
 type srvMetrics struct {
 	Requests      *prometheus.CounterVec `help:"Requests" labels:"code,method"`
-	RequestMS     prometheus.Histogram   `help:"Request durations." buckets:"1,5,10,30,100,200,500"`
-	IngestedCalls prometheus.Counter     `help:"Total ingested calls."`
+	RequestMS     prometheus.Histogram   `help:"Request durations" buckets:"1,5,10,30,100,200,500"`
+	IngestedCalls prometheus.Counter     `help:"Total ingested calls"`
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
