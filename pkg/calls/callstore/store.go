@@ -510,7 +510,7 @@ func (s *store) TranscriptContext(ctx context.Context, tg talkgroups.ID, count u
 	return db.GetTranscriptsContext(ctx, database.GetTranscriptsContextParams{
 		System:         int(tg.System),
 		Talkgroup:      int(tg.Talkgroup),
-		DurationMs:     common.PtrTo(int32(threshold.Duration().Milliseconds())),
+		DurationMS:     common.PtrTo(int32(threshold.Duration().Milliseconds())),
 		NumTranscripts: int32(count),
 		Lookback:       lookback.PGInterval(),
 	})

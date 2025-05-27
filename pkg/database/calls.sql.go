@@ -365,7 +365,7 @@ type GetTranscriptsContextParams struct {
 	System         int             `json:"system"`
 	Talkgroup      int             `json:"talkgroup"`
 	Lookback       pgtype.Interval `json:"lookback"`
-	DurationMs     *int32          `json:"durationMs"`
+	DurationMS     *int32          `json:"durationMs"`
 	NumTranscripts int32           `json:"numTranscripts"`
 }
 
@@ -379,7 +379,7 @@ func (q *Queries) GetTranscriptsContext(ctx context.Context, arg GetTranscriptsC
 		arg.System,
 		arg.Talkgroup,
 		arg.Lookback,
-		arg.DurationMs,
+		arg.DurationMS,
 		arg.NumTranscripts,
 	)
 	if err != nil {
