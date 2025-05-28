@@ -53,7 +53,7 @@ type Server struct {
 	logger      *Logger
 	alerter     alerting.Alerter
 	notifier    notify.Notifier
-	hup         chan os.Signal
+	signals     chan os.Signal
 	tgs         tgstore.Store
 	rest        rest.APIRoot
 	partman     partman.PartitionManager
@@ -271,7 +271,7 @@ func (s *Server) MetricsLogger() func(next http.Handler) http.Handler {
 func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	defer database.Close(s.db)
 
-	s.hupHandler()
+	s.installSignalHandlers()
 
 	ctx = s.fillCtx(ctx)
 

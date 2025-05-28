@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/config"
@@ -41,7 +42,7 @@ func (o *ServeOptions) Execute() error {
 	ctx, cancel := context.WithCancelCause(context.Background())
 
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
 	defer func() {
 		signal.Stop(sig)
 		cancel(nil)
