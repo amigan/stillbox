@@ -33,8 +33,9 @@ type Store interface {
 	// DeleteCall deletes a call.
 	Delete(ctx context.Context, id uuid.UUID) error
 
-	// CallAudio returns a CallAudio struct
-	CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error)
+	// CallAudio returns a CallAudio struct.
+	// isDownload, if true, specifies that any object store references encode disposition as an attachment and the filename.
+	CallAudio(ctx context.Context, id uuid.UUID, isDownload bool) (*calls.CallAudio, error)
 
 	// Call returns the call's metadata.
 	Call(ctx context.Context, id uuid.UUID) (*calls.Call, error)
@@ -174,7 +175,7 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
 	return err
 }
 
-func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, error) {
+func (s *store) CallAudio(ctx context.Context, id uuid.UUID, isDownload bool) (*calls.CallAudio, error) {
 	_, err := authz.Check(ctx, &calls.Call{ID: id}, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
@@ -187,10 +188,15 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID) (*calls.CallAudio, 
 		return nil, err
 	}
 
+	var audioName *string
+	if isDownload {
+		audioName = dbCall.AudioName
+	}
+
 	blob := dbCall.AudioBlob
 	var audioUrl *url.URL
 	if ref := dbCall.AudioRef; blob == nil && ref != nil {
-		blob, audioUrl, err = s.audioBackends.CallAudio(ctx, dbCall.AudioName, ref, false)
+		blob, audioUrl, err = s.audioBackends.CallAudio(ctx, audioName, ref, false)
 		if err != nil {
 			return nil, err
 		}

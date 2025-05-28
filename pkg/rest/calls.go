@@ -187,7 +187,7 @@ func (ca *callsAPI) getAudio(p getAudioParams, w http.ResponseWriter, r *http.Re
 	ctx := r.Context()
 	calls := callstore.FromCtx(ctx)
 
-	call, err := calls.CallAudio(ctx, *p.CallID)
+	call, err := calls.CallAudio(ctx, *p.CallID, p.Download != nil)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
