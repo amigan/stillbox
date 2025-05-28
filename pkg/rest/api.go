@@ -8,6 +8,7 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/shares"
@@ -157,25 +158,26 @@ func internalError(err error) render.Renderer {
 type errResponder func(error) render.Renderer
 
 var statusMapping = map[error]errResponder{
-	tgstore.ErrNoSuchSystem:   notFoundErrText,
-	tgstore.ErrNotFound:       notFoundErrText,
-	tgstore.ErrInvalidOrderBy: badRequestErrText,
-	tgstore.ErrBadDirection:   badRequestErrText,
-	tgstore.ErrBadOrder:       badRequestErrText,
-	pgx.ErrNoRows:             recordNotFound,
-	ErrMissingTGSys:           badRequestErrText,
-	ErrTGIDMismatch:           badRequestErrText,
-	ErrSysMismatch:            badRequestErrText,
-	tgstore.ErrReference:      constraintErrText,
-	authz.ErrBadSubject:       unauthErrText,
-	ErrBadAppName:             unauthErrText,
-	common.ErrPageOutOfRange:  badRequestErrText,
-	authz.ErrNotAuthorized:    unauthErrText,
-	shares.ErrNoShare:         notFoundErrText,
-	ErrBadShare:               notFoundErrText,
-	settings.ErrNoSetting:     notFoundErrText,
-	shares.ErrBadType:         badRequestErrText,
-	calls.ErrInvalidInterval:  badRequestErrText,
+	tgstore.ErrNoSuchSystem:        notFoundErrText,
+	tgstore.ErrNotFound:            notFoundErrText,
+	tgstore.ErrInvalidOrderBy:      badRequestErrText,
+	tgstore.ErrBadDirection:        badRequestErrText,
+	tgstore.ErrBadOrder:            badRequestErrText,
+	pgx.ErrNoRows:                  recordNotFound,
+	ErrMissingTGSys:                badRequestErrText,
+	ErrTGIDMismatch:                badRequestErrText,
+	ErrSysMismatch:                 badRequestErrText,
+	tgstore.ErrReference:           constraintErrText,
+	authz.ErrBadSubject:            unauthErrText,
+	ErrBadAppName:                  unauthErrText,
+	common.ErrPageOutOfRange:       badRequestErrText,
+	authz.ErrNotAuthorized:         unauthErrText,
+	shares.ErrNoShare:              notFoundErrText,
+	ErrBadShare:                    notFoundErrText,
+	settings.ErrNoSetting:          notFoundErrText,
+	shares.ErrBadType:              badRequestErrText,
+	calls.ErrInvalidInterval:       badRequestErrText,
+	callstore.ErrCallAudioNotFound: notFoundErrText,
 }
 
 func autoError(err error) render.Renderer {

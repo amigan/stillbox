@@ -149,6 +149,11 @@ callStorage:
       timeout: 10s
       keyID: 'GK7894947fffaacacd83664923'
       secretKey: 'bacba7892843792347987293874923847293487239487234987234bababababa'
+  - name: fs
+    backend: fs
+    config:
+      # root path to store call audio in, must be a directory
+      root: "/tank/stillbox"
 
 transcription:
 # - type: http

@@ -30,17 +30,10 @@ type s3Backend struct {
 	cli *minio.Client
 }
 
-func objectName(call *calls.Call) string {
-	u := call.ID.String()
-	return string(u[0]) + "/" + string(u[1:2]) + "/" + u + "/" + call.AudioName
-}
-
-type objectPath string
-
 func (*s3Backend) Type() string { return "s3" }
 
 func (sb *s3Backend) StoreCall(ctx context.Context, call *calls.Call) (AudioRef, error) {
-	key := objectName(call)
+	key := blobPath(call)
 
 	dctx, cancel := sb.ctxTimeout(ctx)
 	defer cancel()
@@ -50,7 +43,7 @@ func (sb *s3Backend) StoreCall(ctx context.Context, call *calls.Call) (AudioRef,
 		return nil, err
 	}
 
-	return objectPath(key), nil
+	return key, nil
 }
 
 func (sb *s3Backend) getBlob(ctx context.Context, objKey string) ([]byte, error) {

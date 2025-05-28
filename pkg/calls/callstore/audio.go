@@ -2,6 +2,7 @@ package callstore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 
@@ -13,6 +14,10 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
+)
+
+var (
+	ErrCallAudioNotFound = errors.New("call audio not found")
 )
 
 type AudioRef any
@@ -179,4 +184,9 @@ func MakeBackends(ctx context.Context, fc tgstore.FilterCache, met metrics.Metri
 	met.Register("callaudio", &ab.metrics)
 
 	return ab, nil
+}
+
+func blobPath(call *calls.Call) string {
+	u := call.ID.String()
+	return string(u[0:2]) + "/" + string(u[2:3]) + "/" + u + "_" + call.AudioName
 }
