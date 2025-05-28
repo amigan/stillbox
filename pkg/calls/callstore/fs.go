@@ -20,14 +20,14 @@ type fsBackend struct {
 
 func (*fsBackend) Type() string { return "fs" }
 
-func (fsb *fsBackend) GetCall(_ context.Context, audioName *string, ref AudioRef, _ bool) ([]byte, *url.URL, error) {
+func (fsb *fsBackend) Get(_ context.Context, audioName *string, ref AudioRef, _ bool) ([]byte, *url.URL, error) {
 	refPath, ok := ref.(string)
 	if !ok {
 		log.Error().Str("refPath", fmt.Sprint(refPath)).Msg("call path was not a string")
-		return nil, nil, ErrCallAudioNotFound
+		return nil, nil, ErrBadAudioRef
 	}
 
-	cPath := path.Join(fsb.Root, ref.(string))
+	cPath := fsb.callPath(refPath)
 
 	// it would be nice to be able to use sendfile(2) here
 	audio, err := os.ReadFile(cPath)
@@ -42,9 +42,22 @@ func (fsb *fsBackend) GetCall(_ context.Context, audioName *string, ref AudioRef
 	return audio, nil, nil
 }
 
-func (fsb *fsBackend) StoreCall(_ context.Context, call *calls.Call) (AudioRef, error) {
+func (fsb *fsBackend) Delete(_ context.Context, audioRef AudioRef) error {
+	refPath, ok := audioRef.(string)
+	if !ok {
+		return ErrBadAudioRef
+	}
+
+	return os.Remove(refPath)
+}
+
+func (fsb *fsBackend) callPath(blobPath string) string {
+	return path.Join(fsb.Root, blobPath)
+}
+
+func (fsb *fsBackend) Store(_ context.Context, call *calls.Call) (AudioRef, error) {
 	blobp := blobPath(call)
-	p := path.Join(fsb.Root, blobp)
+	p := fsb.callPath(blobp)
 	err := os.WriteFile(p, call.Audio, 0640)
 	if err != nil {
 		if os.IsNotExist(err) {

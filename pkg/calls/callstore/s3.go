@@ -32,7 +32,7 @@ type s3Backend struct {
 
 func (*s3Backend) Type() string { return "s3" }
 
-func (sb *s3Backend) StoreCall(ctx context.Context, call *calls.Call) (AudioRef, error) {
+func (sb *s3Backend) Store(ctx context.Context, call *calls.Call) (AudioRef, error) {
 	key := blobPath(call)
 
 	dctx, cancel := sb.ctxTimeout(ctx)
@@ -54,6 +54,8 @@ func (sb *s3Backend) getBlob(ctx context.Context, objKey string) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
+
+	defer b.Close()
 
 	return io.ReadAll(b)
 }
@@ -86,10 +88,10 @@ func (sb *s3Backend) getURL(ctx context.Context, audioName *string, objKey strin
 	return ur, nil
 }
 
-func (sb *s3Backend) GetCall(ctx context.Context, audioName *string, ref AudioRef, resolveBlob bool) (blob []byte, audioURL *url.URL, err error) {
+func (sb *s3Backend) Get(ctx context.Context, audioName *string, ref AudioRef, resolveBlob bool) (blob []byte, audioURL *url.URL, err error) {
 	objKey, ok := ref.(string)
 	if !ok {
-		return nil, nil, fmt.Errorf("reference was not a string")
+		return nil, nil, ErrBadAudioRef
 	}
 
 	if resolveBlob {
@@ -99,6 +101,15 @@ func (sb *s3Backend) GetCall(ctx context.Context, audioName *string, ref AudioRe
 	}
 
 	return
+}
+
+func (sb *s3Backend) Delete(ctx context.Context, audioRef AudioRef) error {
+	objKey, ok := audioRef.(string)
+	if !ok {
+		return ErrBadAudioRef
+	}
+
+	return sb.cli.RemoveObject(ctx, sb.Bucket, objKey, minio.RemoveObjectOptions{})
 }
 
 func (sb *s3Backend) ctxTimeout(ctx context.Context) (context.Context, context.CancelFunc) {

@@ -18,14 +18,23 @@ import (
 
 var (
 	ErrCallAudioNotFound = errors.New("call audio not found")
+	ErrBadAudioRef       = errors.New("bad audio reference")
 )
 
 type AudioRef any
 
 type AudioBackend interface {
-	StoreCall(context.Context, *calls.Call) (AudioRef, error)
-	GetCall(ctx context.Context, audioName *string, audioRef AudioRef, resolveBlob bool) (blob []byte, audioURL *url.URL, err error)
+	// Store stores a call in the backend. It returns the reference that, combined with the backend, can retrieve the call audio.
+	Store(context.Context, *calls.Call) (AudioRef, error)
 
+	// Get retrieves a call from the backend using audioRef. If audioName is not nil and the backend returns a URL instead of a blob, the URL will result in a content-disposition of attachment rather than inline.
+	// If resolveBlob is true and the backend normally returns a URL, it will instead return the blob.
+	Get(ctx context.Context, audioName *string, audioRef AudioRef, resolveBlob bool) (blob []byte, audioURL *url.URL, err error)
+
+	// Delete deletes a call from the backend.
+	Delete(ctx context.Context, audioRef AudioRef) error
+
+	// Type returns the backend's type.
 	Type() string
 }
 
@@ -76,7 +85,7 @@ func (sb *audioBackends) CallAudio(ctx context.Context, audioName *string, audio
 			err = fmt.Errorf("no such backend '%s'", backend)
 			continue
 		}
-		blob, ur, err = be.GetCall(ctx, audioName, location, resolveBlob)
+		blob, ur, err = be.Get(ctx, audioName, location, resolveBlob)
 		if err == nil {
 			break
 		}
@@ -99,7 +108,7 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj Audio
 		}
 
 		var ref AudioRef
-		ref, err = be.StoreCall(ctx, call)
+		ref, err = be.Store(ctx, call)
 		if err != nil {
 			ab.metrics.FailedStores.WithLabelValues(beName, be.Type()).Inc()
 
