@@ -109,8 +109,8 @@ relay:
 
 # callStorage backends have filters tested until one matches, then that one wins for storage of new calls
 # null filter always matches
-# readOnly never matches, and will only be used for call retrieval
-# if none are configured/evaluate, calls are simply stored as blobs in the DB
+# ingest specifies whether to try to store audio in this backend
+# if none are configured/evaluate during ingestion, calls are simply stored as blobs in the DB
 callStorage:
   # name of the backend ends up being stored in the DB and
   # should not change once chosen, otherwise every record must be
@@ -123,9 +123,9 @@ callStorage:
     # fail - fail the ingest immediately
     # db - stop processing backends, store in DB
     onError: next-then-fail
-    # readOnly specifies whether this is not to be used to store calls
+    # ingest specifies whether this is not to be used to store new calls
     # but exists to serve requests for calls referencing this backend in the DB
-    readOnly: false
+    ingest: true
     # filter is same as below, or can be null or unspecified
 #   filter:
 #     talkgroups:

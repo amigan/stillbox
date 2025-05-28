@@ -119,12 +119,12 @@ type NotifyService struct {
 type ConfigMap map[string]any
 
 type CallStorage struct {
-	Name     string             `yaml:"name"`
-	ReadOnly bool               `yaml:"readOnly"`
-	Backend  string             `yaml:"backend"`
-	Filter   ConfigMap          `yaml:"filter"`
-	Config   ConfigMap          `yaml:"config"`
-	OnError  StorageDisposition `yaml:"onError"`
+	Name    string             `yaml:"name"`
+	Ingest  bool               `yaml:"ingest"`
+	Backend string             `yaml:"backend"`
+	Filter  ConfigMap          `yaml:"filter"`
+	Config  ConfigMap          `yaml:"config"`
+	OnError StorageDisposition `yaml:"onError"`
 }
 
 type StorageDisposition int

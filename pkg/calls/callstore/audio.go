@@ -185,7 +185,7 @@ func MakeBackends(ctx context.Context, fc tgstore.FilterCache, met metrics.Metri
 			AudioBackend: be,
 		}
 
-		if !cf.ReadOnly { // readonly backends simply don't get added to the list for store calls
+		if cf.Ingest {
 			ab.storeList = append(ab.storeList, cf.Name)
 		}
 	}
