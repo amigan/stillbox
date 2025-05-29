@@ -88,16 +88,16 @@ func (sb *s3Backend) getURL(ctx context.Context, audioName *string, objKey strin
 	return ur, nil
 }
 
-func (sb *s3Backend) Get(ctx context.Context, audioName *string, ref AudioRef, resolveBlob bool) (blob []byte, audioURL *url.URL, err error) {
+func (sb *s3Backend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRef, opts *CallAudioOptions) (blob []byte, audioURL *url.URL, err error) {
 	objKey, ok := ref.(string)
 	if !ok {
 		return nil, nil, ErrBadAudioRef
 	}
 
-	if resolveBlob {
+	if opts != nil && opts.resolveBlob {
 		blob, err = sb.getBlob(ctx, objKey)
 	} else {
-		audioURL, err = sb.getURL(ctx, audioName, objKey)
+		audioURL, err = sb.getURL(ctx, call.AudioName, objKey)
 	}
 
 	return

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
 
 	"dynatron.me/x/stillbox/pkg/calls"
@@ -28,8 +29,7 @@ type AudioBackend interface {
 	Store(context.Context, *calls.Call) (AudioRef, error)
 
 	// Get retrieves a call from the backend using audioRef. If audioName is not nil and the backend returns a URL instead of a blob, the URL will result in a content-disposition of attachment rather than inline.
-	// If resolveBlob is true and the backend normally returns a URL, it will instead return the blob.
-	Get(ctx context.Context, audioName *string, audioRef AudioRef, resolveBlob bool) (blob []byte, audioURL *url.URL, err error)
+	Get(ctx context.Context, call *calls.CallAudio, audioRef AudioRef, opts *CallAudioOptions) (blob []byte, audioURL *url.URL, err error)
 
 	// Delete deletes a call from the backend.
 	Delete(ctx context.Context, audioRef AudioRef) error
@@ -45,9 +45,9 @@ type AudioBackends interface {
 	Store(ctx context.Context, call *calls.Call) (AudioRefJSON, error)
 
 	// CallAudio gets the call audio from the backend and location specified by audioRef.
-	// It returns either a non-nil blob or url, but never both.
-	// resolveBlob disables URL generation.
-	CallAudio(ctx context.Context, audioName *string, audioRef AudioRefJSON, resolveBlob bool) (blob []byte, audioURL *url.URL, err error)
+	// It mutates the passed CallAudio with AudioBlob and/or AudioURL.
+	// If io.EOF is returned as the error, the call audio was successfully sent over the wire and nothing more should be written to the connection.
+	CallAudio(ctx context.Context, call *calls.CallAudio, audioRef []byte, opts *CallAudioOptions) error
 }
 
 type audioBackends struct {
@@ -72,7 +72,7 @@ type audioStorageMetrics struct {
 
 var _ AudioBackends = (*audioBackends)(nil)
 
-func (sb *audioBackends) CallAudio(ctx context.Context, audioName *string, audioRef AudioRefJSON, resolveBlob bool) (blob []byte, ur *url.URL, err error) {
+func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, audioRef []byte, opts *CallAudioOptions) (err error) {
 	var refm map[string]AudioRef
 	err = json.Unmarshal(audioRef, &refm)
 	if err != nil {
@@ -85,9 +85,12 @@ func (sb *audioBackends) CallAudio(ctx context.Context, audioName *string, audio
 			err = fmt.Errorf("no such backend '%s'", backend)
 			continue
 		}
-		blob, ur, err = be.Get(ctx, audioName, location, resolveBlob)
-		if err == nil {
-			break
+		call.AudioBlob, call.AudioURL, err = be.Get(ctx, call, location, opts)
+		switch err {
+		case nil, io.EOF:
+			return
+		default:
+			continue // try next backend
 		}
 	}
 

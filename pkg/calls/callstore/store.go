@@ -3,7 +3,8 @@ package callstore
 import (
 	"context"
 	"fmt"
-	"net/url"
+	"io"
+	"net/http"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
@@ -34,8 +35,8 @@ type Store interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 
 	// CallAudio returns a CallAudio struct.
-	// isDownload, if true, specifies that any object store references encode disposition as an attachment and the filename.
-	CallAudio(ctx context.Context, id uuid.UUID, isDownload bool) (*calls.CallAudio, error)
+	// If io.EOF is returned, request headers and the end of the response have already been sent if the request and suitable backing connection are available.
+	CallAudio(ctx context.Context, id uuid.UUID, opts ...CallAudioOption) (*calls.CallAudio, error)
 
 	// Call returns the call's metadata.
 	Call(ctx context.Context, id uuid.UUID) (*calls.Call, error)
@@ -57,6 +58,8 @@ type Store interface {
 
 	// TranscriptContext gets a talkgroup's last recent calls with length greater than threshold and since lookback ago.
 	TranscriptContext(ctx context.Context, tg talkgroups.ID, count uint, threshold jsontypes.Duration, lookback jsontypes.Duration) ([]database.GetTranscriptsContextRow, error)
+
+	// MoveCallAudio moves call audio from one backend to another.
 }
 
 type store struct {
@@ -175,10 +178,50 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
 	return err
 }
 
-func (s *store) CallAudio(ctx context.Context, id uuid.UUID, isDownload bool) (*calls.CallAudio, error) {
+type ZeroCopyResponseWriter interface {
+	http.ResponseWriter
+	http.Flusher
+	io.ReaderFrom
+}
+
+type CallAudioOptions struct {
+	isDownload  bool // Content-Disposition: attachment
+	resolveBlob bool // don't return a URL, return the blob
+	zcrw        ZeroCopyResponseWriter
+}
+
+type CallAudioOption func(*CallAudioOptions)
+
+func WithDownloadDisposition(isDownload bool) CallAudioOption {
+	return func(o *CallAudioOptions) {
+		o.isDownload = isDownload
+	}
+}
+
+func WithResponseWriter(w http.ResponseWriter) CallAudioOption {
+	return func(o *CallAudioOptions) {
+		zc, isZc := w.(ZeroCopyResponseWriter)
+		if isZc {
+			o.zcrw = zc
+		}
+	}
+}
+
+func WithResolveBlob() CallAudioOption {
+	return func(o *CallAudioOptions) {
+		o.resolveBlob = true
+	}
+}
+
+func (s *store) CallAudio(ctx context.Context, id uuid.UUID, opts ...CallAudioOption) (*calls.CallAudio, error) {
 	_, err := authz.Check(ctx, &calls.Call{ID: id}, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
+	}
+
+	options := CallAudioOptions{}
+	for _, opt := range opts {
+		opt(&options)
 	}
 
 	db := database.FromCtx(ctx)
@@ -186,20 +229,6 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID, isDownload bool) (*
 	dbCall, err := db.GetCallAudioByID(ctx, id)
 	if err != nil {
 		return nil, err
-	}
-
-	var audioName *string
-	if isDownload {
-		audioName = dbCall.AudioName
-	}
-
-	blob := dbCall.AudioBlob
-	var audioUrl *url.URL
-	if ref := dbCall.AudioRef; blob == nil && ref != nil {
-		blob, audioUrl, err = s.audioBackends.CallAudio(ctx, audioName, ref, false)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	audioMime := func(a database.NullAudioMIME) *string {
@@ -210,13 +239,22 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID, isDownload bool) (*
 		return nil
 	}
 
-	return &calls.CallAudio{
+	call := &calls.CallAudio{
 		CallDate:  jsontypes.Time(dbCall.CallDate.Time),
 		AudioName: dbCall.AudioName,
 		AudioType: audioMime(dbCall.AudioType),
-		AudioBlob: blob,
-		AudioURL:  audioUrl,
-	}, nil
+	}
+
+	blob := dbCall.AudioBlob
+	if ref := dbCall.AudioRef; blob == nil && ref != nil {
+		err := s.audioBackends.CallAudio(ctx, call, ref, &options)
+		if err != nil {
+			// even if it's io.EOF due to sendfile (ReadFrom) being used, just pass it up
+			return nil, err
+		}
+	}
+
+	return call, nil
 }
 
 func (s *store) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*calls.Call, error) {

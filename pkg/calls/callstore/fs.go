@@ -3,11 +3,15 @@ package callstore
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"github.com/go-viper/mapstructure/v2"
@@ -20,7 +24,32 @@ type fsBackend struct {
 
 func (*fsBackend) Type() string { return "fs" }
 
-func (fsb *fsBackend) Get(_ context.Context, audioName *string, ref AudioRef, _ bool) ([]byte, *url.URL, error) {
+func (fsb *fsBackend) serveFile(w ZeroCopyResponseWriter, file *os.File, call *calls.CallAudio, opts *CallAudioOptions) error {
+	st, err := file.Stat()
+	if err != nil {
+		return err
+	}
+
+	contentLength := st.Size()
+	// ReadFrom will not call sendfile(2) if the Content-Length is not set in advance
+	w.Header().Add("Content-Length", strconv.Itoa(int(contentLength)))
+
+	if call.AudioType != nil && call.AudioName != nil {
+		common.ContentDisposition(w.Header(), *call.AudioType, *call.AudioName, opts.isDownload)
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Flush()
+
+	// without LimitReader, two sendfile(2) calls get emitted
+	_, err = w.ReadFrom(io.LimitReader(file, contentLength))
+	if err != nil {
+		return err
+	}
+
+	return io.EOF // io.EOF is the sentinel that everything is all done
+}
+
+func (fsb *fsBackend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRef, opts *CallAudioOptions) ([]byte, *url.URL, error) {
 	refPath, ok := ref.(string)
 	if !ok {
 		log.Error().Str("refPath", fmt.Sprint(refPath)).Msg("call path was not a string")
@@ -29,7 +58,22 @@ func (fsb *fsBackend) Get(_ context.Context, audioName *string, ref AudioRef, _ 
 
 	cPath := fsb.callPath(refPath)
 
-	// it would be nice to be able to use sendfile(2) here
+	file, err := os.Open(cPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil, ErrCallAudioNotFound
+		}
+
+		return nil, nil, err
+	}
+	defer file.Close()
+
+	// special case: we have a ResponseWriter set. Emit the file directly out the socket.
+	if w := opts.zcrw; w != nil {
+		return nil, nil, fsb.serveFile(opts.zcrw, file, call, opts)
+	}
+
+	//  otherwise, read a blob buffer
 	audio, err := os.ReadFile(cPath)
 	if err != nil {
 		if os.IsNotExist(err) {
