@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"runtime/debug"
@@ -34,6 +35,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/hashicorp/go-multierror"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
@@ -279,12 +281,37 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 		Addr:    s.conf.Server.Listen,
 		Handler: s.r,
 	}
-	var err error
+
+	var udomSrv *http.Server
+	if s.conf.Server.AdminSocket != nil && *s.conf.Server.AdminSocket != "" {
+		ua, err := net.ResolveUnixAddr("unix", *s.conf.Server.AdminSocket)
+		if err != nil {
+			return err
+		}
+
+		udomSrv = &http.Server{
+			Addr:    *s.conf.Server.AdminSocket,
+			Handler: s.r,
+		}
+
+		go func() {
+			log.Info().Str("path", *s.conf.Server.AdminSocket).Msg("control socket")
+			l, err := net.ListenUnix("unix", ua)
+			if err != nil {
+				log.Error().Err(err).Msg("adm listen")
+				shutReq <- err
+			}
+
+			udomSrv.Serve(l)
+		}()
+	}
+
+	var err, admErr error
 	go func() {
 		log.Info().Str("addr", s.conf.Server.Listen).Msg("listening")
-		err = httpSrv.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			shutReq <- err
+		admErr = httpSrv.ListenAndServe()
+		if admErr != nil && admErr != http.ErrServerClosed {
+			shutReq <- admErr
 		}
 	}()
 
@@ -308,6 +335,27 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	}
 	if err == http.ErrServerClosed {
 		err = nil
+	}
+
+	if udomSrv != nil {
+		ctxShutdown, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+
+		if err := udomSrv.Shutdown(ctxShutdown); err != nil {
+			log.Fatal().Err(err).Msg("ctl shutdown failed")
+		}
+
+		if admErr == http.ErrServerClosed {
+			admErr = nil
+		}
+	}
+
+	if err == nil && admErr != nil {
+		return admErr
+	}
+
+	if admErr != nil { // both are errors
+		err = multierror.Append(err, admErr)
 	}
 
 	return err

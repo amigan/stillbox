@@ -118,8 +118,11 @@ func (c *Configuration) read() error {
 	}
 
 	err = k.Load(env.Provider(common.EnvPrefix, ".", func(s string) string {
-		return strings.Replace(strings.ToLower(
-			strings.TrimPrefix(s, common.EnvPrefix)), "_", ".", -1)
+		// Trim the prefix, lowercase, and replace "__" with the "." key delimiter
+		key := strings.Replace(strings.ToLower(strings.TrimPrefix(s, common.EnvPrefix)), "__", ".", -1)
+		// Convert to camelcase, e.g. "my_key" -> "myKey"
+		key = common.ToLowerCamel(key)
+		return key
 	}), nil)
 	if err != nil {
 		return err

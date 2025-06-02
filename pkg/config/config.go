@@ -32,13 +32,14 @@ type Config struct {
 }
 
 type Server struct {
-	BaseURL    jsontypes.URL `yaml:"baseURL"`
-	DumpRoutes bool          `yaml:"dumpRoutes"`
-	UseXRealIP bool          `yaml:"useXRealIP"`
-	Listen     string        `yaml:"listen" default:":3051"`
-	Public     bool          `yaml:"public"`
-	RateLimit  RateLimit     `yaml:"rateLimit"`
-	CORS       CORS          `yaml:"cors"`
+	BaseURL     jsontypes.URL `yaml:"baseURL"`
+	DumpRoutes  bool          `yaml:"dumpRoutes"`
+	UseXRealIP  bool          `yaml:"useXRealIP"`
+	Listen      string        `yaml:"listen" default:":3051"`
+	Public      bool          `yaml:"public"`
+	RateLimit   RateLimit     `yaml:"rateLimit"`
+	CORS        CORS          `yaml:"cors"`
+	AdminSocket *string       `yaml:"adminSocket"`
 }
 
 type RateLimit struct {

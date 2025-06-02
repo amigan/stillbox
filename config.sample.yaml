@@ -14,6 +14,9 @@ server:
     allowedOrigins:
       - 'localhost:*'
       - 'stillbox.server'
+  # if adminSocket is set/not null, it specifies a path where stillbox will
+  # #open a unix domain socket for local daemon control use
+  adminSocket: /var/run/stillbox/stillbox.sock
 
 db:
   connect: 'postgres://postgres:password@localhost:5432/example'
