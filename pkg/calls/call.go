@@ -51,6 +51,7 @@ func (d CallDuration) Seconds() int32 {
 
 // CallAudio is a skinny Call used for audio API calls.
 type CallAudio struct {
+	ID        uuid.UUID      `json:"id,omitempty"`
 	CallDate  jsontypes.Time `json:"callDate"`
 	AudioName *string        `json:"audioName"`
 	AudioType *string        `json:"audioType"`
@@ -124,6 +125,16 @@ type Call struct {
 	Transcript     *string       `json:"transcript" relayOut:"transcript,omitempty"`
 
 	shouldStore bool `json:"-"`
+}
+
+func (c *Call) ToCallAudio() *CallAudio {
+	return &CallAudio{
+		ID:        c.ID,
+		CallDate:  jsontypes.Time(c.DateTime),
+		AudioName: &c.AudioName,
+		AudioType: &c.AudioType,
+		AudioBlob: c.Audio,
+	}
 }
 
 func (*Call) BroadcastType() broadcast.Type {

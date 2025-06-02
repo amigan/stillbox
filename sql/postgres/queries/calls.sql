@@ -59,8 +59,60 @@ FROM swept_calls sc
 WHERE sc.id = @id
 ;
 
+-- name: GetCallAudio :many
+SELECT
+	c.id,
+	c.call_date,
+	c.audio_name,
+	c.audio_type,
+	c.audio_ref,
+	c.audio_blob,
+	FALSE AS swept
+FROM calls c
+WHERE
+CASE WHEN sqlc.narg('swept')::BOOLEAN IS NOT NULL THEN
+	swept = @swept ELSE TRUE END AND
+CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date >= @start ELSE TRUE END AND
+CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date <= sqlc.narg('end') ELSE TRUE END AND
+CASE WHEN sqlc.narg('tags_any')::TEXT[] IS NOT NULL THEN
+	tgs.tags && ARRAY[@tags_any] ELSE TRUE END AND
+CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags && ARRAY[@tags_not])) ELSE TRUE END AND
+CASE WHEN sqlc.narg('longer_than')::NUMERIC IS NOT NULL THEN (
+		c.duration > @longer_than
+	) ELSE TRUE END AND
+CASE WHEN sqlc.narg('has_backend')::TEXT IS NOT NULL THEN (
+	c.audio_ref ? @has_backend) ELSE TRUE END AND
+CASE WHEN @has_blob::BOOLEAN IS TRUE THEN (
+	c.audio_blob IS NOT NULL) ELSE TRUE END
+UNION
+SELECT
+	sc.id,
+	sc.call_date,
+	sc.audio_name,
+	sc.audio_type,
+	sc.audio_ref,
+	sc.audio_blob,
+	TRUE AS swept
+FROM swept_calls sc
+JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
+LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
+WHERE 
+CASE WHEN sqlc.narg('swept')::BOOLEAN IS NOT NULL THEN
+	swept = @swept ELSE TRUE END AND
+CASE WHEN sqlc.narg('has_backend')::TEXT IS NOT NULL THEN (
+	sc.audio_ref ? @has_backend) ELSE TRUE END AND
+CASE WHEN @has_blob::BOOLEAN IS TRUE THEN (
+	sc.audio_blob IS NOT NULL) ELSE TRUE END
+ORDER BY call_date ASC
+FETCH NEXT sqlc.arg('count') ROWS ONLY
+;
+
 -- name: SetCallAudio :exec
-UPDATE calls SET audio_ref = @audio_ref, audio_blob = @audio_blob;
+UPDATE calls SET audio_ref = @audio_ref, audio_blob = @audio_blob
+WHERE id = $1;
 
 -- name: SetCallTranscript :one
 UPDATE calls SET transcript = $2 WHERE id = $1

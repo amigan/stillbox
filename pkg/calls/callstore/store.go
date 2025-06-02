@@ -45,7 +45,7 @@ type Store interface {
 	CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*calls.Call, error)
 
 	// Calls gets paginated Calls.
-	Calls(ctx context.Context, p CallsParams) (calls []database.ListCallsPRow, totalCount int, err error)
+	Calls(ctx context.Context, p ListCallsParams) (calls []database.ListCallsPRow, totalCount int, err error)
 
 	// CallStats gets call stats by interval.
 	CallStats(ctx context.Context, interval calls.StatsInterval, start, end jsontypes.Time) (*calls.Stats, error)
@@ -60,6 +60,7 @@ type Store interface {
 	TranscriptContext(ctx context.Context, tg talkgroups.ID, count uint, threshold jsontypes.Duration, lookback jsontypes.Duration) ([]database.GetTranscriptsContextRow, error)
 
 	// MoveCallAudio moves call audio from one backend to another.
+	MoveCallAudio(ctx context.Context, src MoveCallSrcParams, dstBackend string, opts MoveCallAudioOptions) (numRows int, err error)
 }
 
 type store struct {
@@ -185,8 +186,9 @@ type ZeroCopyResponseWriter interface {
 }
 
 type CallAudioOptions struct {
-	isDownload  bool // Content-Disposition: attachment
-	resolveBlob bool // don't return a URL, return the blob
+	isDownload  bool         // Content-Disposition: attachment
+	resolveBlob bool         // don't return a URL, return the blob
+	audioRefOut AudioRefList // if not nil, fill with passed backend json
 	zcrw        ZeroCopyResponseWriter
 }
 
@@ -210,6 +212,12 @@ func WithResponseWriter(w http.ResponseWriter) CallAudioOption {
 func WithResolveBlob() CallAudioOption {
 	return func(o *CallAudioOptions) {
 		o.resolveBlob = true
+	}
+}
+
+func WithAudioRefOut(arl AudioRefList) CallAudioOption {
+	return func(o *CallAudioOptions) {
+		o.audioRefOut = arl
 	}
 }
 
@@ -243,6 +251,7 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID, opts ...CallAudioOp
 		CallDate:  jsontypes.Time(dbCall.CallDate.Time),
 		AudioName: dbCall.AudioName,
 		AudioType: audioMime(dbCall.AudioType),
+		AudioBlob: dbCall.AudioBlob,
 	}
 
 	blob := dbCall.AudioBlob
@@ -348,9 +357,6 @@ func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 }
 
 type CallsParams struct {
-	common.Pagination
-	Direction *common.SortDirection `json:"dir"`
-
 	Start            *jsontypes.Time   `json:"start"`
 	End              *jsontypes.Time   `json:"end"`
 	TagsAny          []string          `json:"tagsAny"`
@@ -362,7 +368,26 @@ type CallsParams struct {
 	TranscriptSearch *string           `json:"transcriptSearch"`
 }
 
-func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
+type ListCallsParams struct {
+	common.Pagination
+	Direction *common.SortDirection `json:"dir"`
+
+	CallsParams
+}
+
+func toPGNumericMilliseconds[T int | uint | int64 | uint64 | float32 | float64](f *T) (n pgtype.Numeric) {
+	if f == nil {
+		return
+	}
+
+	if err := n.Scan(fmt.Sprint((*f) * 1000)); err != nil {
+		panic("cannot convert to PG numeric")
+	}
+
+	return
+}
+
+func (s *store) Calls(ctx context.Context, p ListCallsParams) (rows []database.ListCallsPRow, totalCount int, err error) {
 	_, err = authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, 0, err
@@ -385,14 +410,7 @@ func (s *store) Calls(ctx context.Context, p CallsParams) (rows []database.ListC
 		TranscriptSearch: p.TranscriptSearch,
 	}
 
-	if p.AtLeastSeconds != nil {
-		var n pgtype.Numeric
-		if err := n.Scan(fmt.Sprint(*p.AtLeastSeconds * 1000)); err != nil {
-			return nil, 0, err
-		}
-
-		par.LongerThan = n
-	}
+	par.LongerThan = toPGNumericMilliseconds(p.AtLeastSeconds)
 
 	var count int64
 	txErr := db.InTx(ctx, func(db database.Store) error {

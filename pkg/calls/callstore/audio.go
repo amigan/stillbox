@@ -12,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+
 	"github.com/goccy/go-json"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
@@ -26,13 +27,16 @@ type AudioRef any
 
 type AudioBackend interface {
 	// Store stores a call in the backend. It returns the reference that, combined with the backend, can retrieve the call audio.
-	Store(context.Context, *calls.Call) (AudioRef, error)
+	Store(context.Context, *calls.CallAudio) (AudioRef, error)
 
 	// Get retrieves a call from the backend using audioRef. If audioName is not nil and the backend returns a URL instead of a blob, the URL will result in a content-disposition of attachment rather than inline.
 	Get(ctx context.Context, call *calls.CallAudio, audioRef AudioRef, opts *CallAudioOptions) (blob []byte, audioURL *url.URL, err error)
 
 	// Delete deletes a call from the backend.
 	Delete(ctx context.Context, audioRef AudioRef) error
+
+	// DeleteBulk bulk deletes calls from the backend.
+	DeleteBulk(ctx context.Context, refs []AudioRef) error
 
 	// Type returns the backend's type.
 	Type() string
@@ -47,7 +51,10 @@ type AudioBackends interface {
 	// CallAudio gets the call audio from the backend and location specified by audioRef.
 	// It mutates the passed CallAudio with AudioBlob and/or AudioURL.
 	// If io.EOF is returned as the error, the call audio was successfully sent over the wire and nothing more should be written to the connection.
-	CallAudio(ctx context.Context, call *calls.CallAudio, audioRef []byte, opts *CallAudioOptions) error
+	CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) error
+
+	// Backend looks up a backend by name.
+	Backend(name string) AudioBackend
 }
 
 type audioBackends struct {
@@ -55,6 +62,15 @@ type audioBackends struct {
 
 	backends map[string]*audioStorageBackend
 	metrics  audioStorageMetrics
+}
+
+func (ab *audioBackends) Backend(name string) AudioBackend {
+	be, has := ab.backends[name]
+	if !has {
+		return nil
+	}
+
+	return be
 }
 
 type audioStorageBackend struct {
@@ -72,8 +88,14 @@ type audioStorageMetrics struct {
 
 var _ AudioBackends = (*audioBackends)(nil)
 
-func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, audioRef []byte, opts *CallAudioOptions) (err error) {
-	var refm map[string]AudioRef
+type AudioRefList map[string]AudioRef
+
+func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) (err error) {
+	var refm AudioRefList
+	if opts != nil && opts.audioRefOut != nil {
+		refm = opts.audioRefOut
+	}
+
 	err = json.Unmarshal(audioRef, &refm)
 	if err != nil {
 		return
@@ -111,7 +133,7 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj Audio
 		}
 
 		var ref AudioRef
-		ref, err = be.Store(ctx, call)
+		ref, err = be.Store(ctx, call.ToCallAudio())
 		if err != nil {
 			ab.metrics.FailedStores.WithLabelValues(beName, be.Type()).Inc()
 
@@ -198,7 +220,14 @@ func MakeBackends(ctx context.Context, fc tgstore.FilterCache, met metrics.Metri
 	return ab, nil
 }
 
-func blobPath(call *calls.Call) string {
+func blobPath(call *calls.CallAudio) string {
 	u := call.ID.String()
-	return string(u[0:2]) + "/" + string(u[2:3]) + "/" + u + "_" + call.AudioName
+
+	var name string
+
+	if call.AudioName != nil {
+		name = "_" + *call.AudioName
+	}
+
+	return string(u[0:2]) + "/" + string(u[2:3]) + "/" + u + name
 }

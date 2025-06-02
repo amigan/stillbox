@@ -95,14 +95,25 @@ func (fsb *fsBackend) Delete(_ context.Context, audioRef AudioRef) error {
 	return os.Remove(refPath)
 }
 
+func (fsb *fsBackend) DeleteBulk(_ context.Context, refs []AudioRef) error {
+	for _, r := range refs {
+		rErr := fsb.Delete(nil, r)
+		if rErr != nil {
+			return rErr
+		}
+	}
+
+	return nil
+}
+
 func (fsb *fsBackend) callPath(blobPath string) string {
 	return path.Join(fsb.Root, blobPath)
 }
 
-func (fsb *fsBackend) Store(_ context.Context, call *calls.Call) (AudioRef, error) {
+func (fsb *fsBackend) Store(_ context.Context, call *calls.CallAudio) (AudioRef, error) {
 	blobp := blobPath(call)
 	p := fsb.callPath(blobp)
-	err := os.WriteFile(p, call.Audio, 0640)
+	err := os.WriteFile(p, call.AudioBlob, 0640)
 	if err != nil {
 		if os.IsNotExist(err) {
 			cdir := path.Dir(p)
@@ -112,7 +123,7 @@ func (fsb *fsBackend) Store(_ context.Context, call *calls.Call) (AudioRef, erro
 			}
 		}
 
-		err := os.WriteFile(p, call.Audio, 0644)
+		err := os.WriteFile(p, call.AudioBlob, 0644)
 		if err != nil {
 			return nil, err
 		}

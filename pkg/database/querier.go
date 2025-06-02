@@ -36,6 +36,7 @@ type Querier interface {
 	GetAllTalkgroupTags(ctx context.Context) ([]string, error)
 	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
 	GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
+	GetCallAudio(ctx context.Context, arg GetCallAudioParams) ([]GetCallAudioRow, error)
 	GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error)
 	GetCallStatsByInterval(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]GetCallStatsByIntervalRow, error)
 	GetCallStatsByTalkgroup(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]GetCallStatsByTalkgroupRow, error)
@@ -76,7 +77,7 @@ type Querier interface {
 	RemoveFromIncident(ctx context.Context, iD uuid.UUID, callIds []uuid.UUID) error
 	RestoreTalkgroupVersion(ctx context.Context, versionIds int) (Talkgroup, error)
 	SetAppPrefs(ctx context.Context, appName string, prefs []byte, uid int) error
-	SetCallAudio(ctx context.Context, audioRef []byte, audioBlob []byte) error
+	SetCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) (SetCallTranscriptRow, error)
 	SetSetting(ctx context.Context, name string, updatedBy *int32, value []byte) error
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error

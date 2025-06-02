@@ -285,7 +285,7 @@ func (ca *callsAPI) listCalls(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	cSt := callstore.FromCtx(ctx)
 
-	var par callstore.CallsParams
+	var par callstore.ListCallsParams
 	err := forms.Unmarshal(r, &par, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
 	if err != nil {
 		wErr(w, r, badRequest(err))

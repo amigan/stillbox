@@ -239,6 +239,117 @@ func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 	return i, err
 }
 
+const getCallAudio = `-- name: GetCallAudio :many
+SELECT
+	c.id,
+	c.call_date,
+	c.audio_name,
+	c.audio_type,
+	c.audio_ref,
+	c.audio_blob,
+	FALSE AS swept
+FROM calls c
+WHERE
+CASE WHEN $2::BOOLEAN IS NOT NULL THEN
+	swept = $2 ELSE TRUE END AND
+CASE WHEN $3::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date >= $3 ELSE TRUE END AND
+CASE WHEN $4::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date <= $4 ELSE TRUE END AND
+CASE WHEN $5::TEXT[] IS NOT NULL THEN
+	tgs.tags && ARRAY[$5] ELSE TRUE END AND
+CASE WHEN $6::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags && ARRAY[$6])) ELSE TRUE END AND
+CASE WHEN $7::NUMERIC IS NOT NULL THEN (
+		c.duration > $7
+	) ELSE TRUE END AND
+CASE WHEN $8::TEXT IS NOT NULL THEN (
+	c.audio_ref ? $8) ELSE TRUE END AND
+CASE WHEN $9::BOOLEAN IS TRUE THEN (
+	c.audio_blob IS NOT NULL) ELSE TRUE END
+UNION
+SELECT
+	sc.id,
+	sc.call_date,
+	sc.audio_name,
+	sc.audio_type,
+	sc.audio_ref,
+	sc.audio_blob,
+	TRUE AS swept
+FROM swept_calls sc
+JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
+LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
+WHERE 
+CASE WHEN $2::BOOLEAN IS NOT NULL THEN
+	swept = $2 ELSE TRUE END AND
+CASE WHEN $8::TEXT IS NOT NULL THEN (
+	sc.audio_ref ? $8) ELSE TRUE END AND
+CASE WHEN $9::BOOLEAN IS TRUE THEN (
+	sc.audio_blob IS NOT NULL) ELSE TRUE END
+ORDER BY call_date ASC
+FETCH NEXT $1 ROWS ONLY
+`
+
+type GetCallAudioParams struct {
+	Count      int32              `json:"count"`
+	Swept      *bool              `json:"swept"`
+	Start      pgtype.Timestamptz `json:"start"`
+	End        pgtype.Timestamptz `json:"end"`
+	TagsAny    []string           `json:"tagsAny"`
+	TagsNot    []string           `json:"tagsNot"`
+	LongerThan pgtype.Numeric     `json:"longerThan"`
+	HasBackend *string            `json:"hasBackend"`
+	HasBlob    bool               `json:"hasBlob"`
+}
+
+type GetCallAudioRow struct {
+	ID        uuid.UUID          `json:"id"`
+	CallDate  pgtype.Timestamptz `json:"callDate"`
+	AudioName *string            `json:"audioName"`
+	AudioType NullAudioMIME      `json:"audioType"`
+	AudioRef  []byte             `json:"audioRef"`
+	AudioBlob []byte             `json:"audioBlob"`
+	Swept     bool               `json:"swept"`
+}
+
+func (q *Queries) GetCallAudio(ctx context.Context, arg GetCallAudioParams) ([]GetCallAudioRow, error) {
+	rows, err := q.db.Query(ctx, getCallAudio,
+		arg.Count,
+		arg.Swept,
+		arg.Start,
+		arg.End,
+		arg.TagsAny,
+		arg.TagsNot,
+		arg.LongerThan,
+		arg.HasBackend,
+		arg.HasBlob,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCallAudioRow
+	for rows.Next() {
+		var i GetCallAudioRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CallDate,
+			&i.AudioName,
+			&i.AudioType,
+			&i.AudioRef,
+			&i.AudioBlob,
+			&i.Swept,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getCallAudioByID = `-- name: GetCallAudioByID :one
 SELECT
 	c.call_date,
@@ -590,11 +701,12 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 }
 
 const setCallAudio = `-- name: SetCallAudio :exec
-UPDATE calls SET audio_ref = $1, audio_blob = $2
+UPDATE calls SET audio_ref = $2, audio_blob = $3
+WHERE id = $1
 `
 
-func (q *Queries) SetCallAudio(ctx context.Context, audioRef []byte, audioBlob []byte) error {
-	_, err := q.db.Exec(ctx, setCallAudio, audioRef, audioBlob)
+func (q *Queries) SetCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error {
+	_, err := q.db.Exec(ctx, setCallAudio, iD, audioRef, audioBlob)
 	return err
 }
 

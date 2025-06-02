@@ -12,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"github.com/go-viper/mapstructure/v2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -32,13 +33,18 @@ type s3Backend struct {
 
 func (*s3Backend) Type() string { return "s3" }
 
-func (sb *s3Backend) Store(ctx context.Context, call *calls.Call) (AudioRef, error) {
+func (sb *s3Backend) Store(ctx context.Context, call *calls.CallAudio) (AudioRef, error) {
 	key := blobPath(call)
 
 	dctx, cancel := sb.ctxTimeout(ctx)
 	defer cancel()
 
-	_, err := sb.cli.PutObject(dctx, sb.Bucket, key, bytes.NewReader(call.Audio), int64(len(call.Audio)), minio.PutObjectOptions{ContentType: call.AudioType})
+	var contentType string
+	if call.AudioType != nil {
+		contentType = *call.AudioType
+	}
+
+	_, err := sb.cli.PutObject(dctx, sb.Bucket, key, bytes.NewReader(call.AudioBlob), int64(len(call.AudioBlob)), minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		return nil, err
 	}
@@ -110,6 +116,26 @@ func (sb *s3Backend) Delete(ctx context.Context, audioRef AudioRef) error {
 	}
 
 	return sb.cli.RemoveObject(ctx, sb.Bucket, objKey, minio.RemoveObjectOptions{})
+}
+
+func (sb *s3Backend) DeleteBulk(ctx context.Context, refs []AudioRef) error {
+	objCh := make(chan minio.ObjectInfo)
+
+	go func() {
+		defer close(objCh)
+
+		for _, ref := range refs {
+			ref := ref.(string)
+			objCh <- minio.ObjectInfo{Key: ref}
+		}
+	}()
+
+	var err error
+	for rErr := range sb.cli.RemoveObjects(ctx, sb.Bucket, objCh, minio.RemoveObjectsOptions{}) {
+		err = multierror.Append(err, &rErr)
+	}
+
+	return err
 }
 
 func (sb *s3Backend) ctxTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
