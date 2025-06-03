@@ -41,6 +41,9 @@ type Authn interface {
 	// APIKeyMiddleware requires a multipart/form-data API key be set.
 	APIKeyMiddleware(formKey string) func(http.Handler) http.Handler
 
+	// LocalAdminMiddleware is used for local Unix domain socket connections..
+	LocalAdminMiddleware() func(http.Handler) http.Handler
+
 	// PrivateRoutes installs auth-specific private routes to the Router.
 	PrivateRoutes(r chi.Router)
 
@@ -94,6 +97,16 @@ func (a *authn) HUP(cfg *config.Config) {
 	}
 }
 
+func (a *authn) LocalAdminMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		hfn := func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			next.ServeHTTP(w, r.WithContext(entities.CtxWithSubject(ctx, entities.NewLocalAdminSubject())))
+		}
+		return http.HandlerFunc(hfn)
+	}
+}
+
 func (a *authn) SubjectMiddleware(requireToken bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +126,6 @@ func (a *authn) SubjectMiddleware(requireToken bool) func(http.Handler) http.Han
 		}
 		return http.HandlerFunc(hfn)
 	}
-
 }
 
 var (

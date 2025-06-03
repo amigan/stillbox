@@ -1628,6 +1628,63 @@ func (_c *Store_GetCallAudioByID_Call) RunAndReturn(run func(context.Context, uu
 	return _c
 }
 
+// GetCallAudioCount provides a mock function with given fields: ctx, arg
+func (_m *Store) GetCallAudioCount(ctx context.Context, arg database.GetCallAudioParams) (int64, error) {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCallAudioCount")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetCallAudioParams) (int64, error)); ok {
+		return rf(ctx, arg)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, database.GetCallAudioParams) int64); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, database.GetCallAudioParams) error); ok {
+		r1 = rf(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_GetCallAudioCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCallAudioCount'
+type Store_GetCallAudioCount_Call struct {
+	*mock.Call
+}
+
+// GetCallAudioCount is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.GetCallAudioParams
+func (_e *Store_Expecter) GetCallAudioCount(ctx interface{}, arg interface{}) *Store_GetCallAudioCount_Call {
+	return &Store_GetCallAudioCount_Call{Call: _e.mock.On("GetCallAudioCount", ctx, arg)}
+}
+
+func (_c *Store_GetCallAudioCount_Call) Run(run func(ctx context.Context, arg database.GetCallAudioParams)) *Store_GetCallAudioCount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(database.GetCallAudioParams))
+	})
+	return _c
+}
+
+func (_c *Store_GetCallAudioCount_Call) Return(_a0 int64, _a1 error) *Store_GetCallAudioCount_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_GetCallAudioCount_Call) RunAndReturn(run func(context.Context, database.GetCallAudioParams) (int64, error)) *Store_GetCallAudioCount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetCallStatsByInterval provides a mock function with given fields: ctx, truncField, start, end
 func (_m *Store) GetCallStatsByInterval(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]database.GetCallStatsByIntervalRow, error) {
 	ret := _m.Called(ctx, truncField, start, end)
@@ -4242,6 +4299,55 @@ func (_c *Store_SetSetting_Call) Return(_a0 error) *Store_SetSetting_Call {
 }
 
 func (_c *Store_SetSetting_Call) RunAndReturn(run func(context.Context, string, *int32, []byte) error) *Store_SetSetting_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetSweptCallAudio provides a mock function with given fields: ctx, iD, audioRef, audioBlob
+func (_m *Store) SetSweptCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error {
+	ret := _m.Called(ctx, iD, audioRef, audioBlob)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetSweptCallAudio")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, []byte, []byte) error); ok {
+		r0 = rf(ctx, iD, audioRef, audioBlob)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Store_SetSweptCallAudio_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetSweptCallAudio'
+type Store_SetSweptCallAudio_Call struct {
+	*mock.Call
+}
+
+// SetSweptCallAudio is a helper method to define mock.On call
+//   - ctx context.Context
+//   - iD uuid.UUID
+//   - audioRef []byte
+//   - audioBlob []byte
+func (_e *Store_Expecter) SetSweptCallAudio(ctx interface{}, iD interface{}, audioRef interface{}, audioBlob interface{}) *Store_SetSweptCallAudio_Call {
+	return &Store_SetSweptCallAudio_Call{Call: _e.mock.On("SetSweptCallAudio", ctx, iD, audioRef, audioBlob)}
+}
+
+func (_c *Store_SetSweptCallAudio_Call) Run(run func(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte)) *Store_SetSweptCallAudio_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].([]byte), args[3].([]byte))
+	})
+	return _c
+}
+
+func (_c *Store_SetSweptCallAudio_Call) Return(_a0 error) *Store_SetSweptCallAudio_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Store_SetSweptCallAudio_Call) RunAndReturn(run func(context.Context, uuid.UUID, []byte, []byte) error) *Store_SetSweptCallAudio_Call {
 	_c.Call.Return(run)
 	return _c
 }

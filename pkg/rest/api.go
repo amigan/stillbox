@@ -41,6 +41,7 @@ type api struct {
 	users     *usersAPI
 	incidents *incidentsAPI
 	prefs     *prefsAPI
+	admin     *adminAPI
 }
 
 func (a *api) ShareRouter() http.Handler {
@@ -56,6 +57,7 @@ func New(baseURL url.URL, nex nexus.Nexus, transcriber sinks.Transcriber) *api {
 		incidents: newIncidentsAPI(&baseURL),
 		users:     new(usersAPI),
 		prefs:     new(prefsAPI),
+		admin:     new(adminAPI),
 	}
 	s.shares = newShareAPI(&baseURL, s.shareHandlers())
 	return s
@@ -70,6 +72,7 @@ func (a *api) Subrouter() http.Handler {
 	r.Mount("/incident", a.incidents.Subrouter())
 	r.Mount("/share", a.shares.Subrouter())
 	r.Mount("/prefs", a.prefs.Subrouter())
+	r.Mount("/admin", a.admin.Subrouter())
 
 	return r
 }
@@ -152,6 +155,14 @@ func internalError(err error) render.Renderer {
 		Err:   err,
 		Code:  http.StatusInternalServerError,
 		Error: "Internal server error",
+	}
+}
+
+func internalErrorErrText(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusInternalServerError,
+		Error: "Internal server error: " + err.Error(),
 	}
 }
 

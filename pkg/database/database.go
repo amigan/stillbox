@@ -25,6 +25,7 @@ type Store interface {
 	Querier
 	talkgroupQuerier
 	partitionsQuerier
+	callsQuerier
 
 	DB() *Postgres
 	DBTX() DBTX

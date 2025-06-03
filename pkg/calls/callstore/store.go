@@ -60,7 +60,7 @@ type Store interface {
 	TranscriptContext(ctx context.Context, tg talkgroups.ID, count uint, threshold jsontypes.Duration, lookback jsontypes.Duration) ([]database.GetTranscriptsContextRow, error)
 
 	// MoveCallAudio moves call audio from one backend to another.
-	MoveCallAudio(ctx context.Context, src MoveCallSrcParams, dstBackend string, opts MoveCallAudioOptions) (numRows int, err error)
+	MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows int, err error)
 }
 
 type store struct {

@@ -92,7 +92,7 @@ func (fsb *fsBackend) Delete(_ context.Context, audioRef AudioRef) error {
 		return ErrBadAudioRef
 	}
 
-	return os.Remove(refPath)
+	return os.Remove(path.Join(fsb.Root, refPath))
 }
 
 func (fsb *fsBackend) DeleteBulk(_ context.Context, refs []AudioRef) error {

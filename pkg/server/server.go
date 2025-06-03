@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -284,14 +285,23 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 
 	var udomSrv *http.Server
 	if s.conf.Server.AdminSocket != nil && *s.conf.Server.AdminSocket != "" {
+		err := os.Remove(*s.conf.Server.AdminSocket)
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			fmt.Printf("%#v %T\n", err, err)
+			return err
+		}
 		ua, err := net.ResolveUnixAddr("unix", *s.conf.Server.AdminSocket)
 		if err != nil {
 			return err
 		}
 
+		r := chi.NewRouter()
+		r.Use(s.WithCtxStores(), s.auth.LocalAdminMiddleware(), s.MetricsLogger())
+		r.Mount("/", s.rest.Subrouter())
+
 		udomSrv = &http.Server{
 			Addr:    *s.conf.Server.AdminSocket,
-			Handler: s.r,
+			Handler: r,
 		}
 
 		go func() {

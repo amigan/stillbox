@@ -46,7 +46,8 @@ func (sb *s3Backend) Store(ctx context.Context, call *calls.CallAudio) (AudioRef
 
 	_, err := sb.cli.PutObject(dctx, sb.Bucket, key, bytes.NewReader(call.AudioBlob), int64(len(call.AudioBlob)), minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
-		return nil, err
+		// if the context was canceled, our caller will still be interested in key
+		return key, err
 	}
 
 	return key, nil

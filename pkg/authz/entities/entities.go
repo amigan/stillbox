@@ -38,6 +38,7 @@ const (
 	ActionTranscribe       = "updateTranscription"
 	ActionSimulate         = "simulate"
 	ActionTestNotify       = "testNotify"
+	ActionMoveCallAudio    = "moveCallAudio"
 )
 
 func SubjectFrom(ctx context.Context) Subject {
@@ -89,6 +90,25 @@ func (s *PublicSubject) GetRoles() []string {
 
 func NewPublicSubject(r *http.Request) *PublicSubject {
 	return &PublicSubject{RemoteAddr: r.RemoteAddr}
+}
+
+type LocalAdminSubject struct {
+}
+
+func (s *LocalAdminSubject) GetName() string {
+	return "LOCALADMIN"
+}
+
+func (s *LocalAdminSubject) String() string {
+	return s.GetName()
+}
+
+func (s *LocalAdminSubject) GetRoles() []string {
+	return []string{RoleAdmin}
+}
+
+func NewLocalAdminSubject() *LocalAdminSubject {
+	return new(LocalAdminSubject)
 }
 
 type SystemServiceSubject struct {

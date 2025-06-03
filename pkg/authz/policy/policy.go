@@ -109,6 +109,7 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: entities.ActionDelete},
 					&restrict.Permission{Action: entities.ActionShare},
 					&restrict.Permission{Action: entities.ActionTranscribe},
+					&restrict.Permission{Action: entities.ActionMoveCallAudio},
 				},
 				entities.ResourceTalkgroup: {
 					&restrict.Permission{Action: entities.ActionRead},
