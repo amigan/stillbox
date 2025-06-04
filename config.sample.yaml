@@ -22,6 +22,9 @@ db:
   connect: 'postgres://postgres:password@localhost:5432/example'
   partition:
     # whether to enable the built-in partition manager
+    # note that when this is disabled, the calls table is still (by default) created as a partitioned table.
+    # so, notwithstanding manual intervention or intermittent enabling,
+    # disabling the partition manager means that no partitions exist to receive rows.
     enabled: true
     # the postgres schema containing our tables
     schema: public

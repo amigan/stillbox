@@ -140,7 +140,7 @@ UPDATE calls SET audio_ref = @audio_ref, audio_blob = @audio_blob
 WHERE id = $1;
 
 -- name: SetSweptCallAudio :exec
-UPDAtE swept_calls SET audio_ref = @audio_ref, audio_blob = @audio_blob
+UPDATE swept_calls SET audio_ref = @audio_ref, audio_blob = @audio_blob
 WHERE id = $1;
 
 -- name: SetCallTranscript :one
