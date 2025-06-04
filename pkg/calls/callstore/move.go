@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+	"sync/atomic"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
@@ -12,6 +14,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
@@ -62,6 +65,7 @@ type arTuple struct {
 }
 
 type refManager struct {
+	sync.Mutex
 	del     []arTuple    // deletes are queued until transaction commit
 	cre     []AudioRef   // but creates are tracked for deletion on rollback
 	dst     AudioBackend // cre all refers to one backend
@@ -72,6 +76,9 @@ type refManager struct {
 
 // Rollback deletes all created objects.
 func (rm *refManager) Rollback(ctx context.Context) error {
+	rm.Lock()
+	defer rm.Unlock()
+
 	if rm.dst == nil {
 		return nil
 	}
@@ -80,6 +87,9 @@ func (rm *refManager) Rollback(ctx context.Context) error {
 
 // Commit deletes all queued-for-deletion objects.
 func (rm *refManager) Commit(ctx context.Context) error {
+	rm.Lock()
+	defer rm.Unlock()
+
 	m := make(map[AudioBackend][]AudioRef)
 	for _, d := range rm.del {
 		m[d.b] = append(m[d.b], d.r)
@@ -103,32 +113,43 @@ func newRefManager(ab AudioBackends, dstName string, dst AudioBackend) *refManag
 	}
 }
 
-func (gc *refManager) QueueDeleteAll(ar AudioRefList) error {
+func (rm *refManager) QueueDeleteAll(ar AudioRefList) error {
 	for ben, loc := range ar {
 		if ben == "" {
 			continue
 		}
-		be := gc.ab.Backend(ben)
+		be := rm.ab.Backend(ben)
 		if be == nil {
 			return fmt.Errorf("no such backend '%s'", ben)
 		}
 
-		gc.QueueDelete(be, loc)
+		rm.QueueDelete(be, loc)
 	}
 
 	return nil
 }
 
-func (mt *refManager) QueueDelete(ab AudioBackend, ar AudioRef) {
-	mt.del = append(mt.del, arTuple{ab, ar})
+func (rm *refManager) QueueDelete(ab AudioBackend, ar AudioRef) {
+	rm.Lock()
+	defer rm.Unlock()
+
+	rm.del = append(rm.del, arTuple{ab, ar})
 }
 
-func (mt *refManager) Created(ar AudioRef) {
-	mt.cre = append(mt.cre, ar)
+func (rm *refManager) Created(ar AudioRef) {
+	rm.Lock()
+	defer rm.Unlock()
+
+	rm.cre = append(rm.cre, ar)
 }
 
-func (ab *store) moveCallAudio(ctx context.Context, tx database.Store, rm *refManager, row database.GetCallAudioRow, dst AudioBackend, opts MoveCallParams) error {
-	var blob []byte
+type updateRequest struct {
+	id uuid.UUID
+	blob []byte
+	ref AudioRefJSON
+}
+
+func (ab *store) moveCallAudio(ctx context.Context, rm *refManager, row database.GetCallAudioRow, dst AudioBackend, opts *MoveCallParams) (ref AudioRefJSON, blob []byte, err error) {
 	fromBlob := false
 
 	cao := CallAudioOptions{
@@ -137,7 +158,7 @@ func (ab *store) moveCallAudio(ctx context.Context, tx database.Store, rm *refMa
 
 	// check this invariant for sanity
 	if row.AudioBlob == nil && row.AudioRef == nil {
-		return ErrCallAudioNotFound
+		return nil, nil, ErrCallAudioNotFound
 	}
 
 	// prepare a CallAudio without the blob
@@ -153,7 +174,7 @@ func (ab *store) moveCallAudio(ctx context.Context, tx database.Store, rm *refMa
 		// get the blob, CallAudio() will fill in the CallAudio blob
 		err := ab.audioBackends.CallAudio(ctx, ca, row.AudioRef, &cao)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 
@@ -167,7 +188,7 @@ func (ab *store) moveCallAudio(ctx context.Context, tx database.Store, rm *refMa
 	case nil: // use database
 		if fromBlob {
 			// already in DB
-			return fmt.Errorf("%s blob already in db", row.ID.String())
+			return nil, nil, fmt.Errorf("%s blob already in db", row.ID.String())
 		}
 		// set the final blob parameter for storage in the DB
 		blob = ca.AudioBlob
@@ -179,7 +200,7 @@ func (ab *store) moveCallAudio(ctx context.Context, tx database.Store, rm *refMa
 				// the call may have completed; log it anyway
 				rm.Created(crRef)
 			}
-			return err
+			return nil, nil, err
 		}
 
 		// storage succeeded, log the creation
@@ -196,22 +217,14 @@ func (ab *store) moveCallAudio(ctx context.Context, tx database.Store, rm *refMa
 		}
 	}
 
-	var ref []byte
-	var err error
 	// marshal audioRefOut to ref
 	if len(cao.audioRefOut) > 0 {
 		ref, err = json.Marshal(cao.audioRefOut)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
-
-	err = tx.SetCallAudio(ctx, row.ID, ref, blob)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return
 }
 
 func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows int, err error) {
@@ -241,16 +254,16 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	mt := newRefManager(s.audioBackends, destBackend, dst)
 	err = s.db.InTx(ctx, func(tx database.Store) error {
 		dbPar := database.GetCallAudioParams{
-			Count:         batchSize,
-			Swept:         par.SweptCalls,
-			Start:         par.Start.PGTypeTSTZ(),
-			End:           par.End.PGTypeTSTZ(),
-			TagsAny:       par.TagsAny,
-			TagsNot:       par.TagsNot,
-			LongerThan:    toPGNumericMilliseconds(par.AtLeastSeconds),
-			HasBackend:    par.HasBackend,
-			HasBlob:       par.HasBlob,
-			NotHasBackend: par.DestBackend, // not already moved
+				Count:      batchSize,
+				Swept:      par.SweptCalls,
+				Start:      par.Start.PGTypeTSTZ(),
+				End:        par.End.PGTypeTSTZ(),
+				TagsAny:    par.TagsAny,
+				TagsNot:    par.TagsNot,
+				LongerThan: toPGNumericMilliseconds(par.AtLeastSeconds),
+				HasBackend: par.HasBackend,
+				HasBlob:    par.HasBlob,
+				NotHasBackend: par.DestBackend, // not already moved
 		}
 		var rows []database.GetCallAudioRow
 		count, err := tx.GetCallAudioCount(ctx, dbPar)
@@ -258,11 +271,75 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 			return fmt.Errorf("count: %w", err)
 		}
 
+
 		if par.ProgressChan != nil {
 			par.ProgressChan <- int(count) // first message is always total
 		}
 
-	batchLoop:
+		const numStoreWorkers = 4
+
+		moveCh := make(chan database.GetCallAudioRow, numStoreWorkers)
+		errCh := make(chan error, numStoreWorkers)
+		resCh := make(chan updateRequest, numStoreWorkers)
+
+		ctx, cancel := context.WithCancel(ctx)
+
+		var totalRows int64
+
+		var wg sync.WaitGroup
+		for range numStoreWorkers {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for  {
+					select {
+					case row, ok := <-moveCh:
+						if !ok {
+							return
+						}
+						ref, blob, err := s.moveCallAudio(ctx, mt, row, dst, &par)
+						if err != nil {
+							errCh <- fmt.Errorf("call %s: %w", row.ID, err)
+							cancel()
+							return
+						}
+						resCh <- updateRequest{id: row.ID, blob: blob, ref: ref}
+					case <-ctx.Done():
+						return
+					}
+				}
+			}()
+		}
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			for {
+				select {
+				case res, ok := <-resCh:
+					if !ok {
+						return
+					}
+					err := tx.SetCallAudio(ctx, res.id, res.ref, res.blob)
+					if err != nil {
+						errCh <- err
+						cancel()
+					}
+					// increment successful rows
+					totalRows++
+					if totalRows % batchSize == 0 && par.ProgressChan != nil {
+						par.ProgressChan <- batchSize
+					}
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+
+
+
+		batchLoop:
 		for counter := 0; err == nil; counter++ {
 			rows, err = tx.GetCallAudio(ctx, dbPar)
 			if err != nil {
@@ -280,23 +357,20 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 				continue
 			}
 
+
 			for _, row := range rows {
-				err = s.moveCallAudio(ctx, tx, mt, row, dst, par)
-				if err != nil {
-					return fmt.Errorf("call %s: %w", row.ID, err)
-				}
-
-				// increment successful rows
-				numRows++
-			}
-
-			if par.ProgressChan != nil {
-				par.ProgressChan <- numRows
+				moveCh <- row
 			}
 		}
+		wg.Wait()
+
+		close(moveCh)
+		close(errCh)
+		close(resCh)
 
 		return err
 	}, pgx.TxOptions{})
+
 
 	if err != nil {
 		rbErr := mt.Rollback(context.WithoutCancel(ctx))
