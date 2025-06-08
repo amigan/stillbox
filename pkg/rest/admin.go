@@ -39,7 +39,6 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 	flush := w.(http.Flusher)
 
 	go func() {
-		var totalRows int
 		totalCount, ok := <-progress
 		if !ok {
 			return
@@ -56,9 +55,7 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				totalRows += msg
-
-				fmt.Fprintf(w, "data:{\"completed\":%d}\n", totalRows)
+				fmt.Fprintf(w, "data:{\"completed\":%d}\n", msg)
 				flush.Flush()
 			case <-ctx.Done():
 				return
