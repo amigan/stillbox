@@ -266,7 +266,7 @@ CASE WHEN $7::NUMERIC IS NOT NULL THEN (
 		c.duration > $7
 	) ELSE TRUE END AND
 CASE WHEN $8::TEXT IS NOT NULL THEN (
-	c.audio_ref ? $8) ELSE TRUE END AND
+	c.audio_ref IS NOT NULL AND c.audio_ref ? $8) ELSE TRUE END AND
 CASE WHEN $9::TEXT IS NOT NULL THEN (
 	c.audio_ref IS NULL OR (NOT c.audio_ref ? $9)) ELSE TRUE END
 AND CASE
@@ -301,7 +301,7 @@ CASE WHEN $7::NUMERIC IS NOT NULL THEN (
 		sc.duration > $7
 	) ELSE TRUE END AND
 CASE WHEN $8::TEXT IS NOT NULL THEN (
-	sc.audio_ref ? $8) ELSE TRUE END AND
+	sc.audio_ref IS NOT NULL AND sc.audio_ref ? $8) ELSE TRUE END AND
 CASE WHEN $9::TEXT IS NOT NULL THEN (
 	sc.audio_ref IS NULL OR (NOT sc.audio_ref ? $9)) ELSE TRUE END
 AND CASE
@@ -761,7 +761,7 @@ func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcrip
 }
 
 const setSweptCallAudio = `-- name: SetSweptCallAudio :exec
-UPDAtE swept_calls SET audio_ref = $2, audio_blob = $3
+UPDATE swept_calls SET audio_ref = $2, audio_blob = $3
 WHERE id = $1
 `
 

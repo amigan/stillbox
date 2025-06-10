@@ -33,7 +33,7 @@ CASE WHEN sqlc.narg('longer_than')::NUMERIC IS NOT NULL THEN (
 		c.duration > @longer_than
 	) ELSE TRUE END AND
 CASE WHEN sqlc.narg('has_backend')::TEXT IS NOT NULL THEN (
-	c.audio_ref ? @has_backend) ELSE TRUE END AND
+	c.audio_ref IS NOT NULL AND c.audio_ref ? @has_backend) ELSE TRUE END AND
 CASE WHEN sqlc.narg('not_has_backend')::TEXT IS NOT NULL THEN (
 	c.audio_ref IS NULL OR (NOT c.audio_ref ? @not_has_backend)) ELSE TRUE END
 AND CASE
@@ -62,7 +62,7 @@ CASE WHEN sqlc.narg('longer_than')::NUMERIC IS NOT NULL THEN (
 		sc.duration > @longer_than
 	) ELSE TRUE END AND
 CASE WHEN sqlc.narg('has_backend')::TEXT IS NOT NULL THEN (
-	sc.audio_ref ? @has_backend) ELSE TRUE END AND
+	sc.audio_ref IS NOT NULL AND sc.audio_ref ? @has_backend) ELSE TRUE END AND
 CASE WHEN sqlc.narg('not_has_backend')::TEXT IS NOT NULL THEN (
 	sc.audio_ref IS NULL OR (NOT sc.audio_ref ? @not_has_backend)) ELSE TRUE END
 AND CASE
@@ -96,7 +96,7 @@ CASE WHEN $6::NUMERIC IS NOT NULL THEN (
 		c.duration > $6
 	) ELSE TRUE END AND
 CASE WHEN $7::TEXT IS NOT NULL THEN (
-	NOT (c.audio_ref ? $8)) ELSE TRUE END AND
+	c.audio_ref IS NOT NULL AND c.audio_ref ? $7) ELSE TRUE END AND
 CASE WHEN $8::TEXT IS NOT NULL THEN (
 	c.audio_ref IS NULL OR (NOT c.audio_ref ? $8)) ELSE TRUE END
 AND CASE
@@ -125,7 +125,7 @@ CASE WHEN $6::NUMERIC IS NOT NULL THEN (
 		sc.duration > $6
 	) ELSE TRUE END AND
 CASE WHEN $7::TEXT IS NOT NULL THEN (
-	sc.audio_ref ? $7) ELSE TRUE END AND
+	sc.audio_ref IS NOT NULL AND sc.audio_ref ? $7) ELSE TRUE END AND
 CASE WHEN $8::TEXT IS NOT NULL THEN (
 	sc.audio_ref IS NULL OR (NOT sc.audio_ref ? $8)) ELSE TRUE END
 AND CASE

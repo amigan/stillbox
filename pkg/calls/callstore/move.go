@@ -237,7 +237,7 @@ type mover struct {
 	tx database.Store
 	txMtx sync.Mutex
 
-	moveCh chan []database.GetCallAudioRow
+	moveCh chan database.GetCallAudioRow
 	resCh chan updateRequest
 	totalRows int
 	dst AudioBackend
@@ -245,22 +245,18 @@ type mover struct {
 }
 
 func (m *mover) moveWorker(ctx context.Context) error {
-	for rows := range m.moveCh {
-		for _, row := range rows {
-			ref, blob, err := m.moveCallAudio(ctx, row)
-			if err != nil {
-				return fmt.Errorf("call %s: %w", row.ID, err)
-			}
-			m.resCh <- updateRequest{id: row.ID, blob: blob, ref: ref}
+	for row := range m.moveCh {
+		ref, blob, err := m.moveCallAudio(ctx, row)
+		if err != nil {
+			return fmt.Errorf("call %s: %w", row.ID, err)
 		}
+		m.resCh <- updateRequest{id: row.ID, blob: blob, ref: ref}
 	}
 
 	return nil
 }
 
 func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error {
-	ctx, cancel := context.WithCancel(ctx)
-
 	var moveWorkerWg sync.WaitGroup
 	g, ctx := errgroup.WithContext(ctx)
 	for range m.numWorkers {
@@ -291,9 +287,6 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 
 	g.Go(func() error {
 		err := m.dispatcher(ctx, dbPar)
-
-		// shut down the dispatcher
-		cancel()
 
 		// shut down the move workers
 		close(m.moveCh)
@@ -349,12 +342,14 @@ func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParam
 
 		count -= int64(len(rows))
 
-		log.Debug().Msg("sending to movech")
-		select {
-		case <-ctx.Done():
-			return nil
-		case m.moveCh <- rows:
+		for _, row := range rows {
+			select {
+			case <-ctx.Done():
+				return nil
+			case m.moveCh <- row:
+			}
 		}
+		// TODO: commit refTracker every batch and figure out why ~1869 calls are being left behind
 	}
 
 	return nil
@@ -366,7 +361,7 @@ func (s *store) newMover(dst AudioBackend, tx database.Store, rm *refManager, pa
 		rm: rm,
 		tx: tx,
 		numWorkers: numStoreWorkers,
-		moveCh: make(chan []database.GetCallAudioRow, numStoreWorkers),
+		moveCh: make(chan database.GetCallAudioRow, numStoreWorkers),
 		resCh: make(chan updateRequest, numStoreWorkers),
 		dst: dst,
 		par: par,
@@ -433,9 +428,11 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		}
 	} else {
 		go func() {
-			err := rm.Commit(ctx)
+			err := rm.Commit(context.WithoutCancel(ctx))
 			if err != nil {
 				log.Error().Err(err).Msg("move refTracker commit")
+			} else {
+				log.Info().Msg("move commit finished")
 			}
 		}()
 	}
