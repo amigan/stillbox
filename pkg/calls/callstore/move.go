@@ -21,7 +21,7 @@ import (
 )
 
 // number of store workers
-const numStoreWorkers = 10
+const numStoreWorkers = 16
 
 type MoveCallParams struct {
 	CallsParams
@@ -423,6 +423,8 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		rbErr := rm.Rollback(context.WithoutCancel(ctx))
 		if rbErr != nil {
 			err = multierror.Append(err, rbErr)
+		} else {
+			log.Info().Msg("move rollback finished")
 		}
 	} else {
 		go func() {
