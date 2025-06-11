@@ -9,15 +9,17 @@ import (
 	rbacmock "dynatron.me/x/stillbox/pkg/authz/mocks"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/database"
 	dbmock "dynatron.me/x/stillbox/pkg/database/mocks"
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-type testSub struct{}
+type testSub struct{} // TODO: move to test package
 func (*testSub) String() string { return "test" }
 func (*testSub) GetName() string { return "test" }
 func (*testSub) GetRoles() []string { return []string{"admin"} }
@@ -91,6 +93,9 @@ func TestMove(t *testing.T) {
 	for _, tc := range tests {
 		ctx, cancel := context.WithCancel(ctx)
 		db := dbmock.NewStore(t)
+	/*	db.EXPECT().InTx(mock.Anything, mock.Anything, nil).RunAndReturn(func(ctx context.Context, f func(database.Store) error, _ pgx.TxOptions) error {
+			f(
+		})*/
 		met := metrics.NewNoOp()
 		tgc := tgstore.NewCache(db, met)
 		st, err := NewStore(ctx, db, tgc, met, backendCfg)
