@@ -104,7 +104,7 @@ func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, a
 	for backend, location := range refm {
 		be, has := sb.backends[backend]
 		if !has {
-			err = fmt.Errorf("no such backend '%s'", backend)
+			err = fmt.Errorf("get call audio: no such backend '%s'", backend)
 			continue
 		}
 		call.AudioBlob, call.AudioURL, err = be.Get(ctx, call, location, opts)
@@ -167,6 +167,7 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj Audio
 
 type BackendFactory func(config.ConfigMap) (AudioBackend, error)
 type backendRegistry map[string]BackendFactory
+
 var backends = make(backendRegistry)
 
 func registerAudioBackend(name string, f BackendFactory) {

@@ -123,7 +123,7 @@ func (rm *refManager) QueueDeleteAll(ar AudioRefList) error {
 		}
 		be := rm.ab.Backend(ben)
 		if be == nil {
-			return fmt.Errorf("no such backend '%s'", ben)
+			return fmt.Errorf("queue delete all: no such backend '%s'", ben)
 		}
 
 		rm.QueueDelete(be, loc)
@@ -147,9 +147,9 @@ func (rm *refManager) Created(ar AudioRef) {
 }
 
 type updateRequest struct {
-	id uuid.UUID
+	id   uuid.UUID
 	blob []byte
-	ref AudioRefJSON
+	ref  AudioRefJSON
 }
 
 func (m *mover) moveCallAudio(ctx context.Context, row database.GetCallAudioRow) (ref AudioRefJSON, blob []byte, err error) {
@@ -231,17 +231,17 @@ func (m *mover) moveCallAudio(ctx context.Context, row database.GetCallAudioRow)
 }
 
 type mover struct {
-	ab AudioBackends
-	rm *refManager
+	ab         AudioBackends
+	rm         *refManager
 	numWorkers int
-	tx database.Store
-	txMtx sync.Mutex
+	tx         database.Store
+	txMtx      sync.Mutex
 
-	moveCh chan database.GetCallAudioRow
-	resCh chan updateRequest
+	moveCh    chan database.GetCallAudioRow
+	resCh     chan updateRequest
 	totalRows int
-	dst AudioBackend
-	par MoveCallParams
+	dst       AudioBackend
+	par       MoveCallParams
 }
 
 func (m *mover) moveWorker(ctx context.Context) error {
@@ -277,7 +277,7 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 			}
 			// increment successful rows
 			m.totalRows++
-			if m.totalRows % batchSize == 0 && m.par.ProgressChan != nil {
+			if m.totalRows%batchSize == 0 && m.par.ProgressChan != nil {
 				m.par.ProgressChan <- m.totalRows
 			}
 		}
@@ -357,14 +357,14 @@ func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParam
 
 func (s *store) newMover(dst AudioBackend, tx database.Store, rm *refManager, par MoveCallParams) *mover {
 	return &mover{
-		ab: s.audioBackends,
-		rm: rm,
-		tx: tx,
+		ab:         s.audioBackends,
+		rm:         rm,
+		tx:         tx,
 		numWorkers: numStoreWorkers,
-		moveCh: make(chan database.GetCallAudioRow, numStoreWorkers),
-		resCh: make(chan updateRequest, numStoreWorkers),
-		dst: dst,
-		par: par,
+		moveCh:     make(chan database.GetCallAudioRow, numStoreWorkers),
+		resCh:      make(chan updateRequest, numStoreWorkers),
+		dst:        dst,
+		par:        par,
 	}
 }
 
@@ -380,7 +380,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		destBackend = *par.DestBackend
 		dst = s.audioBackends.Backend(destBackend)
 		if dst == nil {
-			return 0, fmt.Errorf("no such backend '%s'", *par.DestBackend)
+			return 0, fmt.Errorf("move params: no such backend '%s'", *par.DestBackend)
 		}
 	} else {
 		// otherwise dst is the database, exclude already copied
@@ -394,18 +394,17 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	rm := newRefManager(s.audioBackends, destBackend, dst)
 	err = s.db.InTx(context.WithoutCancel(ctx), func(tx database.Store) error {
 		dbPar := database.GetCallAudioParams{
-				Count:      batchSize,
-				Swept:      par.SweptCalls,
-				Start:      par.Start.PGTypeTSTZ(),
-				End:        par.End.PGTypeTSTZ(),
-				TagsAny:    par.TagsAny,
-				TagsNot:    par.TagsNot,
-				LongerThan: toPGNumericMilliseconds(par.AtLeastSeconds),
-				HasBackend: par.HasBackend,
-				HasBlob:    par.HasBlob,
-				NotHasBackend: par.DestBackend, // not already moved
+			Count:         batchSize,
+			Swept:         par.SweptCalls,
+			Start:         par.Start.PGTypeTSTZ(),
+			End:           par.End.PGTypeTSTZ(),
+			TagsAny:       par.TagsAny,
+			TagsNot:       par.TagsNot,
+			LongerThan:    toPGNumericMilliseconds(par.AtLeastSeconds),
+			HasBackend:    par.HasBackend,
+			HasBlob:       par.HasBlob,
+			NotHasBackend: par.DestBackend, // not already moved
 		}
-
 
 		m := s.newMover(dst, tx, rm, par)
 
@@ -418,7 +417,6 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 
 		return err
 	}, pgx.TxOptions{})
-
 
 	if err != nil {
 		numRows = 0

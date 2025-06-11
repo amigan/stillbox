@@ -2,8 +2,12 @@ package callstore
 
 import (
 	"context"
+	"fmt"
+	"math/rand"
 	"net/url"
+	"sync"
 	"testing"
+	"time"
 
 	"dynatron.me/x/stillbox/pkg/authz"
 	rbacmock "dynatron.me/x/stillbox/pkg/authz/mocks"
@@ -13,15 +17,16 @@ import (
 	dbmock "dynatron.me/x/stillbox/pkg/database/mocks"
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-type testSub struct{} // TODO: move to test package
-func (*testSub) String() string { return "test" }
-func (*testSub) GetName() string { return "test" }
+type testSub struct{}               // TODO: move to test package
+func (*testSub) String() string     { return "test" }
+func (*testSub) GetName() string    { return "test" }
 func (*testSub) GetRoles() []string { return []string{"admin"} }
 
 func fillCtx(t *testing.T, ctx context.Context) context.Context {
@@ -33,7 +38,7 @@ func fillCtx(t *testing.T, ctx context.Context) context.Context {
 
 var backendCfg []config.CallStorage = []config.CallStorage{
 	{
-		Name: "b1",
+		Name:    "test",
 		Backend: "test",
 	},
 }
@@ -65,24 +70,56 @@ func (m *mockAudioBackend) Type() string {
 	return "test"
 }
 
-func newMockAudioBackend(_ config.ConfigMap) (AudioBackend, error) {
-	return &mockAudioBackend{
-		calls: map[string]*calls.CallAudio{},
-	}, nil
+func (m *mockAudioBackend) makeCalls(ctx context.Context, n int) []database.GetCallAudioRow {
+	rows := make([]database.GetCallAudioRow, n)
+
+	for i := range n {
+		id := uuid.New()
+		ref := fmt.Sprintf(`{"test":"%s"}`, id.String())
+		rows[i] = database.GetCallAudioRow{
+			ID:       id,
+			AudioRef: []byte(ref),
+		}
+		m.Store(ctx, getCallAudioRowToSkinnyCallAudio(rows[i]))
+	}
+
+	return rows
 }
 
+func newMockAudioBackend(_ config.ConfigMap) (AudioBackend, error) {
+	backendMake.Do(func() {
+		mbe = &mockAudioBackend{
+			calls: map[string]*calls.CallAudio{},
+		}
+		dbCalls = mbe.makeCalls(context.Background(), 2500)
+	})
+
+	return mbe, nil
+}
+
+var dbCalls []database.GetCallAudioRow
+var mbe *mockAudioBackend
+var backendMake sync.Once
+
 func TestMove(t *testing.T) {
-	tests := []struct{
-		desc string
-		par MoveCallParams
-		expectErr error
-		expectNumRows int
-		canceler func(cancel func())
+	tests := []struct {
+		desc            string
+		par             MoveCallParams
+		expectErr       error
+		expectNumRows   int
+		expectTotalRows int
+		canceler        func(cancel func())
 	}{
 		{
-			desc: "base",
-			par: MoveCallParams{
-			},
+			desc:            "base",
+			par:             MoveCallParams{},
+			expectNumRows:   1000,
+			expectTotalRows: 2000,
+		},
+		{
+			desc:          "base zero rows",
+			par:           MoveCallParams{},
+			expectNumRows: 0,
 		},
 	}
 
@@ -93,9 +130,25 @@ func TestMove(t *testing.T) {
 	for _, tc := range tests {
 		ctx, cancel := context.WithCancel(ctx)
 		db := dbmock.NewStore(t)
-	/*	db.EXPECT().InTx(mock.Anything, mock.Anything, nil).RunAndReturn(func(ctx context.Context, f func(database.Store) error, _ pgx.TxOptions) error {
-			f(
-		})*/
+		db.EXPECT().InTx(mock.Anything, mock.Anything, pgx.TxOptions{}).RunAndReturn(func(ctx context.Context, f func(database.Store) error, _ pgx.TxOptions) error {
+			return f(db)
+		})
+		db.EXPECT().GetCallAudioCount(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams")).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams) (int64, error) {
+			time.Sleep(time.Duration(rand.Intn(10)) * time.Millisecond)
+			return int64(tc.expectTotalRows), nil
+		})
+		gcaIter := -1
+		if tc.expectNumRows > 0 {
+			db.EXPECT().GetCallAudio(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams")).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams) ([]database.GetCallAudioRow, error) {
+				time.Sleep(time.Duration(rand.Intn(4)) * time.Millisecond)
+				gcaIter++
+				return dbCalls[gcaIter : gcaIter+tc.expectNumRows], nil
+			})
+			db.EXPECT().SetCallAudio(mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.Anything, mock.Anything).RunAndReturn(func(_ context.Context, _ uuid.UUID, ref, blob []byte) error {
+				time.Sleep(time.Duration(rand.Intn(2)) * time.Millisecond)
+				return nil
+			})
+		}
 		met := metrics.NewNoOp()
 		tgc := tgstore.NewCache(db, met)
 		st, err := NewStore(ctx, db, tgc, met, backendCfg)
@@ -111,8 +164,7 @@ func TestMove(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			assert.Equal(t, tc.expectNumRows, nr)
+			assert.Equal(t, tc.expectTotalRows, nr)
 		})
-
 	}
 }
