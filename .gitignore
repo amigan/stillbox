@@ -16,3 +16,4 @@ cover.out
 backups/
 models/
 ktrace.out
+__debug_bin*
