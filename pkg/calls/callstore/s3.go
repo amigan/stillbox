@@ -147,7 +147,11 @@ func (sb *s3Backend) ctxTimeout(ctx context.Context) (context.Context, context.C
 	return context.WithTimeout(ctx, sb.Timeout)
 }
 
-func newS3backend(_ context.Context, cfg config.ConfigMap) (*s3Backend, error) {
+func init() {
+	registerAudioBackend("s3", newS3backend)
+}
+
+func newS3backend(cfg config.ConfigMap) (AudioBackend, error) {
 	sb := new(s3Backend)
 
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{

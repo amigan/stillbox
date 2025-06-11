@@ -165,6 +165,14 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj Audio
 	return
 }
 
+type BackendFactory func(config.ConfigMap) (AudioBackend, error)
+type backendRegistry map[string]BackendFactory
+var backends = make(backendRegistry)
+
+func registerAudioBackend(name string, f BackendFactory) {
+	backends[name] = f
+}
+
 func MakeBackends(ctx context.Context, fc tgstore.FilterCache, met metrics.Metrics, cfg []config.CallStorage) (*audioBackends, error) {
 	ab := &audioBackends{
 		storeList: make([]string, 0, len(cfg)),
@@ -190,15 +198,12 @@ func MakeBackends(ctx context.Context, fc tgstore.FilterCache, met metrics.Metri
 			}
 		}
 
-		switch cf.Backend {
-		case "s3":
-			be, err = newS3backend(ctx, cf.Config)
-		case "fs":
-			be, err = newFSbackend(cf.Config)
-		default:
+		makeBackend, hasBackend := backends[cf.Backend]
+		if !hasBackend {
 			return nil, fmt.Errorf("unknown backend '%s'", cf.Backend)
 		}
 
+		be, err = makeBackend(cf.Config)
 		if err != nil {
 			return nil, fmt.Errorf("backend '%s': %w", cf.Name, err)
 		}

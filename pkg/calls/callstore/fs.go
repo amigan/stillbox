@@ -132,7 +132,11 @@ func (fsb *fsBackend) Store(_ context.Context, call *calls.CallAudio) (AudioRef,
 	return blobp, nil
 }
 
-func newFSbackend(cfg config.ConfigMap) (*fsBackend, error) {
+func init() {
+	registerAudioBackend("fs", newFSbackend)
+}
+
+func newFSbackend(cfg config.ConfigMap) (AudioBackend, error) {
 	fsb := new(fsBackend)
 
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
