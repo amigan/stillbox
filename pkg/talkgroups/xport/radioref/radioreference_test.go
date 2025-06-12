@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	rbacmocks "dynatron.me/x/stillbox/pkg/authz/mocks"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/mocks"
@@ -55,7 +56,7 @@ func TestRadioRef(t *testing.T) {
 		},
 	}
 
-	subject := users.User{IsAdmin: true}
+	subject := users.User{Roles: []string{entities.RoleAdmin}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

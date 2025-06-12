@@ -43,14 +43,14 @@ func (ua *usersAPI) getUser(w http.ResponseWriter, r *http.Request) {
 		UID           users.UserID    `json:"uid"`
 		Username      string          `json:"username"`
 		Email         string          `json:"email,omitzero"`
-		IsAdmin       bool            `json:"isAdmin,omitzero"`
+		Roles       []string            `json:"roles,omitzero"`
 		LastLoginAt   *jsontypes.Time `json:"lastLoginAt,omitempty"`
 		LastLoginFrom *netip.Addr     `json:"lastLoginFrom,omitempty"`
 	}{
 		UID:           user.ID,
 		Username:      user.Username,
 		Email:         user.Email,
-		IsAdmin:       user.IsAdmin,
+		Roles:         user.Roles,
 		LastLoginAt:   user.LastLoginAt,
 		LastLoginFrom: user.LastLoginFrom,
 	}

@@ -206,7 +206,7 @@ type User struct {
 	Username      string             `json:"username,omitempty"`
 	Password      string             `json:"password,omitempty"`
 	Email         string             `json:"email,omitempty"`
-	IsAdmin       bool               `json:"isAdmin,omitempty"`
+	Roles         []string           `json:"roles,omitempty"`
 	LastLoginAt   pgtype.Timestamptz `json:"lastLoginAt,omitempty"`
 	LastLoginFrom *netip.Addr        `json:"lastLoginFrom,omitempty"`
 	PasswordSetAt pgtype.Timestamptz `json:"passwordSetAt,omitempty"`

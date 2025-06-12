@@ -48,7 +48,6 @@ var Policy = &restrict.PolicyDefinition{
 				},
 				entities.ResourceShare: {
 					&restrict.Permission{Action: entities.ActionRead},
-					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Preset: PresetUpdateOwn},
 					&restrict.Permission{Preset: PresetDeleteOwn},
 				},
@@ -75,6 +74,14 @@ var Policy = &restrict.PolicyDefinition{
 					// for learning TGs
 					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Action: entities.ActionUpdate},
+				},
+			},
+		},
+		entities.RoleSharer: {
+			Description: "Someone who is allowed to share",
+			Grants: restrict.GrantsMap{
+				entities.ResourceShare: {
+					&restrict.Permission{Action: entities.ActionCreate},
 				},
 			},
 		},

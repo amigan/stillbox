@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users(
 	username VARCHAR (255) UNIQUE NOT NULL,
 	password TEXT NOT NULL,
 	email TEXT NOT NULL,
-	is_admin BOOLEAN NOT NULL,
+	roles TEXT[],
 	last_login_at TIMESTAMPTZ,
 	last_login_from INET,
 	password_set_at TIMESTAMPTZ NOT NULL,

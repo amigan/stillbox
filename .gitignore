@@ -17,3 +17,5 @@ backups/
 models/
 ktrace.out
 __debug_bin*
+cpu.txt
+ktrace.out

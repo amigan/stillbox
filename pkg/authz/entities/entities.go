@@ -17,6 +17,7 @@ const (
 	RolePublic      = "Public"
 	RoleShareGuest  = "ShareGuest"
 	RoleTranscriber = "Transcriber"
+	RoleSharer      = "Sharer"
 
 	ResourceCall      = "Call"
 	ResourceIncident  = "Incident"
