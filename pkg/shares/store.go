@@ -112,11 +112,11 @@ func (s *postgresStore) Delete(ctx context.Context, id string) error {
 func (s *postgresStore) Shares(ctx context.Context, p SharesParams) (shares []*Share, totalCount int, err error) {
 	sub := entities.SubjectFrom(ctx)
 
-	// ersatz RBAC
+	// ersatz RBAC: non-admin can only see their own shares
 	var owner *int32
 	switch s := sub.(type) {
 	case *users.User:
-		if !s.IsAdmin {
+		if !s.HasRole(entities.RoleAdmin) {
 			owner = s.ID.Int32Ptr()
 		} else {
 			owner = nil

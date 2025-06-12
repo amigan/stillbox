@@ -87,12 +87,12 @@ func (s *postgresStore) HUP(_ *config.Config) {
 }
 
 type UserUpdate struct {
-	Email   *string `json:"email"`
-	IsAdmin *bool   `json:"isAdmin"`
+	Email   *string  `json:"email"`
+	Roles   []string `json:"roles"`
 }
 
 func (s *postgresStore) UpdateUser(ctx context.Context, username string, user UserUpdate) error {
-	dbu, err := s.db.UpdateUser(ctx, username, user.Email, user.IsAdmin)
+	dbu, err := s.db.UpdateUser(ctx, username, user.Email, user.Roles)
 	if err != nil {
 		return err
 	}

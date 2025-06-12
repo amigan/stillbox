@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"syscall"
 
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"github.com/urfave/cli/v2"
@@ -54,11 +55,16 @@ func AddUser(ctx context.Context, username, email string, isAdmin bool) error {
 		return err
 	}
 
+	var roles []string
+	if isAdmin {
+		roles = []string{entities.RoleAdmin}
+	}
+
 	_, err = db.CreateUser(context.Background(), database.CreateUserParams{
 		Username: username,
 		Password: string(hashpw),
 		Email:    email,
-		IsAdmin:  isAdmin,
+		Roles:    roles,
 	})
 
 	return err

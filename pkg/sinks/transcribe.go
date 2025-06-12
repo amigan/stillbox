@@ -66,7 +66,7 @@ type transcriber struct {
 }
 
 func (s *transcriber) Call(ctx context.Context, call *calls.Call) error {
-	if call.Duration < calls.CallDuration(s.AtLeast) || !s.Filter.Test(ctx, call) || !call.ShouldStore() {
+	if s.workers == nil || call.Duration < calls.CallDuration(s.AtLeast) || !s.Filter.Test(ctx, call) || !call.ShouldStore() {
 		return nil
 	}
 
@@ -144,6 +144,10 @@ type transportConstructor func(*transcriber, config.ConfigMap) (transcribeTransp
 
 // newTranscriber requires the caller take a lock.
 func (t *transcriber) makeWorkers(cfg config.Transcription) error {
+	if len(cfg.Workers) < 1 {
+		t.workers = nil
+		return nil
+	}
 	wk := map[string]transportConstructor{
 		"http": newHttpTranscriber,
 	}
