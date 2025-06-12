@@ -1,22 +1,18 @@
 dir: '{{.InterfaceDir}}/mocks'
-mockname: "{{.InterfaceName}}"
-outpkg: "mocks"
-filename: "{{.InterfaceName}}.go"
-with-expecter: true
-resolve-type-alias: false
-disable-version-string: true
-issue-845-fix: true
+structname: '{{.InterfaceName}}'
+pkgname: "mocks"
+filename: '{{.InterfaceName}}.go'
+template: testify
+template-data:
+  unroll-variadic: true
 packages:
-  dynatron.me/x/stillbox/pkg/database:
-    config:
-    interfaces:
-      Store:
-      DBTX:
   dynatron.me/x/stillbox/pkg/authz:
-    config:
     interfaces:
-      RBAC:
+      RBAC: {}
+  dynatron.me/x/stillbox/pkg/database:
+    interfaces:
+      DBTX: {}
+      Store: {}
   dynatron.me/x/stillbox/pkg/talkgroups/tgstore:
-    config:
     interfaces:
-      Store:
+      Store: {}

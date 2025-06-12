@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/netip"
+	"slices"
 	"strings"
 	"time"
 
@@ -67,11 +68,15 @@ type User struct {
 	Username      string
 	Password      string
 	Email         string
-	IsAdmin       bool
+	Roles         []string
 	LastLoginAt   *jsontypes.Time
 	LastLoginFrom *netip.Addr
 	Prefs         json.RawMessage
 	PasswordSetAt time.Time
+}
+
+func (u *User) HasRole(role string) bool {
+	return slices.Contains(u.Roles, role)
 }
 
 func (*User) GetResourceName() string {
@@ -87,15 +92,7 @@ func (u *User) String() string {
 }
 
 func (u *User) GetRoles() []string {
-	r := make([]string, 1, 2)
-
-	r[0] = entities.RoleUser
-
-	if u.IsAdmin {
-		r = append(r, entities.RoleAdmin)
-	}
-
-	return r
+	return append(u.Roles, entities.RoleUser)
 }
 
 func (u *User) Mask() *User {
@@ -116,7 +113,7 @@ func FromDBUser(dbu database.User) *User {
 		Username:      dbu.Username,
 		Password:      dbu.Password,
 		Email:         dbu.Email,
-		IsAdmin:       dbu.IsAdmin,
+		Roles:         dbu.Roles,
 		Prefs:         dbu.Prefs,
 		LastLoginAt:   lastLoginAt,
 		LastLoginFrom: dbu.LastLoginFrom,

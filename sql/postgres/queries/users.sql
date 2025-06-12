@@ -14,7 +14,7 @@ INSERT INTO users (
 		username,
 		password,
 		email,
-		is_admin,
+		roles,
 		password_set_at
 	) VALUES ($1, $2, $3, $4, NOW())
 RETURNING *;
@@ -28,7 +28,7 @@ UPDATE users SET password = $2, password_set_at = NOW() WHERE username = $1;
 -- name: UpdateUser :one
 UPDATE users SET
 	email = COALESCE(sqlc.narg('email'), email),
-	is_admin = COALESCE(sqlc.narg('is_admin'), is_admin)
+	roles = COALESCE(sqlc.narg('roles'), roles)
 WHERE
 	username = $1
 RETURNING *;
