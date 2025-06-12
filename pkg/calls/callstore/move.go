@@ -237,11 +237,11 @@ type mover struct {
 	tx         database.Store
 	txMtx      sync.Mutex
 
-	moveCh    chan database.GetCallAudioRow
-	resCh     chan updateRequest
-	totalRows int
-	dst       AudioBackend
-	par       MoveCallParams
+	moveCh        chan database.GetCallAudioRow
+	resCh         chan updateRequest
+	completedRows int
+	dst           AudioBackend
+	par           MoveCallParams
 }
 
 func (m *mover) moveWorker(ctx context.Context) error {
@@ -276,9 +276,9 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 				return err
 			}
 			// increment successful rows
-			m.totalRows++
-			if m.totalRows%batchSize == 0 && m.par.ProgressChan != nil {
-				m.par.ProgressChan <- m.totalRows
+			m.completedRows++
+			if m.completedRows%batchSize == 0 && m.par.ProgressChan != nil {
+				m.par.ProgressChan <- m.completedRows
 			}
 		}
 
@@ -362,7 +362,7 @@ func (s *store) newMover(dst AudioBackend, tx database.Store, rm *refManager, pa
 		tx:         tx,
 		numWorkers: numStoreWorkers,
 		moveCh:     make(chan database.GetCallAudioRow, numStoreWorkers),
-		resCh:      make(chan updateRequest, numStoreWorkers),
+		resCh:      make(chan updateRequest, numStoreWorkers*2),
 		dst:        dst,
 		par:        par,
 	}
@@ -409,10 +409,10 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		m := s.newMover(dst, tx, rm, par)
 
 		err = m.do(ctx, dbPar)
-		numRows = m.totalRows
+		numRows = m.completedRows
 
 		if par.ProgressChan != nil {
-			par.ProgressChan <- m.totalRows
+			par.ProgressChan <- m.completedRows
 		}
 
 		return err

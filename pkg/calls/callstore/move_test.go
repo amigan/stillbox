@@ -117,6 +117,16 @@ func TestMove(t *testing.T) {
 			expectTotalRows: 2000,
 		},
 		{
+			desc:            "base canceler",
+			par:             MoveCallParams{},
+			expectNumRows:   1000,
+			expectTotalRows: 2000,
+			canceler: func(cancel func()) {
+				time.Sleep(time.Millisecond * 200)
+				cancel()
+			},
+		},
+		{
 			desc:          "base zero rows",
 			par:           MoveCallParams{},
 			expectNumRows: 0,
@@ -164,7 +174,9 @@ func TestMove(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			assert.Equal(t, tc.expectTotalRows, nr)
+			if tc.canceler == nil {
+				assert.Equal(t, tc.expectTotalRows, nr)
+			}
 		})
 	}
 }

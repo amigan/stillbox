@@ -30,7 +30,7 @@ func TestRBAC(t *testing.T) {
 		{
 			name: "admin update talkgroup",
 			subject: &users.User{
-				ID:      2,
+				ID:    2,
 				Roles: []string{entities.RoleAdmin},
 			},
 			resource:  &talkgroups.Talkgroup{},
@@ -40,7 +40,7 @@ func TestRBAC(t *testing.T) {
 		{
 			name: "admin update incident",
 			subject: &users.User{
-				ID:      2,
+				ID:    2,
 				Roles: []string{entities.RoleAdmin},
 			},
 			resource: &incidents.Incident{
@@ -89,7 +89,7 @@ func TestRBAC(t *testing.T) {
 		{
 			name: "admin update call",
 			subject: &users.User{
-				ID:      2,
+				ID:    2,
 				Roles: []string{entities.RoleAdmin},
 			},
 			resource: &calls.Call{
@@ -156,7 +156,7 @@ func TestRBAC(t *testing.T) {
 		{
 			name: "user share call admin",
 			subject: &users.User{
-				ID:      2,
+				ID:    2,
 				Roles: []string{entities.RoleAdmin},
 			},
 			resource: &calls.Call{
@@ -190,7 +190,7 @@ func TestRBAC(t *testing.T) {
 		{
 			name: "user share incident admin",
 			subject: &users.User{
-				ID:      2,
+				ID:    2,
 				Roles: []string{entities.RoleAdmin},
 			},
 			resource: &incidents.Incident{
