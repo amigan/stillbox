@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
@@ -52,7 +53,7 @@ type MoveCallParams struct {
 
 	// ProgressChan is a channel where the number of rows is written as the call progresses if not nil.
 	// It is closed by MoveCalls on finish (or error)
-	ProgressChan chan int `json:"-"`
+	ProgressChan chan int64 `json:"-"`
 }
 
 const batchSize = 1000 // incidentally this is also the number of keys S3 allows in a DeleteObjects call
@@ -243,7 +244,7 @@ type mover struct {
 
 	moveCh        chan database.GetCallAudioRow
 	resCh         chan updateRequest
-	completedRows int
+	completedRows atomic.Int64
 	dst           AudioBackend
 	par           MoveCallParams
 }
@@ -280,9 +281,9 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 				return err
 			}
 			// increment successful rows
-			m.completedRows++
-			if m.completedRows%batchSize == 0 && m.par.ProgressChan != nil {
-				m.par.ProgressChan <- m.completedRows
+			cr := m.completedRows.Add(1)
+			if cr%batchSize == 0 && m.par.ProgressChan != nil {
+				m.par.ProgressChan <- cr
 			}
 		}
 
@@ -306,6 +307,7 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 	})
 
 	err := g.Wait()
+	// collapse context.Canceled if it is what happened
 	if err != nil && errors.Is(err, context.Canceled) {
 		return context.Canceled
 	}
@@ -323,7 +325,7 @@ func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParam
 	}
 
 	if m.par.ProgressChan != nil {
-		m.par.ProgressChan <- int(count) // first message is always total
+		m.par.ProgressChan <- count // first message is always total
 	}
 
 	for count > 0 {
@@ -376,7 +378,7 @@ func (s *store) newMover(dst AudioBackend, tx database.Store, rm *refManager, pa
 	}
 }
 
-func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows int, err error) {
+func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows int64, err error) {
 	_, err = authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionMoveCallAudio))
 	if err != nil {
 		return 0, err
@@ -417,10 +419,10 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		m := s.newMover(dst, tx, rm, par)
 
 		err = m.do(ctx, dbPar)
-		numRows = m.completedRows
+		numRows = m.completedRows.Load()
 
 		if par.ProgressChan != nil {
-			par.ProgressChan <- m.completedRows
+			par.ProgressChan <- numRows
 		}
 
 		return err

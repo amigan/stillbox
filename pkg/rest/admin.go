@@ -32,7 +32,7 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	progress := make(chan int, 8)
+	progress := make(chan int64, 8)
 
 	par.ProgressChan = progress
 

@@ -106,8 +106,8 @@ func TestMove(t *testing.T) {
 		desc            string
 		par             MoveCallParams
 		expectErr       error
-		expectNumRows   int
-		expectTotalRows int
+		expectNumRows   int64
+		expectTotalRows int64
 		canceler        func(cancel func())
 	}{
 		{
@@ -145,9 +145,9 @@ func TestMove(t *testing.T) {
 		})
 		db.EXPECT().GetCallAudioCount(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams")).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams) (int64, error) {
 			time.Sleep(time.Duration(rand.Intn(10)) * time.Millisecond)
-			return int64(tc.expectTotalRows), nil
+			return tc.expectTotalRows, nil
 		})
-		gcaIter := -1
+		gcaIter := int64(-1)
 		if tc.expectNumRows > 0 {
 			db.EXPECT().GetCallAudio(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams")).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams) ([]database.GetCallAudioRow, error) {
 				time.Sleep(time.Duration(rand.Intn(4)) * time.Millisecond)
