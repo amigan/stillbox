@@ -21,7 +21,8 @@ import (
 )
 
 // number of store workers
-const numStoreWorkers = 16
+const numStoreWorkers = 10
+const numStoreWorkersLimit = 50
 
 type MoveCallParams struct {
 	CallsParams
@@ -45,6 +46,9 @@ type MoveCallParams struct {
 
 	// DryRun specifies whether to just return the number of affected calls rather than actually moving.
 	DryRun bool `json:"dryRun"`
+
+	// NumWorkers specifies the number of workers to use for the move. It is bounded internally by numStoreWorkersLimit.
+	NumWorkers *uint `json:"numWorkers"`
 
 	// ProgressChan is a channel where the number of rows is written as the call progresses if not nil.
 	// It is closed by MoveCalls on finish (or error)
@@ -310,7 +314,6 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 }
 
 func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParams) error {
-
 	m.txMtx.Lock()
 	count, err := m.tx.GetCallAudioCount(ctx, dbPar)
 	m.txMtx.Unlock()
@@ -324,10 +327,11 @@ func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParam
 	}
 
 	for count > 0 {
-		select {
-		case <-ctx.Done():
-			return nil
-		default:
+		if err := ctx.Err(); err != nil {
+			if err == context.Canceled {
+				return nil
+			}
+			return err
 		}
 		m.txMtx.Lock()
 		rows, err := m.tx.GetCallAudio(ctx, dbPar)
@@ -356,13 +360,17 @@ func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParam
 }
 
 func (s *store) newMover(dst AudioBackend, tx database.Store, rm *refManager, par MoveCallParams) *mover {
+	numWorkers := numStoreWorkers
+	if par.NumWorkers != nil {
+		numWorkers = min(int(*par.NumWorkers), numStoreWorkersLimit)
+	}
 	return &mover{
 		ab:         s.audioBackends,
 		rm:         rm,
 		tx:         tx,
-		numWorkers: numStoreWorkers,
 		moveCh:     make(chan database.GetCallAudioRow, numStoreWorkers),
 		resCh:      make(chan updateRequest, numStoreWorkers*2),
+		numWorkers: numWorkers,
 		dst:        dst,
 		par:        par,
 	}
