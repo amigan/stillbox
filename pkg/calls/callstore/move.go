@@ -261,6 +261,24 @@ func (m *mover) moveWorker(ctx context.Context) error {
 	return nil
 }
 
+func (m *mover) resultsWorker(ctx context.Context) error {
+	for res := range m.resCh {
+		m.txMtx.Lock()
+		err := m.tx.SetCallAudio(ctx, res.id, res.ref, res.blob)
+		m.txMtx.Unlock()
+		if err != nil {
+			return err
+		}
+		// increment successful rows
+		cr := m.completedRows.Add(1)
+		if cr%batchSize == 0 && m.par.ProgressChan != nil {
+			m.par.ProgressChan <- cr
+		}
+	}
+
+	return nil
+}
+
 func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error {
 	var moveWorkerWg sync.WaitGroup
 	g, ctx := errgroup.WithContext(ctx)
@@ -273,21 +291,8 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 	}
 
 	g.Go(func() error {
-		for res := range m.resCh {
-			m.txMtx.Lock()
-			err := m.tx.SetCallAudio(ctx, res.id, res.ref, res.blob)
-			m.txMtx.Unlock()
-			if err != nil {
-				return err
-			}
-			// increment successful rows
-			cr := m.completedRows.Add(1)
-			if cr%batchSize == 0 && m.par.ProgressChan != nil {
-				m.par.ProgressChan <- cr
-			}
-		}
-
-		return nil
+		// results must be committed to DB, there is no way to cancel
+		return m.resultsWorker(context.WithoutCancel(ctx))
 	})
 
 	g.Go(func() error {
@@ -309,8 +314,11 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 	err := g.Wait()
 	// collapse context.Canceled if it is what happened
 	if err != nil && errors.Is(err, context.Canceled) {
+		log.Info().Err(err).Msg("move done")
 		return context.Canceled
 	}
+
+	log.Info().Err(err).Msg("move done")
 
 	return err
 }
@@ -324,9 +332,17 @@ func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParam
 		return fmt.Errorf("count: %w", err)
 	}
 
+	log.Info().Int64("count", count).Msg("move begin")
+
 	if m.par.ProgressChan != nil {
 		m.par.ProgressChan <- count // first message is always total
 	}
+
+	var dispatchCount int64
+
+	defer func() {
+		log.Debug().Int64("dispatchCount", dispatchCount).Msg("dispatcher finished")
+	}()
 
 	for count > 0 {
 		if err := ctx.Err(); err != nil {
@@ -336,12 +352,16 @@ func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParam
 			return err
 		}
 		m.txMtx.Lock()
+		// XXX: this is broken. we are dispatching more than the job because we are calling this while the workers are going
+		// this should probably happen where we are in a loop with the database row gathering
+		// or we should wait for workers to finish before going on to the next batch
 		rows, err := m.tx.GetCallAudio(ctx, dbPar)
 		m.txMtx.Unlock()
 		if err != nil {
 			return err
 		}
 
+		// if we are dry run, or there were no rows
 		if len(rows) == 0 || m.par.DryRun {
 			return nil
 		}
@@ -353,9 +373,11 @@ func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParam
 			case <-ctx.Done():
 				return nil
 			case m.moveCh <- row:
+				dispatchCount++
 			}
 		}
-		// TODO: commit refTracker every batch and figure out why ~1869 calls are being left behind
+
+		// TODO: commit refTracker every batch? and figure out why ~1869 calls are being left behind
 	}
 
 	return nil
