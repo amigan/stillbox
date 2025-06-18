@@ -30,6 +30,7 @@ type Store interface {
 	DB() *Postgres
 	DBTX() DBTX
 	InTx(context.Context, func(Store) error, pgx.TxOptions) error
+	PoolTx(ctx context.Context, opts pgx.TxOptions) (dbtx *Postgres, tx pgx.Tx, err error)
 }
 
 type Postgres struct {
@@ -45,16 +46,22 @@ func (db *Postgres) DB() *Postgres {
 	return db
 }
 
-func (db *Postgres) InTx(ctx context.Context, f func(Store) error, opts pgx.TxOptions) error {
-	tx, err := db.DB().Pool.BeginTx(ctx, opts)
+func (db *Postgres) PoolTx(ctx context.Context, opts pgx.TxOptions) (dbtx *Postgres, tx pgx.Tx, err error) {
+	tx, err = db.DB().Pool.BeginTx(ctx, opts)
 	if err != nil {
-		return fmt.Errorf("Tx begin: %w", err)
+		return nil, nil, fmt.Errorf("Tx begin: %w", err)
 	}
+
+	dbtx = &Postgres{Pool: db.Pool, Queries: db.Queries.WithTx(tx)}
+
+	return dbtx, tx, nil
+}
+
+func (db *Postgres) InTx(ctx context.Context, f func(Store) error, opts pgx.TxOptions) error {
+	dbtx, tx, err := db.PoolTx(ctx, opts)
 
 	//nolint:errcheck
 	defer tx.Rollback(ctx)
-
-	dbtx := &Postgres{Pool: db.Pool, Queries: db.Queries.WithTx(tx)}
 
 	err = f(dbtx)
 	if err != nil {
