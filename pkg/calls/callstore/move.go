@@ -82,6 +82,11 @@ type refManager struct {
 	ab AudioBackends
 }
 
+func (rm *refManager) reset() {
+	rm.del = rm.del[:0]
+	rm.cre = rm.cre[:0]
+}
+
 // Rollback deletes all created objects.
 func (rm *refManager) Rollback(ctx context.Context) error {
 	rm.Lock()
@@ -109,6 +114,8 @@ func (rm *refManager) Commit(ctx context.Context) error {
 			return err
 		}
 	}
+
+	rm.reset()
 
 	return nil
 }
@@ -242,88 +249,34 @@ type mover struct {
 	tx         database.Store
 	txMtx      sync.Mutex
 
-	moveCh        chan database.GetCallAudioRow
-	resCh         chan updateRequest
 	completedRows atomic.Int64
 	dst           AudioBackend
 	par           MoveCallParams
 }
 
-func (m *mover) moveWorker(ctx context.Context) error {
-	for row := range m.moveCh {
-		ref, blob, err := m.moveCallAudio(ctx, row)
-		if err != nil {
-			return fmt.Errorf("call %s: %w", row.ID, err)
-		}
-		m.resCh <- updateRequest{id: row.ID, blob: blob, ref: ref}
+func (m *mover) moveWorker(ctx context.Context, row database.GetCallAudioRow) error {
+	ref, blob, err := m.moveCallAudio(ctx, row)
+	if err != nil {
+		return fmt.Errorf("call %s: %w", row.ID, err)
 	}
 
-	return nil
-}
+	m.txMtx.Lock()
+	err = m.tx.SetCallAudio(ctx, row.ID, ref, blob)
+	m.txMtx.Unlock()
+	if err != nil {
+		return err
+	}
 
-func (m *mover) resultsWorker(ctx context.Context) error {
-	for res := range m.resCh {
-		m.txMtx.Lock()
-		err := m.tx.SetCallAudio(ctx, res.id, res.ref, res.blob)
-		m.txMtx.Unlock()
-		if err != nil {
-			return err
-		}
-		// increment successful rows
-		cr := m.completedRows.Add(1)
-		if cr%batchSize == 0 && m.par.ProgressChan != nil {
-			m.par.ProgressChan <- cr
-		}
+	// increment successful rows
+	cr := m.completedRows.Add(1)
+	if cr%batchSize == 0 && m.par.ProgressChan != nil {
+		m.par.ProgressChan <- cr
 	}
 
 	return nil
 }
 
 func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error {
-	var moveWorkerWg sync.WaitGroup
-	g, ctx := errgroup.WithContext(ctx)
-	for range m.numWorkers {
-		moveWorkerWg.Add(1)
-		g.Go(func() error {
-			defer moveWorkerWg.Done()
-			return m.moveWorker(ctx)
-		})
-	}
-
-	g.Go(func() error {
-		// results must be committed to DB, there is no way to cancel
-		return m.resultsWorker(context.WithoutCancel(ctx))
-	})
-
-	g.Go(func() error {
-		err := m.dispatcher(ctx, dbPar)
-
-		// shut down the move workers
-		close(m.moveCh)
-
-		// wait until workers exit so we don't close their result channel while
-		// they are attempting send
-		moveWorkerWg.Wait()
-
-		// shut down the results worker
-		close(m.resCh)
-
-		return err
-	})
-
-	err := g.Wait()
-	// collapse context.Canceled if it is what happened
-	if err != nil && errors.Is(err, context.Canceled) {
-		log.Info().Err(err).Msg("move done")
-		return context.Canceled
-	}
-
-	log.Info().Err(err).Msg("move done")
-
-	return err
-}
-
-func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParams) error {
 	m.txMtx.Lock()
 	count, err := m.tx.GetCallAudioCount(ctx, dbPar)
 	m.txMtx.Unlock()
@@ -338,24 +291,12 @@ func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParam
 		m.par.ProgressChan <- count // first message is always total
 	}
 
-	var dispatchCount int64
-
-	defer func() {
-		log.Debug().Int64("dispatchCount", dispatchCount).Msg("dispatcher finished")
-	}()
-
 	for count > 0 {
-		if err := ctx.Err(); err != nil {
-			if err == context.Canceled {
-				return nil
-			}
-			return err
-		}
+		eg, wctx := errgroup.WithContext(ctx)
+		eg.SetLimit(m.numWorkers)
+
 		m.txMtx.Lock()
-		// XXX: this is broken. we are dispatching more than the job because we are calling this while the workers are going
-		// this should probably happen where we are in a loop with the database row gathering
-		// or we should wait for workers to finish before going on to the next batch
-		rows, err := m.tx.GetCallAudio(ctx, dbPar)
+		rows, err := m.tx.GetCallAudio(wctx, dbPar)
 		m.txMtx.Unlock()
 		if err != nil {
 			return err
@@ -369,15 +310,22 @@ func (m *mover) dispatcher(ctx context.Context, dbPar database.GetCallAudioParam
 		count -= int64(len(rows))
 
 		for _, row := range rows {
-			select {
-			case <-ctx.Done():
-				return nil
-			case m.moveCh <- row:
-				dispatchCount++
-			}
+			eg.Go(func() error {
+				return m.moveWorker(wctx, row)
+			})
 		}
 
-		// TODO: commit refTracker every batch? and figure out why ~1869 calls are being left behind
+		err = eg.Wait()
+		if err != nil {
+			log.Info().Err(err).Msg("move done")
+			// collapse context.Canceled if it is what happened
+			if err != nil && errors.Is(err, context.Canceled) {
+				return context.Canceled
+			}
+
+			return err
+		}
+		// TODO: once this entire loop body is a single transaction, m.rm.Commit() here
 	}
 
 	return nil
@@ -392,8 +340,6 @@ func (s *store) newMover(dst AudioBackend, tx database.Store, rm *refManager, pa
 		ab:         s.audioBackends,
 		rm:         rm,
 		tx:         tx,
-		moveCh:     make(chan database.GetCallAudioRow, numStoreWorkers),
-		resCh:      make(chan updateRequest, numStoreWorkers*2),
 		numWorkers: numWorkers,
 		dst:        dst,
 		par:        par,
@@ -405,6 +351,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	if err != nil {
 		return 0, err
 	}
+
 	var destBackend string
 	var dst AudioBackend
 
@@ -424,6 +371,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	}
 
 	rm := newRefManager(s.audioBackends, destBackend, dst)
+	// TODO: dispatch split transactions, can also use pgxpool Acquire
 	err = s.db.InTx(context.WithoutCancel(ctx), func(tx database.Store) error {
 		dbPar := database.GetCallAudioParams{
 			Count:         batchSize,
