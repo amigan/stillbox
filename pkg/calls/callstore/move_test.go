@@ -80,7 +80,7 @@ func (m *mockAudioBackend) makeCalls(ctx context.Context, n int) []database.GetC
 			ID:       id,
 			AudioRef: []byte(ref),
 		}
-		m.Store(ctx, getCallAudioRowToSkinnyCallAudio(rows[i]))
+		m.Store(ctx, getCallAudioRowToSkinnyCallAudio(&rows[i]))
 	}
 
 	return rows

@@ -56,9 +56,12 @@ type MoveCallParams struct {
 	ProgressChan chan int64 `json:"-"`
 }
 
-const batchSize = 1000 // incidentally this is also the number of keys S3 allows in a DeleteObjects call
+const (
+	batchSize        = 5000
+	progressInterval = 500
+)
 
-func getCallAudioRowToSkinnyCallAudio(row database.GetCallAudioRow) *calls.CallAudio {
+func getCallAudioRowToSkinnyCallAudio(row *database.GetCallAudioRow) *calls.CallAudio {
 	return &calls.CallAudio{
 		ID:        row.ID,
 		CallDate:  jsontypes.Time(row.CallDate.Time),
@@ -72,7 +75,7 @@ type arTuple struct {
 	r AudioRef
 }
 
-type refManager struct {
+type refTracker struct {
 	sync.Mutex
 	del     []arTuple    // deletes are queued until transaction commit
 	cre     []AudioRef   // but creates are tracked for deletion on rollback
@@ -82,29 +85,32 @@ type refManager struct {
 	ab AudioBackends
 }
 
-func (rm *refManager) reset() {
-	rm.del = rm.del[:0]
-	rm.cre = rm.cre[:0]
+func (rt *refTracker) reset() {
+	rt.del = rt.del[:0]
+	rt.cre = rt.cre[:0]
 }
 
 // Rollback deletes all created objects.
-func (rm *refManager) Rollback(ctx context.Context) error {
-	rm.Lock()
-	defer rm.Unlock()
+// Pass it a context without cancel.
+func (rt *refTracker) Rollback(ctx context.Context) error {
+	rt.Lock()
+	defer rt.Unlock()
 
-	if rm.dst == nil {
+	if rt.dst == nil {
 		return nil
 	}
-	return rm.dst.DeleteBulk(ctx, rm.cre)
+
+	return rt.dst.DeleteBulk(ctx, rt.cre)
 }
 
 // Commit deletes all queued-for-deletion objects.
-func (rm *refManager) Commit(ctx context.Context) error {
-	rm.Lock()
-	defer rm.Unlock()
+// Pass it a context without cancel.
+func (rt *refTracker) Commit(ctx context.Context) error {
+	rt.Lock()
+	defer rt.Unlock()
 
 	m := make(map[AudioBackend][]AudioRef)
-	for _, d := range rm.del {
+	for _, d := range rt.del {
 		m[d.b] = append(m[d.b], d.r)
 	}
 
@@ -115,47 +121,47 @@ func (rm *refManager) Commit(ctx context.Context) error {
 		}
 	}
 
-	rm.reset()
+	rt.reset()
 
 	return nil
 }
 
-func newRefManager(ab AudioBackends, dstName string, dst AudioBackend) *refManager {
-	return &refManager{
-		ab:      ab,
-		dst:     dst,
-		dstName: dstName,
-	}
-}
-
-func (rm *refManager) QueueDeleteAll(ar AudioRefList) error {
+func (rt *refTracker) QueueDeleteAll(ar AudioRefList) error {
 	for ben, loc := range ar {
 		if ben == "" {
 			continue
 		}
-		be := rm.ab.Backend(ben)
+		be := rt.ab.Backend(ben)
 		if be == nil {
 			return fmt.Errorf("queue delete all: no such backend '%s'", ben)
 		}
 
-		rm.QueueDelete(be, loc)
+		rt.QueueDelete(be, loc)
 	}
 
 	return nil
 }
 
-func (rm *refManager) QueueDelete(ab AudioBackend, ar AudioRef) {
-	rm.Lock()
-	defer rm.Unlock()
+func (rt *refTracker) QueueDelete(ab AudioBackend, ar AudioRef) {
+	rt.Lock()
+	defer rt.Unlock()
 
-	rm.del = append(rm.del, arTuple{ab, ar})
+	rt.del = append(rt.del, arTuple{ab, ar})
 }
 
-func (rm *refManager) Created(ar AudioRef) {
-	rm.Lock()
-	defer rm.Unlock()
+func (rt *refTracker) Created(ar AudioRef) {
+	rt.Lock()
+	defer rt.Unlock()
 
-	rm.cre = append(rm.cre, ar)
+	rt.cre = append(rt.cre, ar)
+}
+
+func newRefTracker(ab AudioBackends, dstName string, dst AudioBackend) *refTracker {
+	return &refTracker{
+		ab:      ab,
+		dst:     dst,
+		dstName: dstName,
+	}
 }
 
 type updateRequest struct {
@@ -164,7 +170,7 @@ type updateRequest struct {
 	ref  AudioRefJSON
 }
 
-func (m *mover) moveCallAudio(ctx context.Context, row database.GetCallAudioRow) (ref AudioRefJSON, blob []byte, err error) {
+func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow) (ref AudioRefJSON, blob []byte, err error) {
 	fromBlob := false
 
 	cao := CallAudioOptions{
@@ -195,7 +201,7 @@ func (m *mover) moveCallAudio(ctx context.Context, row database.GetCallAudioRow)
 
 	// if we aren't copying, queue a clear of all existing audiorefs
 	if !m.par.Copy && len(cao.audioRefOut) > 0 {
-		m.rm.QueueDeleteAll(cao.audioRefOut)
+		m.refs.QueueDeleteAll(cao.audioRefOut)
 		clear(cao.audioRefOut)
 	}
 
@@ -213,19 +219,19 @@ func (m *mover) moveCallAudio(ctx context.Context, row database.GetCallAudioRow)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				// the call may have completed; log it anyway
-				m.rm.Created(crRef)
+				m.refs.Created(crRef)
 			}
 			return nil, nil, err
 		}
 
 		// storage succeeded, log the creation
-		m.rm.Created(crRef)
+		m.refs.Created(crRef)
 
 		if cao.audioRefOut == nil {
 			cao.audioRefOut = make(AudioRefList)
 		}
 
-		cao.audioRefOut[m.rm.dstName] = crRef
+		cao.audioRefOut[m.refs.dstName] = crRef
 		if !m.par.Copy && fromBlob {
 			// we are from the DB and copy is disabled and we are a ref, clear blob
 			blob = nil
@@ -244,32 +250,31 @@ func (m *mover) moveCallAudio(ctx context.Context, row database.GetCallAudioRow)
 
 type mover struct {
 	ab         AudioBackends
-	rm         *refManager
 	numWorkers int
-	tx         database.Store
-	txMtx      sync.Mutex
+	dbTx       database.Store
+	dbMtx      sync.Mutex
+	refs       *refTracker
 
 	completedRows atomic.Int64
 	dst           AudioBackend
 	par           MoveCallParams
 }
 
-func (m *mover) moveWorker(ctx context.Context, row database.GetCallAudioRow) error {
+func (m *mover) moveWorker(ctx context.Context, row *database.GetCallAudioRow) error {
 	ref, blob, err := m.moveCallAudio(ctx, row)
 	if err != nil {
 		return fmt.Errorf("call %s: %w", row.ID, err)
 	}
 
-	m.txMtx.Lock()
-	err = m.tx.SetCallAudio(ctx, row.ID, ref, blob)
-	m.txMtx.Unlock()
+	m.dbMtx.Lock()
+	err = m.dbTx.SetCallAudio(ctx, row.ID, ref, blob)
+	m.dbMtx.Unlock()
 	if err != nil {
 		return err
 	}
 
-	// increment successful rows
 	cr := m.completedRows.Add(1)
-	if cr%batchSize == 0 && m.par.ProgressChan != nil {
+	if cr%progressInterval == 0 && m.par.ProgressChan != nil {
 		m.par.ProgressChan <- cr
 	}
 
@@ -277,9 +282,9 @@ func (m *mover) moveWorker(ctx context.Context, row database.GetCallAudioRow) er
 }
 
 func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error {
-	m.txMtx.Lock()
-	count, err := m.tx.GetCallAudioCount(ctx, dbPar)
-	m.txMtx.Unlock()
+	m.dbMtx.Lock()
+	count, err := m.dbTx.GetCallAudioCount(ctx, dbPar)
+	m.dbMtx.Unlock()
 
 	if err != nil {
 		return fmt.Errorf("count: %w", err)
@@ -292,26 +297,31 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 	}
 
 	for count > 0 {
+		log.Debug().Str("start", dbPar.Start.Time.String()).Msg("iter")
 		eg, wctx := errgroup.WithContext(ctx)
 		eg.SetLimit(m.numWorkers)
 
-		m.txMtx.Lock()
-		rows, err := m.tx.GetCallAudio(wctx, dbPar)
-		m.txMtx.Unlock()
+		m.dbMtx.Lock()
+		rows, err := m.dbTx.GetCallAudio(wctx, dbPar)
+		m.dbMtx.Unlock()
 		if err != nil {
+			log.Debug().Err(err).Msg("gca returned error")
 			return err
 		}
 
-		// if we are dry run, or there were no rows
+		// if we are dry run, or there were no rows, we can finish now
 		if len(rows) == 0 || m.par.DryRun {
 			return nil
 		}
+
+		// XXX this might be racy since the lower bound of the interval is inclusive
+	//	dbPar.Start = rows[len(rows)-1].CallDate
 
 		count -= int64(len(rows))
 
 		for _, row := range rows {
 			eg.Go(func() error {
-				return m.moveWorker(wctx, row)
+				return m.moveWorker(wctx, &row)
 			})
 		}
 
@@ -319,30 +329,29 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 		if err != nil {
 			log.Info().Err(err).Msg("move done")
 			// collapse context.Canceled if it is what happened
-			if err != nil && errors.Is(err, context.Canceled) {
+			if errors.Is(err, context.Canceled) {
 				return context.Canceled
 			}
 
 			return err
 		}
-		// TODO: once this entire loop body is a single transaction, m.rm.Commit() here
 	}
 
 	return nil
 }
 
-func (s *store) newMover(dst AudioBackend, tx database.Store, rm *refManager, par MoveCallParams) *mover {
+func (s *store) newMover(dst AudioBackend, tx database.Store, rt *refTracker, par MoveCallParams) *mover {
 	numWorkers := numStoreWorkers
 	if par.NumWorkers != nil {
 		numWorkers = min(int(*par.NumWorkers), numStoreWorkersLimit)
 	}
 	return &mover{
 		ab:         s.audioBackends,
-		rm:         rm,
-		tx:         tx,
+		dbTx:       tx,
 		numWorkers: numWorkers,
 		dst:        dst,
 		par:        par,
+		refs:       rt,
 	}
 }
 
@@ -369,24 +378,23 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	if par.HasBackend != nil && par.DestBackend != nil && *par.HasBackend == *par.DestBackend {
 		return 0, fmt.Errorf("source hasBackend same as destination backend '%s'", *par.HasBackend)
 	}
+	dbPar := database.GetCallAudioParams{
+		Count:         batchSize,
+		Swept:         par.SweptCalls,
+		Start:         par.Start.PGTypeTSTZ(),
+		End:           par.End.PGTypeTSTZ(),
+		TagsAny:       par.TagsAny,
+		TagsNot:       par.TagsNot,
+		LongerThan:    toPGNumericMilliseconds(par.AtLeastSeconds),
+		HasBackend:    par.HasBackend,
+		HasBlob:       par.HasBlob,
+		NotHasBackend: par.DestBackend, // not already moved
+	}
 
-	rm := newRefManager(s.audioBackends, destBackend, dst)
-	// TODO: dispatch split transactions, can also use pgxpool Acquire
+	refT := newRefTracker(s.audioBackends, destBackend, dst)
+
 	err = s.db.InTx(context.WithoutCancel(ctx), func(tx database.Store) error {
-		dbPar := database.GetCallAudioParams{
-			Count:         batchSize,
-			Swept:         par.SweptCalls,
-			Start:         par.Start.PGTypeTSTZ(),
-			End:           par.End.PGTypeTSTZ(),
-			TagsAny:       par.TagsAny,
-			TagsNot:       par.TagsNot,
-			LongerThan:    toPGNumericMilliseconds(par.AtLeastSeconds),
-			HasBackend:    par.HasBackend,
-			HasBlob:       par.HasBlob,
-			NotHasBackend: par.DestBackend, // not already moved
-		}
-
-		m := s.newMover(dst, tx, rm, par)
+		m := s.newMover(dst, tx, refT, par)
 
 		err = m.do(ctx, dbPar)
 		numRows = m.completedRows.Load()
@@ -400,19 +408,19 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 
 	if err != nil {
 		numRows = 0
-		rbErr := rm.Rollback(context.WithoutCancel(ctx))
+		rbErr := refT.Rollback(context.WithoutCancel(ctx))
 		if rbErr != nil {
 			err = multierror.Append(err, rbErr)
 		} else {
-			log.Info().Msg("move rollback finished")
+			log.Debug().Msg("move rollback finished")
 		}
 	} else {
 		go func() {
-			err := rm.Commit(context.WithoutCancel(ctx))
+			err := refT.Commit(context.WithoutCancel(ctx))
 			if err != nil {
-				log.Error().Err(err).Msg("move refTracker commit")
+				log.Error().Err(err).Msg("move tx commit")
 			} else {
-				log.Info().Msg("move commit finished")
+				log.Debug().Msg("move tx commit finished")
 			}
 		}()
 	}

@@ -4657,6 +4657,82 @@ func (_c *Store_ListIncidentsP_Call) RunAndReturn(run func(ctx context.Context, 
 	return _c
 }
 
+// PoolTx provides a mock function for the type Store
+func (_mock *Store) PoolTx(ctx context.Context, opts pgx.TxOptions) (*database.Postgres, pgx.Tx, error) {
+	ret := _mock.Called(ctx, opts)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PoolTx")
+	}
+
+	var r0 *database.Postgres
+	var r1 pgx.Tx
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.TxOptions) (*database.Postgres, pgx.Tx, error)); ok {
+		return returnFunc(ctx, opts)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.TxOptions) *database.Postgres); ok {
+		r0 = returnFunc(ctx, opts)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*database.Postgres)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, pgx.TxOptions) pgx.Tx); ok {
+		r1 = returnFunc(ctx, opts)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(pgx.Tx)
+		}
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, pgx.TxOptions) error); ok {
+		r2 = returnFunc(ctx, opts)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
+}
+
+// Store_PoolTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PoolTx'
+type Store_PoolTx_Call struct {
+	*mock.Call
+}
+
+// PoolTx is a helper method to define mock.On call
+//   - ctx context.Context
+//   - opts pgx.TxOptions
+func (_e *Store_Expecter) PoolTx(ctx interface{}, opts interface{}) *Store_PoolTx_Call {
+	return &Store_PoolTx_Call{Call: _e.mock.On("PoolTx", ctx, opts)}
+}
+
+func (_c *Store_PoolTx_Call) Run(run func(ctx context.Context, opts pgx.TxOptions)) *Store_PoolTx_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgx.TxOptions
+		if args[1] != nil {
+			arg1 = args[1].(pgx.TxOptions)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_PoolTx_Call) Return(dbtx *database.Postgres, tx pgx.Tx, err error) *Store_PoolTx_Call {
+	_c.Call.Return(dbtx, tx, err)
+	return _c
+}
+
+func (_c *Store_PoolTx_Call) RunAndReturn(run func(ctx context.Context, opts pgx.TxOptions) (*database.Postgres, pgx.Tx, error)) *Store_PoolTx_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // PruneShares provides a mock function for the type Store
 func (_mock *Store) PruneShares(ctx context.Context) error {
 	ret := _mock.Called(ctx)
