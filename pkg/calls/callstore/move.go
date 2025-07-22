@@ -22,7 +22,7 @@ import (
 )
 
 // number of store workers
-const numStoreWorkers = 10
+const numStoreWorkers = 16
 const numStoreWorkersLimit = 50
 
 type MoveCallParams struct {
@@ -296,10 +296,10 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 		m.par.ProgressChan <- count // first message is always total
 	}
 
+	eg, wctx := errgroup.WithContext(ctx)
+	eg.SetLimit(m.numWorkers)
 	for count > 0 {
 		log.Debug().Str("start", dbPar.Start.Time.String()).Msg("iter")
-		eg, wctx := errgroup.WithContext(ctx)
-		eg.SetLimit(m.numWorkers)
 
 		m.dbMtx.Lock()
 		rows, err := m.dbTx.GetCallAudio(wctx, dbPar)
@@ -315,7 +315,7 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 		}
 
 		// XXX this might be racy since the lower bound of the interval is inclusive
-	//	dbPar.Start = rows[len(rows)-1].CallDate
+		dbPar.Start = rows[len(rows)-1].CallDate
 
 		count -= int64(len(rows))
 
@@ -324,17 +324,16 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 				return m.moveWorker(wctx, &row)
 			})
 		}
+	}
 
-		err = eg.Wait()
-		if err != nil {
-			log.Info().Err(err).Msg("move done")
-			// collapse context.Canceled if it is what happened
-			if errors.Is(err, context.Canceled) {
-				return context.Canceled
-			}
-
-			return err
+	if err := eg.Wait(); err != nil {
+		log.Info().Err(err).Msg("move done")
+		// collapse context.Canceled if it is what happened
+		if errors.Is(err, context.Canceled) {
+			return context.Canceled
 		}
+
+		return err
 	}
 
 	return nil
