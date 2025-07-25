@@ -1,12 +1,14 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"github.com/go-chi/chi/v5"
+	"github.com/tmaxmax/go-sse"
 )
 
 type adminAPI struct {
@@ -32,11 +34,11 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s := &sse.Server{}
+
 	progress := make(chan int64, 8)
 
 	par.ProgressChan = progress
-
-	flush := w.(http.Flusher)
 
 	go func() {
 		totalCount, ok := <-progress
@@ -44,9 +46,9 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Fprintf(w, "data:{\"total\":%d}\n", totalCount)
-
-		flush.Flush()
+		m := &sse.Message{}
+		m.AppendData(fmt.Sprintf(`{"total":%d}`, totalCount))
+		_ = s.Publish(m)
 
 		for {
 			select {
@@ -55,25 +57,28 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				fmt.Fprintf(w, "data:{\"completed\":%d}\n", msg)
-				flush.Flush()
+				m := &sse.Message{}
+				m.AppendData(fmt.Sprintf(`{"completed":%d}`, msg))
+				_ = s.Publish(m)
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 
+	go s.ServeHTTP(w, r)
+
 	numRows, err := cst.MoveCallAudio(ctx, par)
 	if err != nil {
-		wErr(w, r, internalErrorErrText(err))
+		es, _ := json.Marshal(map[string]string{"error": err.Error()})
+		m := &sse.Message{}
+		m.AppendData(string(es))
+		_ = s.Publish(m)
+
 		return
 	}
 
-	// setup SSE; maybe we will use go-sse someday
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-
-	fmt.Fprintf(w, "data:{\"final\":%d}\n", numRows)
-	flush.Flush()
+	m := &sse.Message{}
+	m.AppendData(fmt.Sprintf(`{"final":%d}`, numRows))
+	_ = s.Publish(m)
 }
