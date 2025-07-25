@@ -38,7 +38,7 @@ func (s *Server) sighup() {
 	}
 }
 
-// installSignalHandler is for non-terminating signals. Terminating signals are in pkg/cmd/serve.
+// installSignalHandler is for non-terminating signals. Terminating signals are in internal/cmd/serve.
 func (s *Server) installSignalHandlers() {
 	s.signals = make(chan os.Signal, 1)
 	go func() {

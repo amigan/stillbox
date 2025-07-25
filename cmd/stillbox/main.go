@@ -10,8 +10,8 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/version"
-	"dynatron.me/x/stillbox/pkg/cmd/admin"
-	"dynatron.me/x/stillbox/pkg/cmd/serve"
+	"dynatron.me/x/stillbox/internal/cmd/admin"
+	"dynatron.me/x/stillbox/internal/cmd/serve"
 	"dynatron.me/x/stillbox/pkg/config"
 
 	"github.com/urfave/cli/v3"

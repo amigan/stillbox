@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"dynatron.me/x/stillbox/internal/forms"
@@ -69,20 +70,25 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	go s.ServeHTTP(w, r)
+	s.Logger = func(_ *http.Request) *slog.Logger {
+		return slog.Default()
+	}
+	go func() {
+		numRows, err := cst.MoveCallAudio(ctx, par)
+		if err != nil {
+			es, _ := json.Marshal(map[string]string{"error": err.Error()})
+			m := &sse.Message{}
+			m.AppendData(string(es))
+			_ = s.Publish(m)
+			_ = s.Shutdown(ctx)
 
-	numRows, err := cst.MoveCallAudio(ctx, par)
-	if err != nil {
-		es, _ := json.Marshal(map[string]string{"error": err.Error()})
+			return
+		}
+
 		m := &sse.Message{}
-		m.AppendData(string(es))
+		m.AppendData(fmt.Sprintf(`{"final":%d}`, numRows))
 		_ = s.Publish(m)
 		_ = s.Shutdown(ctx)
-
-		return
-	}
-
-	m := &sse.Message{}
-	m.AppendData(fmt.Sprintf(`{"final":%d}`, numRows))
-	_ = s.Publish(m)
+	}()
+	s.ServeHTTP(w, r)
 }
