@@ -1,9 +1,10 @@
 package common
 
 import (
+	"context"
 	"strconv"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const (
@@ -16,13 +17,13 @@ const (
 )
 
 type cmdOptions interface {
-	Options(*cli.Context) error
+	Options(context.Context, *cli.Command) error
 	Execute() error
 }
 
 func Action(c cmdOptions) cli.ActionFunc {
-	return func(ctx *cli.Context) error {
-		err := c.Options(ctx)
+	return func(ctx context.Context, cmd *cli.Command) error {
+		err := c.Options(ctx, cmd)
 		if err != nil {
 			return err
 		}

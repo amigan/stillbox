@@ -54,7 +54,7 @@ func (c *client) MoveCalls(ctx context.Context, p callstore.MoveCallParams, prog
 
 	select {
 	case <-ctx.Done():
-	case err := <- errCh:
+	case err := <-errCh:
 		return err
 	}
 

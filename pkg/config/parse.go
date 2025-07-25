@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog/log"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 // New creates a new Configuration, but does not read it.
@@ -27,8 +28,8 @@ func New(configFile *string) *Configuration {
 	return &Configuration{configPath: configFile}
 }
 
-func (c *Configuration) Before(ctx *cli.Context) error {
-	return c.ReadConfig()
+func (c *Configuration) Before(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+	return ctx, c.ReadConfig()
 }
 
 func (c *Configuration) ReadConfig() error {
