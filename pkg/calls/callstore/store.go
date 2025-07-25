@@ -357,15 +357,15 @@ func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 }
 
 type CallsParams struct {
-	Start            *jsontypes.Time   `json:"start"`
-	End              *jsontypes.Time   `json:"end"`
-	TagsAny          []string          `json:"tagsAny"`
-	TagsNot          []string          `json:"tagsNot"`
-	TGFilter         *jsontypes.String `json:"tgFilter"`
-	SourceFilter     *string           `json:"sourceFilter"`
-	AtLeastSeconds   *float32          `json:"atLeastSeconds"`
-	UnknownTG        bool              `json:"unknownTG"`
-	TranscriptSearch *string           `json:"transcriptSearch"`
+	Start            *jsontypes.Time   `json:"start,omitempty"`
+	End              *jsontypes.Time   `json:"end,omitempty"`
+	TagsAny          []string          `json:"tagsAny,omitempty"`
+	TagsNot          []string          `json:"tagsNot,omitempty"`
+	TGFilter         *jsontypes.String `json:"tgFilter,omitempty"`
+	SourceFilter     *string           `json:"sourceFilter,omitempty"`
+	AtLeastSeconds   *float32          `json:"atLeastSeconds,omitempty"`
+	UnknownTG        bool              `json:"unknownTG,omitzero"`
+	TranscriptSearch *string           `json:"transcriptSearch,omitempty"`
 }
 
 type ListCallsParams struct {

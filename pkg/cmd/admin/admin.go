@@ -15,6 +15,7 @@ func AdminCommand(cfg *config.Configuration) *cli.Command {
 		Subcommands: []*cli.Command{
 			UsersCommand(cfg),
 			DatabaseCommand(cfg),
+			CallsCommand(cfg),
 		},
 	}
 

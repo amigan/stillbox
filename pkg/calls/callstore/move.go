@@ -13,6 +13,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/database"
+
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
@@ -30,28 +31,28 @@ type MoveCallParams struct {
 
 	// If SweptCalls is true, all other parameters are ignored
 	// and only swept calls are operated on.
-	SweptCalls *bool `json:"sweptCalls"`
+	SweptCalls *bool `json:"sweptCalls,omitempty"`
 
 	// If HasBackend is not nil, it selects calls that have the specified backend as their storage.
-	HasBackend *string `json:"hasBackend"`
+	HasBackend *string `json:"hasBackend,omitempty"`
 
 	// DestBackend specifies the destination backend. If nil or empty, the DB is used.
-	DestBackend *string `json:"destBackend"`
+	DestBackend *string `json:"destBackend,omitempty"`
 
 	// If HasBlob is not nil, it selects calls that have an audio blob set or not.
-	HasBlob *bool `json:"hasBlob"`
+	HasBlob *bool `json:"hasBlob,omitempty"`
 
 	// If Copy is true, the old object is not deleted.
 	// Dangling references will never be left.
-	Copy bool `json:"copy"`
+	Copy bool `json:"copy,omitzero"`
 
 	// DryRun specifies whether to just return the number of affected calls rather than actually moving.
-	DryRun bool `json:"dryRun"`
+	DryRun bool `json:"dryRun,omitzero"`
 
 	// NumWorkers specifies the number of workers to use for the move. It is bounded internally by numStoreWorkersLimit.
-	NumWorkers *uint `json:"numWorkers"`
+	NumWorkers *uint `json:"numWorkers,omitempty"`
 
-	// ProgressChan is a channel where the number of rows is written as the call progresses if not nil.
+	// ProgressChan, if not nil, is a channel where the number of rows is written as the call progresses.
 	// It is closed by MoveCalls on finish (or error)
 	ProgressChan chan int64 `json:"-"`
 }
@@ -305,7 +306,7 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 		rows, err := m.dbTx.GetCallAudio(wctx, dbPar)
 		m.dbMtx.Unlock()
 		if err != nil {
-			log.Debug().Err(err).Msg("gca returned error")
+			log.Debug().Err(err).Msg("GetCallAudio returned error")
 			return err
 		}
 

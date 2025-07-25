@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -23,7 +24,9 @@ func (aa *adminAPI) Subrouter() http.Handler {
 }
 
 func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+	r = r.WithContext(ctx)
 
 	cst := callstore.FromCtx(ctx)
 
@@ -74,6 +77,7 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 		m := &sse.Message{}
 		m.AppendData(string(es))
 		_ = s.Publish(m)
+		_ = s.Shutdown(ctx)
 
 		return
 	}
