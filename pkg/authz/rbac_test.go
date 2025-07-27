@@ -147,17 +147,17 @@ func TestRBAC(t *testing.T) {
 			subject: &users.User{
 				ID: 2,
 			},
-			resource: authz.UseResource(entities.ResourceShare),
+			resource:  authz.UseResource(entities.ResourceShare),
 			action:    entities.ActionCreate,
 			expectErr: errors.New(`access denied for Action: "create" on Resource: "Share"`),
 		},
 		{
 			name: "user create share sharer",
 			subject: &users.User{
-				ID: 2,
+				ID:    2,
 				Roles: []string{entities.RoleSharer},
 			},
-			resource: authz.UseResource(entities.ResourceShare),
+			resource:  authz.UseResource(entities.ResourceShare),
 			action:    entities.ActionCreate,
 			expectErr: nil,
 		},
