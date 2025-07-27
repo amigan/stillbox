@@ -31,15 +31,16 @@ require (
 	github.com/knadh/koanf/v2 v2.2.0
 	github.com/lestrrat-go/jwx/v2 v2.1.5
 	github.com/matoous/go-nanoid v1.5.1
+	github.com/mattn/go-isatty v0.0.20
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/minio/minio-go/v7 v7.0.92
 	github.com/nikoksr/notify v1.3.0
 	github.com/prometheus/client_golang v1.11.1
 	github.com/rs/zerolog v1.34.0
+	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
-	github.com/tmaxmax/go-sse v0.11.0
 	github.com/urfave/cli/v3 v3.3.8
 	github.com/urfave/sflags v0.4.1
 	golang.org/x/crypto v0.37.0
@@ -81,7 +82,6 @@ require (
 	github.com/lestrrat-go/iter v1.0.2 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/minio/crc64nvme v1.0.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
@@ -96,7 +96,6 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/schollz/progressbar/v3 v3.18.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/tinylib/msgp v1.3.0 // indirect
