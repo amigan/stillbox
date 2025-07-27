@@ -15,7 +15,7 @@ server:
       - 'localhost:*'
       - 'stillbox.server'
   # if adminSocket is set/not null, it specifies a path where stillbox will
-  # #open a unix domain socket for local daemon control use
+  # open a unix domain socket for local daemon control use
   adminSocket: /var/run/stillbox/stillbox.sock
 
 db:
@@ -149,7 +149,7 @@ callStorage:
       # if externalHost is set, this host will be used to generate presigned URLs
       # for call audio redirect to clients rather than endpoint above
       externalHost: 'garage.example.com'
-      # if externalHost is set, externalSecure specified whether to use https for presigned URLs
+      # if externalHost is set, externalSecure specifies whether to use https for presigned URLs
       externalSecure: true
       # timeout is the amount of time for S3 request deadline before next action (store in DB or fail)
       timeout: 10s
