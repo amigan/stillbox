@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 )
@@ -21,42 +22,69 @@ type ProgressMsg struct {
 
 type ProgressCallback func(ProgressMsg)
 
-func (c *client) MoveCalls(ctx context.Context, p callstore.MoveCallParams, progressCb ProgressCallback) error {
+func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, progressCb ProgressCallback) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	req, err := c.POST(ctx, "/api/move-calls", p)
+	req, err := c.POST(ctx, "/admin/move-calls", p)
 	if err != nil {
 		return err
 	}
 
-	errCh := make(chan error)
-	cb := func(msg []byte) {
+	cb := func(msg []byte) error {
 		var m ProgressMsg
+		if len(msg) < 1 {
+			return nil
+		}
+
 		err := json.Unmarshal(msg, &m)
 		if err != nil {
-			errCh <- err
-			return
+			return err
 		}
 
 		if m.Error != nil {
-			errCh <- errors.New(*m.Error)
-			return
+			return errors.New(*m.Error)
 		}
 
 		progressCb(m)
+		return nil
 	}
 
-	err = c.sseSubscribe(req, cb)
+	resp, err := c.hc.Do(req)
 	if err != nil {
 		return err
 	}
 
-	select {
-	case <-ctx.Done():
-	case err := <-errCh:
+	if resp.StatusCode != 200 {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		err = cb(body)
 		return err
 	}
 
-	return nil
+	ch, err := c.sseSubscribe(resp)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	for {
+		select {
+		case msg, ok := <-ch:
+			if !ok {
+				return nil
+			}
+
+			err := cb(msg)
+			if err != nil {
+				return err
+			}
+		case <-ctx.Done():
+			return context.Canceled
+		}
+	}
 }

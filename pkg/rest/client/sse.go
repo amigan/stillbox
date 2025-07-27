@@ -1,31 +1,36 @@
 package client
 
 import (
-	"context"
-	"errors"
+	"bufio"
+	"bytes"
 	"net/http"
-
-	"github.com/tmaxmax/go-sse"
+	"strings"
 )
 
-type EventCallback func(msg []byte)
+func (c *client) sseSubscribe(resp *http.Response) (chan []byte, error) {
+	rdr := bufio.NewReader(resp.Body)
 
-func (c *client) sseSubscribe(req *http.Request, cb EventCallback) error {
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Accept", "text/event-stream")
-	req.Header.Set("Connection", "keep-alive")
+	evChan := make(chan []byte)
 
-	sseClient := *sse.DefaultClient
-	sseClient.HTTPClient = &c.hc
+	go func() {
+		var buf bytes.Buffer
+		for {
+			ln, err := rdr.ReadBytes('\n')
+			if err != nil {
+				evChan <- buf.Bytes()
+				close(evChan)
+				return
+			}
 
-	conn := sseClient.NewConnection(req)
-	_ = conn.SubscribeToAll(func(ev sse.Event) {
-		cb([]byte(ev.Data))
-	})
+			switch {
+			case strings.HasPrefix(string(ln), "data:"):
+				buf.Write(ln[5:])
+			case bytes.Equal(ln, []byte("\n")):
+				evChan <- buf.Bytes()
+				buf.Reset()
+			}
+		}
+	}()
 
-	if err := conn.Connect(); !errors.Is(err, context.Canceled) {
-		return err
-	}
-
-	return nil
+	return evChan, nil
 }

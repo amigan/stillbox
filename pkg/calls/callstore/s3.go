@@ -46,8 +46,7 @@ func (sb *s3Backend) Store(ctx context.Context, call *calls.CallAudio) (AudioRef
 
 	_, err := sb.cli.PutObject(dctx, sb.Bucket, key, bytes.NewReader(call.AudioBlob), int64(len(call.AudioBlob)), minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
-		// if the context was canceled, our caller will still be interested in key
-		return key, err
+		return nil, err
 	}
 
 	return key, nil
@@ -132,8 +131,18 @@ func (sb *s3Backend) DeleteBulk(ctx context.Context, refs []AudioRef) error {
 	}()
 
 	var err error
+	var notFoundCount int64
 	for rErr := range sb.cli.RemoveObjects(ctx, sb.Bucket, objCh, minio.RemoveObjectsOptions{}) {
+		if rErr.Error() == "Key not found" {
+			notFoundCount++
+			continue
+		}
+
 		err = multierror.Append(err, &rErr)
+	}
+
+	if notFoundCount > 0 {
+		err = multierror.Append(fmt.Errorf("Key not found (x%d)", notFoundCount))
 	}
 
 	return err

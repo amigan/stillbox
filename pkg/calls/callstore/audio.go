@@ -21,6 +21,7 @@ import (
 var (
 	ErrCallAudioNotFound = errors.New("call audio not found")
 	ErrBadAudioRef       = errors.New("bad audio reference")
+	ErrNXBackend         = errors.New("no such backend")
 )
 
 type AudioRef any
@@ -104,7 +105,7 @@ func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, a
 	for backend, location := range refm {
 		be, has := sb.backends[backend]
 		if !has {
-			err = fmt.Errorf("get call audio: no such backend '%s'", backend)
+			err = fmt.Errorf("get call audio: %w '%s'", ErrNXBackend, backend)
 			continue
 		}
 		call.AudioBlob, call.AudioURL, err = be.Get(ctx, call, location, opts)
@@ -124,7 +125,7 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj Audio
 		be, has := ab.backends[beName]
 		if !has {
 			// this should never happen
-			return nil, fmt.Errorf("no such backend '%s'", beName)
+			return nil, fmt.Errorf("%w '%s'", ErrNXBackend, beName)
 		}
 
 		res := be.Filter.Test(ctx, call)
@@ -201,7 +202,7 @@ func MakeBackends(ctx context.Context, fc tgstore.FilterCache, met metrics.Metri
 
 		makeBackend, hasBackend := backends[cf.Backend]
 		if !hasBackend {
-			return nil, fmt.Errorf("unknown backend '%s'", cf.Backend)
+			return nil, fmt.Errorf("%w '%s'", ErrNXBackend, cf.Backend)
 		}
 
 		be, err = makeBackend(cf.Config)

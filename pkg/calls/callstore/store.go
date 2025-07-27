@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
@@ -66,6 +67,8 @@ type Store interface {
 type store struct {
 	db            database.Store
 	audioBackends AudioBackends
+
+	moveInProgress sync.Mutex
 }
 
 func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, audioBE []config.CallStorage) (*store, error) {
@@ -357,15 +360,15 @@ func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 }
 
 type CallsParams struct {
-	Start            *jsontypes.Time   `json:"start,omitempty"`
-	End              *jsontypes.Time   `json:"end,omitempty"`
-	TagsAny          []string          `json:"tagsAny,omitempty"`
-	TagsNot          []string          `json:"tagsNot,omitempty"`
-	TGFilter         *jsontypes.String `json:"tgFilter,omitempty"`
-	SourceFilter     *string           `json:"sourceFilter,omitempty"`
-	AtLeastSeconds   *float32          `json:"atLeastSeconds,omitempty"`
-	UnknownTG        bool              `json:"unknownTG,omitzero"`
-	TranscriptSearch *string           `json:"transcriptSearch,omitempty"`
+	Start            *jsontypes.Time   `json:"start,omitempty" desc:"timestamp start" flag:"start s"`
+	End              *jsontypes.Time   `json:"end,omitempty" desc:"timestamp end" flag:"end e"`
+	TagsAny          []string          `json:"tagsAny,omitempty" desc:"talkgroup tags contain any"`
+	TagsNot          []string          `json:"tagsNot,omitempty" desc:"talkgroup tags doesn't contain"`
+	TGFilter         *jsontypes.String `json:"tgFilter,omitempty" desc:"talkgroup name filter" flag:"tg-filter t"`
+	SourceFilter     *string           `json:"sourceFilter,omitempty" desc:"source contains"`
+	AtLeastSeconds   *float32          `json:"atLeastSeconds,omitempty" desc:"call length at least seconds" flag:"length l"`
+	UnknownTG        bool              `json:"unknownTG,omitzero" desc:"talkgroup is unknown" flag:"unknown-tg u"`
+	TranscriptSearch *string           `json:"transcriptSearch,omitempty" desc:"transcript contains" flag:"transcript-search T"`
 }
 
 type ListCallsParams struct {

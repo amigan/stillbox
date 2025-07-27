@@ -166,6 +166,14 @@ func internalErrorErrText(err error) render.Renderer {
 	}
 }
 
+func tooManyRequestsErrText(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusTooManyRequests,
+		Error: "Too Many Requests: " + err.Error(),
+	}
+}
+
 type errResponder func(error) render.Renderer
 
 var statusMapping = map[error]errResponder{
@@ -189,12 +197,15 @@ var statusMapping = map[error]errResponder{
 	shares.ErrBadType:              badRequestErrText,
 	calls.ErrInvalidInterval:       badRequestErrText,
 	callstore.ErrCallAudioNotFound: notFoundErrText,
+	callstore.ErrNXBackend:         badRequestErrText,
+	callstore.ErrSrcDestSame:       badRequestErrText,
+	callstore.ErrMoveInProgress:    tooManyRequestsErrText,
 }
 
 func autoError(err error) render.Renderer {
 	c, ok := statusMapping[err]
 	if ok {
-		c(err)
+		return c(err)
 	}
 
 	for e, c := range statusMapping { // check if err wraps an error we know about

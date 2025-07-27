@@ -9,6 +9,12 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+
+	"dynatron.me/x/stillbox/internal/version"
+)
+
+var (
+	APIClientUA = version.HttpString("go-api-client")
 )
 
 type Client interface {
@@ -26,7 +32,7 @@ type ClientOption func(*client)
 func UnixSocket(p string) ClientOption {
 	return func(c *client) {
 		c.unixSocket = &p
-		baseURL, err := url.Parse("http://unix/")
+		baseURL, err := url.Parse("http://unix")
 		if err != nil {
 			panic(err)
 		}
@@ -82,15 +88,20 @@ func (c *client) newRequest(ctx context.Context, method, endpoint string, body a
 
 	var bodyReader io.Reader
 
-	if body != nil {
-		pay, err := json.Marshal(body)
-		if err != nil {
-			return nil, err
-		}
+	switch br := body.(type) {
+	case io.Reader:
+		bodyReader = br
+	default:
+		if body == nil {
+			bodyReader = http.NoBody
+		} else {
+			pay, err := json.Marshal(body)
+			if err != nil {
+				return nil, err
+			}
 
-		bodyReader = bytes.NewReader(pay)
-	} else {
-		bodyReader = http.NoBody
+			bodyReader = bytes.NewReader(pay)
+		}
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), bodyReader)
@@ -99,6 +110,7 @@ func (c *client) newRequest(ctx context.Context, method, endpoint string, body a
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", APIClientUA)
 
 	return req, nil
 }

@@ -31,26 +31,26 @@ type MoveCallParams struct {
 
 	// If SweptCalls is true, all other parameters are ignored
 	// and only swept calls are operated on.
-	SweptCalls *bool `json:"sweptCalls,omitempty"`
+	SweptCalls *bool `json:"sweptCalls,omitempty" desc:"swept calls only" flag:"swept-calls S"`
 
 	// If HasBackend is not nil, it selects calls that have the specified backend as their storage.
-	HasBackend *string `json:"hasBackend,omitempty"`
+	HasBackend *string `json:"hasBackend,omitempty" desc:"calls that have specified backend" flag:"has-backend H"`
 
 	// DestBackend specifies the destination backend. If nil or empty, the DB is used.
-	DestBackend *string `json:"destBackend,omitempty"`
+	DestBackend *string `json:"destBackend,omitempty" desc:"destination backend" flag:"destination D"`
 
 	// If HasBlob is not nil, it selects calls that have an audio blob set or not.
-	HasBlob *bool `json:"hasBlob,omitempty"`
+	HasBlob *bool `json:"hasBlob,omitempty" desc:"only calls that have blob set" flag:"has-blob B"`
 
 	// If Copy is true, the old object is not deleted.
 	// Dangling references will never be left.
-	Copy bool `json:"copy,omitzero"`
+	Copy bool `json:"copy,omitzero" desc:"do not delete old audio object" flag:"copy c"`
 
 	// DryRun specifies whether to just return the number of affected calls rather than actually moving.
-	DryRun bool `json:"dryRun,omitzero"`
+	DryRun bool `json:"dryRun,omitzero" desc:"dry run" flag:"dry-run n"`
 
 	// NumWorkers specifies the number of workers to use for the move. It is bounded internally by numStoreWorkersLimit.
-	NumWorkers *uint `json:"numWorkers,omitempty"`
+	NumWorkers *uint `json:"numWorkers,omitempty" desc:"number of workers" flag:"workers w"`
 
 	// ProgressChan, if not nil, is a channel where the number of rows is written as the call progresses.
 	// It is closed by MoveCalls on finish (or error)
@@ -218,10 +218,6 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 		// store in backend
 		crRef, err := m.dst.Store(ctx, ca)
 		if err != nil {
-			if errors.Is(err, context.Canceled) {
-				// the call may have completed; log it anyway
-				m.refs.Created(crRef)
-			}
 			return nil, nil, err
 		}
 
@@ -329,10 +325,6 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 
 	if err := eg.Wait(); err != nil {
 		log.Info().Err(err).Msg("move done")
-		// collapse context.Canceled if it is what happened
-		if errors.Is(err, context.Canceled) {
-			return context.Canceled
-		}
 
 		return err
 	}
@@ -355,10 +347,20 @@ func (s *store) newMover(dst AudioBackend, tx database.Store, rt *refTracker, pa
 	}
 }
 
+var (
+	ErrSrcDestSame    = errors.New("source and destination backend are the same")
+	ErrMoveInProgress = errors.New("move in progress")
+)
+
+// MoveCallAudio moves calls from one audio backing store to another. It returns the number of rows moved.
 func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows int64, err error) {
 	_, err = authz.Check(ctx, authz.UseResource(entities.ResourceCall), authz.WithActions(entities.ActionMoveCallAudio))
 	if err != nil {
 		return 0, err
+	}
+
+	if !s.moveInProgress.TryLock() {
+		return 0, ErrMoveInProgress
 	}
 
 	var destBackend string
@@ -368,7 +370,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		destBackend = *par.DestBackend
 		dst = s.audioBackends.Backend(destBackend)
 		if dst == nil {
-			return 0, fmt.Errorf("move params: no such backend '%s'", *par.DestBackend)
+			return 0, fmt.Errorf("move params: %w '%s'", ErrNXBackend, *par.DestBackend)
 		}
 	} else {
 		// otherwise dst is the database, exclude already copied
@@ -376,7 +378,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	}
 
 	if par.HasBackend != nil && par.DestBackend != nil && *par.HasBackend == *par.DestBackend {
-		return 0, fmt.Errorf("source hasBackend same as destination backend '%s'", *par.HasBackend)
+		return 0, fmt.Errorf("%w '%s'", ErrSrcDestSame, *par.HasBackend)
 	}
 	dbPar := database.GetCallAudioParams{
 		Count:         batchSize,
@@ -395,7 +397,6 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 
 	err = s.db.InTx(context.WithoutCancel(ctx), func(tx database.Store) error {
 		m := s.newMover(dst, tx, refT, par)
-
 		err = m.do(ctx, dbPar)
 		numRows = m.completedRows.Load()
 
@@ -407,15 +408,21 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	}, pgx.TxOptions{})
 
 	if err != nil {
-		numRows = 0
-		rbErr := refT.Rollback(context.WithoutCancel(ctx))
-		if rbErr != nil {
-			err = multierror.Append(err, rbErr)
-		} else {
-			log.Debug().Msg("move rollback finished")
-		}
+		go func() {
+			// unlock only after the rollback finishes
+			defer s.moveInProgress.Unlock()
+			numRows = 0
+			rbErr := refT.Rollback(context.WithoutCancel(ctx))
+			if rbErr != nil {
+				err = multierror.Append(err, rbErr)
+			} else {
+				log.Debug().Msg("move rollback finished")
+			}
+		}()
 	} else {
 		go func() {
+			// unlock only after the commit finishes
+			defer s.moveInProgress.Unlock()
 			err := refT.Commit(context.WithoutCancel(ctx))
 			if err != nil {
 				log.Error().Err(err).Msg("move tx commit")

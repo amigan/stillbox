@@ -1,16 +1,15 @@
 package rest
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
+	"sync/atomic"
 
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"github.com/go-chi/chi/v5"
-	"github.com/tmaxmax/go-sse"
+	"github.com/rs/zerolog/log"
 )
 
 type adminAPI struct {
@@ -25,24 +24,24 @@ func (aa *adminAPI) Subrouter() http.Handler {
 }
 
 func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithCancel(r.Context())
-	defer cancel()
-	r = r.WithContext(ctx)
+	ctx := r.Context()
 
 	cst := callstore.FromCtx(ctx)
 
 	var par callstore.MoveCallParams
 	err := forms.Unmarshal(r, &par, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
 	if err != nil {
-		wErr(w, r, badRequestErrText(err))
+		wErr(w, r, autoError(err))
 		return
 	}
-
-	s := &sse.Server{}
 
 	progress := make(chan int64, 8)
 
 	par.ProgressChan = progress
+
+	rc := http.NewResponseController(w)
+
+	var sentSSE atomic.Bool
 
 	go func() {
 		totalCount, ok := <-progress
@@ -50,9 +49,15 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		m := &sse.Message{}
-		m.AppendData(fmt.Sprintf(`{"total":%d}`, totalCount))
-		_ = s.Publish(m)
+		sentSSE.Store(true)
+
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+
+		fmt.Fprintf(w, "data:{\"total\":%d}\n\n", totalCount)
+
+		rc.Flush()
 
 		for {
 			select {
@@ -61,34 +66,28 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				m := &sse.Message{}
-				m.AppendData(fmt.Sprintf(`{"completed":%d}`, msg))
-				_ = s.Publish(m)
+				fmt.Fprintf(w, "data:{\"completed\":%d}\n\n", msg)
+				rc.Flush()
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 
-	s.Logger = func(_ *http.Request) *slog.Logger {
-		return slog.Default()
-	}
-	go func() {
-		numRows, err := cst.MoveCallAudio(ctx, par)
-		if err != nil {
-			es, _ := json.Marshal(map[string]string{"error": err.Error()})
-			m := &sse.Message{}
-			m.AppendData(string(es))
-			_ = s.Publish(m)
-			_ = s.Shutdown(ctx)
-
-			return
+	numRows, err := cst.MoveCallAudio(ctx, par)
+	if err != nil {
+		if sentSSE.Load() {
+			b, err := json.Marshal(map[string]string{"error": err.Error()})
+			if err != nil {
+				log.Error().Err(err).Msg("move call rest encode")
+			}
+			fmt.Fprintf(w, "data:%s\n", string(b))
+		} else {
+			wErr(w, r, autoError(err))
 		}
+		return
+	}
 
-		m := &sse.Message{}
-		m.AppendData(fmt.Sprintf(`{"final":%d}`, numRows))
-		_ = s.Publish(m)
-		_ = s.Shutdown(ctx)
-	}()
-	s.ServeHTTP(w, r)
+	fmt.Fprintf(w, "data:{\"final\":%d}\n\n", numRows)
+	rc.Flush()
 }
