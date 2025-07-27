@@ -23,7 +23,7 @@ import (
 
 // number of store workers
 const numStoreWorkers = 16
-const numStoreWorkersLimit = 50
+const numStoreWorkersLimit = 128
 
 type MoveCallParams struct {
 	CallsParams

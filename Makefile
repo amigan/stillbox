@@ -8,7 +8,7 @@ all: client/stillbox/dist
 	go build -o stillbox ${GOFLAGS} ${LDFLAGS} ./cmd/stillbox/
 	go build -o calls ${GOFLAGS} ${LDFLAGS} ./cmd/calls/
 
-buildpprof:
+pprof:
 	go build -o stillbox-pprof ${GOFLAGS} ${LDFLAGS} -tags pprof ./cmd/stillbox
 
 client/stillbox/dist:
