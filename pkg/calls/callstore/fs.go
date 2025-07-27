@@ -95,9 +95,9 @@ func (fsb *fsBackend) Delete(_ context.Context, audioRef AudioRef) error {
 	return os.Remove(path.Join(fsb.Root, refPath))
 }
 
-func (fsb *fsBackend) DeleteBulk(_ context.Context, refs []AudioRef) error {
+func (fsb *fsBackend) DeleteBulk(ctx context.Context, refs []AudioRef) error {
 	for _, r := range refs {
-		rErr := fsb.Delete(nil, r)
+		rErr := fsb.Delete(ctx, r)
 		if rErr != nil {
 			return rErr
 		}

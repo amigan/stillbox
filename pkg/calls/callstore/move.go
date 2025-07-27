@@ -15,7 +15,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 
 	"github.com/goccy/go-json"
-	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
@@ -165,12 +164,6 @@ func newRefTracker(ab AudioBackends, dstName string, dst AudioBackend) *refTrack
 	}
 }
 
-type updateRequest struct {
-	id   uuid.UUID
-	blob []byte
-	ref  AudioRefJSON
-}
-
 func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow) (ref AudioRefJSON, blob []byte, err error) {
 	fromBlob := false
 
@@ -202,7 +195,9 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 
 	// if we aren't copying, queue a clear of all existing audiorefs
 	if !m.par.Copy && len(cao.audioRefOut) > 0 {
-		m.refs.QueueDeleteAll(cao.audioRefOut)
+		if err := m.refs.QueueDeleteAll(cao.audioRefOut); err != nil {
+			return nil, nil, err
+		}
 		clear(cao.audioRefOut)
 	}
 

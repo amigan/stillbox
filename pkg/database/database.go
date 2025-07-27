@@ -59,6 +59,9 @@ func (db *Postgres) PoolTx(ctx context.Context, opts pgx.TxOptions) (dbtx *Postg
 
 func (db *Postgres) InTx(ctx context.Context, f func(Store) error, opts pgx.TxOptions) error {
 	dbtx, tx, err := db.PoolTx(ctx, opts)
+	if err != nil {
+		return err
+	}
 
 	//nolint:errcheck
 	defer tx.Rollback(ctx)

@@ -312,7 +312,10 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 				shutReq <- err
 			}
 
-			udomSrv.Serve(l)
+			err = udomSrv.Serve(l)
+			if err != nil {
+				log.Error().Err(err).Msg("control socket serve")
+			}
 		}()
 	}
 

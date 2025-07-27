@@ -17,6 +17,7 @@ import (
 	dbmock "dynatron.me/x/stillbox/pkg/database/mocks"
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
@@ -80,7 +81,7 @@ func (m *mockAudioBackend) makeCalls(ctx context.Context, n int) []database.GetC
 			ID:       id,
 			AudioRef: []byte(ref),
 		}
-		m.Store(ctx, getCallAudioRowToSkinnyCallAudio(&rows[i]))
+		_, _ = m.Store(ctx, getCallAudioRowToSkinnyCallAudio(&rows[i]))
 	}
 
 	return rows

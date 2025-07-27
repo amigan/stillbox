@@ -79,7 +79,6 @@ type audioStorageBackend struct {
 	Filter  *filter.Filter
 	OnError config.StorageDisposition
 	AudioBackend
-	met audioStorageMetrics
 }
 
 type audioStorageMetrics struct {

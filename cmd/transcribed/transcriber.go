@@ -1,3 +1,5 @@
+//go:build whisper
+// +build whisper
 package main
 
 import (

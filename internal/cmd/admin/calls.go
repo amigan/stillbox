@@ -123,7 +123,7 @@ func moveCommand(cfg *config.Config) *cli.Command {
 			err = c.MoveCalls(ctx, params, progressCb)
 			if err != nil {
 				if prog.pb != nil {
-					prog.pb.Exit()
+					_ = prog.pb.Exit()
 				}
 				return err
 			}

@@ -158,14 +158,6 @@ func internalError(err error) render.Renderer {
 	}
 }
 
-func internalErrorErrText(err error) render.Renderer {
-	return &errResponse{
-		Err:   err,
-		Code:  http.StatusInternalServerError,
-		Error: "Internal server error: " + err.Error(),
-	}
-}
-
 func tooManyRequestsErrText(err error) render.Renderer {
 	return &errResponse{
 		Err:   err,
