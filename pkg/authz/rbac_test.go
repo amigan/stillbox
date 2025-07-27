@@ -143,6 +143,25 @@ func TestRBAC(t *testing.T) {
 			expectErr: errors.New(`access denied for Action: "delete" on Resource: "Call"`),
 		},
 		{
+			name: "user create share not sharer",
+			subject: &users.User{
+				ID: 2,
+			},
+			resource: authz.UseResource(entities.ResourceShare),
+			action:    entities.ActionCreate,
+			expectErr: errors.New(`access denied for Action: "create" on Resource: "Share"`),
+		},
+		{
+			name: "user create share sharer",
+			subject: &users.User{
+				ID: 2,
+				Roles: []string{entities.RoleSharer},
+			},
+			resource: authz.UseResource(entities.ResourceShare),
+			action:    entities.ActionCreate,
+			expectErr: nil,
+		},
+		{
 			name: "user share call not submitter",
 			subject: &users.User{
 				ID: 2,
