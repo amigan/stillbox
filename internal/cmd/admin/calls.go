@@ -48,11 +48,17 @@ func (p *progresser) textCb(msg client.ProgressMsg) {
 func (p *progresser) ttyCb(msg client.ProgressMsg) {
 	switch {
 	case msg.Completed != nil:
+		if p.pb == nil {
+			break
+		}
 		err := p.pb.Set64(*msg.Completed)
 		if err != nil {
 			panic(err)
 		}
 	case msg.Total != nil:
+		if *msg.Total == 0 {
+			break
+		}
 		p.pb = progressbar.NewOptions64(
 			*msg.Total,
 			progressbar.OptionSetDescription("moving calls"),
@@ -71,9 +77,15 @@ func (p *progresser) ttyCb(msg client.ProgressMsg) {
 			progressbar.OptionSetRenderBlankState(true),
 		)
 	case msg.Final != nil:
-		_ = p.pb.Exit()
-		p.pb = nil
-		fmt.Printf("\nFinished %d calls\n", *msg.Final)
+		if p.pb != nil {
+			err := p.pb.Set64(*msg.Final)
+			if err != nil {
+				panic(err)
+			}
+			_ = p.pb.Exit()
+			p.pb = nil
+		}
+		fmt.Printf("Moved %d calls\n", *msg.Final)
 	}
 }
 

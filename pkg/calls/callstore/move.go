@@ -59,7 +59,7 @@ type MoveCallParams struct {
 
 const (
 	batchSize        = 5000
-	progressInterval = 500
+	progressInterval = 50
 )
 
 func getCallAudioRowToSkinnyCallAudio(row *database.GetCallAudioRow) *calls.CallAudio {

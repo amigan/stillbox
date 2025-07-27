@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync/atomic"
 
 	"dynatron.me/x/stillbox/internal/forms"
@@ -23,7 +24,10 @@ func (aa *adminAPI) Subrouter() http.Handler {
 	return r
 }
 
-func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
+// moveCalls handles the admin call move endpoint.
+// If `text/event-stream` appears in the Accept: header, server-side events will be used to indicate
+// progress to the client.
+func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	cst := callstore.FromCtx(ctx)
@@ -35,48 +39,49 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	progress := make(chan int64, 8)
-
-	par.ProgressChan = progress
-
 	rc := http.NewResponseController(w)
-
+	progress := strings.Contains(r.Header.Get("Accept"), "text/event-stream")
 	var sentSSE atomic.Bool
 
-	go func() {
-		totalCount, ok := <-progress
-		if !ok {
-			return
-		}
+	if progress {
+		progCh := make(chan int64, 8)
+		par.ProgressChan = progCh
 
-		sentSSE.Store(true)
-
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Connection", "keep-alive")
-
-		fmt.Fprintf(w, "data:{\"total\":%d}\n\n", totalCount)
-
-		rc.Flush()
-
-		for {
-			select {
-			case msg, ok := <-progress:
-				if !ok {
-					return
-				}
-
-				fmt.Fprintf(w, "data:{\"completed\":%d}\n\n", msg)
-				rc.Flush()
-			case <-ctx.Done():
+		go func() {
+			totalCount, ok := <-progCh
+			if !ok {
 				return
 			}
-		}
-	}()
+
+			sentSSE.Store(true)
+
+			w.Header().Set("Content-Type", "text/event-stream")
+			w.Header().Set("Cache-Control", "no-cache")
+			w.Header().Set("Connection", "keep-alive")
+
+			fmt.Fprintf(w, "data:{\"total\":%d}\n\n", totalCount)
+
+			rc.Flush()
+
+			for {
+				select {
+				case msg, ok := <-progCh:
+					if !ok {
+						return
+					}
+
+					fmt.Fprintf(w, "data:{\"completed\":%d}\n\n", msg)
+					rc.Flush()
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+	}
 
 	numRows, err := cst.MoveCallAudio(ctx, par)
 	if err != nil {
-		if sentSSE.Load() {
+		if progress && sentSSE.Load() {
 			b, err := json.Marshal(map[string]string{"error": err.Error()})
 			if err != nil {
 				log.Error().Err(err).Msg("move call rest encode")
@@ -88,6 +93,10 @@ func (aa *adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "data:{\"final\":%d}\n\n", numRows)
-	rc.Flush()
+	if progress {
+		fmt.Fprintf(w, "data:{\"final\":%d}\n\n", numRows)
+		rc.Flush()
+	} else {
+		respond(w, r, map[string]int64{"count": numRows})
+	}
 }

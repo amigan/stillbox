@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"os"
 
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 )
@@ -31,17 +33,9 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 		return err
 	}
 
-	cb := func(msg []byte) error {
-		var m ProgressMsg
-		if len(msg) < 1 {
-			return nil
-		}
+	setSSErequestHeaders(req)
 
-		err := json.Unmarshal(msg, &m)
-		if err != nil {
-			return err
-		}
-
+	cb := func(m ProgressMsg) error {
 		if m.Error != nil {
 			return errors.New(*m.Error)
 		}
@@ -55,22 +49,32 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 		return err
 	}
 
+	defer resp.Body.Close()
+
+	//b := io.TeeReader(resp.Body, os.Stderr)
+	_ = os.Stderr
+	b := resp.Body
+
 	if resp.StatusCode != 200 {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}
 
-		err = cb(body)
+		var m ProgressMsg
+		err = json.Unmarshal(body, &m)
+		if err != nil {
+			return fmt.Errorf("decoding '%s': %w", string(body), err)
+		}
+
+		err = cb(m)
 		return err
 	}
 
-	ch, err := c.sseSubscribe(resp)
+	ch, err := sseSubscribe[ProgressMsg](b)
 	if err != nil {
 		return err
 	}
-
-	defer resp.Body.Close()
 
 	for {
 		select {
