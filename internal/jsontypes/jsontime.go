@@ -61,8 +61,27 @@ func (t Time) MarshalJSON() ([]byte, error) {
 	return json.Marshal(time.Time(t))
 }
 
-func (t Time) String() string {
-	return time.Time(t).String()
+func (t *Time) String() string {
+	if t == nil || *t == (Time{}) {
+		return ""
+	}
+
+	return time.Time(*t).String()
+}
+
+func (t *Time) Set(s string) error {
+	d, err := dateparse.ParseAny(s)
+	if err != nil {
+		return err
+	}
+
+	*t = Time(d)
+
+	return nil
+}
+
+func (t *Time) Type() string {
+	return "timestamp"
 }
 
 func (t Time) Time() time.Time {
@@ -104,6 +123,10 @@ func (d *Duration) UnmarshalText(text []byte) error {
 	*d = Duration(dur)
 
 	return nil
+}
+
+func (d *Duration) Set(s string) error {
+	return d.UnmarshalText([]byte(s))
 }
 
 func (d *Duration) UnmarshalJSON(b []byte) error {

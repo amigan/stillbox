@@ -1846,6 +1846,74 @@ func (_c *Store_GetCall_Call) RunAndReturn(run func(ctx context.Context, id uuid
 	return _c
 }
 
+// GetCallAudio provides a mock function for the type Store
+func (_mock *Store) GetCallAudio(ctx context.Context, arg database.GetCallAudioParams) ([]database.GetCallAudioRow, error) {
+	ret := _mock.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCallAudio")
+	}
+
+	var r0 []database.GetCallAudioRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetCallAudioParams) ([]database.GetCallAudioRow, error)); ok {
+		return returnFunc(ctx, arg)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetCallAudioParams) []database.GetCallAudioRow); ok {
+		r0 = returnFunc(ctx, arg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetCallAudioRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, database.GetCallAudioParams) error); ok {
+		r1 = returnFunc(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetCallAudio_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCallAudio'
+type Store_GetCallAudio_Call struct {
+	*mock.Call
+}
+
+// GetCallAudio is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.GetCallAudioParams
+func (_e *Store_Expecter) GetCallAudio(ctx interface{}, arg interface{}) *Store_GetCallAudio_Call {
+	return &Store_GetCallAudio_Call{Call: _e.mock.On("GetCallAudio", ctx, arg)}
+}
+
+func (_c *Store_GetCallAudio_Call) Run(run func(ctx context.Context, arg database.GetCallAudioParams)) *Store_GetCallAudio_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 database.GetCallAudioParams
+		if args[1] != nil {
+			arg1 = args[1].(database.GetCallAudioParams)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetCallAudio_Call) Return(getCallAudioRows []database.GetCallAudioRow, err error) *Store_GetCallAudio_Call {
+	_c.Call.Return(getCallAudioRows, err)
+	return _c
+}
+
+func (_c *Store_GetCallAudio_Call) RunAndReturn(run func(ctx context.Context, arg database.GetCallAudioParams) ([]database.GetCallAudioRow, error)) *Store_GetCallAudio_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetCallAudioByID provides a mock function for the type Store
 func (_mock *Store) GetCallAudioByID(ctx context.Context, id uuid.UUID) (database.GetCallAudioByIDRow, error) {
 	ret := _mock.Called(ctx, id)
@@ -1908,6 +1976,72 @@ func (_c *Store_GetCallAudioByID_Call) Return(getCallAudioByIDRow database.GetCa
 }
 
 func (_c *Store_GetCallAudioByID_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) (database.GetCallAudioByIDRow, error)) *Store_GetCallAudioByID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetCallAudioCount provides a mock function for the type Store
+func (_mock *Store) GetCallAudioCount(ctx context.Context, arg database.GetCallAudioParams) (int64, error) {
+	ret := _mock.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCallAudioCount")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetCallAudioParams) (int64, error)); ok {
+		return returnFunc(ctx, arg)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetCallAudioParams) int64); ok {
+		r0 = returnFunc(ctx, arg)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, database.GetCallAudioParams) error); ok {
+		r1 = returnFunc(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetCallAudioCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCallAudioCount'
+type Store_GetCallAudioCount_Call struct {
+	*mock.Call
+}
+
+// GetCallAudioCount is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.GetCallAudioParams
+func (_e *Store_Expecter) GetCallAudioCount(ctx interface{}, arg interface{}) *Store_GetCallAudioCount_Call {
+	return &Store_GetCallAudioCount_Call{Call: _e.mock.On("GetCallAudioCount", ctx, arg)}
+}
+
+func (_c *Store_GetCallAudioCount_Call) Run(run func(ctx context.Context, arg database.GetCallAudioParams)) *Store_GetCallAudioCount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 database.GetCallAudioParams
+		if args[1] != nil {
+			arg1 = args[1].(database.GetCallAudioParams)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetCallAudioCount_Call) Return(n int64, err error) *Store_GetCallAudioCount_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *Store_GetCallAudioCount_Call) RunAndReturn(run func(ctx context.Context, arg database.GetCallAudioParams) (int64, error)) *Store_GetCallAudioCount_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -4523,6 +4657,82 @@ func (_c *Store_ListIncidentsP_Call) RunAndReturn(run func(ctx context.Context, 
 	return _c
 }
 
+// PoolTx provides a mock function for the type Store
+func (_mock *Store) PoolTx(ctx context.Context, opts pgx.TxOptions) (*database.Postgres, pgx.Tx, error) {
+	ret := _mock.Called(ctx, opts)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PoolTx")
+	}
+
+	var r0 *database.Postgres
+	var r1 pgx.Tx
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.TxOptions) (*database.Postgres, pgx.Tx, error)); ok {
+		return returnFunc(ctx, opts)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.TxOptions) *database.Postgres); ok {
+		r0 = returnFunc(ctx, opts)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*database.Postgres)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, pgx.TxOptions) pgx.Tx); ok {
+		r1 = returnFunc(ctx, opts)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(pgx.Tx)
+		}
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, pgx.TxOptions) error); ok {
+		r2 = returnFunc(ctx, opts)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
+}
+
+// Store_PoolTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PoolTx'
+type Store_PoolTx_Call struct {
+	*mock.Call
+}
+
+// PoolTx is a helper method to define mock.On call
+//   - ctx context.Context
+//   - opts pgx.TxOptions
+func (_e *Store_Expecter) PoolTx(ctx interface{}, opts interface{}) *Store_PoolTx_Call {
+	return &Store_PoolTx_Call{Call: _e.mock.On("PoolTx", ctx, opts)}
+}
+
+func (_c *Store_PoolTx_Call) Run(run func(ctx context.Context, opts pgx.TxOptions)) *Store_PoolTx_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgx.TxOptions
+		if args[1] != nil {
+			arg1 = args[1].(pgx.TxOptions)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_PoolTx_Call) Return(dbtx *database.Postgres, tx pgx.Tx, err error) *Store_PoolTx_Call {
+	_c.Call.Return(dbtx, tx, err)
+	return _c
+}
+
+func (_c *Store_PoolTx_Call) RunAndReturn(run func(ctx context.Context, opts pgx.TxOptions) (*database.Postgres, pgx.Tx, error)) *Store_PoolTx_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // PruneShares provides a mock function for the type Store
 func (_mock *Store) PruneShares(ctx context.Context) error {
 	ret := _mock.Called(ctx)
@@ -4841,6 +5051,75 @@ func (_c *Store_SetAppPrefs_Call) RunAndReturn(run func(ctx context.Context, app
 	return _c
 }
 
+// SetCallAudio provides a mock function for the type Store
+func (_mock *Store) SetCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error {
+	ret := _mock.Called(ctx, iD, audioRef, audioBlob)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetCallAudio")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, []byte, []byte) error); ok {
+		r0 = returnFunc(ctx, iD, audioRef, audioBlob)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_SetCallAudio_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetCallAudio'
+type Store_SetCallAudio_Call struct {
+	*mock.Call
+}
+
+// SetCallAudio is a helper method to define mock.On call
+//   - ctx context.Context
+//   - iD uuid.UUID
+//   - audioRef []byte
+//   - audioBlob []byte
+func (_e *Store_Expecter) SetCallAudio(ctx interface{}, iD interface{}, audioRef interface{}, audioBlob interface{}) *Store_SetCallAudio_Call {
+	return &Store_SetCallAudio_Call{Call: _e.mock.On("SetCallAudio", ctx, iD, audioRef, audioBlob)}
+}
+
+func (_c *Store_SetCallAudio_Call) Run(run func(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte)) *Store_SetCallAudio_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 []byte
+		if args[2] != nil {
+			arg2 = args[2].([]byte)
+		}
+		var arg3 []byte
+		if args[3] != nil {
+			arg3 = args[3].([]byte)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_SetCallAudio_Call) Return(err error) *Store_SetCallAudio_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_SetCallAudio_Call) RunAndReturn(run func(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error) *Store_SetCallAudio_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetCallTranscript provides a mock function for the type Store
 func (_mock *Store) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) (database.SetCallTranscriptRow, error) {
 	ret := _mock.Called(ctx, iD, transcript)
@@ -4978,6 +5257,75 @@ func (_c *Store_SetSetting_Call) Return(err error) *Store_SetSetting_Call {
 }
 
 func (_c *Store_SetSetting_Call) RunAndReturn(run func(ctx context.Context, name string, updatedBy *int32, value []byte) error) *Store_SetSetting_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetSweptCallAudio provides a mock function for the type Store
+func (_mock *Store) SetSweptCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error {
+	ret := _mock.Called(ctx, iD, audioRef, audioBlob)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetSweptCallAudio")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, []byte, []byte) error); ok {
+		r0 = returnFunc(ctx, iD, audioRef, audioBlob)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_SetSweptCallAudio_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetSweptCallAudio'
+type Store_SetSweptCallAudio_Call struct {
+	*mock.Call
+}
+
+// SetSweptCallAudio is a helper method to define mock.On call
+//   - ctx context.Context
+//   - iD uuid.UUID
+//   - audioRef []byte
+//   - audioBlob []byte
+func (_e *Store_Expecter) SetSweptCallAudio(ctx interface{}, iD interface{}, audioRef interface{}, audioBlob interface{}) *Store_SetSweptCallAudio_Call {
+	return &Store_SetSweptCallAudio_Call{Call: _e.mock.On("SetSweptCallAudio", ctx, iD, audioRef, audioBlob)}
+}
+
+func (_c *Store_SetSweptCallAudio_Call) Run(run func(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte)) *Store_SetSweptCallAudio_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 []byte
+		if args[2] != nil {
+			arg2 = args[2].([]byte)
+		}
+		var arg3 []byte
+		if args[3] != nil {
+			arg3 = args[3].([]byte)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_SetSweptCallAudio_Call) Return(err error) *Store_SetSweptCallAudio_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_SetSweptCallAudio_Call) RunAndReturn(run func(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error) *Store_SetSweptCallAudio_Call {
 	_c.Call.Return(run)
 	return _c
 }

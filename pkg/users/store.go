@@ -87,8 +87,8 @@ func (s *postgresStore) HUP(_ *config.Config) {
 }
 
 type UserUpdate struct {
-	Email   *string  `json:"email"`
-	Roles   []string `json:"roles"`
+	Email *string  `json:"email"`
+	Roles []string `json:"roles"`
 }
 
 func (s *postgresStore) UpdateUser(ctx context.Context, username string, user UserUpdate) error {

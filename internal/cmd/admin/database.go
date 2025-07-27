@@ -11,7 +11,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database/partman"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 // DatabaseCommand is the Database command.
@@ -21,7 +21,7 @@ func DatabaseCommand(cfg *config.Configuration) *cli.Command {
 		Name:    "database",
 		Aliases: []string{"db"},
 		Usage:   "administers database",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			partitioningCommand(c),
 		},
 	}
@@ -37,9 +37,7 @@ func partitioningCommand(cfg *config.Config) *cli.Command {
 		Usage:       "checks partition interval",
 		Description: "checks partition interval matches whatever is specified in the config",
 		UsageText:   "stillbox admin database partitioning",
-		Args:        true,
-		Action: func(cctx *cli.Context) error {
-			ctx := context.Background()
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			db, err := database.NewClient(ctx, cfg.DB)
 			if err != nil {
 				return err

@@ -85,6 +85,7 @@ func (s *Server) setupRoutes(ctx context.Context) error {
 func (s *Server) WithCtxStores() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
+			// XXX: maybe do fillCtx once and use services.CtxWith()
 			r = r.WithContext(s.fillCtx(r.Context()))
 			next.ServeHTTP(w, r)
 		}

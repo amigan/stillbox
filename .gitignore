@@ -15,5 +15,7 @@ Session.vim
 cover.out
 backups/
 models/
+ktrace.out
+__debug_bin*
 cpu.txt
 ktrace.out

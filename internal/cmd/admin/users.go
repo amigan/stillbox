@@ -9,7 +9,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 )
@@ -60,7 +60,7 @@ func AddUser(ctx context.Context, username, email string, isAdmin bool) error {
 		roles = []string{entities.RoleAdmin}
 	}
 
-	_, err = db.CreateUser(context.Background(), database.CreateUserParams{
+	_, err = db.CreateUser(ctx, database.CreateUserParams{
 		Username: username,
 		Password: string(hashpw),
 		Email:    email,
@@ -110,7 +110,7 @@ func Passwd(ctx context.Context, username string) error {
 		return err
 	}
 
-	return db.UpdatePassword(context.Background(), username, string(hashpw))
+	return db.UpdatePassword(ctx, username, string(hashpw))
 }
 
 func readPassword(prompt string) (string, error) {
@@ -127,7 +127,7 @@ func UsersCommand(cfg *config.Configuration) *cli.Command {
 		Name:    "users",
 		Aliases: []string{"u"},
 		Usage:   "administers users",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			addUserCommand(c),
 			passwdCommand(c),
 		},
@@ -141,22 +141,21 @@ func addUserCommand(cfg *config.Config) *cli.Command {
 		Name:        "add",
 		Description: "adds a user",
 		UsageText:   "stillbox users add [-a] [-m email] [username]",
-		Args:        true,
-		Action: func(ctx *cli.Context) error {
-			if ctx.Args().Len() != 1 {
-				return errors.New(ctx.Command.Usage)
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			if cmd.Args().Len() != 1 {
+				return errors.New(cmd.Usage)
 			}
 
-			db, err := database.NewClient(context.Background(), cfg.DB)
+			db, err := database.NewClient(ctx, cfg.DB)
 			if err != nil {
 				return err
 			}
 
-			username := ctx.Args().Get(0)
-			isAdmin := ctx.Bool("admin")
-			email := ctx.String("email")
+			username := cmd.Args().Get(0)
+			isAdmin := cmd.Bool("admin")
+			email := cmd.String("email")
 
-			return AddUser(database.CtxWithDB(context.Background(), db), username, email, isAdmin)
+			return AddUser(database.CtxWithDB(ctx, db), username, email, isAdmin)
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
@@ -178,22 +177,20 @@ func addUserCommand(cfg *config.Config) *cli.Command {
 
 func passwdCommand(cfg *config.Config) *cli.Command {
 	c := &cli.Command{
-		Name:      "passwd",
-		Usage:     "changes password for a user",
-		UsageText: "stillbox users passwd [username]",
-		Args:      true,
-		Action: func(ctx *cli.Context) error {
-			if ctx.Args().Len() != 1 {
-				return errors.New(ctx.Command.Usage)
+		Name:  "passwd",
+		Usage: "stillbox admin users passwd [username]",
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			if cmd.Args().Len() != 1 {
+				return errors.New(cmd.Usage)
 			}
 
-			db, err := database.NewClient(context.Background(), cfg.DB)
+			db, err := database.NewClient(ctx, cfg.DB)
 			if err != nil {
 				return err
 			}
-			username := ctx.Args().Get(0)
+			username := cmd.Args().Get(0)
 
-			err = Passwd(database.CtxWithDB(context.Background(), db), username)
+			err = Passwd(database.CtxWithDB(ctx, db), username)
 			if err != nil {
 				return err
 			}

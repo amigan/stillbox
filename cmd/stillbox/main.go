@@ -1,19 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"dynatron.me/x/stillbox/internal/cmd/admin"
+	"dynatron.me/x/stillbox/internal/cmd/serve"
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/version"
-	"dynatron.me/x/stillbox/pkg/cmd/admin"
-	"dynatron.me/x/stillbox/pkg/cmd/serve"
 	"dynatron.me/x/stillbox/pkg/config"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const DefaultConfig = "config.yaml"
@@ -23,7 +24,7 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: common.TimeFormat})
 
 	cfg := config.New(&configFile)
-	app := &cli.App{
+	app := &cli.Command{
 		Name:                   common.AppName,
 		Usage:                  "a scanner call server",
 		UseShortOptionHandling: true,
@@ -39,7 +40,7 @@ func main() {
 			&cli.BoolFlag{
 				Name:    "version",
 				Aliases: []string{"V"},
-				Action: func(_ *cli.Context, v bool) error {
+				Action: func(_ context.Context, _ *cli.Command, v bool) error {
 					if v {
 						fmt.Print(version.String())
 						os.Exit(0)
@@ -47,7 +48,7 @@ func main() {
 
 					return nil
 				},
-				DisableDefaultText: true,
+				DefaultText: "",
 			},
 		},
 		Commands: []*cli.Command{
@@ -56,7 +57,7 @@ func main() {
 		},
 	}
 
-	err := app.Run(os.Args)
+	err := app.Run(context.Background(), os.Args)
 	if err != nil {
 		os.Stderr.Write([]byte("Error: " + err.Error() + "\n"))
 		os.Exit(1)

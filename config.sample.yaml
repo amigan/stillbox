@@ -14,11 +14,17 @@ server:
     allowedOrigins:
       - 'localhost:*'
       - 'stillbox.server'
+  # if adminSocket is set/not null, it specifies a path where stillbox will
+  # open a unix domain socket for local daemon control use
+  adminSocket: /var/run/stillbox/stillbox.sock
 
 db:
   connect: 'postgres://postgres:password@localhost:5432/example'
   partition:
     # whether to enable the built-in partition manager
+    # note that when this is disabled, the calls table is still (by default) created as a partitioned table.
+    # so, notwithstanding manual intervention or intermittent enabling,
+    # disabling the partition manager means that no partitions exist to receive rows.
     enabled: true
     # the postgres schema containing our tables
     schema: public
@@ -63,7 +69,7 @@ auth:
     order: deny, allow
 
 log:
-  # level logs at or above the specified level
+  # level logs at or above the specifies level
   # levels are trace, debug, info, warn, error, fatal, panic
   # an entry without a file: property indicates stderr
   - level: debug
@@ -106,6 +112,54 @@ relay:
     # `required` specifies whether we should report failure (i.e. HTTP 500 for rdio-http) to the source
     # if the relay call submission fails
 #   required: false
+
+# callStorage backends have filters tested until one matches, then that one wins for storage of new calls
+# null filter always matches
+# ingest specifies whether to try to store audio in this backend
+# if none are configured/evaluate during ingestion, calls are simply stored as blobs in the DB
+callStorage:
+  # name of the backend ends up being stored in the DB and
+  # should not change once chosen, otherwise every record must be
+  # updated.
+  - name: s3
+    backend: s3
+    # if this backend fails:
+    # next-then-fail (default) - try next backend (including filter), if no other backends store then fail ingest
+    # next-then-db - try next backend (including filter) or ultimately the DB
+    # fail - fail the ingest immediately
+    # db - stop processing backends, store in DB
+    onError: next-then-fail
+    # ingest specifies whether this is not to be used to store new calls
+    # but exists to serve requests for calls referencing this backend in the DB
+    ingest: true
+    # filter is same as below, or can be null or unspecified
+#   filter:
+#     talkgroups:
+#       - "197:10101"
+#     talkgroupTagsAny:
+#       - fire dispatch
+#       - law dispatch
+    config:
+      bucket: 'stillbox'
+      # secure is whether to use https when accessing the endpoint.
+      secure: false
+      # endpoint is how stillbox will access the object server
+      endpoint: 'garage:3900'
+      region: 'garage'
+      # if externalHost is set, this host will be used to generate presigned URLs
+      # for call audio redirect to clients rather than endpoint above
+      externalHost: 'garage.example.com'
+      # if externalHost is set, externalSecure specifies whether to use https for presigned URLs
+      externalSecure: true
+      # timeout is the amount of time for S3 request deadline before next action (store in DB or fail)
+      timeout: 10s
+      keyID: 'GK7894947fffaacacd83664923'
+      secretKey: 'bacba7892843792347987293874923847293487239487234987234bababababa'
+  - name: fs
+    backend: fs
+    config:
+      # root path to store call audio in, must be a directory
+      root: "/tank/stillbox"
 
 transcription:
 # - type: http

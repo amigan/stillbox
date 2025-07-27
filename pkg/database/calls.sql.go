@@ -62,7 +62,7 @@ call_date,
 audio_name,
 audio_blob,
 audio_type,
-audio_url,
+audio_ref,
 duration,
 frequency,
 frequencies,
@@ -103,7 +103,7 @@ type AddCallParams struct {
 	AudioName   *string            `json:"audioName"`
 	AudioBlob   []byte             `json:"audioBlob"`
 	AudioType   NullAudioMIME      `json:"audioType"`
-	AudioUrl    *string            `json:"audioUrl"`
+	AudioRef    []byte             `json:"audioRef"`
 	Duration    *int32             `json:"duration"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
@@ -125,7 +125,7 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) error {
 		arg.AudioName,
 		arg.AudioBlob,
 		arg.AudioType,
-		arg.AudioUrl,
+		arg.AudioRef,
 		arg.Duration,
 		arg.Frequency,
 		arg.Frequencies,
@@ -177,7 +177,7 @@ SELECT
 	call_date,
 	audio_name,
 	audio_type,
-	audio_url,
+	audio_ref,
 	duration,
 	frequency,
 	frequencies,
@@ -200,7 +200,7 @@ type GetCallRow struct {
 	CallDate    pgtype.Timestamptz `json:"callDate"`
 	AudioName   *string            `json:"audioName"`
 	AudioType   NullAudioMIME      `json:"audioType"`
-	AudioUrl    *string            `json:"audioUrl"`
+	AudioRef    []byte             `json:"audioRef"`
 	Duration    *int32             `json:"duration"`
 	Frequency   int                `json:"frequency"`
 	Frequencies []int              `json:"frequencies"`
@@ -224,7 +224,7 @@ func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 		&i.CallDate,
 		&i.AudioName,
 		&i.AudioType,
-		&i.AudioUrl,
+		&i.AudioRef,
 		&i.Duration,
 		&i.Frequency,
 		&i.Frequencies,
@@ -239,11 +239,149 @@ func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 	return i, err
 }
 
+const getCallAudio = `-- name: GetCallAudio :many
+SELECT
+	c.id,
+	c.call_date,
+	c.audio_name,
+	c.audio_type,
+	c.audio_ref,
+	c.audio_blob,
+	FALSE AS swept
+FROM calls c
+JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
+LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
+WHERE
+CASE WHEN $2::BOOLEAN = TRUE THEN
+	FALSE ELSE TRUE END AND
+CASE WHEN $3::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date >= $3 ELSE TRUE END AND
+CASE WHEN $4::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date <= $4 ELSE TRUE END AND
+CASE WHEN $5::TEXT[] IS NOT NULL THEN
+	tgs.tags && ARRAY[$5] ELSE TRUE END AND
+CASE WHEN $6::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags && ARRAY[$6])) ELSE TRUE END AND
+CASE WHEN $7::NUMERIC IS NOT NULL THEN (
+		c.duration > $7
+	) ELSE TRUE END AND
+CASE WHEN $8::TEXT IS NOT NULL THEN (
+	c.audio_ref IS NOT NULL AND c.audio_ref ? $8) ELSE TRUE END AND
+CASE WHEN $9::TEXT IS NOT NULL THEN (
+	c.audio_ref IS NULL OR (NOT c.audio_ref ? $9)) ELSE TRUE END
+AND CASE
+	WHEN $10::BOOLEAN IS NULL THEN TRUE
+	WHEN $10::BOOLEAN = TRUE THEN (c.audio_blob IS NOT NULL)
+	WHEN $10::BOOLEAN = FALSE THEN (c.audio_blob IS NULL)
+END
+UNION
+SELECT
+	sc.id,
+	sc.call_date,
+	sc.audio_name,
+	sc.audio_type,
+	sc.audio_ref,
+	sc.audio_blob,
+	TRUE AS swept
+FROM swept_calls sc
+JOIN talkgroups tgs ON sc.talkgroup = tgs.tgid AND sc.system = tgs.system_id
+LEFT JOIN incidents_calls ic ON sc.id = ic.calls_tbl_id AND sc.call_date = ic.call_date
+WHERE 
+CASE WHEN $2::BOOLEAN = FALSE THEN
+	FALSE ELSE TRUE END AND
+CASE WHEN $3::TIMESTAMPTZ IS NOT NULL THEN
+	sc.call_date >= $3 ELSE TRUE END AND
+CASE WHEN $4::TIMESTAMPTZ IS NOT NULL THEN
+	sc.call_date <= $4 ELSE TRUE END AND
+CASE WHEN $5::TEXT[] IS NOT NULL THEN
+	tgs.tags && ARRAY[$5] ELSE TRUE END AND
+CASE WHEN $6::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags && ARRAY[$6])) ELSE TRUE END AND
+CASE WHEN $7::NUMERIC IS NOT NULL THEN (
+		sc.duration > $7
+	) ELSE TRUE END AND
+CASE WHEN $8::TEXT IS NOT NULL THEN (
+	sc.audio_ref IS NOT NULL AND sc.audio_ref ? $8) ELSE TRUE END AND
+CASE WHEN $9::TEXT IS NOT NULL THEN (
+	sc.audio_ref IS NULL OR (NOT sc.audio_ref ? $9)) ELSE TRUE END
+AND CASE
+	WHEN $10::BOOLEAN IS NULL THEN TRUE
+	WHEN $10::BOOLEAN = TRUE THEN (sc.audio_blob IS NOT NULL)
+	WHEN $10::BOOLEAN = FALSE THEN (sc.audio_blob IS NULL)
+END
+ORDER BY call_date ASC
+FETCH NEXT $1 ROWS ONLY
+`
+
+type GetCallAudioParams struct {
+	Count         int32              `json:"count"`
+	Swept         *bool              `json:"swept"`
+	Start         pgtype.Timestamptz `json:"start"`
+	End           pgtype.Timestamptz `json:"end"`
+	TagsAny       []string           `json:"tagsAny"`
+	TagsNot       []string           `json:"tagsNot"`
+	LongerThan    pgtype.Numeric     `json:"longerThan"`
+	HasBackend    *string            `json:"hasBackend"`
+	NotHasBackend *string            `json:"notHasBackend"`
+	HasBlob       *bool              `json:"hasBlob"`
+}
+
+type GetCallAudioRow struct {
+	ID        uuid.UUID          `json:"id"`
+	CallDate  pgtype.Timestamptz `json:"callDate"`
+	AudioName *string            `json:"audioName"`
+	AudioType NullAudioMIME      `json:"audioType"`
+	AudioRef  []byte             `json:"audioRef"`
+	AudioBlob []byte             `json:"audioBlob"`
+	Swept     bool               `json:"swept"`
+}
+
+// For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount
+func (q *Queries) GetCallAudio(ctx context.Context, arg GetCallAudioParams) ([]GetCallAudioRow, error) {
+	rows, err := q.db.Query(ctx, getCallAudio,
+		arg.Count,
+		arg.Swept,
+		arg.Start,
+		arg.End,
+		arg.TagsAny,
+		arg.TagsNot,
+		arg.LongerThan,
+		arg.HasBackend,
+		arg.NotHasBackend,
+		arg.HasBlob,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCallAudioRow
+	for rows.Next() {
+		var i GetCallAudioRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CallDate,
+			&i.AudioName,
+			&i.AudioType,
+			&i.AudioRef,
+			&i.AudioBlob,
+			&i.Swept,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getCallAudioByID = `-- name: GetCallAudioByID :one
 SELECT
 	c.call_date,
 	c.audio_name,
 	c.audio_type,
+	c.audio_ref,
 	c.audio_blob
 FROM calls c
 WHERE c.id = $1
@@ -252,6 +390,7 @@ SELECT
 	sc.call_date,
 	sc.audio_name,
 	sc.audio_type,
+	sc.audio_ref,
 	sc.audio_blob
 FROM swept_calls sc
 WHERE sc.id = $1
@@ -261,6 +400,7 @@ type GetCallAudioByIDRow struct {
 	CallDate  pgtype.Timestamptz `json:"callDate"`
 	AudioName *string            `json:"audioName"`
 	AudioType NullAudioMIME      `json:"audioType"`
+	AudioRef  []byte             `json:"audioRef"`
 	AudioBlob []byte             `json:"audioBlob"`
 }
 
@@ -271,6 +411,7 @@ func (q *Queries) GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAu
 		&i.CallDate,
 		&i.AudioName,
 		&i.AudioType,
+		&i.AudioRef,
 		&i.AudioBlob,
 	)
 	return i, err
@@ -288,7 +429,7 @@ func (q *Queries) GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, e
 }
 
 const getCalls = `-- name: GetCalls :many
-SELECT calls.id, calls.submitter, calls.system, calls.talkgroup, calls.call_date, calls.audio_name, calls.audio_blob, calls.duration, calls.audio_type, calls.audio_url, calls.frequency, calls.frequencies, calls.patches, calls.talker_alias, calls.tg_label, calls.tg_alpha_tag, calls.tg_group, calls.source, calls.transcript FROM calls WHERE id = ANY($1::UUID[])
+SELECT calls.id, calls.submitter, calls.system, calls.talkgroup, calls.call_date, calls.audio_name, calls.audio_blob, calls.duration, calls.audio_type, calls.audio_ref, calls.frequency, calls.frequencies, calls.patches, calls.talker_alias, calls.tg_label, calls.tg_alpha_tag, calls.tg_group, calls.source, calls.transcript FROM calls WHERE id = ANY($1::UUID[])
 `
 
 type GetCallsRow struct {
@@ -314,7 +455,7 @@ func (q *Queries) GetCalls(ctx context.Context, ids []uuid.UUID) ([]GetCallsRow,
 			&i.Call.AudioBlob,
 			&i.Call.Duration,
 			&i.Call.AudioType,
-			&i.Call.AudioUrl,
+			&i.Call.AudioRef,
 			&i.Call.Frequency,
 			&i.Call.Frequencies,
 			&i.Call.Patches,
@@ -361,7 +502,7 @@ type GetTranscriptsContextParams struct {
 	System         int             `json:"system"`
 	Talkgroup      int             `json:"talkgroup"`
 	Lookback       pgtype.Interval `json:"lookback"`
-	DurationMs     *int32          `json:"durationMs"`
+	DurationMS     *int32          `json:"durationMs"`
 	NumTranscripts int32           `json:"numTranscripts"`
 }
 
@@ -375,7 +516,7 @@ func (q *Queries) GetTranscriptsContext(ctx context.Context, arg GetTranscriptsC
 		arg.System,
 		arg.Talkgroup,
 		arg.Lookback,
-		arg.DurationMs,
+		arg.DurationMS,
 		arg.NumTranscripts,
 	)
 	if err != nil {
@@ -585,6 +726,16 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 	return items, nil
 }
 
+const setCallAudio = `-- name: SetCallAudio :exec
+UPDATE calls SET audio_ref = $2, audio_blob = $3
+WHERE id = $1
+`
+
+func (q *Queries) SetCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error {
+	_, err := q.db.Exec(ctx, setCallAudio, iD, audioRef, audioBlob)
+	return err
+}
+
 const setCallTranscript = `-- name: SetCallTranscript :one
 UPDATE calls SET transcript = $2 WHERE id = $1
 RETURNING call_date, system, talkgroup, patches
@@ -609,14 +760,24 @@ func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcrip
 	return i, err
 }
 
+const setSweptCallAudio = `-- name: SetSweptCallAudio :exec
+UPDATE swept_calls SET audio_ref = $2, audio_blob = $3
+WHERE id = $1
+`
+
+func (q *Queries) SetSweptCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error {
+	_, err := q.db.Exec(ctx, setSweptCallAudio, iD, audioRef, audioBlob)
+	return err
+}
+
 const sweepCalls = `-- name: SweepCalls :execrows
 WITH to_sweep AS (
 	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type,
-		audio_url, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript
+		audio_ref, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= $1 AND calls.call_date < $2
-) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_url, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
+) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_ref, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
 `
 
 // This is used to sweep calls that are part of an incident prior to pruning a partition.

@@ -21,26 +21,35 @@ func (s *Server) huppers() []hupper {
 		s.alerter,
 		s.users,
 		s.transcriber,
+		s.relayer,
 	}
 }
 
-func (s *Server) hupHandler() {
-	s.hup = make(chan os.Signal, 1)
-	go func() {
-		for sig := range s.hup {
-			log.Info().Msgf("received %s", sig)
-			err := s.conf.ReadConfig()
-			if err != nil {
-				log.Error().Err(err).Msg("cannot read config")
-				continue
-			}
+func (s *Server) sighup() {
+	err := s.conf.ReadConfig()
+	if err != nil {
+		log.Error().Err(err).Msg("cannot read config")
+		return
+	}
 
-			hs := s.huppers()
-			for _, h := range hs {
-				h.HUP(&s.conf.Config)
+	hs := s.huppers()
+	for _, h := range hs {
+		h.HUP(&s.conf.Config)
+	}
+}
+
+// installSignalHandler is for non-terminating signals. Terminating signals are in internal/cmd/serve.
+func (s *Server) installSignalHandlers() {
+	s.signals = make(chan os.Signal, 1)
+	go func() {
+		for sig := range s.signals {
+			log.Info().Msgf("received %s", sig)
+			switch sig {
+			case syscall.SIGHUP:
+				s.sighup()
 			}
 		}
 	}()
 
-	signal.Notify(s.hup, syscall.SIGHUP)
+	signal.Notify(s.signals, syscall.SIGHUP)
 }

@@ -14,9 +14,9 @@ import (
 	"dynatron.me/x/stillbox/internal/jsontypes"
 
 	"dynatron.me/x/stillbox/pkg/alerting"
+	"dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
-	"dynatron.me/x/stillbox/pkg/talkgroups/filter"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport"
 
@@ -143,7 +143,7 @@ var (
 		Template:         []byte("this is a template\n\r\nthingy"),
 		TemplateFileName: "template.xml",
 
-		TalkgroupFilter: filter.TalkgroupFilter{
+		Filter: filter.Filter{
 			Talkgroups: []talkgroups.ID{
 				talkgroups.TG(197, 3),
 				talkgroups.TG(0, 4),

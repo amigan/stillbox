@@ -8,6 +8,7 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/shares"
@@ -40,6 +41,7 @@ type api struct {
 	users     *usersAPI
 	incidents *incidentsAPI
 	prefs     *prefsAPI
+	admin     *adminAPI
 }
 
 func (a *api) ShareRouter() http.Handler {
@@ -55,6 +57,7 @@ func New(baseURL url.URL, nex nexus.Nexus, transcriber sinks.Transcriber) *api {
 		incidents: newIncidentsAPI(&baseURL),
 		users:     new(usersAPI),
 		prefs:     new(prefsAPI),
+		admin:     new(adminAPI),
 	}
 	s.shares = newShareAPI(&baseURL, s.shareHandlers())
 	return s
@@ -69,6 +72,7 @@ func (a *api) Subrouter() http.Handler {
 	r.Mount("/incident", a.incidents.Subrouter())
 	r.Mount("/share", a.shares.Subrouter())
 	r.Mount("/prefs", a.prefs.Subrouter())
+	r.Mount("/admin", a.admin.Subrouter())
 
 	return r
 }
@@ -154,34 +158,46 @@ func internalError(err error) render.Renderer {
 	}
 }
 
+func tooManyRequestsErrText(err error) render.Renderer {
+	return &errResponse{
+		Err:   err,
+		Code:  http.StatusTooManyRequests,
+		Error: "Too Many Requests: " + err.Error(),
+	}
+}
+
 type errResponder func(error) render.Renderer
 
 var statusMapping = map[error]errResponder{
-	tgstore.ErrNoSuchSystem:   notFoundErrText,
-	tgstore.ErrNotFound:       notFoundErrText,
-	tgstore.ErrInvalidOrderBy: badRequestErrText,
-	tgstore.ErrBadDirection:   badRequestErrText,
-	tgstore.ErrBadOrder:       badRequestErrText,
-	pgx.ErrNoRows:             recordNotFound,
-	ErrMissingTGSys:           badRequestErrText,
-	ErrTGIDMismatch:           badRequestErrText,
-	ErrSysMismatch:            badRequestErrText,
-	tgstore.ErrReference:      constraintErrText,
-	authz.ErrBadSubject:       unauthErrText,
-	ErrBadAppName:             unauthErrText,
-	common.ErrPageOutOfRange:  badRequestErrText,
-	authz.ErrNotAuthorized:    unauthErrText,
-	shares.ErrNoShare:         notFoundErrText,
-	ErrBadShare:               notFoundErrText,
-	settings.ErrNoSetting:     notFoundErrText,
-	shares.ErrBadType:         badRequestErrText,
-	calls.ErrInvalidInterval:  badRequestErrText,
+	tgstore.ErrNoSuchSystem:        notFoundErrText,
+	tgstore.ErrNotFound:            notFoundErrText,
+	tgstore.ErrInvalidOrderBy:      badRequestErrText,
+	tgstore.ErrBadDirection:        badRequestErrText,
+	tgstore.ErrBadOrder:            badRequestErrText,
+	pgx.ErrNoRows:                  recordNotFound,
+	ErrMissingTGSys:                badRequestErrText,
+	ErrTGIDMismatch:                badRequestErrText,
+	ErrSysMismatch:                 badRequestErrText,
+	tgstore.ErrReference:           constraintErrText,
+	authz.ErrBadSubject:            unauthErrText,
+	ErrBadAppName:                  unauthErrText,
+	common.ErrPageOutOfRange:       badRequestErrText,
+	authz.ErrNotAuthorized:         unauthErrText,
+	shares.ErrNoShare:              notFoundErrText,
+	ErrBadShare:                    notFoundErrText,
+	settings.ErrNoSetting:          notFoundErrText,
+	shares.ErrBadType:              badRequestErrText,
+	calls.ErrInvalidInterval:       badRequestErrText,
+	callstore.ErrCallAudioNotFound: notFoundErrText,
+	callstore.ErrNXBackend:         badRequestErrText,
+	callstore.ErrSrcDestSame:       badRequestErrText,
+	callstore.ErrMoveInProgress:    tooManyRequestsErrText,
 }
 
 func autoError(err error) render.Renderer {
 	c, ok := statusMapping[err]
 	if ok {
-		c(err)
+		return c(err)
 	}
 
 	for e, c := range statusMapping { // check if err wraps an error we know about

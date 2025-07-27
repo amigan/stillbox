@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS calls(
 	audio_blob BYTEA,
 	duration INTEGER,
 	audio_type audio_mime,
-	audio_url TEXT,
+	audio_ref JSONB,
 	frequency INTEGER NOT NULL,
 	frequencies INTEGER[],
 	patches INTEGER[],
@@ -127,7 +127,7 @@ CREATE TABLE swept_calls (
 	audio_blob BYTEA,
 	duration INTEGER,
 	audio_type audio_mime,
-	audio_url TEXT,
+	audio_ref JSONB,
 	frequency INTEGER NOT NULL,
 	frequencies INTEGER[],
 	patches INTEGER[],
@@ -187,3 +187,4 @@ CREATE TABLE IF NOT EXISTS shares(
 	owner INTEGER NOT NULL REFERENCES users(id),
 	expiration TIMESTAMPTZ NULL
 );
+

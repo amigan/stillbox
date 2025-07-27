@@ -8,7 +8,7 @@ call_date,
 audio_name,
 audio_blob,
 audio_type,
-audio_url,
+audio_ref,
 duration,
 frequency,
 frequencies,
@@ -27,7 +27,7 @@ source
 @audio_name,
 @audio_blob,
 @audio_type,
-@audio_url,
+@audio_ref,
 @duration,
 @frequency,
 @frequencies,
@@ -44,6 +44,7 @@ SELECT
 	c.call_date,
 	c.audio_name,
 	c.audio_type,
+	c.audio_ref,
 	c.audio_blob
 FROM calls c
 WHERE c.id = @id
@@ -52,10 +53,95 @@ SELECT
 	sc.call_date,
 	sc.audio_name,
 	sc.audio_type,
+	sc.audio_ref,
 	sc.audio_blob
 FROM swept_calls sc
 WHERE sc.id = @id
 ;
+
+-- name: GetCallAudio :many
+-- For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount
+SELECT
+	c.id,
+	c.call_date,
+	c.audio_name,
+	c.audio_type,
+	c.audio_ref,
+	c.audio_blob,
+	FALSE AS swept
+FROM calls c
+JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
+LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
+WHERE
+CASE WHEN sqlc.narg('swept')::BOOLEAN = TRUE THEN
+	FALSE ELSE TRUE END AND
+CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date >= @start ELSE TRUE END AND
+CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
+	c.call_date <= sqlc.narg('end') ELSE TRUE END AND
+CASE WHEN sqlc.narg('tags_any')::TEXT[] IS NOT NULL THEN
+	tgs.tags && ARRAY[@tags_any] ELSE TRUE END AND
+CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags && ARRAY[@tags_not])) ELSE TRUE END AND
+CASE WHEN sqlc.narg('longer_than')::NUMERIC IS NOT NULL THEN (
+		c.duration > @longer_than
+	) ELSE TRUE END AND
+CASE WHEN sqlc.narg('has_backend')::TEXT IS NOT NULL THEN (
+	c.audio_ref IS NOT NULL AND c.audio_ref ? @has_backend) ELSE TRUE END AND
+CASE WHEN sqlc.narg('not_has_backend')::TEXT IS NOT NULL THEN (
+	c.audio_ref IS NULL OR (NOT c.audio_ref ? @not_has_backend)) ELSE TRUE END
+AND CASE
+	WHEN sqlc.narg('has_blob')::BOOLEAN IS NULL THEN TRUE
+	WHEN @has_blob::BOOLEAN = TRUE THEN (c.audio_blob IS NOT NULL)
+	WHEN @has_blob::BOOLEAN = FALSE THEN (c.audio_blob IS NULL)
+END
+UNION
+SELECT
+	sc.id,
+	sc.call_date,
+	sc.audio_name,
+	sc.audio_type,
+	sc.audio_ref,
+	sc.audio_blob,
+	TRUE AS swept
+FROM swept_calls sc
+JOIN talkgroups tgs ON sc.talkgroup = tgs.tgid AND sc.system = tgs.system_id
+LEFT JOIN incidents_calls ic ON sc.id = ic.calls_tbl_id AND sc.call_date = ic.call_date
+WHERE 
+CASE WHEN sqlc.narg('swept')::BOOLEAN = FALSE THEN
+	FALSE ELSE TRUE END AND
+CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
+	sc.call_date >= @start ELSE TRUE END AND
+CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
+	sc.call_date <= sqlc.narg('end') ELSE TRUE END AND
+CASE WHEN sqlc.narg('tags_any')::TEXT[] IS NOT NULL THEN
+	tgs.tags && ARRAY[@tags_any] ELSE TRUE END AND
+CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
+	(NOT (tgs.tags && ARRAY[@tags_not])) ELSE TRUE END AND
+CASE WHEN sqlc.narg('longer_than')::NUMERIC IS NOT NULL THEN (
+		sc.duration > @longer_than
+	) ELSE TRUE END AND
+CASE WHEN sqlc.narg('has_backend')::TEXT IS NOT NULL THEN (
+	sc.audio_ref IS NOT NULL AND sc.audio_ref ? @has_backend) ELSE TRUE END AND
+CASE WHEN sqlc.narg('not_has_backend')::TEXT IS NOT NULL THEN (
+	sc.audio_ref IS NULL OR (NOT sc.audio_ref ? @not_has_backend)) ELSE TRUE END
+AND CASE
+	WHEN @has_blob::BOOLEAN IS NULL THEN TRUE
+	WHEN @has_blob::BOOLEAN = TRUE THEN (sc.audio_blob IS NOT NULL)
+	WHEN @has_blob::BOOLEAN = FALSE THEN (sc.audio_blob IS NULL)
+END
+ORDER BY call_date ASC
+FETCH NEXT sqlc.arg('count') ROWS ONLY
+;
+
+
+-- name: SetCallAudio :exec
+UPDATE calls SET audio_ref = @audio_ref, audio_blob = @audio_blob
+WHERE id = $1;
+
+-- name: SetSweptCallAudio :exec
+UPDATE swept_calls SET audio_ref = @audio_ref, audio_blob = @audio_blob
+WHERE id = $1;
 
 -- name: SetCallTranscript :one
 UPDATE calls SET transcript = $2 WHERE id = $1
@@ -82,7 +168,7 @@ SELECT pg_size_pretty(pg_database_size(current_database()));
 -- This is used to sweep calls that are part of an incident prior to pruning a partition.
 WITH to_sweep AS (
 	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type,
-		audio_url, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript
+		audio_ref, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= @range_start AND calls.call_date < @range_end
@@ -212,7 +298,7 @@ SELECT
 	call_date,
 	audio_name,
 	audio_type,
-	audio_url,
+	audio_ref,
 	duration,
 	frequency,
 	frequencies,

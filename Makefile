@@ -49,7 +49,7 @@ backupplain:
 	sh util/dumpdb.sh -p
 
 test:
-	go test ${GOFLAGS} ${LDFLAGS} -v ./internal/... ./pkg/...
+	go test -race ${GOFLAGS} ${LDFLAGS} -v ./...
 
 run:
 	go run -v ./cmd/stillbox/ serve

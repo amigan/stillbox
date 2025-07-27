@@ -4,12 +4,13 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/server"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type ServeOptions struct {
@@ -33,7 +34,7 @@ func makeOptions(cfg *config.Configuration) *ServeOptions {
 	}
 }
 
-func (o *ServeOptions) Options(_ *cli.Context) error {
+func (o *ServeOptions) Options(_ context.Context, _ *cli.Command) error {
 	return nil
 }
 
@@ -41,7 +42,7 @@ func (o *ServeOptions) Execute() error {
 	ctx, cancel := context.WithCancelCause(context.Background())
 
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
 	defer func() {
 		signal.Stop(sig)
 		cancel(nil)

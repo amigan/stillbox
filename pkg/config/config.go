@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,19 +25,21 @@ type Config struct {
 	Alerting      Alerting      `yaml:"alerting"`
 	Log           []Logger      `yaml:"log"`
 	Notify        Notify        `yaml:"notify"`
+	CallStorage   []CallStorage `yaml:"callStorage"`
 	Relay         []Relay       `yaml:"relay"`
 	Transcription Transcription `yaml:"transcription"`
 	Metrics       Metrics       `yaml:"metrics"`
 }
 
 type Server struct {
-	BaseURL    jsontypes.URL `yaml:"baseURL"`
-	DumpRoutes bool          `yaml:"dumpRoutes"`
-	UseXRealIP bool          `yaml:"useXRealIP"`
-	Listen     string        `yaml:"listen" default:":3051"`
-	Public     bool          `yaml:"public"`
-	RateLimit  RateLimit     `yaml:"rateLimit"`
-	CORS       CORS          `yaml:"cors"`
+	BaseURL     jsontypes.URL `yaml:"baseURL"`
+	DumpRoutes  bool          `yaml:"dumpRoutes"`
+	UseXRealIP  bool          `yaml:"useXRealIP"`
+	Listen      string        `yaml:"listen" default:":3051"`
+	Public      bool          `yaml:"public"`
+	RateLimit   RateLimit     `yaml:"rateLimit"`
+	CORS        CORS          `yaml:"cors"`
+	AdminSocket *string       `yaml:"adminSocket"`
 }
 
 type RateLimit struct {
@@ -114,6 +118,41 @@ type NotifyService struct {
 }
 
 type ConfigMap map[string]any
+
+type CallStorage struct {
+	Name    string             `yaml:"name"`
+	Ingest  bool               `yaml:"ingest"`
+	Backend string             `yaml:"backend"`
+	Filter  ConfigMap          `yaml:"filter"`
+	Config  ConfigMap          `yaml:"config"`
+	OnError StorageDisposition `yaml:"onError"`
+}
+
+type StorageDisposition int
+
+const (
+	OnErrorNextThenFail StorageDisposition = iota
+	OnErrorNextThenDB
+	OnErrorFail
+	OnErrorDB
+)
+
+func (sd *StorageDisposition) UnmarshalText(s []byte) error {
+	t := strings.ToLower(string(s))
+	d, h := map[string]StorageDisposition{
+		"next-then-fail": OnErrorNextThenFail,
+		"next-then-db":   OnErrorNextThenDB,
+		"fail":           OnErrorFail,
+		"db":             OnErrorDB,
+	}[t]
+	if !h {
+		return fmt.Errorf("invalid storage disposition '%s'", t)
+	}
+
+	*sd = d
+
+	return nil
+}
 
 type Transcription struct {
 	Filter         ConfigMap `yaml:"filter,omitempty"`

@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/database"
 	dbmocks "dynatron.me/x/stillbox/pkg/database/mocks"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
-	"dynatron.me/x/stillbox/pkg/talkgroups/filter"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	tgsmocks "dynatron.me/x/stillbox/pkg/talkgroups/tgstore/mocks"
 	"github.com/stretchr/testify/assert"
@@ -131,7 +131,7 @@ func tgsMock(t *testing.T, ts tagSet) tgstore.Store {
 func TestFilterCompile(t *testing.T) {
 	tests := []struct {
 		desc       string
-		filter     *filter.TalkgroupFilter
+		filter     *filter.Filter
 		tgTags     tagSet
 		testVector tvector
 	}{
@@ -146,7 +146,7 @@ func TestFilterCompile(t *testing.T) {
 				"197:1196":  "law,statewide,law-tac,tac2",
 				"197:10001": "law,providence,law-talk,tac2",
 			},
-			filter: &filter.TalkgroupFilter{
+			filter: &filter.Filter{
 				Talkgroups:       tgids("197:10101"),
 				TalkgroupsNot:    tgids("197:1657"),
 				TalkgroupTagsAll: stg("law statewide"),

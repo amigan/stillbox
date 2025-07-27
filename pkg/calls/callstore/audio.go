@@ -1,0 +1,239 @@
+package callstore
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"net/url"
+
+	"dynatron.me/x/stillbox/pkg/calls"
+	"dynatron.me/x/stillbox/pkg/calls/filter"
+	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/metrics"
+	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+
+	"github.com/goccy/go-json"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog/log"
+)
+
+var (
+	ErrCallAudioNotFound = errors.New("call audio not found")
+	ErrBadAudioRef       = errors.New("bad audio reference")
+	ErrNXBackend         = errors.New("no such backend")
+)
+
+type AudioRef any
+
+type AudioBackend interface {
+	// Store stores a call in the backend. It returns the reference that, combined with the backend, can retrieve the call audio.
+	Store(context.Context, *calls.CallAudio) (AudioRef, error)
+
+	// Get retrieves a call from the backend using audioRef. If audioName is not nil and the backend returns a URL instead of a blob, the URL will result in a content-disposition of attachment rather than inline.
+	Get(ctx context.Context, call *calls.CallAudio, audioRef AudioRef, opts *CallAudioOptions) (blob []byte, audioURL *url.URL, err error)
+
+	// Delete deletes a call from the backend.
+	Delete(ctx context.Context, audioRef AudioRef) error
+
+	// DeleteBulk bulk deletes calls from the backend.
+	DeleteBulk(ctx context.Context, refs []AudioRef) error
+
+	// Type returns the backend's type.
+	Type() string
+}
+
+type AudioBackends interface {
+	// Store tries all backends and stores the call if any match.
+	// If the call was stored, audioRef will be non-nil.
+	// If the call was not stored, but not due to an error, AudioRef will be nil along with err.
+	Store(ctx context.Context, call *calls.Call) (AudioRefJSON, error)
+
+	// CallAudio gets the call audio from the backend and location specified by audioRef.
+	// It mutates the passed CallAudio with AudioBlob and/or AudioURL.
+	// If io.EOF is returned as the error, the call audio was successfully sent over the wire and nothing more should be written to the connection.
+	CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) error
+
+	// Backend looks up a backend by name.
+	Backend(name string) AudioBackend
+}
+
+type audioBackends struct {
+	storeList []string // in config order
+
+	backends map[string]*audioStorageBackend
+	metrics  audioStorageMetrics
+}
+
+func (ab *audioBackends) Backend(name string) AudioBackend {
+	be, has := ab.backends[name]
+	if !has {
+		return nil
+	}
+
+	return be
+}
+
+type audioStorageBackend struct {
+	Name    string
+	Filter  *filter.Filter
+	OnError config.StorageDisposition
+	AudioBackend
+}
+
+type audioStorageMetrics struct {
+	TotalStores  *prometheus.CounterVec `help:"Total call stores" labels:"backend,type"`
+	FailedStores *prometheus.CounterVec `help:"Failed call storage attempts by backend" labels:"backend,type"`
+}
+
+var _ AudioBackends = (*audioBackends)(nil)
+
+type AudioRefList map[string]AudioRef
+
+func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) (err error) {
+	var refm AudioRefList
+	if opts != nil && opts.audioRefOut != nil {
+		refm = opts.audioRefOut
+	}
+
+	err = json.Unmarshal(audioRef, &refm)
+	if err != nil {
+		return
+	}
+
+	for backend, location := range refm {
+		be, has := sb.backends[backend]
+		if !has {
+			err = fmt.Errorf("get call audio: %w '%s'", ErrNXBackend, backend)
+			continue
+		}
+		call.AudioBlob, call.AudioURL, err = be.Get(ctx, call, location, opts)
+		switch err {
+		case nil, io.EOF:
+			return
+		default:
+			continue // try next backend
+		}
+	}
+
+	return
+}
+
+func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj AudioRefJSON, err error) {
+	for _, beName := range ab.storeList {
+		be, has := ab.backends[beName]
+		if !has {
+			// this should never happen
+			return nil, fmt.Errorf("%w '%s'", ErrNXBackend, beName)
+		}
+
+		res := be.Filter.Test(ctx, call)
+		if !res {
+			continue
+		}
+
+		var ref AudioRef
+		ref, err = be.Store(ctx, call.ToCallAudio())
+		if err != nil {
+			ab.metrics.FailedStores.WithLabelValues(beName, be.Type()).Inc()
+
+			switch be.OnError {
+			case config.OnErrorFail:
+				return nil, fmt.Errorf("backend '%s': %w", beName, err)
+			case config.OnErrorDB:
+				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, storing in DB")
+				return nil, nil
+			case config.OnErrorNextThenDB:
+				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, trying next then storing in DB")
+				err = nil // so if nobody else stores, it stores in DB
+				continue
+			case config.OnErrorNextThenFail: // default
+				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, trying next")
+				continue
+			}
+		} else if ref != nil {
+			ab.metrics.TotalStores.WithLabelValues(beName, be.Type()).Inc()
+		}
+
+		refMap := map[string]AudioRef{
+			beName: ref,
+		}
+
+		return json.Marshal(refMap)
+	}
+
+	return
+}
+
+type BackendFactory func(config.ConfigMap) (AudioBackend, error)
+type backendRegistry map[string]BackendFactory
+
+var backends = make(backendRegistry)
+
+func registerAudioBackend(name string, f BackendFactory) {
+	backends[name] = f
+}
+
+func MakeBackends(ctx context.Context, fc tgstore.FilterCache, met metrics.Metrics, cfg []config.CallStorage) (*audioBackends, error) {
+	ab := &audioBackends{
+		storeList: make([]string, 0, len(cfg)),
+		backends:  make(map[string]*audioStorageBackend, len(cfg)),
+	}
+
+	for _, cf := range cfg {
+		if cf.Name == "" {
+			return nil, fmt.Errorf("blank name invalid")
+		}
+
+		if _, exists := ab.backends[cf.Name]; exists {
+			return nil, fmt.Errorf("backend with duplicate name '%s'", cf.Name)
+		}
+
+		var filt *filter.Filter
+		var err error
+		var be AudioBackend
+		if cf.Filter != nil {
+			filt, err = filter.FromMap(cf.Filter)
+			if err != nil {
+				return nil, fmt.Errorf("filter '%s': %w", cf.Name, err)
+			}
+		}
+
+		makeBackend, hasBackend := backends[cf.Backend]
+		if !hasBackend {
+			return nil, fmt.Errorf("%w '%s'", ErrNXBackend, cf.Backend)
+		}
+
+		be, err = makeBackend(cf.Config)
+		if err != nil {
+			return nil, fmt.Errorf("backend '%s': %w", cf.Name, err)
+		}
+
+		ab.backends[cf.Name] = &audioStorageBackend{
+			Name:         cf.Name,
+			Filter:       filt,
+			OnError:      cf.OnError,
+			AudioBackend: be,
+		}
+
+		if cf.Ingest {
+			ab.storeList = append(ab.storeList, cf.Name)
+		}
+	}
+
+	met.Register("callaudio", &ab.metrics)
+
+	return ab, nil
+}
+
+func blobPath(call *calls.CallAudio) string {
+	u := call.ID.String()
+
+	var name string
+
+	if call.AudioName != nil {
+		name = "_" + *call.AudioName
+	}
+
+	return string(u[0:2]) + "/" + string(u[2:3]) + "/" + u + name
+}

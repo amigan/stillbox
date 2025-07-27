@@ -1,6 +1,8 @@
 package common
 
 import (
+	"fmt"
+	"net/http"
 	"net/netip"
 	"strings"
 )
@@ -19,4 +21,15 @@ func RemoteAddr(as string) (netip.Addr, error) {
 	a, err := netip.ParseAddr(as)
 
 	return a, err
+}
+
+func ContentDisposition(hdr http.Header, contentType, filename string, attachment bool) {
+	disposition := "inline"
+	if attachment {
+		disposition = "attachment"
+	}
+
+	hdr.Add("Content-Type", contentType)
+	hdr.Add("Content-Disposition",
+		fmt.Sprintf(`%s; filename="%s"`, disposition, filename))
 }

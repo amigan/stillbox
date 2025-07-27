@@ -377,7 +377,7 @@ func (pm *partman) verifyPartName(pr database.PartitionResult) (p Partition, err
 			ymd[i] = r
 		}
 		parsed := time.Date(ymd[0], time.Month(ymd[1]), ymd[2], 0, 0, 0, 0, time.UTC)
-		if parsed != p.Time {
+		if !parsed.Equal(p.Time) {
 			return p, PartitionError(pn, ParsedIntvlErr{parsed: parsed, start: p.Time})
 		}
 		return p, nil

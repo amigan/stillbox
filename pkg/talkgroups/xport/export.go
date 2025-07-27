@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
+	"dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
-	"dynatron.me/x/stillbox/pkg/talkgroups/filter"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/xport/sdrtrunk"
 )
@@ -20,7 +20,7 @@ type ExportJob struct {
 	Template         []byte `json:"template" form:"template" filenameField:"TemplateFileName"`
 	TemplateFileName string
 
-	filter.TalkgroupFilter
+	filter.Filter
 	Exporter
 }
 
@@ -28,18 +28,18 @@ func (ej *ExportJob) Export(ctx context.Context, w io.Writer) error {
 	var tgs []*talkgroups.Talkgroup
 	var err error
 	tgst := tgstore.FromCtx(ctx)
-	if ej.TalkgroupFilter.IsEmpty() {
+	if ej.Filter.IsEmpty() {
 		tgs, err = tgst.SystemTGs(ctx, ej.SystemID)
 		if err != nil {
 			return err
 		}
 	} else {
-		for i, v := range ej.TalkgroupFilter.Talkgroups {
+		for i, v := range ej.Filter.Talkgroups {
 			if v.System == 0 {
-				ej.TalkgroupFilter.Talkgroups[i].System = uint32(ej.SystemID)
+				ej.Filter.Talkgroups[i].System = uint32(ej.SystemID)
 			}
 		}
-		ids, err := ej.TalkgroupFilter.TGs(ctx)
+		ids, err := ej.Filter.TGs(ctx)
 		if err != nil {
 			return err
 		}

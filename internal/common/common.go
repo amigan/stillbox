@@ -1,9 +1,11 @@
 package common
 
 import (
+	"context"
+	"reflect"
 	"strconv"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const (
@@ -16,13 +18,13 @@ const (
 )
 
 type cmdOptions interface {
-	Options(*cli.Context) error
+	Options(context.Context, *cli.Command) error
 	Execute() error
 }
 
 func Action(c cmdOptions) cli.ActionFunc {
-	return func(ctx *cli.Context) error {
-		err := c.Options(ctx)
+	return func(ctx context.Context, cmd *cli.Command) error {
+		err := c.Options(ctx, cmd)
 		if err != nil {
 			return err
 		}
@@ -42,6 +44,38 @@ func NilIfZero[T comparable](val T) *T {
 	}
 
 	return &val
+}
+
+// ZeroFields takes a struct or a pointer to struct and if any pointer fields point to a zero value for the pointed type, they are set to nil. It also recurses into embedded fields.
+func ZeroFields(s any) {
+	zeroFields(reflect.ValueOf(s))
+}
+
+func zeroFields(v reflect.Value) {
+	if v.Kind() == reflect.Pointer {
+		v = v.Elem()
+	}
+
+	if v.Kind() != reflect.Struct {
+		panic("must be pointer to struct")
+	}
+
+	vt := v.Type()
+
+	for fi := range v.NumField() {
+		fv := v.Field(fi)
+		ft := fv.Type()
+
+		if ft.Kind() == reflect.Struct && vt.Field(fi).Anonymous {
+			zeroFields(fv)
+		}
+		if fv.Kind() == reflect.Pointer && !fv.IsNil() && fv.Elem().Kind() == reflect.String {
+			fe := fv.Elem()
+			if fe.IsZero() {
+				fv.Set(reflect.Zero(ft))
+			}
+		}
+	}
 }
 
 func ZeroIfNil[T any](v *T) T {

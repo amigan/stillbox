@@ -15,6 +15,7 @@ import (
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/sources"
 	"dynatron.me/x/stillbox/pkg/users"
 
@@ -89,7 +90,7 @@ func TestRelay(t *testing.T) {
 		}
 		ns := &nullSinks{}
 
-		rm, err := NewRelayManager(ns, []config.Relay{cfg})
+		rm, err := NewRelayManager(ns, metrics.NewNoOp(), []config.Relay{cfg})
 		require.NoError(t, err)
 
 		for range 5 {
@@ -106,7 +107,7 @@ func TestRelay(t *testing.T) {
 
 type nullSinks struct{}
 
-func (*nullSinks) Register(_ Sink, _ bool)                         {}
+func (*nullSinks) Register(_ Sink, _ ...Flags)                     {}
 func (*nullSinks) Unregister(_ Sink)                               {}
 func (*nullSinks) Shutdown()                                       {}
 func (*nullSinks) EmitCall(_ context.Context, _ *calls.Call) error { return nil }

@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"runtime/debug"
@@ -34,6 +36,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/hashicorp/go-multierror"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
@@ -53,7 +56,7 @@ type Server struct {
 	logger      *Logger
 	alerter     alerting.Alerter
 	notifier    notify.Notifier
-	hup         chan os.Signal
+	signals     chan os.Signal
 	tgs         tgstore.Store
 	rest        rest.APIRoot
 	partman     partman.PartitionManager
@@ -70,8 +73,8 @@ type Server struct {
 
 type srvMetrics struct {
 	Requests      *prometheus.CounterVec `help:"Requests" labels:"code,method"`
-	RequestMS     prometheus.Histogram   `help:"Request durations." buckets:"1,5,10,30,100,200,500"`
-	IngestedCalls prometheus.Counter     `help:"Total ingested calls."`
+	RequestMS     prometheus.Histogram   `help:"Request durations" buckets:"1,5,10,30,100,200,500"`
+	IngestedCalls prometheus.Counter     `help:"Total ingested calls"`
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
@@ -111,7 +114,11 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
-	callStore := callstore.NewStore(db)
+	callStore, err := callstore.NewStore(ctx, db, tgCache, met, cfg.CallStorage)
+	if err != nil {
+		return nil, err
+	}
+
 	statsSvc := stats.NewStats(callStore, stats.DefaultExpiration)
 
 	nex := nexus.New(tgCache, met)
@@ -137,7 +144,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		settings:  settings.New(settings.ConfigDefaults),
 	}
 
-	srv.transcriber, err = sinks.NewTranscriber(srv.sinks, authenticator, srv.tgs, cfg.Transcription)
+	srv.transcriber, err = sinks.NewTranscriber(srv.sinks, authenticator, srv.tgs, met, cfg.Transcription)
 	if err != nil {
 		return nil, err
 	}
@@ -159,17 +166,17 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		}
 	}
 
-	srv.sinks.Register(sinks.NewDatabaseSink(db, tgCache), true)
-	srv.sinks.Register(sinks.NewNexusSink(srv.nex), false)
-	srv.sinks.Register(srv.transcriber, false)
+	srv.sinks.Register(sinks.NewCallstoreSink(callStore, tgCache), sinks.RequiredFlag)
+	srv.sinks.Register(sinks.NewNexusSink(srv.nex))
+	srv.sinks.Register(srv.transcriber)
 
 	if srv.alerter.Enabled() {
-		srv.sinks.Register(srv.alerter, false)
+		srv.sinks.Register(srv.alerter)
 	}
 
 	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
 
-	relayer, err := sinks.NewRelayManager(srv.sinks, cfg.Relay)
+	relayer, err := sinks.NewRelayManager(srv.sinks, met, cfg.Relay)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +274,7 @@ func (s *Server) MetricsLogger() func(next http.Handler) http.Handler {
 func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	defer database.Close(s.db)
 
-	s.hupHandler()
+	s.installSignalHandlers()
 
 	ctx = s.fillCtx(ctx)
 
@@ -275,11 +282,49 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 		Addr:    s.conf.Server.Listen,
 		Handler: s.r,
 	}
-	var err error
+
+	var udomSrv *http.Server
+	if s.conf.Server.AdminSocket != nil && *s.conf.Server.AdminSocket != "" {
+		err := os.Remove(*s.conf.Server.AdminSocket)
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			fmt.Printf("%#v %T\n", err, err)
+			return err
+		}
+		ua, err := net.ResolveUnixAddr("unix", *s.conf.Server.AdminSocket)
+		if err != nil {
+			return err
+		}
+
+		r := chi.NewRouter()
+		r.Use(s.WithCtxStores(), s.auth.LocalAdminMiddleware(), s.MetricsLogger())
+		r.Mount("/", s.rest.Subrouter())
+
+		udomSrv = &http.Server{
+			Addr:    *s.conf.Server.AdminSocket,
+			Handler: r,
+		}
+
+		go func() {
+			log.Info().Str("path", *s.conf.Server.AdminSocket).Msg("control socket")
+			l, err := net.ListenUnix("unix", ua)
+			if err != nil {
+				log.Error().Err(err).Msg("adm listen")
+				shutReq <- err
+			}
+
+			err = udomSrv.Serve(l)
+			if err != nil {
+				log.Error().Err(err).Msg("control socket serve")
+			}
+		}()
+	}
+
+	var err, admErr error
 	go func() {
-		err = httpSrv.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			shutReq <- err
+		log.Info().Str("addr", s.conf.Server.Listen).Msg("listening")
+		admErr = httpSrv.ListenAndServe()
+		if admErr != nil && admErr != http.ErrServerClosed {
+			shutReq <- admErr
 		}
 	}()
 
@@ -303,6 +348,27 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	}
 	if err == http.ErrServerClosed {
 		err = nil
+	}
+
+	if udomSrv != nil {
+		ctxShutdown, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+
+		if err := udomSrv.Shutdown(ctxShutdown); err != nil {
+			log.Fatal().Err(err).Msg("ctl shutdown failed")
+		}
+
+		if admErr == http.ErrServerClosed {
+			admErr = nil
+		}
+	}
+
+	if err == nil && admErr != nil {
+		return admErr
+	}
+
+	if admErr != nil { // both are errors
+		err = multierror.Append(err, admErr)
 	}
 
 	return err

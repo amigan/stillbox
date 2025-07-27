@@ -30,7 +30,7 @@ type nexus struct {
 }
 
 type nexMetrics struct {
-	ActiveWSConns prometheus.Gauge `help:"Number of active websocket connections."`
+	ActiveWSConns prometheus.Gauge `help:"Number of active websocket connections"`
 }
 
 type Nexus interface {

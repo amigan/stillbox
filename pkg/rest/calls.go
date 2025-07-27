@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -187,9 +188,29 @@ func (ca *callsAPI) getAudio(p getAudioParams, w http.ResponseWriter, r *http.Re
 	ctx := r.Context()
 	calls := callstore.FromCtx(ctx)
 
-	call, err := calls.CallAudio(ctx, *p.CallID)
-	if err != nil {
+	caOpts := make([]callstore.CallAudioOption, 0, 2)
+
+	if p.Download != nil {
+		caOpts = append(caOpts, callstore.WithDownloadDisposition(true))
+	}
+	call, err := calls.CallAudio(ctx, *p.CallID, append(caOpts, callstore.WithResponseWriter(w))...)
+	switch err {
+	case io.EOF: // sendfile(2)/splice(2) (TCPConn.ReadFrom()) was used by the fs backend
+		return
+	case nil:
+		// continue
+	default: // error
 		wErr(w, r, autoError(err))
+		return
+	}
+
+	if call.AudioBlob == nil {
+		if call.AudioURL == nil {
+			wErr(w, r, autoError(ErrNoCall))
+			return
+		}
+
+		http.Redirect(w, r, call.AudioURL.String(), http.StatusFound)
 		return
 	}
 
@@ -213,15 +234,7 @@ func (ca *callsAPI) getAudio(p getAudioParams, w http.ResponseWriter, r *http.Re
 		call.AudioName = common.PtrTo(call.CallDate.Time().Format(fileNameDateFmt))
 	}
 
-	disposition := "inline"
-	if p.Download != nil {
-		disposition = "attachment"
-	}
-
-	w.Header().Add("Content-Type", *call.AudioType)
-	w.Header().Add("Content-Disposition",
-		fmt.Sprintf(`%s; filename="%s"`, disposition, *call.AudioName))
-
+	common.ContentDisposition(w.Header(), *call.AudioType, *call.AudioName, p.Download != nil)
 	_, _ = w.Write(call.AudioBlob)
 }
 
@@ -272,7 +285,7 @@ func (ca *callsAPI) listCalls(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	cSt := callstore.FromCtx(ctx)
 
-	var par callstore.CallsParams
+	var par callstore.ListCallsParams
 	err := forms.Unmarshal(r, &par, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
 	if err != nil {
 		wErr(w, r, badRequest(err))

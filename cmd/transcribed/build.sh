@@ -19,4 +19,4 @@ export CGO_CFLAGS=`pkg-config --cflags ${WHISPER_PACKAGES}`
 TRANSCRIBED_LDFLAGS=-ldflags="${VERSION_LDF}"
 
 echo building transcribed with "${TRANSCRIBED_LDFLAGS}"
-go build -v -o transcribed ${GOFLAGS} "${TRANSCRIBED_LDFLAGS}" ./cmd/transcribed/
+go build -v -o transcribed -tags whisper ${GOFLAGS} "${TRANSCRIBED_LDFLAGS}" ./cmd/transcribed/
