@@ -4,26 +4,33 @@ import (
 	"context"
 	"fmt"
 	"sync"
+
+	"github.com/hashicorp/go-multierror"
 )
 
-type arTuple struct {
-	b AudioBackend
-	r AudioRef
+type beRefMap map[AudioBackend][]AudioRef
+
+func (brm beRefMap) reset() {
+	for k := range brm {
+		brm[k] = brm[k][:0]
+	}
 }
 
+// A refTracker gives us transaction-ish semantics for audio storage backends.
 type refTracker struct {
 	sync.Mutex
-	del     []arTuple    // deletes are queued until transaction commit
-	cre     []AudioRef   // but creates are tracked for deletion on rollback
-	dst     AudioBackend // cre all refers to one backend
-	dstName string
+	del beRefMap // deletes are queued until transaction commit
+	cre beRefMap // but creates are tracked for deletion on rollback
 
 	ab AudioBackends
 }
 
 func (rt *refTracker) reset() {
-	rt.del = rt.del[:0]
-	rt.cre = rt.cre[:0]
+	rt.Lock()
+	defer rt.Unlock()
+
+	rt.del.reset()
+	rt.cre.reset()
 }
 
 // Rollback deletes all created objects.
@@ -32,11 +39,15 @@ func (rt *refTracker) Rollback(ctx context.Context) error {
 	rt.Lock()
 	defer rt.Unlock()
 
-	if rt.dst == nil {
-		return nil
+	var err error
+	for b, refs := range rt.cre {
+		bErr := b.DeleteBulk(ctx, refs)
+		if bErr != nil {
+			err = multierror.Append(err, bErr)
+		}
 	}
 
-	return rt.dst.DeleteBulk(ctx, rt.cre)
+	return err
 }
 
 // Commit deletes all queued-for-deletion objects.
@@ -45,16 +56,16 @@ func (rt *refTracker) Commit(ctx context.Context) error {
 	rt.Lock()
 	defer rt.Unlock()
 
-	m := make(map[AudioBackend][]AudioRef)
-	for _, d := range rt.del {
-		m[d.b] = append(m[d.b], d.r)
+	var err error
+	for b, rs := range rt.del {
+		bErr := b.DeleteBulk(ctx, rs)
+		if bErr != nil {
+			err = multierror.Append(err, bErr)
+		}
 	}
 
-	for b, rs := range m {
-		err := b.DeleteBulk(ctx, rs)
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
 	rt.reset()
@@ -67,6 +78,7 @@ func (rt *refTracker) QueueDeleteAll(ar AudioRefList) error {
 		if ben == "" {
 			continue
 		}
+
 		be := rt.ab.Backend(ben)
 		if be == nil {
 			return fmt.Errorf("queue delete all: no such backend '%s'", ben)
@@ -78,26 +90,24 @@ func (rt *refTracker) QueueDeleteAll(ar AudioRefList) error {
 	return nil
 }
 
-func (rt *refTracker) QueueDelete(ab AudioBackend, ar AudioRef) {
+func (rt *refTracker) QueueDelete(be AudioBackend, ar AudioRef) {
 	rt.Lock()
 	defer rt.Unlock()
 
-	rt.del = append(rt.del, arTuple{ab, ar})
+	rt.del[be] = append(rt.del[be], ar)
 }
 
-func (rt *refTracker) Created(ar AudioRef) {
+func (rt *refTracker) Created(be AudioBackend, ar AudioRef) {
 	rt.Lock()
 	defer rt.Unlock()
 
-	rt.cre = append(rt.cre, ar)
+	rt.cre[be] = append(rt.cre[be], ar)
 }
 
-func newRefTracker(ab AudioBackends, dstName string, dst AudioBackend) *refTracker {
+func newRefTracker(ab AudioBackends) *refTracker {
 	return &refTracker{
-		ab:      ab,
-		dst:     dst,
-		dstName: dstName,
+		ab:  ab,
+		cre: make(beRefMap),
+		del: make(beRefMap),
 	}
 }
-
-

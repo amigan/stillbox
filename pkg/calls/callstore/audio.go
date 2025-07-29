@@ -55,7 +55,7 @@ type AudioBackends interface {
 	CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) error
 
 	// Backend looks up a backend by name.
-	Backend(name string) AudioBackend
+	Backend(name string) *audioStorageBackend
 }
 
 type audioBackends struct {
@@ -65,7 +65,7 @@ type audioBackends struct {
 	metrics  audioStorageMetrics
 }
 
-func (ab *audioBackends) Backend(name string) AudioBackend {
+func (ab *audioBackends) Backend(name string) *audioStorageBackend {
 	be, has := ab.backends[name]
 	if !has {
 		return nil

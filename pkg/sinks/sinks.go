@@ -6,6 +6,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/calls"
 
 	"github.com/rs/zerolog/log"
@@ -101,8 +102,13 @@ const (
 )
 
 func (sink *sinkInstance) callEmitter(ctx context.Context, call *calls.Call) func() error {
-	return func() error {
-		err := sink.Call(ctx, call)
+	return func() (err error) {
+		defer func() { // for errgroup
+			if rec := recover(); rec != nil {
+				err = common.FromPanicValue(rec)
+			}
+		}()
+		err = sink.Call(ctx, call)
 		if err != nil {
 			if sink.Flags.Has(RequiredFlag) {
 				return err
