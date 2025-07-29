@@ -39,15 +39,15 @@ UPDATE users SET
 	last_login_from = @last_login_from
 WHERE username = $1;
 
--- name: CreateAPIKey :one
+-- name: CreateAPIKey :exec
 INSERT INTO api_keys(
 	owner,
+	name,
 	created_at,
 	expires,
 	disabled,
 	api_key
-	) VALUES ($1, NOW(), $2, $3, gen_random_uuid())
-RETURNING *;
+	) VALUES (@owner, @name, @created_at, @expires, @disabled, @hashed_key);
 
 -- name: DeleteAPIKey :exec
 DELETE FROM api_keys WHERE api_key = $1;
@@ -56,6 +56,7 @@ DELETE FROM api_keys WHERE api_key = $1;
 SELECT
 	a.id,
 	a.owner,
+	a.name,
 	a.created_at,
 	a.expires,
 	a.disabled,

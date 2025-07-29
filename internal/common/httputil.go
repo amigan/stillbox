@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"net/netip"
 	"strings"
+
+	"github.com/moul/http2curl"
+	"github.com/rs/zerolog/log"
 )
 
 func RemoteAddr(as string) (netip.Addr, error) {
@@ -32,4 +35,16 @@ func ContentDisposition(hdr http.Header, contentType, filename string, attachmen
 	hdr.Add("Content-Type", contentType)
 	hdr.Add("Content-Disposition",
 		fmt.Sprintf(`%s; filename="%s"`, disposition, filename))
+}
+
+type loggingRoundTripper struct{}
+
+func (ct loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	curlCmd, _ := http2curl.GetCurlCommand(req)
+	log.Debug().Msgf("curl %s", curlCmd.String())
+	return http.DefaultTransport.RoundTrip(req)
+}
+
+func LoggingRoundTripper() http.RoundTripper {
+	return new(loggingRoundTripper)
 }

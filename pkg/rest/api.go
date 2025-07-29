@@ -14,6 +14,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -192,6 +193,8 @@ var statusMapping = map[error]errResponder{
 	callstore.ErrNXBackend:         badRequestErrText,
 	callstore.ErrSrcDestSame:       badRequestErrText,
 	callstore.ErrMoveInProgress:    tooManyRequestsErrText,
+	users.ErrNoUIDSpecified:        badRequestErrText,
+	users.ErrDuplicateName:         badRequestErrText,
 }
 
 func autoError(err error) render.Renderer {

@@ -2,7 +2,9 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"reflect"
+	"runtime"
 	"strconv"
 
 	"github.com/urfave/cli/v3"
@@ -113,4 +115,24 @@ func AtoiU32(s string) (uint32, error) {
 
 	v, err := strconv.Atoi(s)
 	return uint32(v), err
+}
+
+// FromPanicValue is used to recover errgroup panics.
+func FromPanicValue(i any) error {
+	switch value := i.(type) {
+	case nil:
+		return nil
+	case string:
+		return fmt.Errorf("panic: %v\n%s", value, CollectStack())
+	case error:
+		return fmt.Errorf("panic in errgroup goroutine %w\n%s", value, CollectStack())
+	default:
+		return fmt.Errorf("unknown panic: %+v\n%s", value, CollectStack())
+	}
+}
+
+func CollectStack() []byte {
+	buf := make([]byte, 64<<10)
+	buf = buf[:runtime.Stack(buf, false)]
+	return buf
 }

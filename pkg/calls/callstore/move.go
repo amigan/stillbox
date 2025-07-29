@@ -23,7 +23,7 @@ import (
 
 // number of store workers
 const numStoreWorkers = 16
-const numStoreWorkersLimit = 50
+const numStoreWorkersLimit = 128
 
 type MoveCallParams struct {
 	CallsParams
@@ -67,100 +67,6 @@ func getCallAudioRowToSkinnyCallAudio(row *database.GetCallAudioRow) *calls.Call
 		CallDate:  jsontypes.Time(row.CallDate.Time),
 		AudioName: row.AudioName,
 		AudioType: (*string)(&row.AudioType.AudioMIME),
-	}
-}
-
-type arTuple struct {
-	b AudioBackend
-	r AudioRef
-}
-
-type refTracker struct {
-	sync.Mutex
-	del     []arTuple    // deletes are queued until transaction commit
-	cre     []AudioRef   // but creates are tracked for deletion on rollback
-	dst     AudioBackend // cre all refers to one backend
-	dstName string
-
-	ab AudioBackends
-}
-
-func (rt *refTracker) reset() {
-	rt.del = rt.del[:0]
-	rt.cre = rt.cre[:0]
-}
-
-// Rollback deletes all created objects.
-// Pass it a context without cancel.
-func (rt *refTracker) Rollback(ctx context.Context) error {
-	rt.Lock()
-	defer rt.Unlock()
-
-	if rt.dst == nil {
-		return nil
-	}
-
-	return rt.dst.DeleteBulk(ctx, rt.cre)
-}
-
-// Commit deletes all queued-for-deletion objects.
-// Pass it a context without cancel.
-func (rt *refTracker) Commit(ctx context.Context) error {
-	rt.Lock()
-	defer rt.Unlock()
-
-	m := make(map[AudioBackend][]AudioRef)
-	for _, d := range rt.del {
-		m[d.b] = append(m[d.b], d.r)
-	}
-
-	for b, rs := range m {
-		err := b.DeleteBulk(ctx, rs)
-		if err != nil {
-			return err
-		}
-	}
-
-	rt.reset()
-
-	return nil
-}
-
-func (rt *refTracker) QueueDeleteAll(ar AudioRefList) error {
-	for ben, loc := range ar {
-		if ben == "" {
-			continue
-		}
-		be := rt.ab.Backend(ben)
-		if be == nil {
-			return fmt.Errorf("queue delete all: no such backend '%s'", ben)
-		}
-
-		rt.QueueDelete(be, loc)
-	}
-
-	return nil
-}
-
-func (rt *refTracker) QueueDelete(ab AudioBackend, ar AudioRef) {
-	rt.Lock()
-	defer rt.Unlock()
-
-	rt.del = append(rt.del, arTuple{ab, ar})
-}
-
-func (rt *refTracker) Created(ar AudioRef) {
-	rt.Lock()
-	defer rt.Unlock()
-
-	rt.cre = append(rt.cre, ar)
-}
-
-func newRefTracker(ab AudioBackends, dstName string, dst AudioBackend) *refTracker {
-	return &refTracker{
-		ab:      ab,
-		dst:     dst,
-		dstName: dstName,
 	}
 }
 
@@ -217,13 +123,13 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 		}
 
 		// storage succeeded, log the creation
-		m.refs.Created(crRef)
+		m.refs.Created(m.dst, crRef)
 
 		if cao.audioRefOut == nil {
 			cao.audioRefOut = make(AudioRefList)
 		}
 
-		cao.audioRefOut[m.refs.dstName] = crRef
+		cao.audioRefOut[m.dst.Name] = crRef
 		if !m.par.Copy && fromBlob {
 			// we are from the DB and copy is disabled and we are a ref, clear blob
 			blob = nil
@@ -248,7 +154,7 @@ type mover struct {
 	refs       *refTracker
 
 	completedRows atomic.Int64
-	dst           AudioBackend
+	dst           *audioStorageBackend
 	par           MoveCallParams
 }
 
@@ -312,7 +218,14 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 		count -= int64(len(rows))
 
 		for _, row := range rows {
-			eg.Go(func() error {
+			eg.Go(func() (err error) {
+				defer func() { // for errgroup
+					if rec := recover(); rec != nil {
+						err = common.FromPanicValue(rec)
+						log.Error().Err(err).Msg("panic in worker")
+					}
+				}()
+
 				return m.moveWorker(wctx, &row)
 			})
 		}
@@ -327,7 +240,7 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 	return nil
 }
 
-func (s *store) newMover(dst AudioBackend, tx database.Store, rt *refTracker, par MoveCallParams) *mover {
+func (s *store) newMover(dst *audioStorageBackend, tx database.Store, rt *refTracker, par MoveCallParams) *mover {
 	numWorkers := numStoreWorkers
 	if par.NumWorkers != nil {
 		numWorkers = min(int(*par.NumWorkers), numStoreWorkersLimit)
@@ -358,12 +271,10 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		return 0, ErrMoveInProgress
 	}
 
-	var destBackend string
-	var dst AudioBackend
+	var dst *audioStorageBackend
 
 	if par.DestBackend != nil {
-		destBackend = *par.DestBackend
-		dst = s.audioBackends.Backend(destBackend)
+		dst = s.audioBackends.Backend(*par.DestBackend)
 		if dst == nil {
 			return 0, fmt.Errorf("move params: %w '%s'", ErrNXBackend, *par.DestBackend)
 		}
@@ -388,7 +299,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		NotHasBackend: par.DestBackend, // not already moved
 	}
 
-	refT := newRefTracker(s.audioBackends, destBackend, dst)
+	refT := newRefTracker(s.audioBackends)
 
 	err = s.db.InTx(context.WithoutCancel(ctx), func(tx database.Store) error {
 		m := s.newMover(dst, tx, refT, par)

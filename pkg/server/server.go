@@ -313,7 +313,7 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 			}
 
 			err = udomSrv.Serve(l)
-			if err != nil {
+			if err != nil && err != http.ErrServerClosed {
 				log.Error().Err(err).Msg("control socket serve")
 			}
 		}()
