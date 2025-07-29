@@ -500,29 +500,20 @@ func (_c *Store_CleanupSweptCalls_Call) RunAndReturn(run func(ctx context.Contex
 }
 
 // CreateAPIKey provides a mock function for the type Store
-func (_mock *Store) CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (database.ApiKey, error) {
-	ret := _mock.Called(ctx, owner, expires, disabled)
+func (_mock *Store) CreateAPIKey(ctx context.Context, arg database.CreateAPIKeyParams) error {
+	ret := _mock.Called(ctx, arg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateAPIKey")
 	}
 
-	var r0 database.ApiKey
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int, pgtype.Timestamp, *bool) (database.ApiKey, error)); ok {
-		return returnFunc(ctx, owner, expires, disabled)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int, pgtype.Timestamp, *bool) database.ApiKey); ok {
-		r0 = returnFunc(ctx, owner, expires, disabled)
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.CreateAPIKeyParams) error); ok {
+		r0 = returnFunc(ctx, arg)
 	} else {
-		r0 = ret.Get(0).(database.ApiKey)
+		r0 = ret.Error(0)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int, pgtype.Timestamp, *bool) error); ok {
-		r1 = returnFunc(ctx, owner, expires, disabled)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
+	return r0
 }
 
 // Store_CreateAPIKey_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateAPIKey'
@@ -532,47 +523,35 @@ type Store_CreateAPIKey_Call struct {
 
 // CreateAPIKey is a helper method to define mock.On call
 //   - ctx context.Context
-//   - owner int
-//   - expires pgtype.Timestamp
-//   - disabled *bool
-func (_e *Store_Expecter) CreateAPIKey(ctx interface{}, owner interface{}, expires interface{}, disabled interface{}) *Store_CreateAPIKey_Call {
-	return &Store_CreateAPIKey_Call{Call: _e.mock.On("CreateAPIKey", ctx, owner, expires, disabled)}
+//   - arg database.CreateAPIKeyParams
+func (_e *Store_Expecter) CreateAPIKey(ctx interface{}, arg interface{}) *Store_CreateAPIKey_Call {
+	return &Store_CreateAPIKey_Call{Call: _e.mock.On("CreateAPIKey", ctx, arg)}
 }
 
-func (_c *Store_CreateAPIKey_Call) Run(run func(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool)) *Store_CreateAPIKey_Call {
+func (_c *Store_CreateAPIKey_Call) Run(run func(ctx context.Context, arg database.CreateAPIKeyParams)) *Store_CreateAPIKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 int
+		var arg1 database.CreateAPIKeyParams
 		if args[1] != nil {
-			arg1 = args[1].(int)
-		}
-		var arg2 pgtype.Timestamp
-		if args[2] != nil {
-			arg2 = args[2].(pgtype.Timestamp)
-		}
-		var arg3 *bool
-		if args[3] != nil {
-			arg3 = args[3].(*bool)
+			arg1 = args[1].(database.CreateAPIKeyParams)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
-			arg3,
 		)
 	})
 	return _c
 }
 
-func (_c *Store_CreateAPIKey_Call) Return(apiKey database.ApiKey, err error) *Store_CreateAPIKey_Call {
-	_c.Call.Return(apiKey, err)
+func (_c *Store_CreateAPIKey_Call) Return(err error) *Store_CreateAPIKey_Call {
+	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *Store_CreateAPIKey_Call) RunAndReturn(run func(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (database.ApiKey, error)) *Store_CreateAPIKey_Call {
+func (_c *Store_CreateAPIKey_Call) RunAndReturn(run func(ctx context.Context, arg database.CreateAPIKeyParams) error) *Store_CreateAPIKey_Call {
 	_c.Call.Return(run)
 	return _c
 }

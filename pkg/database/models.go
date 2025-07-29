@@ -73,9 +73,10 @@ type Alert struct {
 type ApiKey struct {
 	ID        int              `json:"id,omitempty"`
 	Owner     int              `json:"owner,omitempty"`
+	Name      *string          `json:"name,omitempty"`
 	CreatedAt time.Time        `json:"createdAt,omitempty"`
 	Expires   pgtype.Timestamp `json:"expires,omitempty"`
-	Disabled  *bool            `json:"disabled,omitempty"`
+	Disabled  bool             `json:"disabled,omitempty"`
 	ApiKey    string           `json:"apiKey,omitempty"`
 }
 

@@ -19,7 +19,7 @@ type Querier interface {
 	AddToIncident(ctx context.Context, incidentID uuid.UUID, callIds []uuid.UUID, notes [][]byte) error
 	CallInIncident(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID) (bool, error)
 	CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)
-	CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error)
+	CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error)
 	CreateShare(ctx context.Context, arg CreateShareParams) error
 	CreateSystem(ctx context.Context, iD int, name string) error

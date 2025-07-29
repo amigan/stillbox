@@ -6,8 +6,8 @@ package server
 import (
 	"runtime"
 
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/felixge/fgprof"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func (s *Server) installPprof() {

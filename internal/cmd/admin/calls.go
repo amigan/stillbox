@@ -51,10 +51,7 @@ func (p *progresser) ttyCb(msg client.ProgressMsg) {
 		if p.pb == nil {
 			break
 		}
-		err := p.pb.Set64(*msg.Completed)
-		if err != nil {
-			panic(err)
-		}
+		_ = p.pb.Set64(*msg.Completed)
 	case msg.Total != nil:
 		if *msg.Total == 0 {
 			break

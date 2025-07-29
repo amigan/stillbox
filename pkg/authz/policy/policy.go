@@ -7,6 +7,8 @@ import (
 )
 
 const (
+	PresetCreateOwn       = "createOwn"
+	PresetReadOwn         = "readOwn"
 	PresetUpdateOwn       = "updateOwn"
 	PresetDeleteOwn       = "deleteOwn"
 	PresetReadShared      = "readShared"
@@ -61,6 +63,11 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: entities.ActionRead},
 					&restrict.Permission{Preset: PresetReadPrivilegedSelf},
 					&restrict.Permission{Preset: PresetUpdateSelf},
+				},
+				entities.ResourceAPIKey: {
+					&restrict.Permission{Preset: PresetCreateOwn},
+					&restrict.Permission{Preset: PresetDeleteOwn},
+					&restrict.Permission{Preset: PresetReadOwn},
 				},
 			},
 		},
@@ -148,6 +155,12 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: entities.ActionSimulate},
 					&restrict.Permission{Action: entities.ActionTestNotify},
 				},
+				entities.ResourceAPIKey: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionDelete},
+				},
 			},
 		},
 		entities.RoleSystem: {
@@ -190,6 +203,38 @@ var Policy = &restrict.PolicyDefinition{
 		},
 		PresetDeleteOwn: &restrict.Permission{
 			Action: entities.ActionDelete,
+			Conditions: restrict.Conditions{
+				&restrict.EqualCondition{
+					ID: "isOwner",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Owner",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetCreateOwn: &restrict.Permission{
+			Action: entities.ActionCreate,
+			Conditions: restrict.Conditions{
+				&restrict.EqualCondition{
+					ID: "isOwner",
+					Left: &restrict.ValueDescriptor{
+						Source: restrict.ResourceField,
+						Field:  "Owner",
+					},
+					Right: &restrict.ValueDescriptor{
+						Source: restrict.SubjectField,
+						Field:  "ID",
+					},
+				},
+			},
+		},
+		PresetReadOwn: &restrict.Permission{
+			Action: entities.ActionRead,
 			Conditions: restrict.Conditions{
 				&restrict.EqualCondition{
 					ID: "isOwner",

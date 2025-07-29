@@ -13,29 +13,36 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createAPIKey = `-- name: CreateAPIKey :one
+const createAPIKey = `-- name: CreateAPIKey :exec
 INSERT INTO api_keys(
 	owner,
+	name,
 	created_at,
 	expires,
 	disabled,
 	api_key
-	) VALUES ($1, NOW(), $2, $3, gen_random_uuid())
-RETURNING id, owner, created_at, expires, disabled, api_key
+	) VALUES ($1, $2, $3, $4, $5, $6)
 `
 
-func (q *Queries) CreateAPIKey(ctx context.Context, owner int, expires pgtype.Timestamp, disabled *bool) (ApiKey, error) {
-	row := q.db.QueryRow(ctx, createAPIKey, owner, expires, disabled)
-	var i ApiKey
-	err := row.Scan(
-		&i.ID,
-		&i.Owner,
-		&i.CreatedAt,
-		&i.Expires,
-		&i.Disabled,
-		&i.ApiKey,
+type CreateAPIKeyParams struct {
+	Owner     int              `json:"owner"`
+	Name      *string          `json:"name"`
+	CreatedAt time.Time        `json:"createdAt"`
+	Expires   pgtype.Timestamp `json:"expires"`
+	Disabled  bool             `json:"disabled"`
+	HashedKey string           `json:"hashedKey"`
+}
+
+func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error {
+	_, err := q.db.Exec(ctx, createAPIKey,
+		arg.Owner,
+		arg.Name,
+		arg.CreatedAt,
+		arg.Expires,
+		arg.Disabled,
+		arg.HashedKey,
 	)
-	return i, err
+	return err
 }
 
 const createUser = `-- name: CreateUser :one
@@ -100,6 +107,7 @@ const getAPIKey = `-- name: GetAPIKey :one
 SELECT
 	a.id,
 	a.owner,
+	a.name,
 	a.created_at,
 	a.expires,
 	a.disabled,
@@ -113,9 +121,10 @@ WHERE api_key = $1
 type GetAPIKeyRow struct {
 	ID        int              `json:"id"`
 	Owner     int              `json:"owner"`
+	Name      *string          `json:"name"`
 	CreatedAt time.Time        `json:"createdAt"`
 	Expires   pgtype.Timestamp `json:"expires"`
-	Disabled  *bool            `json:"disabled"`
+	Disabled  bool             `json:"disabled"`
 	ApiKey    string           `json:"apiKey"`
 	Username  string           `json:"username"`
 }
@@ -126,6 +135,7 @@ func (q *Queries) GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, e
 	err := row.Scan(
 		&i.ID,
 		&i.Owner,
+		&i.Name,
 		&i.CreatedAt,
 		&i.Expires,
 		&i.Disabled,

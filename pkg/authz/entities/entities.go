@@ -65,6 +65,24 @@ func CtxWithServiceSubject(ctx context.Context, name string) context.Context {
 	return CtxWithSubject(ctx, &SystemServiceSubject{Name: name})
 }
 
+// HasRole returns whether the subject has any of the passed roles.
+func HasRole(sub Subject, roles ...string) bool {
+	r := sub.GetRoles()
+	m := make(map[string]struct{}, len(r))
+	for _, r := range r {
+		m[r] = struct{}{}
+	}
+
+	for _, role := range roles {
+		_, has := m[role]
+		if has {
+			return true
+		}
+	}
+
+	return false
+}
+
 type subjectContextKey string
 
 const SubjectCtxKey subjectContextKey = "sub"

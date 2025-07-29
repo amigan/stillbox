@@ -30,7 +30,7 @@ func IsSystemConstraintViolation(e error) bool {
 
 func IsConstraintViolation(e error, constraintName string) bool {
 	var err *pgconn.PgError
-	if errors.As(e, &err) && err.Code == "23503" && err.ConstraintName == constraintName {
+	if errors.As(e, &err) && (err.Code == "23503" || err.Code == "23505") && err.ConstraintName == constraintName {
 		return true
 	}
 
