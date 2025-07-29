@@ -390,7 +390,7 @@ func (tga *talkgroupAPI) putSystem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tgs.CreateSystem(ctx, *id.System, sysName)
+	err = tgs.CreateSystem(ctx, *id.System, sysName, false)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return

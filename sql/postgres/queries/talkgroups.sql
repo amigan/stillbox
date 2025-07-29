@@ -278,7 +278,7 @@ INSERT INTO talkgroup_versions(
 ) VALUES(@system_id, @tg_id, NOW(), @submitter, TRUE);
 
 -- name: CreateSystem :exec
-INSERT INTO systems(id, name) VALUES(@id, @name);
+INSERT INTO systems(id, name, learned) VALUES(@id, @name, @learned);
 
 -- name: DeleteSystem :exec
 DELETE FROM systems WHERE id = @id;

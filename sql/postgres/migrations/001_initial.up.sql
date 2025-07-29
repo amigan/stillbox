@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS api_keys(
 
 CREATE TABLE IF NOT EXISTS systems(
 	id INTEGER PRIMARY KEY,
-	name TEXT NOT NULL
+	name TEXT NOT NULL,
+	learned BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- NB: if the column defaults are updated here, they must also be updated in the UpsertTalkgroup query
@@ -89,7 +90,7 @@ CREATE TYPE audio_mime AS ENUM ('audio/mpeg', 'audio/wav');
 
 CREATE TABLE IF NOT EXISTS calls(
 	id UUID,
-	submitter INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
+	submitter INTEGER REFERENCES users(id) ON DELETE SET NULL,
 	system INTEGER NOT NULL,
 	talkgroup INTEGER NOT NULL,
 	call_date TIMESTAMPTZ NOT NULL,

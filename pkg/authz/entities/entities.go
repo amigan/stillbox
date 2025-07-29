@@ -22,6 +22,7 @@ const (
 	ResourceCall      = "Call"
 	ResourceIncident  = "Incident"
 	ResourceTalkgroup = "Talkgroup"
+	ResourceSystem    = "System" // P25 system
 	ResourceAlert     = "Alert"
 	ResourceShare     = "Share"
 	ResourceAPIKey    = "APIKey"
