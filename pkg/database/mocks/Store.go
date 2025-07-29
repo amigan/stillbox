@@ -755,16 +755,16 @@ func (_c *Store_CreateShare_Call) RunAndReturn(run func(ctx context.Context, arg
 }
 
 // CreateSystem provides a mock function for the type Store
-func (_mock *Store) CreateSystem(ctx context.Context, iD int, name string) error {
-	ret := _mock.Called(ctx, iD, name)
+func (_mock *Store) CreateSystem(ctx context.Context, iD int, name string, learned bool) error {
+	ret := _mock.Called(ctx, iD, name, learned)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateSystem")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int, string) error); ok {
-		r0 = returnFunc(ctx, iD, name)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, string, bool) error); ok {
+		r0 = returnFunc(ctx, iD, name, learned)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -780,11 +780,12 @@ type Store_CreateSystem_Call struct {
 //   - ctx context.Context
 //   - iD int
 //   - name string
-func (_e *Store_Expecter) CreateSystem(ctx interface{}, iD interface{}, name interface{}) *Store_CreateSystem_Call {
-	return &Store_CreateSystem_Call{Call: _e.mock.On("CreateSystem", ctx, iD, name)}
+//   - learned bool
+func (_e *Store_Expecter) CreateSystem(ctx interface{}, iD interface{}, name interface{}, learned interface{}) *Store_CreateSystem_Call {
+	return &Store_CreateSystem_Call{Call: _e.mock.On("CreateSystem", ctx, iD, name, learned)}
 }
 
-func (_c *Store_CreateSystem_Call) Run(run func(ctx context.Context, iD int, name string)) *Store_CreateSystem_Call {
+func (_c *Store_CreateSystem_Call) Run(run func(ctx context.Context, iD int, name string, learned bool)) *Store_CreateSystem_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -798,10 +799,15 @@ func (_c *Store_CreateSystem_Call) Run(run func(ctx context.Context, iD int, nam
 		if args[2] != nil {
 			arg2 = args[2].(string)
 		}
+		var arg3 bool
+		if args[3] != nil {
+			arg3 = args[3].(bool)
+		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -812,7 +818,7 @@ func (_c *Store_CreateSystem_Call) Return(err error) *Store_CreateSystem_Call {
 	return _c
 }
 
-func (_c *Store_CreateSystem_Call) RunAndReturn(run func(ctx context.Context, iD int, name string) error) *Store_CreateSystem_Call {
+func (_c *Store_CreateSystem_Call) RunAndReturn(run func(ctx context.Context, iD int, name string, learned bool) error) *Store_CreateSystem_Call {
 	_c.Call.Return(run)
 	return _c
 }

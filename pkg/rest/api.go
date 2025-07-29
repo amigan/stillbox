@@ -40,6 +40,7 @@ type api struct {
 	tgs       *talkgroupAPI
 	calls     *callsAPI
 	users     *usersAPI
+	apiKeys   *apiKeyAPI
 	incidents *incidentsAPI
 	prefs     *prefsAPI
 	admin     *adminAPI
@@ -57,6 +58,7 @@ func New(baseURL url.URL, nex nexus.Nexus, transcriber sinks.Transcriber) *api {
 		calls:     newCallsAPI(nex, transcriber),
 		incidents: newIncidentsAPI(&baseURL),
 		users:     new(usersAPI),
+		apiKeys:   new(apiKeyAPI),
 		prefs:     new(prefsAPI),
 		admin:     new(adminAPI),
 	}
@@ -73,6 +75,7 @@ func (a *api) Subrouter() http.Handler {
 	r.Mount("/incident", a.incidents.Subrouter())
 	r.Mount("/share", a.shares.Subrouter())
 	r.Mount("/prefs", a.prefs.Subrouter())
+	r.Mount("/keys", a.apiKeys.Subrouter())
 	r.Mount("/admin", a.admin.Subrouter())
 
 	return r

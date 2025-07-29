@@ -67,7 +67,7 @@ func (sb *s3Backend) getBlob(ctx context.Context, objKey string) ([]byte, error)
 	return io.ReadAll(b)
 }
 
-func (sb *s3Backend) getURL(ctx context.Context, audioName *string, objKey string) (*url.URL, error) {
+func (sb *s3Backend) generateSignedURL(ctx context.Context, audioName *string, objKey string) (*url.URL, error) {
 	par := make(url.Values)
 	if audioName != nil {
 		par.Set("response-content-disposition", fmt.Sprintf(`attachment; filename="%s"`, *audioName))
@@ -104,7 +104,7 @@ func (sb *s3Backend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRe
 	if opts != nil && opts.resolveBlob {
 		blob, err = sb.getBlob(ctx, objKey)
 	} else {
-		audioURL, err = sb.getURL(ctx, call.AudioName, objKey)
+		audioURL, err = sb.generateSignedURL(ctx, call.AudioName, objKey)
 	}
 
 	return

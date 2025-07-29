@@ -3,6 +3,7 @@ package tgstore
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -42,7 +43,7 @@ type Store interface {
 	UpsertTGs(ctx context.Context, system int, input []database.UpsertTalkgroupParams) ([]*tgsp.Talkgroup, error)
 
 	// CreateSystem creates a new system with the specified name and ID.
-	CreateSystem(ctx context.Context, id int, name string) error
+	CreateSystem(ctx context.Context, id int, name string, learned bool) error
 
 	// TG retrieves a Talkgroup from the Store.
 	TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error)
@@ -52,6 +53,9 @@ type Store interface {
 
 	// TGsByTags gets talkgroups by tags any, all, and not.
 	TGsByTags(ctx context.Context, tagsAll, tagsAny, tagsNot []string) (tgsp.IDs, error)
+
+	// LearnSystem learns the system from a call.
+	LearnSystem(ctx context.Context, call *calls.Call) error
 
 	// LearnTG learns the talkgroup from a Call.
 	LearnTG(ctx context.Context, call *calls.Call) (*tgsp.Talkgroup, error)
@@ -717,6 +721,15 @@ func (t *cache) DeleteTG(ctx context.Context, id tgsp.ID) error {
 	return nil
 }
 
+func (t *cache) LearnSystem(ctx context.Context, call *calls.Call) error {
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceSystem), authz.WithActions(entities.ActionCreate, entities.ActionUpdate))
+	if err != nil {
+		return err
+	}
+
+	return t.db.CreateSystem(ctx, call.System, fmt.Sprintf("System %d", call.System), true)
+}
+
 func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, error) {
 	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionCreate, entities.ActionUpdate))
 	if err != nil {
@@ -727,7 +740,10 @@ func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, er
 
 	sys, has := t.SystemName(ctx, c.System)
 	if !has {
-		return nil, ErrNoSuchSystem
+		err := t.LearnSystem(ctx, c)
+		if err != nil {
+			return nil, fmt.Errorf("%w: learning failed with %w", ErrNoSuchSystem, err)
+		}
 	}
 
 	tgm, err := db.AddLearnedTalkgroup(ctx, database.AddLearnedTalkgroupParams{
@@ -872,8 +888,8 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 	return tgs, nil
 }
 
-func (t *cache) CreateSystem(ctx context.Context, id int, name string) error {
-	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionCreate))
+func (t *cache) CreateSystem(ctx context.Context, id int, name string, learned bool) error {
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceSystem), authz.WithActions(entities.ActionCreate))
 	if err != nil {
 		return err
 	}
@@ -881,9 +897,14 @@ func (t *cache) CreateSystem(ctx context.Context, id int, name string) error {
 	t.Lock()
 	defer t.Unlock()
 
+	err = t.db.CreateSystem(ctx, id, name, learned)
+	if err != nil {
+		return err
+	}
+
 	t.addSysNoLock(id, name)
 
-	return t.db.CreateSystem(ctx, id, name)
+	return nil
 }
 
 func (t *cache) RegisterFilter(f Filter) {

@@ -36,7 +36,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/hashicorp/go-multierror"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
@@ -287,7 +286,6 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	if s.conf.Server.AdminSocket != nil && *s.conf.Server.AdminSocket != "" {
 		err := os.Remove(*s.conf.Server.AdminSocket)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
-			fmt.Printf("%#v %T\n", err, err)
 			return err
 		}
 		ua, err := net.ResolveUnixAddr("unix", *s.conf.Server.AdminSocket)
@@ -315,16 +313,17 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 			err = udomSrv.Serve(l)
 			if err != nil && err != http.ErrServerClosed {
 				log.Error().Err(err).Msg("control socket serve")
+				shutReq <- err
 			}
 		}()
 	}
 
-	var err, admErr error
+	var err error
 	go func() {
 		log.Info().Str("addr", s.conf.Server.Listen).Msg("listening")
-		admErr = httpSrv.ListenAndServe()
-		if admErr != nil && admErr != http.ErrServerClosed {
-			shutReq <- admErr
+		err = httpSrv.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			shutReq <- err
 		}
 	}()
 
@@ -357,18 +356,6 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 		if err := udomSrv.Shutdown(ctxShutdown); err != nil {
 			log.Fatal().Err(err).Msg("ctl shutdown failed")
 		}
-
-		if admErr == http.ErrServerClosed {
-			admErr = nil
-		}
-	}
-
-	if err == nil && admErr != nil {
-		return admErr
-	}
-
-	if admErr != nil { // both are errors
-		err = multierror.Append(err, admErr)
 	}
 
 	return err

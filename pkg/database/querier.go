@@ -22,7 +22,7 @@ type Querier interface {
 	CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error)
 	CreateShare(ctx context.Context, arg CreateShareParams) error
-	CreateSystem(ctx context.Context, iD int, name string) error
+	CreateSystem(ctx context.Context, iD int, name string, learned bool) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteAPIKey(ctx context.Context, apiKey string) error
 	DeleteCall(ctx context.Context, id uuid.UUID) error

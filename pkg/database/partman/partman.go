@@ -368,7 +368,7 @@ func (pm *partman) verifyPartName(pr database.PartitionResult) (p Partition, err
 	case 3: // daily
 		p.Interval = Daily
 		ymd := [3]int{}
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			r, err := strconv.Atoi(dateAr[i])
 			if err != nil {
 				return p, PartitionError(pn, err)

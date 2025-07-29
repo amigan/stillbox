@@ -161,6 +161,12 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: entities.ActionUpdate},
 					&restrict.Permission{Action: entities.ActionDelete},
 				},
+				entities.ResourceSystem: {
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionDelete},
+				},
 			},
 		},
 		entities.RoleSystem: {

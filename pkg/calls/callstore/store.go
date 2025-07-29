@@ -160,7 +160,9 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
 	audioRef, err := s.audioBackends.Store(ctx, call)
 	if err != nil {
 		return fmt.Errorf("add call: %w", err)
-	} else if audioRef != nil { // was stored in a backend
+	}
+
+	if audioRef != nil { // was stored in a backend
 		blob = nil
 		rt.Created(audioRef.Backend, audioRef.Ref)
 

@@ -161,8 +161,9 @@ type SweptCall struct {
 }
 
 type System struct {
-	ID   int    `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
+	ID      int    `json:"id,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Learned bool   `json:"learned,omitempty"`
 }
 
 type Talkgroup struct {
