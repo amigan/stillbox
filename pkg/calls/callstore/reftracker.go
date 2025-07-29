@@ -25,10 +25,14 @@ type refTracker struct {
 	ab AudioBackends
 }
 
-func (rt *refTracker) reset() {
+func (rt *refTracker) Reset() {
 	rt.Lock()
 	defer rt.Unlock()
 
+	rt.reset()
+}
+
+func (rt *refTracker) reset() {
 	rt.del.reset()
 	rt.cre.reset()
 }

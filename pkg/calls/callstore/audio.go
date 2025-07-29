@@ -25,6 +25,11 @@ var (
 )
 
 type AudioRef any
+type AudioRefJSON []byte
+type AudioRefFQ struct {
+	Backend *audioStorageBackend
+	Ref     AudioRef
+}
 
 type AudioBackend interface {
 	// Store stores a call in the backend. It returns the reference that, combined with the backend, can retrieve the call audio.
@@ -47,7 +52,7 @@ type AudioBackends interface {
 	// Store tries all backends and stores the call if any match.
 	// If the call was stored, audioRef will be non-nil.
 	// If the call was not stored, but not due to an error, AudioRef will be nil along with err.
-	Store(ctx context.Context, call *calls.Call) (AudioRefJSON, error)
+	Store(ctx context.Context, call *calls.Call) (*AudioRefFQ, error)
 
 	// CallAudio gets the call audio from the backend and location specified by audioRef.
 	// It mutates the passed CallAudio with AudioBlob and/or AudioURL.
@@ -119,7 +124,7 @@ func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, a
 	return
 }
 
-func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj AudioRefJSON, err error) {
+func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (rfq *AudioRefFQ, err error) {
 	for _, beName := range ab.storeList {
 		be, has := ab.backends[beName]
 		if !has {
@@ -154,12 +159,12 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (arj Audio
 		} else if ref != nil {
 			ab.metrics.TotalStores.WithLabelValues(beName, be.Type()).Inc()
 		}
-
-		refMap := map[string]AudioRef{
-			beName: ref,
+		rfq = &AudioRefFQ{
+			Backend: be,
+			Ref:     ref,
 		}
 
-		return json.Marshal(refMap)
+		return rfq, nil
 	}
 
 	return

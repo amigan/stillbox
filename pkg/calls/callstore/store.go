@@ -2,6 +2,7 @@ package callstore
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,8 +25,10 @@ import (
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-multierror"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/rs/zerolog/log"
 )
 
 type Store interface {
@@ -65,8 +68,9 @@ type Store interface {
 }
 
 type store struct {
-	db            database.Store
-	audioBackends AudioBackends
+	db             database.Store
+	audioBackends  AudioBackends
+	refTrackerPool sync.Pool
 
 	moveInProgress sync.Mutex
 }
@@ -80,6 +84,11 @@ func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, m
 	return &store{
 		db:            db,
 		audioBackends: be,
+		refTrackerPool: sync.Pool{
+			New: func() any {
+				return newRefTracker(be)
+			},
+		},
 	}, nil
 }
 
@@ -111,8 +120,6 @@ func audioMimeFromString(s string) database.NullAudioMIME {
 	}
 }
 
-type AudioRefJSON []byte
-
 func toAddCallParams(call *calls.Call, audioRef AudioRefJSON, audioBlob []byte) database.AddCallParams {
 	return database.AddCallParams{
 		ID:          call.ID,
@@ -136,21 +143,59 @@ func toAddCallParams(call *calls.Call, audioRef AudioRefJSON, audioBlob []byte) 
 	}
 }
 
-func (s *store) AddCall(ctx context.Context, call *calls.Call) error {
-	_, err := authz.Check(ctx, call, authz.WithActions(entities.ActionCreate))
+func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
+	_, err = authz.Check(ctx, call, authz.WithActions(entities.ActionCreate))
 	if err != nil {
 		return err
 	}
 
+	rt := s.refTrackerPool.Get().(*refTracker)
+	rt.Reset()
+	defer func() {
+		s.refTrackerPool.Put(rt)
+	}()
+
 	blob := call.Audio
+	var refJ AudioRefJSON
 	audioRef, err := s.audioBackends.Store(ctx, call)
 	if err != nil {
 		return fmt.Errorf("add call: %w", err)
-	} else if audioRef != nil {
+	} else if audioRef != nil { // was stored in a backend
 		blob = nil
+		rt.Created(audioRef.Backend, audioRef.Ref)
+
+		refMap := map[string]AudioRef{
+			audioRef.Backend.Name: audioRef.Ref,
+		}
+
+		refJ, err = json.Marshal(refMap)
+		if err != nil {
+			rbe := rt.Rollback(ctx)
+			if rbe != nil {
+				err = multierror.Append(err, rbe)
+			}
+
+			return err
+		}
 	}
 
-	params := toAddCallParams(call, audioRef, blob)
+	defer func() {
+		if err != nil {
+			rbe := rt.Rollback(ctx)
+			if rbe != nil {
+				err = multierror.Append(err, rbe)
+			}
+		} else {
+			ce := rt.Commit(ctx)
+			// doesn't truly matter here since there will never be anything committable (only creates)
+			// but log it anyay
+			if ce != nil {
+				log.Error().Err(ce).Msg("audioRefTracker commit failed")
+			}
+		}
+	}()
+
+	params := toAddCallParams(call, refJ, blob)
 	db := database.FromCtx(ctx)
 	tgs := tgstore.FromCtx(ctx)
 
