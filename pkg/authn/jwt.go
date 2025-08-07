@@ -177,7 +177,7 @@ func (a *jwtAuthenticator) NewAccessToken(username string) string {
 	return tokenString
 }
 
-func (a *jwtAuthenticator) NewRefreshToken(username string) string {
+func (a *jwtAuthenticator) NewRefreshToken(username string) (string, error) {
 	claims := claims{
 		"sub": username,
 	}
@@ -188,11 +188,8 @@ func (a *jwtAuthenticator) NewRefreshToken(username string) string {
 	a.Lock()
 	defer a.Unlock()
 	_, tokenString, err := a.jwt.Encode(claims)
-	if err != nil {
-		panic(err)
-	}
 
-	return tokenString
+	return tokenString, err
 }
 
 func (a *jwtAuthenticator) NewCallToken(callID string) string {
