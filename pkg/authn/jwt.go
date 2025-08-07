@@ -18,7 +18,9 @@ import (
 )
 
 const (
-	CallRealm = "me.dynatron.stillbox.call"
+	CallRealm    = "me.dynatron.stillbox.call"
+	RefreshRealm = "me.dynatron.stillbox.refresh"
+	AccessRealm  = "me.dynatron.stillbox.access"
 )
 
 var (
@@ -120,37 +122,33 @@ func (a *jwtAuthenticator) AuthenticateJWT(ctx context.Context, r *http.Request)
 		return nil, err
 	}
 
-	var sub entities.Subject
-
 	subjectString := token.Subject()
+
+	var realmStr string
 	realm, hasRealm := token.Get("realm")
 	if hasRealm {
-		realmStr, ok := realm.(string)
+		var ok bool
+		realmStr, ok = realm.(string)
 		if !ok {
 			return nil, ErrBadRealm
 		}
+	}
 
-		switch realmStr {
-		case CallRealm:
-			cUUID, err := uuid.Parse(subjectString)
-			if err != nil {
-				return nil, err
-			}
-
-			sub = &entities.CallSubject{
-				CallID: cUUID,
-			}
-		default:
-			return nil, ErrBadRealm
-		}
-	} else {
-		sub, err = users.FromCtx(ctx).GetUser(ctx, subjectString)
+	switch realmStr {
+	case CallRealm:
+		cUUID, err := uuid.Parse(subjectString)
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	return sub, nil
+		return &entities.CallSubject{
+			CallID: cUUID,
+		}, nil
+	case "", RefreshRealm, AccessRealm:
+		return users.FromCtx(ctx).GetUser(ctx, subjectString)
+	default:
+		return nil, ErrBadRealm
+	}
 }
 
 func (a *jwtAuthenticator) Init(cfg config.Auth) {
@@ -164,8 +162,10 @@ func (a *jwtAuthenticator) Init(cfg config.Auth) {
 
 func (a *jwtAuthenticator) NewAccessToken(username string) string {
 	claims := claims{
-		"sub": username,
+		"sub":   username,
+		"realm": AccessRealm,
 	}
+	jwtauth.SetIssuedNow(claims)
 	jwtauth.SetExpiryIn(claims, time.Hour)
 
 	a.Lock()
@@ -179,7 +179,8 @@ func (a *jwtAuthenticator) NewAccessToken(username string) string {
 
 func (a *jwtAuthenticator) NewRefreshToken(username string) (string, error) {
 	claims := claims{
-		"sub": username,
+		"sub":   username,
+		"realm": RefreshRealm,
 	}
 
 	jwtauth.SetIssuedNow(claims)
@@ -197,6 +198,7 @@ func (a *jwtAuthenticator) NewCallToken(callID string) string {
 		"sub":   callID,
 		"realm": CallRealm,
 	}
+	jwtauth.SetIssuedNow(claims)
 	jwtauth.SetExpiryIn(claims, time.Hour)
 
 	a.Lock()

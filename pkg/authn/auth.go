@@ -153,10 +153,10 @@ func ErrorResponse(w http.ResponseWriter, err error) {
 func (a *authn) PublicRoutes(r chi.Router) {
 	r.Post("/api/login", a.routeLogin)
 	r.Get("/api/login", a.routeLoginPage)
+	r.Get("/api/refresh", a.routeRefresh)
 }
 
 func (a *authn) PrivateRoutes(r chi.Router) {
-	r.Get("/api/refresh", a.routeRefresh)
 	r.Get("/api/logout", a.routeLogout)
 }
 
