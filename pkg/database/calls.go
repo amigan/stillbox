@@ -6,6 +6,9 @@ import (
 
 type callsQuerier interface {
 	GetCallAudioCount(ctx context.Context, arg GetCallAudioParams) (int64, error)
+
+	// GetAudioRefJournalCb calls a callback for each row. Until it returns, the connection is busy.
+	GetAudioRefJournalCb(ctx context.Context, arg GetRefJournalParams, sendEntry func(AudioRefJournal)) error
 }
 
 // GetCallAudioCount is here because the following query crashes sqlc.
@@ -151,4 +154,36 @@ func (q *Queries) GetCallAudioCount(ctx context.Context, arg GetCallAudioParams)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+func (q *Queries) GetAudioRefJournalCb(ctx context.Context, arg GetRefJournalParams, cb func(AudioRefJournal)) error {
+	rows, err := q.db.Query(ctx, getRefJournal,
+		arg.Missing,
+		arg.Since,
+		arg.Until,
+		arg.Num,
+	)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var i AudioRefJournal
+		if err := rows.Scan(
+			&i.ID,
+			&i.CallID,
+			&i.Backend,
+			&i.Ref,
+			&i.PruneAfter,
+			&i.LastTry,
+			&i.Tries,
+		); err != nil {
+			return err
+		}
+		cb(i)
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	return nil
 }

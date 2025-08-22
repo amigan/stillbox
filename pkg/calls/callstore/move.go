@@ -21,6 +21,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// NB: None of the move code uses the ref journal. This probably won't change unless a good reason arises.
+
 // number of store workers
 const numStoreWorkers = 16
 const numStoreWorkersLimit = 128
@@ -299,7 +301,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		NotHasBackend: par.DestBackend, // not already moved
 	}
 
-	refT := newRefTracker(s.audioBackends)
+	refT := newRefTracker(s.audioBackends, nil)
 
 	err = s.db.InTx(context.WithoutCancel(ctx), func(tx database.Store) error {
 		m := s.newMover(dst, tx, refT, par)

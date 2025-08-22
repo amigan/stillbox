@@ -65,31 +65,45 @@ type Store interface {
 
 	// MoveCallAudio moves call audio from one backend to another.
 	MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows int64, err error)
+
+	// BlobPath generates the audio path for FS and S3 backends. audioPath is the real path into
+	// the store, while audioRef will contain a leading `_/` if partitioning is enabled.
+	BlobPath(call *calls.CallAudio) (audioPath, audioRef string)
 }
 
 type store struct {
-	db             database.Store
-	audioBackends  AudioBackends
-	refTrackerPool sync.Pool
+	db            database.Store
+	audioBackends AudioBackends
+	partman       PartitionManager
 
 	moveInProgress sync.Mutex
 }
 
-func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, audioBE []config.CallStorage) (*store, error) {
-	be, err := MakeBackends(ctx, tgc, met, audioBE)
+func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, audioBE []config.CallStorage, partConfig config.Partition) (*store, error) {
+	st := &store{
+		db: db,
+	}
+
+	be, err := st.MakeBackends(ctx, tgc, met, audioBE)
 	if err != nil {
 		return nil, fmt.Errorf("call storage: %w", err)
 	}
 
-	return &store{
-		db:            db,
-		audioBackends: be,
-		refTrackerPool: sync.Pool{
-			New: func() any {
-				return newRefTracker(be)
-			},
-		},
-	}, nil
+	st.audioBackends = be
+
+	if partConfig.Enabled {
+		st.partman, err = NewPartitionManager(db, st, partConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		err = st.partman.Check(ctx, time.Now())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return st, nil
 }
 
 type storeCtxKey string
@@ -149,10 +163,10 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
 		return err
 	}
 
-	rt := s.refTrackerPool.Get().(*refTracker)
+	rt := s.audioBackends.RefTracker()
 	rt.Reset()
 	defer func() {
-		s.refTrackerPool.Put(rt)
+		s.audioBackends.PutRefTracker(rt)
 	}()
 
 	blob := call.Audio

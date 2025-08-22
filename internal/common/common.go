@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/urfave/cli/v3"
 )
 
@@ -115,6 +117,17 @@ func AtoiU32(s string) (uint32, error) {
 
 	v, err := strconv.Atoi(s)
 	return uint32(v), err
+}
+
+func PGUUID(u *uuid.UUID) pgtype.UUID {
+	if u != nil {
+		return pgtype.UUID{
+			Bytes: *u,
+			Valid: true,
+		}
+	}
+
+	return pgtype.UUID{}
 }
 
 // FromPanicValue is used to recover errgroup panics.

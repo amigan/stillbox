@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/calls"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/minio/minio-go/v7/pkg/lifecycle"
 )
 
 type s3Backend struct {
@@ -29,13 +31,23 @@ type s3Backend struct {
 	SecretKey      string        `yaml:"secretKey"`
 	Timeout        time.Duration `yaml:"timeout"`
 
+	lc  s3LifecycleCache
 	cli *minio.Client
+	st  Store
 }
 
 func (*s3Backend) Type() string { return "s3" }
 
+const S3LifecycleTTL = 10 * time.Minute
+
+type s3LifecycleCache struct {
+	cfg     *lifecycle.Configuration
+	tm      time.Time
+	ruleMap map[string]lifecycle.Rule
+}
+
 func (sb *s3Backend) Store(ctx context.Context, call *calls.CallAudio) (AudioRef, error) {
-	key := blobPath(call)
+	audioPath, audioRef := sb.st.BlobPath(call)
 
 	dctx, cancel := sb.ctxTimeout(ctx)
 	defer cancel()
@@ -45,12 +57,12 @@ func (sb *s3Backend) Store(ctx context.Context, call *calls.CallAudio) (AudioRef
 		contentType = *call.AudioType
 	}
 
-	_, err := sb.cli.PutObject(dctx, sb.Bucket, key, bytes.NewReader(call.AudioBlob), int64(len(call.AudioBlob)), minio.PutObjectOptions{ContentType: contentType})
+	_, err := sb.cli.PutObject(dctx, sb.Bucket, audioPath, bytes.NewReader(call.AudioBlob), int64(len(call.AudioBlob)), minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		return nil, err
 	}
 
-	return key, nil
+	return audioRef, nil
 }
 
 func (sb *s3Backend) getBlob(ctx context.Context, objKey string) ([]byte, error) {
@@ -110,13 +122,124 @@ func (sb *s3Backend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRe
 	return
 }
 
+func (sb *s3Backend) Prune(ctx context.Context, audioRef AudioRef, pruneAfter *time.Time) (*time.Time, error) {
+	refPath, ok := audioRef.(string)
+	if !ok {
+		return nil, ErrBadAudioRef
+	}
+
+	if pruneAfter != nil { // this has already been pruned, now check if the rule needs to be removed yet
+		if !time.Now().After(*pruneAfter) {
+			// this probably won't ever happen
+			return nil, ErrNotYetPruneTime
+		}
+
+		return nil, sb.pruneRmRule(ctx, refPath)
+	}
+
+	if !strings.HasSuffix(refPath, "/") {
+		// singleton remove
+		return nil, sb.delete(ctx, refPath)
+	}
+
+	err := sb.addRmRule(ctx, refPath)
+	if err != nil {
+		return nil, err
+	}
+
+	newPruneAfter := time.Now().Add(48 * time.Hour)
+	return &newPruneAfter, nil
+}
+
+func (sb *s3Backend) addRmRule(ctx context.Context, refPath string) error {
+	lcCfg, err := sb.getRules(ctx)
+	if err != nil {
+		return err
+	}
+
+	if _, exists := sb.lc.ruleMap[refPath]; exists {
+		return fmt.Errorf("rule exists for '%s'", refPath)
+	}
+
+	lcCfg.Rules = append(lcCfg.Rules, lifecycle.Rule{
+		ID:     refPath,
+		Prefix: refPath,
+		Expiration: lifecycle.Expiration{
+			Days: lifecycle.ExpirationDays(1),
+		},
+	})
+
+	return sb.setRules(ctx, lcCfg)
+}
+
+func (sb *s3Backend) pruneRmRule(ctx context.Context, refPath string) error {
+	lcCfg, err := sb.getRules(ctx)
+	if err != nil {
+		return err
+	}
+
+	if _, exists := sb.lc.ruleMap[refPath]; !exists {
+		return fmt.Errorf("rule doesn't exist for '%s'", refPath)
+	}
+
+	// filter
+	r := lcCfg.Rules[:0]
+	for _, x := range lcCfg.Rules {
+		if x.ID == refPath {
+			r = append(r, x)
+		}
+	}
+
+	return sb.setRules(ctx, lcCfg)
+}
+
+func (sb *s3Backend) setRules(ctx context.Context, cfg *lifecycle.Configuration) error {
+	err := sb.cli.SetBucketLifecycle(ctx, sb.Bucket, cfg)
+	if err != nil {
+		return err
+	}
+
+	sb.lc.set(cfg)
+
+	return nil
+}
+
+func (lc *s3LifecycleCache) set(cfg *lifecycle.Configuration) {
+	lc.cfg = cfg
+	lc.tm = time.Now()
+	lc.ruleMap = make(map[string]lifecycle.Rule, len(lc.cfg.Rules))
+	for _, r := range lc.cfg.Rules {
+		lc.ruleMap[r.Prefix] = r
+	}
+}
+
+func (sb *s3Backend) getRules(ctx context.Context) (*lifecycle.Configuration, error) {
+	now := time.Now()
+
+	if now.After(sb.lc.tm.Add(S3LifecycleTTL)) {
+		lc, err := sb.cli.GetBucketLifecycle(ctx, sb.Bucket)
+		if err != nil {
+			return nil, err
+		}
+
+		sb.lc.set(lc)
+
+		return lc, nil
+	}
+
+	return sb.lc.cfg, nil
+}
+
+func (sb *s3Backend) delete(ctx context.Context, objKey string) error {
+	return sb.cli.RemoveObject(ctx, sb.Bucket, objKey, minio.RemoveObjectOptions{})
+}
+
 func (sb *s3Backend) Delete(ctx context.Context, audioRef AudioRef) error {
 	objKey, ok := audioRef.(string)
 	if !ok {
 		return ErrBadAudioRef
 	}
-
-	return sb.cli.RemoveObject(ctx, sb.Bucket, objKey, minio.RemoveObjectOptions{})
+	return sb.delete(ctx, objKey)
 }
 
 func (sb *s3Backend) DeleteBulk(ctx context.Context, refs []AudioRef) error {
@@ -161,8 +284,10 @@ func init() {
 	registerAudioBackend("s3", newS3backend)
 }
 
-func newS3backend(cfg config.ConfigMap) (AudioBackend, error) {
-	sb := new(s3Backend)
+func newS3backend(s Store, cfg config.ConfigMap) (AudioBackend, error) {
+	sb := &s3Backend{
+		st: s,
+	}
 
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Metadata:         nil,

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -9,62 +10,83 @@ const (
 	MonthsInQuarter = 3
 )
 
-type TimeBounder interface {
-	GetDailyBounds(date time.Time) (lowerBound, upperBound time.Time)
-	GetWeeklyBounds(date time.Time) (lowerBound, upperBound time.Time)
-	GetMonthlyBounds(date time.Time) (lowerBound, upperBound time.Time)
-	GetQuarterlyBounds(date time.Time) (lowerBound, upperBound time.Time)
-	GetYearlyBounds(date time.Time) (lowerBound, upperBound time.Time)
-}
-
-type tbOpt func(*timeBounder)
+type tbOpt func(*TimeBounder)
 
 func WithLocation(l *time.Location) tbOpt {
-	return func(tb *timeBounder) {
+	return func(tb *TimeBounder) {
 		tb.loc = l
 	}
 }
 
-func NewTimeBounder(opts ...tbOpt) timeBounder {
-	tb := timeBounder{}
+func WithDefaultBounds(i Interval) tbOpt {
+	return func(tb *TimeBounder) {
+		tb.defaultIntvl = &i
+	}
+}
+
+func NewTimeBounder(opts ...tbOpt) *TimeBounder {
+	tb := &TimeBounder{}
 
 	for _, opt := range opts {
-		opt(&tb)
+		opt(tb)
 	}
 
 	if tb.loc == nil {
 		tb.loc = time.UTC
 	}
 
+	if tb.defaultIntvl != nil {
+		switch *tb.defaultIntvl {
+		case Daily:
+			tb.defaultBounder = tb.GetDailyBounds
+		case Weekly:
+			tb.defaultBounder = tb.GetWeeklyBounds
+		case Monthly:
+			tb.defaultBounder = tb.GetMonthlyBounds
+		case Quarterly:
+			tb.defaultBounder = tb.GetQuarterlyBounds
+		case Yearly:
+			tb.defaultBounder = tb.GetYearlyBounds
+		default:
+			panic("unknown interval")
+		}
+	}
+
 	return tb
 }
 
-type timeBounder struct {
-	loc *time.Location
+func (tb *TimeBounder) Bounds(t time.Time) (lowerBound, upperBound time.Time) {
+	return tb.defaultBounder(t)
 }
 
-func (tb timeBounder) GetDailyBounds(date time.Time) (lowerBound, upperBound time.Time) {
+type TimeBounder struct {
+	loc            *time.Location
+	defaultIntvl   *Interval
+	defaultBounder func(time.Time) (time.Time, time.Time)
+}
+
+func (tb *TimeBounder) GetDailyBounds(date time.Time) (lowerBound, upperBound time.Time) {
 	lowerBound = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, tb.loc)
 	upperBound = lowerBound.AddDate(0, 0, 1)
 
 	return
 }
 
-func (tb timeBounder) GetWeeklyBounds(date time.Time) (lowerBound, upperBound time.Time) {
+func (tb *TimeBounder) GetWeeklyBounds(date time.Time) (lowerBound, upperBound time.Time) {
 	lowerBound = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, tb.loc).AddDate(0, 0, -int(date.Weekday()-time.Monday))
 	upperBound = lowerBound.AddDate(0, 0, DaysInWeek)
 
 	return
 }
 
-func (tb timeBounder) GetMonthlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
+func (tb *TimeBounder) GetMonthlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
 	lowerBound = time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, tb.loc)
 	upperBound = lowerBound.AddDate(0, 1, 0)
 
 	return
 }
 
-func (tb *timeBounder) GetQuarterlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
+func (tb *TimeBounder) GetQuarterlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
 	year, _, _ := date.Date()
 
 	quarter := (int(date.Month()) - 1) / MonthsInQuarter
@@ -76,9 +98,35 @@ func (tb *timeBounder) GetQuarterlyBounds(date time.Time) (lowerBound, upperBoun
 	return
 }
 
-func (tb timeBounder) GetYearlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
+func (tb *TimeBounder) GetYearlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
 	lowerBound = time.Date(date.Year(), 1, 1, 0, 0, 0, 0, tb.loc)
 	upperBound = lowerBound.AddDate(1, 0, 0)
 
 	return
+}
+
+type ErrInvalidInterval string
+
+func (in ErrInvalidInterval) Error() string {
+	return fmt.Sprintf("invalid interval '%s'", string(in))
+}
+
+type Interval string
+
+const (
+	Unknown   Interval = ""
+	Daily     Interval = "daily"
+	Weekly    Interval = "weekly"
+	Monthly   Interval = "monthly"
+	Quarterly Interval = "quarterly"
+	Yearly    Interval = "yearly"
+)
+
+func (p Interval) IsValid() bool {
+	switch p {
+	case Daily, Weekly, Monthly, Quarterly, Yearly:
+		return true
+	}
+
+	return false
 }

@@ -16,13 +16,14 @@ func (brm beRefMap) reset() {
 	}
 }
 
-// A refTracker gives us transaction-ish semantics for audio storage backends.
+// A refTracker gives us transaction-ish semantics for audio storage backends. It is similar to a refJournal but without persistence, for increased performance for operations such as moving.
 type refTracker struct {
 	sync.Mutex
 	del beRefMap // deletes are queued until transaction commit
 	cre beRefMap // but creates are tracked for deletion on rollback
 
-	ab AudioBackends
+	ab      AudioBackends
+	journal RefJournal
 }
 
 func (rt *refTracker) Reset() {
@@ -108,10 +109,12 @@ func (rt *refTracker) Created(be AudioBackend, ar AudioRef) {
 	rt.cre[be] = append(rt.cre[be], ar)
 }
 
-func newRefTracker(ab AudioBackends) *refTracker {
+// newRefTracker creates a new ref tracker. If journal is nil, journaling is disabled.
+func newRefTracker(ab AudioBackends, journal RefJournal) *refTracker {
 	return &refTracker{
-		ab:  ab,
-		cre: make(beRefMap),
-		del: make(beRefMap),
+		ab:      ab,
+		cre:     make(beRefMap),
+		del:     make(beRefMap),
+		journal: journal,
 	}
 }

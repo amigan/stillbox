@@ -16,9 +16,11 @@ type Querier interface {
 	AddAlert(ctx context.Context, arg AddAlertParams) error
 	AddCall(ctx context.Context, arg AddCallParams) error
 	AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error)
+	AddRefJournal(ctx context.Context, arg AddRefJournalParams) (int64, error)
 	AddToIncident(ctx context.Context, incidentID uuid.UUID, callIds []uuid.UUID, notes [][]byte) error
 	CallInIncident(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID) (bool, error)
 	CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)
+	CountRefJournal(ctx context.Context, missing *bool, since pgtype.Timestamptz, until pgtype.Timestamptz) (int64, error)
 	CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error)
 	CreateShare(ctx context.Context, arg CreateShareParams) error
@@ -32,6 +34,8 @@ type Querier interface {
 	DeleteSystem(ctx context.Context, id int) error
 	DeleteTalkgroup(ctx context.Context, systemID int32, tGID int32) error
 	DeleteUser(ctx context.Context, username string) error
+	DetailedCountRefJournal(ctx context.Context) ([]DetailedCountRefJournalRow, error)
+	DropRefJournal(ctx context.Context, id int64) error
 	GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, error)
 	GetAllTalkgroupTags(ctx context.Context) ([]string, error)
 	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
@@ -48,10 +52,12 @@ type Querier interface {
 	GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetIncidentCallsRow, error)
 	GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error)
 	GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error)
+	GetRefJournal(ctx context.Context, arg GetRefJournalParams) ([]AudioRefJournal, error)
 	GetSetting(ctx context.Context, name string) ([]byte, error)
 	GetShare(ctx context.Context, id string) (Share, error)
 	GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSharesPRow, error)
 	GetSharesPCount(ctx context.Context, owner *int32) (int64, error)
+	GetSweptCallsWithRef(ctx context.Context) ([]GetSweptCallsWithRefRow, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
 	GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error)
 	GetTalkgroupIDsByTags(ctx context.Context, allTags []string, anyTags []string, notAnyTags []string) ([]GetTalkgroupIDsByTagsRow, error)
@@ -69,6 +75,7 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id int) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUsers(ctx context.Context) ([]User, error)
+	IncrementRefJournal(ctx context.Context, id int64) error
 	ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error)
 	ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error)
 	ListIncidentsCount(ctx context.Context, start pgtype.Timestamptz, end pgtype.Timestamptz, filter *string) (int64, error)
@@ -80,7 +87,9 @@ type Querier interface {
 	SetAppPrefs(ctx context.Context, appName string, prefs []byte, uid int) error
 	SetCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) (SetCallTranscriptRow, error)
+	SetRefJournalPrune(ctx context.Context, iD int64, pruneAfter pgtype.Timestamptz) error
 	SetSetting(ctx context.Context, name string, updatedBy *int32, value []byte) error
+	SetSweptAudioAndClearRef(ctx context.Context, audioBlob []byte, iD uuid.UUID) error
 	SetSweptCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error
 	StoreDeletedTGVersion(ctx context.Context, systemID *int32, tGID *int32, submitter *int32) error

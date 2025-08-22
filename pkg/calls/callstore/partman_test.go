@@ -1,4 +1,4 @@
-package partman_test
+package callstore
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/mocks"
-	"dynatron.me/x/stillbox/pkg/database/partman"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -83,6 +82,7 @@ func TestPartman(t *testing.T) {
 		now           time.Time
 		cfg           config.Partition
 		extant        []database.PartitionResult
+		partPrefix    string
 		expectCreate  []partSpec
 		expectDrop    []string
 		expectDetach  []string
@@ -91,8 +91,9 @@ func TestPartman(t *testing.T) {
 		expectErr     error
 	}{
 		{
-			name: "monthly base",
-			now:  timeInUTC("2024-11-28 11:37:04"),
+			name:       "monthly base",
+			now:        timeInUTC("2024-11-28 11:37:04"),
+			partPrefix: "2024_11",
 			cfg: config.Partition{
 				Enabled:      true,
 				Schema:       "public",
@@ -130,8 +131,9 @@ func TestPartman(t *testing.T) {
 			},
 		},
 		{
-			name: "monthly retain all",
-			now:  timeInUTC("2024-11-28 11:37:04"),
+			name:       "monthly retain all",
+			now:        timeInUTC("2024-11-28 11:37:04"),
+			partPrefix: "2024_11",
 			cfg: config.Partition{
 				Enabled:      true,
 				Schema:       "public",
@@ -156,10 +158,10 @@ func TestPartman(t *testing.T) {
 			expectCleanup: []timeRange{},
 			expectDetach:  []string{},
 		},
-
 		{
-			name: "weekly base",
-			now:  timeInUTC("2024-11-28 11:37:04"), // week 48
+			name:       "weekly base",
+			now:        timeInUTC("2024-11-28 11:37:04"), // week 48
+			partPrefix: "2024_w48",
 			cfg: config.Partition{
 				Enabled:      true,
 				Schema:       "public",
@@ -194,8 +196,42 @@ func TestPartman(t *testing.T) {
 			},
 		},
 		{
-			name: "daily base",
-			now:  timeInUTC("2024-12-31 11:37:04"),
+			name:       "weekly single digit week",
+			now:        timeInUTC("2024-01-28 11:37:04"), // week 4
+			partPrefix: "2024_w04",
+			cfg: config.Partition{
+				Enabled:      true,
+				Schema:       "public",
+				Interval:     "weekly",
+				Retain:       2,
+				Drop:         false,
+				PreProvision: common.PtrTo(2),
+			},
+			extant: []database.PartitionResult{
+				partResult("calls_p_2024_w01", "2024-01-01", "2024-01-06"),
+				partResult("calls_p_2024_w02", "2024-01-08", "2024-01-13"),
+				partResult("calls_p_2024_w03", "2024-01-15", "2024-01-20"),
+				// missing week 4
+			},
+			expectCreate: []partSpec{
+				{name: "calls_p_2024_w04", timeRange: timeRange{start: dateInUTC("2024-01-29"), end: dateInUTC("2024-02-05")}},
+				{name: "calls_p_2024_w05", timeRange: timeRange{start: dateInUTC("2024-02-05"), end: dateInUTC("2024-02-12")}},
+				{name: "calls_p_2024_w06", timeRange: timeRange{start: dateInUTC("2024-02-12"), end: dateInUTC("2024-02-19")}},
+			},
+			expectSweep: []timeRange{
+				{start: dateInUTC("2024-01-01"), end: dateInUTC("2024-01-08")},
+			},
+			expectCleanup: []timeRange{
+				{start: dateInUTC("2024-01-01"), end: dateInUTC("2024-01-08")},
+			},
+			expectDetach: []string{
+				"public.calls_p_2024_w01",
+			},
+		},
+		{
+			name:       "daily base",
+			now:        timeInUTC("2024-12-31 11:37:04"),
+			partPrefix: "2024_12_31",
 			cfg: config.Partition{
 				Enabled:      true,
 				Schema:       "public",
@@ -233,8 +269,9 @@ func TestPartman(t *testing.T) {
 			},
 		},
 		{
-			name: "quarterly base",
-			now:  timeInUTC("2025-07-28 11:37:04"), // q3
+			name:       "quarterly base",
+			now:        timeInUTC("2025-07-28 11:37:04"), // q3
+			partPrefix: "2025_q3",
 			cfg: config.Partition{
 				Enabled:      true,
 				Schema:       "public",
@@ -272,8 +309,9 @@ func TestPartman(t *testing.T) {
 			},
 		},
 		{
-			name: "quarterly base bad bounds",
-			now:  timeInUTC("2025-07-28 11:37:04"), // q3
+			name:       "quarterly base bad bounds",
+			now:        timeInUTC("2025-07-28 11:37:04"), // q3
+			partPrefix: "2025_q3",
 			cfg: config.Partition{
 				Enabled:      true,
 				Schema:       "public",
@@ -291,8 +329,9 @@ func TestPartman(t *testing.T) {
 			expectErr: database.ErrLowerBoundAfterUpperBound,
 		},
 		{
-			name: "yearly base",
-			now:  timeInUTC("2023-04-28 11:37:04"), // q3
+			name:       "yearly base",
+			now:        timeInUTC("2023-04-28 11:37:04"),
+			partPrefix: "2023",
 			cfg: config.Partition{
 				Enabled:      true,
 				Schema:       "public",
@@ -324,8 +363,9 @@ func TestPartman(t *testing.T) {
 			},
 		},
 		{
-			name: "changed monthly to daily",
-			now:  timeInUTC("2024-11-28 11:37:04"),
+			name:       "changed monthly to daily",
+			now:        timeInUTC("2024-11-28 11:37:04"),
+			partPrefix: "2024_11_28",
 			cfg: config.Partition{
 				Enabled:      true,
 				Schema:       "public",
@@ -340,11 +380,12 @@ func TestPartman(t *testing.T) {
 				partResult("calls_p_2024_08", "2024-08-01", "2024-09-01"),
 				partResult("calls_p_2024_07", "2024-07-01", "2024-08-01"),
 			},
-			expectErr: partman.ErrDifferentInterval,
+			expectErr: ErrDifferentInterval,
 		},
 		{
-			name: "monthly wrong schema",
-			now:  timeInUTC("2024-11-28 11:37:04"),
+			name:       "monthly wrong schema",
+			now:        timeInUTC("2024-11-28 11:37:04"),
+			partPrefix: "2024_11",
 			cfg: config.Partition{
 				Enabled:      true,
 				Schema:       "public",
@@ -359,7 +400,7 @@ func TestPartman(t *testing.T) {
 				partResult("calls_p_2024_08", "2024-08-01", "2024-09-01"),
 				partResult("calls_p_2024_07", "2024-07-01", "2024-08-01"),
 			},
-			expectErr: partman.ErrWrongSchema,
+			expectErr: ErrWrongSchema,
 		},
 	}
 
@@ -407,6 +448,7 @@ func TestPartman(t *testing.T) {
 
 					cleanupRanges = append(cleanupRanges, tr)
 				}).Return(30, nil)
+				db.EXPECT().GetSweptCallsWithRef(mock.Anything).Return(nil, nil)
 			}
 
 			if tc.cfg.Drop && len(tc.expectDrop) > 0 {
@@ -430,8 +472,11 @@ func TestPartman(t *testing.T) {
 
 			db.EXPECT().GetTablePartitions(mctx, "public", "calls").Return(tc.extant, nil)
 
-			pm, err := partman.New(db, tc.cfg)
+			pm, err := NewPartitionManager(db, nil, tc.cfg)
 			require.NoError(t, err)
+
+			partPrefix := pm.PartitionPrefix(tc.now)
+			assert.Equal(t, tc.partPrefix, partPrefix, "prefix of %s", tc.now.String())
 
 			err = pm.Check(ctx, tc.now)
 			if tc.expectErr != nil {

@@ -1,4 +1,4 @@
-package partman
+package callstore
 
 import (
 	"fmt"
@@ -10,17 +10,17 @@ import (
 func (p Partition) Next(i int) Partition {
 	var t time.Time
 	switch p.Interval {
-	case Daily:
+	case common.Daily:
 		t = p.Time.AddDate(0, 0, i)
-	case Weekly:
+	case common.Weekly:
 		t = p.Time.AddDate(0, 0, i*common.DaysInWeek)
-	case Monthly:
+	case common.Monthly:
 		year, month, _ := p.Time.Date()
 
 		t = time.Date(year, month+time.Month(i), 1, 0, 0, 0, 0, p.Time.Location())
-	case Quarterly:
+	case common.Quarterly:
 		t = p.Time.AddDate(0, i*common.MonthsInQuarter, 0)
-	case Yearly:
+	case common.Yearly:
 		year, _, _ := p.Time.Date()
 
 		t = time.Date(year+i, 1, 1, 0, 0, 0, 0, p.Time.Location())
@@ -43,14 +43,14 @@ func (p *Partition) setName() {
 	var suffix string
 
 	switch p.Interval {
-	case Daily:
+	case common.Daily:
 		suffix = t.Format("2006_01_02")
-	case Weekly:
+	case common.Weekly:
 		year, week := t.ISOWeek()
 		suffix = fmt.Sprintf("%d_w%02d", year, week)
-	case Monthly:
+	case common.Monthly:
 		suffix = t.Format("2006_01")
-	case Quarterly:
+	case common.Quarterly:
 		year, month, _ := t.Date()
 
 		var quarter int
@@ -67,10 +67,10 @@ func (p *Partition) setName() {
 		}
 
 		suffix = fmt.Sprintf("%d_q%d", year, quarter)
-	case Yearly:
+	case common.Yearly:
 		suffix = t.Format("2006")
 	default:
-		panic(ErrInvalidInterval(p.Interval))
+		panic(common.ErrInvalidInterval(p.Interval))
 	}
 
 	p.Name = fmt.Sprintf("%s_p_%s", p.ParentTable, suffix)
@@ -79,17 +79,17 @@ func (p *Partition) setName() {
 func (p Partition) Prev(i int) Partition {
 	var t time.Time
 	switch p.Interval {
-	case Daily:
+	case common.Daily:
 		t = p.Time.AddDate(0, 0, -i)
-	case Weekly:
+	case common.Weekly:
 		t = p.Time.AddDate(0, 0, -i*common.DaysInWeek)
-	case Monthly:
+	case common.Monthly:
 		year, month, _ := p.Time.Date()
 
 		t = time.Date(year, month-time.Month(i), 1, 0, 0, 0, 0, p.Time.Location())
-	case Quarterly:
+	case common.Quarterly:
 		t = p.Time.AddDate(0, -i*common.MonthsInQuarter, 0)
-	case Yearly:
+	case common.Yearly:
 		year, _, _ := p.Time.Date()
 
 		t = time.Date(year-i, 1, 1, 0, 0, 0, 0, p.Time.Location())
@@ -109,19 +109,5 @@ func (p Partition) Prev(i int) Partition {
 }
 
 func (p Partition) Range() (time.Time, time.Time) {
-	b := common.NewTimeBounder()
-	switch p.Interval {
-	case Daily:
-		return b.GetDailyBounds(p.Time)
-	case Weekly:
-		return b.GetWeeklyBounds(p.Time)
-	case Monthly:
-		return b.GetMonthlyBounds(p.Time)
-	case Quarterly:
-		return b.GetQuarterlyBounds(p.Time)
-	case Yearly:
-		return b.GetYearlyBounds(p.Time)
-	}
-
-	panic("unknown interval!")
+	return common.NewTimeBounder(common.WithDefaultBounds(p.Interval)).Bounds(p.Time)
 }

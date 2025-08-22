@@ -1,4 +1,4 @@
-package partman
+package callstore
 
 // portions lifted gratefully from github.com/qonto/postgresql-partition-manager, MIT license.
 
@@ -68,46 +68,23 @@ func PartitionError(pname string, err ...error) PartitionErr {
 	return PartitionErr{p: pname}
 }
 
-type ErrInvalidInterval string
-
-func (in ErrInvalidInterval) Error() string {
-	return fmt.Sprintf("invalid interval '%s'", string(in))
-}
-
-type Interval string
-
-const (
-	Unknown   Interval = ""
-	Daily     Interval = "daily"
-	Weekly    Interval = "weekly"
-	Monthly   Interval = "monthly"
-	Quarterly Interval = "quarterly"
-	Yearly    Interval = "yearly"
-)
-
-func (p Interval) IsValid() bool {
-	switch p {
-	case Daily, Weekly, Monthly, Quarterly, Yearly:
-		return true
-	}
-
-	return false
-}
-
 type PartitionManager interface {
 	Go(ctx context.Context)
 	Check(ctx context.Context, now time.Time) error
-	Interval() Interval
+	Interval() common.Interval
 	ExistingPartitions(parts []database.PartitionResult) ([]Partition, error)
+	PartitionPrefix(time.Time) string
 }
 
 type partman struct {
-	db   database.Store
-	cfg  config.Partition
-	intv Interval
+	db      database.Store
+	calls   *store
+	cfg     config.Partition
+	intv    common.Interval
+	bounder *common.TimeBounder
 }
 
-func (pm *partman) Interval() Interval {
+func (pm *partman) Interval() common.Interval {
 	return pm.intv
 }
 
@@ -115,19 +92,22 @@ type Partition struct {
 	ParentTable string
 	Schema      string
 	Name        string
-	Interval    Interval
+	Interval    common.Interval
 	Time        time.Time
 }
 
-func New(db database.Store, cfg config.Partition) (*partman, error) {
-	pm := &partman{
-		cfg:  cfg,
-		db:   db,
-		intv: Interval(cfg.Interval),
+func NewPartitionManager(db database.Store, callStore *store, cfg config.Partition) (*partman, error) {
+	intv := common.Interval(cfg.Interval)
+	if !intv.IsValid() {
+		return nil, common.ErrInvalidInterval(intv)
 	}
 
-	if !pm.intv.IsValid() {
-		return nil, ErrInvalidInterval(pm.intv)
+	pm := &partman{
+		cfg:     cfg,
+		db:      db,
+		calls:   callStore,
+		intv:    intv,
+		bounder: common.NewTimeBounder(common.WithDefaultBounds(intv)),
 	}
 
 	return pm, nil
@@ -154,7 +134,7 @@ func (pm *partman) newPartition(t time.Time) Partition {
 	p := Partition{
 		ParentTable: CallsTable,
 		Schema:      pm.cfg.Schema,
-		Interval:    Interval(pm.cfg.Interval),
+		Interval:    common.Interval(pm.cfg.Interval),
 		Time:        t,
 	}
 
@@ -241,7 +221,7 @@ func (pm *partman) ExistingPartitions(parts []database.PartitionResult) ([]Parti
 			return nil, err
 		}
 
-		if p.Interval != Interval(pm.cfg.Interval) {
+		if p.Interval != common.Interval(pm.cfg.Interval) {
 			return nil, PartitionError(v.Schema+"."+v.Name, ErrDifferentInterval)
 		}
 
@@ -272,6 +252,13 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Part
 		return err
 	}
 	log.Debug().Int64("rows", swept).Time("start", s).Time("end", e).Msg("cleaned up swept calls")
+
+	err = pm.calls.derefSweptCallAudios(ctx, tx)
+	if err != nil {
+		return err
+	}
+
+	// TODO: queue up any external audio cleanup here!
 
 	log.Info().Str("partition", fullPartName).Msg("detaching partition")
 	err = tx.DetachPartition(ctx, CallsTable, fullPartName)
@@ -366,7 +353,7 @@ func (pm *partman) verifyPartName(pr database.PartitionResult) (p Partition, err
 	dateAr = strings.Split(dateAr[1], "_")
 	switch len(dateAr) {
 	case 3: // daily
-		p.Interval = Daily
+		p.Interval = common.Daily
 		ymd := [3]int{}
 		for i := range 3 {
 			r, err := strconv.Atoi(dateAr[i])
@@ -387,7 +374,7 @@ func (pm *partman) verifyPartName(pr database.PartitionResult) (p Partition, err
 			return p, PartitionError(pn, err)
 		}
 		if strings.HasPrefix(dateAr[1], "w") {
-			p.Interval = Weekly
+			p.Interval = common.Weekly
 			weekNum, err := strconv.Atoi(dateAr[1][1:])
 			if err != nil {
 				return p, PartitionError(pn, err)
@@ -399,7 +386,7 @@ func (pm *partman) verifyPartName(pr database.PartitionResult) (p Partition, err
 			}
 			return p, nil
 		} else if strings.HasPrefix(dateAr[1], "q") {
-			p.Interval = Quarterly
+			p.Interval = common.Quarterly
 			quarterNum, err := strconv.Atoi(dateAr[1][1:])
 			if err != nil {
 				return p, PartitionError(pn, err)
@@ -415,7 +402,7 @@ func (pm *partman) verifyPartName(pr database.PartitionResult) (p Partition, err
 			return p, nil
 		}
 		// monthly
-		p.Interval = Monthly
+		p.Interval = common.Monthly
 		month, err := strconv.Atoi(dateAr[1])
 		if err != nil {
 			return p, PartitionError(pn)
@@ -427,7 +414,7 @@ func (pm *partman) verifyPartName(pr database.PartitionResult) (p Partition, err
 		}
 		return p, nil
 	case 1: // yearly
-		p.Interval = Yearly
+		p.Interval = common.Yearly
 		year, err := strconv.Atoi(dateAr[0])
 		if err != nil {
 			return p, PartitionError(pn, err)
@@ -441,4 +428,25 @@ func (pm *partman) verifyPartName(pr database.PartitionResult) (p Partition, err
 	}
 
 	return p, PartitionError(pn)
+}
+
+func (pm *partman) PartitionPrefix(t time.Time) string {
+	lb, _ := pm.bounder.Bounds(t)
+
+	switch pm.intv {
+	case common.Daily:
+		return lb.Format("2006_01_02")
+	case common.Weekly:
+		year, week := isoweek.FromDate(t.Year(), t.Month(), t.Day())
+		return fmt.Sprintf("%04d_w%02d", year, week)
+	case common.Monthly:
+		return lb.Format("2006_01")
+	case common.Quarterly:
+		quarter := ((int(lb.Month()) - 1) / common.MonthsInQuarter) + 1
+		return fmt.Sprintf("%04d_q%d", t.Year(), quarter)
+	case common.Yearly:
+		return lb.Format("2006")
+	}
+
+	return ""
 }

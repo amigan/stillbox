@@ -59,6 +59,12 @@ FROM swept_calls sc
 WHERE sc.id = @id
 ;
 
+-- name: GetSweptCallsWithRef :many
+SELECT id, audio_ref, audio_blob FROM swept_calls WHERE audio_ref IS NOT NULL;
+
+-- name: SetSweptAudioAndClearRef :exec
+UPDATE swept_calls SET audio_blob = @audio_blob, audio_ref = NULL WHERE id = @id;
+
 -- name: GetCallAudio :many
 -- For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount
 SELECT
@@ -314,3 +320,73 @@ WHERE id = @id;
 
 -- name: GetCalls :many
 SELECT sqlc.embed(calls) FROM calls WHERE id = ANY(@ids::UUID[]);
+
+-- name: AddRefJournal :one
+INSERT INTO audio_ref_journal (
+	call_id,
+	backend,
+	ref,
+	prune_after,
+	last_try,
+	tries
+) VALUES (
+	sqlc.narg('call_id'),
+	@backend,
+	@ref,
+	@prune_after,
+	NOW(),
+	@tries
+) RETURNING id;
+
+-- name: SetRefJournalPrune :exec
+UPDATE audio_ref_journal SET
+	prune_after = sqlc.narg('prune_after')
+WHERE
+	id = $1;
+
+-- name: IncrementRefJournal :exec
+UPDATE audio_ref_journal SET
+	tries = tries + 1,
+	last_try = NOW()
+WHERE id = @id;
+
+-- name: DropRefJournal :exec
+DELETE FROM audio_ref_journal
+WHERE id = @id;
+
+-- name: GetRefJournal :many
+SELECT id, call_id, backend, ref, prune_after, last_try, tries
+FROM
+audio_ref_journal
+WHERE
+	(prune_after IS NULL OR NOW() > prune_after) AND
+	CASE
+		WHEN sqlc.narg('missing')::BOOLEAN IS TRUE THEN ref IS NULL
+		WHEN @missing::BOOLEAN IS FALSE THEN ref IS NOT NULL
+		ELSE TRUE
+	END AND
+	CASE WHEN sqlc.narg('since')::TIMESTAMPTZ IS NOT NULL THEN last_try > @since ELSE TRUE END AND
+	CASE WHEN sqlc.narg('until')::TIMESTAMPTZ IS NOT NULL THEN last_try <= @until ELSE TRUE END
+ORDER BY last_try ASC
+LIMIT @num;
+
+-- name: DetailedCountRefJournal :many
+SELECT
+COUNT(*), backend, (ref IS NULL)::BOOLEAN has_ref
+FROM audio_ref_journal
+GROUP BY backend, has_ref;
+
+-- name: CountRefJournal :one
+SELECT COUNT(*)
+FROM
+audio_ref_journal
+WHERE
+	(prune_after IS NULL OR NOW() > prune_after) AND
+	CASE
+		WHEN sqlc.narg('missing')::BOOLEAN IS TRUE THEN ref IS NULL
+		WHEN @missing::BOOLEAN IS FALSE THEN ref IS NOT NULL
+		ELSE TRUE
+	END AND
+	CASE WHEN sqlc.narg('since')::TIMESTAMPTZ IS NOT NULL THEN last_try > @since ELSE TRUE END AND
+	CASE WHEN sqlc.narg('until')::TIMESTAMPTZ IS NOT NULL THEN last_try <= @until ELSE TRUE END
+;

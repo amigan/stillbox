@@ -46,6 +46,7 @@ var backendCfg []config.CallStorage = []config.CallStorage{
 
 type mockAudioBackend struct {
 	calls map[string]*calls.CallAudio
+	st    Store
 }
 
 func (m *mockAudioBackend) Store(ctx context.Context, ca *calls.CallAudio) (AudioRef, error) {
@@ -87,10 +88,11 @@ func (m *mockAudioBackend) makeCalls(ctx context.Context, n int) []database.GetC
 	return rows
 }
 
-func newMockAudioBackend(_ config.ConfigMap) (AudioBackend, error) {
+func newMockAudioBackend(st Store, _ config.ConfigMap) (AudioBackend, error) {
 	backendMake.Do(func() {
 		mbe = &mockAudioBackend{
 			calls: map[string]*calls.CallAudio{},
+			st:    st,
 		}
 		dbCalls = mbe.makeCalls(context.Background(), 2500)
 	})
@@ -109,6 +111,7 @@ func TestMove(t *testing.T) {
 		expectErr       error
 		expectNumRows   int64
 		expectTotalRows int64
+		partConfig      config.Partition
 		canceler        func(cancel func())
 	}{
 		{
@@ -162,7 +165,7 @@ func TestMove(t *testing.T) {
 		}
 		met := metrics.NewNoOp()
 		tgc := tgstore.NewCache(db, met)
-		st, err := NewStore(ctx, db, tgc, met, backendCfg)
+		st, err := NewStore(ctx, db, tgc, met, backendCfg, tc.partConfig)
 		require.NoError(t, err)
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.canceler != nil {
