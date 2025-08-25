@@ -102,6 +102,7 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 	errCounts := make(map[*audioStorageBackend]int)
 
 	err = rs.store.db.GetAudioRefJournalCb(ctx, arg, func(fr database.AudioRefJournal) {
+		log.Debug().Interface("journalEntry", fr).Msg("journ")
 		create := fr.Ref == nil
 
 		var ref AudioRef
