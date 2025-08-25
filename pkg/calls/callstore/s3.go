@@ -3,6 +3,7 @@ package callstore
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio-go/v7/pkg/lifecycle"
+	"github.com/rs/zerolog/log"
 )
 
 type s3Backend struct {
@@ -30,6 +32,7 @@ type s3Backend struct {
 	KeyID          string        `yaml:"keyID"`
 	SecretKey      string        `yaml:"secretKey"`
 	Timeout        time.Duration `yaml:"timeout"`
+	Trace          bool          `yaml:"trace"`
 
 	lc  s3LifecycleCache
 	cli *minio.Client
@@ -144,11 +147,16 @@ func (sb *s3Backend) Prune(ctx context.Context, audioRef AudioRef, pruneAfter *t
 
 	err := sb.addRmRule(ctx, refPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("add lifecycle rule: %w", err)
 	}
 
 	newPruneAfter := time.Now().Add(48 * time.Hour)
 	return &newPruneAfter, nil
+}
+
+func (sb *s3Backend) isNoSuchLifecycleConfig(err error) bool {
+	var erR minio.ErrorResponse
+	return errors.As(err, &erR) && erR.Code == "NoSuchLifecycleConfiguration"
 }
 
 func (sb *s3Backend) addRmRule(ctx context.Context, refPath string) error {
@@ -161,6 +169,7 @@ func (sb *s3Backend) addRmRule(ctx context.Context, refPath string) error {
 		return fmt.Errorf("rule exists for '%s'", refPath)
 	}
 
+	log.Debug().Str("prefix", refPath).Msg("add rm rule")
 	lcCfg.Rules = append(lcCfg.Rules, lifecycle.Rule{
 		ID:     refPath,
 		Prefix: refPath,
@@ -196,7 +205,7 @@ func (sb *s3Backend) pruneRmRule(ctx context.Context, refPath string) error {
 func (sb *s3Backend) setRules(ctx context.Context, cfg *lifecycle.Configuration) error {
 	err := sb.cli.SetBucketLifecycle(ctx, sb.Bucket, cfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("set bucket lifecycle: %w", err)
 	}
 
 	sb.lc.set(cfg)
@@ -219,7 +228,11 @@ func (sb *s3Backend) getRules(ctx context.Context) (*lifecycle.Configuration, er
 	if now.After(sb.lc.tm.Add(S3LifecycleTTL)) {
 		lc, err := sb.cli.GetBucketLifecycle(ctx, sb.Bucket)
 		if err != nil {
-			return nil, err
+			if !sb.isNoSuchLifecycleConfig(err) {
+				return nil, err
+			}
+
+			lc = lifecycle.NewConfiguration()
 		}
 
 		sb.lc.set(lc)

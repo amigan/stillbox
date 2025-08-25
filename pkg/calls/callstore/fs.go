@@ -108,7 +108,7 @@ func (fsb *fsBackend) Prune(ctx context.Context, audioRef AudioRef, pruneAfter *
 	}
 
 	if !strings.HasSuffix(composedPath, "/") {
-		return nil, fmt.Errorf("'%s' is a directory but path does not end in '/'")
+		return nil, fmt.Errorf("'%s' is a directory but path does not end in '/'", composedPath)
 	}
 
 	return nil, os.RemoveAll(composedPath)
@@ -149,7 +149,7 @@ func (fsb *fsBackend) Delete(_ context.Context, audioRef AudioRef) error {
 	}
 
 	if isDir {
-		return fmt.Errorf("'%s' is a directory")
+		return fmt.Errorf("'%s' is a directory", composedPath)
 	}
 
 	return os.Remove(composedPath)
@@ -170,21 +170,32 @@ func (fsb *fsBackend) callPath(blobPath string) string {
 	return path.Join(fsb.Root, blobPath)
 }
 
+const (
+	// this could be configurable someday?
+	FSDefaultMode          = 0640
+	FSDefaultDirectoryMode = 0755
+)
+
 func (fsb *fsBackend) Store(_ context.Context, call *calls.CallAudio) (AudioRef, error) {
 	audPath, audRef := fsb.st.BlobPath(call)
 	p := fsb.callPath(audPath)
-	err := os.WriteFile(p, call.AudioBlob, 0640)
+	err := os.WriteFile(p, call.AudioBlob, FSDefaultMode)
 	if err != nil {
-		if os.IsNotExist(err) {
+		switch os.IsNotExist(err) {
+		case true:
+			// try creating missing directories
 			cdir := path.Dir(p)
-			err := os.MkdirAll(cdir, 0755)
+			err := os.MkdirAll(cdir, FSDefaultDirectoryMode)
 			if err != nil {
 				return nil, err
 			}
-		}
 
-		err := os.WriteFile(p, call.AudioBlob, 0644)
-		if err != nil {
+			// try to write again
+			err = os.WriteFile(p, call.AudioBlob, FSDefaultMode)
+			if err != nil {
+				return nil, err
+			}
+		case false:
 			return nil, err
 		}
 	}

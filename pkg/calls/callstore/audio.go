@@ -22,15 +22,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
 
 var (
-	ErrCallAudioNotFound = errors.New("call audio not found")
-	ErrNoAudioBlob       = errors.New("no call audio blob")
-	ErrBadAudioRef       = errors.New("bad audio reference")
-	ErrNXBackend         = errors.New("no such backend")
+	ErrCallAudioNotFound    = errors.New("call audio not found")
+	ErrNoAudioBlob          = errors.New("no call audio blob")
+	ErrBadAudioRef          = errors.New("bad audio reference")
+	ErrNXBackend            = errors.New("no such backend")
+	ErrExhaustedAllBackends = errors.New("exhausted all backends, failed")
 )
 
 const (
@@ -90,15 +92,20 @@ type AudioBackends interface {
 
 	// JournalSizeMetric returns the prometheus metric for the given backendName and missing state.
 	JournalSizeMetric(backendName string, missing bool) prometheus.Gauge
+
+	// JournalGCErrorMetric returns the prometheus GC error metric for the given backendName and missing state.
+	JournalGCErrorMetric(backendName string, missing bool) prometheus.Counter
 }
 
 type audioBackends struct {
 	backendList []string // in config order
 
+	onExhaust      config.StorageDisposition
 	backends       map[string]*audioStorageBackend
 	metrics        audioStorageMetrics
 	refTrackerPool sync.Pool
 	journal        RefJournal
+	disablePrune   bool
 }
 
 func (ab *audioBackends) Backend(name string) *audioStorageBackend {
@@ -111,9 +118,10 @@ func (ab *audioBackends) Backend(name string) *audioStorageBackend {
 }
 
 type audioStorageBackend struct {
-	Name    string
-	Filter  *filter.Filter
-	OnError config.StorageDisposition
+	Name         string
+	Filter       *filter.Filter
+	OnError      config.StorageDisposition
+	DisablePrune bool
 	AudioBackend
 }
 
@@ -121,6 +129,7 @@ type audioStorageMetrics struct {
 	TotalStores  *prometheus.CounterVec `help:"Total call stores" labels:"backend,type"`
 	FailedStores *prometheus.CounterVec `help:"Failed call storage attempts by backend" labels:"backend,type"`
 	JournalSize  *prometheus.GaugeVec   `help:"AudioRef journal size" labels:"backend,kind"`
+	JournalGCError *prometheus.CounterVec `help:"Journal garbage collection error count" labels:"backend,kind"` 
 }
 
 const (
@@ -135,6 +144,15 @@ func (ab *audioBackends) JournalSizeMetric(backendName string, missing bool) pro
 	}
 
 	return ab.metrics.JournalSize.WithLabelValues(backendName, missingLabel)
+}
+
+func (ab *audioBackends) JournalGCErrorMetric(backendName string, missing bool) prometheus.Counter {
+	missingLabel := MissingDeleteLabel
+	if missing {
+		missingLabel = MissingCreateLabel
+	}
+
+	return ab.metrics.JournalGCError.WithLabelValues(backendName, missingLabel)
 }
 
 var _ AudioBackends = (*audioBackends)(nil)
@@ -207,6 +225,10 @@ func (ab *audioBackends) Prune(ctx context.Context, beName string, ref AudioRef)
 		return ErrNXBackend
 	}
 
+	if be.DisablePrune {
+		return nil
+	}
+
 	rj, err := json.Marshal(ref)
 	if err != nil {
 		return err
@@ -271,12 +293,8 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (rfq *Audi
 			case config.OnErrorDB:
 				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, storing in DB")
 				return nil, nil
-			case config.OnErrorNextThenDB:
-				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, trying next then storing in DB")
-				err = nil // so if nobody else stores, it stores in DB
-				continue
-			case config.OnErrorNextThenFail: // default
-				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, trying next")
+			case config.OnErrorNext:
+				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, trying next backend")
 				continue
 			}
 		} else if ref != nil {
@@ -288,6 +306,13 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (rfq *Audi
 		}
 
 		return rfq, nil
+	}
+
+	switch ab.onExhaust {
+	case config.OnErrorDB:
+		return nil, nil
+	case config.OnErrorFail:
+		return nil, ErrExhaustedAllBackends
 	}
 
 	return
@@ -310,10 +335,62 @@ func (ab *audioBackends) PutRefTracker(rt *refTracker) {
 	ab.refTrackerPool.Put(rt)
 }
 
-func (s *store) MakeBackends(ctx context.Context, fc tgstore.FilterCache, met metrics.Metrics, cfg []config.CallStorage) (*audioBackends, error) {
+// Count returns the number of configured backends.
+func (ab *audioBackends) Count() int {
+	return len(ab.backends)
+}
+
+func (s *store) GoGC(ctx context.Context) {
+	if s.audioBackends.journal == nil {
+		// this is probably only in tests that this may happen, but we check anyway.
+		log.Debug().Msg("callstore garbage collection thread exiting")
+		return
+	}
+	errCh := make(chan error)
+	go func() {
+		select {
+		case err := <-errCh:
+			log.Error().Err(err).Msg("call audio cleanup error")
+		case <-ctx.Done():
+			return
+		}
+	}()
+	doGC := func() {
+		gcCount, err := s.audioBackends.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
+		if err != nil {
+			s.audioBackends.JournalGCErrorMetric("", false).Inc()
+			errCh <- err
+		} else if gcCount > 0 {
+			log.Info().Int64("count", gcCount).Msg("call audio garbage collected")
+		}
+	}
+
+	tick := time.NewTicker(CheckInterval)
+
+	select {
+	case <-tick.C:
+		doGC()
+	case <-ctx.Done():
+		close(errCh)
+		return
+	}
+}
+
+func (s *store) MakeBackends(ctx context.Context, fc tgstore.FilterCache, met metrics.Metrics, cfg config.CallStorage) (*audioBackends, error) {
 	ab := &audioBackends{
-		backendList: make([]string, 0, len(cfg)),
-		backends:    make(map[string]*audioStorageBackend, len(cfg)),
+		backendList:  make([]string, 0, len(cfg.Backends)),
+		backends:     make(map[string]*audioStorageBackend, len(cfg.Backends)),
+		disablePrune: cfg.DisablePrune,
+	}
+
+	if cfg.OnExhaust == nil {
+		ab.onExhaust = config.OnErrorDB
+	} else {
+		ab.onExhaust = *cfg.OnExhaust
+	}
+
+	if ab.onExhaust == config.OnErrorNext {
+		return nil, errors.New("onExhaust next makes no sense")
 	}
 
 	ab.journal = NewRefJournal(ctx, ab, s, JournalErrThreshold)
@@ -326,7 +403,7 @@ func (s *store) MakeBackends(ctx context.Context, fc tgstore.FilterCache, met me
 
 	met.Register("callaudio", &ab.metrics)
 
-	for _, cf := range cfg {
+	for _, cf := range cfg.Backends {
 		if cf.Name == "" {
 			return nil, fmt.Errorf("blank name invalid")
 		}
@@ -358,6 +435,7 @@ func (s *store) MakeBackends(ctx context.Context, fc tgstore.FilterCache, met me
 		ab.backends[cf.Name] = &audioStorageBackend{
 			Name:         cf.Name,
 			Filter:       filt,
+			DisablePrune: cf.DisablePrune,
 			OnError:      cf.OnError,
 			AudioBackend: be,
 		}
@@ -377,8 +455,33 @@ func (s *store) MakeBackends(ctx context.Context, fc tgstore.FilterCache, met me
 	return ab, nil
 }
 
+func (s *store) PruneAudioPrefix(ctx context.Context, partPrefix string, pStart, pEnd pgtype.Timestamptz) error {
+	if s.audioBackends.disablePrune || s.audioBackends.Count() < 1 {
+		return nil
+	}
+
+	prunableRefs, err := s.db.GetPrunableAudioRefs(ctx, pStart, pEnd)
+	if err != nil {
+		return err
+	}
+
+	for i := range prunableRefs {
+		backend, pathFirst := prunableRefs[i].Backend, prunableRefs[i].PathFirst
+		if pathFirst != "_/" {
+			continue
+		}
+
+		err := s.audioBackends.Prune(ctx, backend, AudioRef(partPrefix+"/"))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // DerefSweptCallAudios resolves all audio_refs of swept calls and puts the audio into audio_blob.
-func (s *store) derefSweptCallAudios(ctx context.Context, tx database.Store) error {
+func (s *store) DerefSweptCallAudios(ctx context.Context, tx database.Store) error {
 	cas, err := tx.GetSweptCallsWithRef(ctx)
 	if err != nil {
 		return err

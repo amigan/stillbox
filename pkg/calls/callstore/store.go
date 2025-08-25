@@ -69,27 +69,50 @@ type Store interface {
 	// BlobPath generates the audio path for FS and S3 backends. audioPath is the real path into
 	// the store, while audioRef will contain a leading `_/` if partitioning is enabled.
 	BlobPath(call *calls.CallAudio) (audioPath, audioRef string)
+
+	// GoGC starts the audio garbage collector thread.
+	GoGC(ctx context.Context)
 }
 
 type store struct {
 	db            database.Store
-	audioBackends AudioBackends
+	audioBackends *audioBackends
 	partman       PartitionManager
 
 	moveInProgress sync.Mutex
 }
 
-func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, audioBE []config.CallStorage, partConfig config.Partition) (*store, error) {
+func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, callStorage config.CallStorage, partConfig config.Partition) (*store, error) {
 	st := &store{
 		db: db,
 	}
 
-	be, err := st.MakeBackends(ctx, tgc, met, audioBE)
+	be, err := st.MakeBackends(ctx, tgc, met, callStorage)
 	if err != nil {
 		return nil, fmt.Errorf("call storage: %w", err)
 	}
 
 	st.audioBackends = be
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	errCh := make(chan error)
+	go func() {
+		select {
+		case err := <-errCh:
+			log.Error().Err(err).Msg("call audio cleanup error")
+		case <-ctx.Done():
+			return
+		}
+	}()
+	gcCount, err := st.audioBackends.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
+	if err != nil {
+		return nil, err
+	}
+
+	if gcCount > 0 {
+		log.Info().Int64("count", gcCount).Msg("call audio garbage collected")
+	}
 
 	if partConfig.Enabled {
 		st.partman, err = NewPartitionManager(db, st, partConfig)

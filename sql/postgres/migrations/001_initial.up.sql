@@ -196,5 +196,6 @@ CREATE TABLE IF NOT EXISTS audio_ref_journal(
 	prune_after TIMESTAMPTZ,
 	last_try TIMESTAMPTZ NOT NULL, -- when tries = 0, last_try means creation time of the entry
 	tries INTEGER NOT NULL,
-	CHECK(ref IS NOT NULL OR call_id IS NOT NULL)
+	CHECK(ref IS NOT NULL OR call_id IS NOT NULL),
+	UNIQUE NULLS NOT DISTINCT (call_id, backend, ref)
 );

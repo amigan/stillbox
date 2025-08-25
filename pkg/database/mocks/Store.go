@@ -2981,6 +2981,80 @@ func (_c *Store_GetIncidentTalkgroups_Call) RunAndReturn(run func(ctx context.Co
 	return _c
 }
 
+// GetPrunableAudioRefs provides a mock function for the type Store
+func (_mock *Store) GetPrunableAudioRefs(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]database.GetPrunableAudioRefsRow, error) {
+	ret := _mock.Called(ctx, partitionStart, partitionEnd)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPrunableAudioRefs")
+	}
+
+	var r0 []database.GetPrunableAudioRefsRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) ([]database.GetPrunableAudioRefsRow, error)); ok {
+		return returnFunc(ctx, partitionStart, partitionEnd)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) []database.GetPrunableAudioRefsRow); ok {
+		r0 = returnFunc(ctx, partitionStart, partitionEnd)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetPrunableAudioRefsRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+		r1 = returnFunc(ctx, partitionStart, partitionEnd)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetPrunableAudioRefs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPrunableAudioRefs'
+type Store_GetPrunableAudioRefs_Call struct {
+	*mock.Call
+}
+
+// GetPrunableAudioRefs is a helper method to define mock.On call
+//   - ctx context.Context
+//   - partitionStart pgtype.Timestamptz
+//   - partitionEnd pgtype.Timestamptz
+func (_e *Store_Expecter) GetPrunableAudioRefs(ctx interface{}, partitionStart interface{}, partitionEnd interface{}) *Store_GetPrunableAudioRefs_Call {
+	return &Store_GetPrunableAudioRefs_Call{Call: _e.mock.On("GetPrunableAudioRefs", ctx, partitionStart, partitionEnd)}
+}
+
+func (_c *Store_GetPrunableAudioRefs_Call) Run(run func(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz)) *Store_GetPrunableAudioRefs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgtype.Timestamptz
+		if args[1] != nil {
+			arg1 = args[1].(pgtype.Timestamptz)
+		}
+		var arg2 pgtype.Timestamptz
+		if args[2] != nil {
+			arg2 = args[2].(pgtype.Timestamptz)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetPrunableAudioRefs_Call) Return(getPrunableAudioRefsRows []database.GetPrunableAudioRefsRow, err error) *Store_GetPrunableAudioRefs_Call {
+	_c.Call.Return(getPrunableAudioRefsRows, err)
+	return _c
+}
+
+func (_c *Store_GetPrunableAudioRefs_Call) RunAndReturn(run func(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]database.GetPrunableAudioRefsRow, error)) *Store_GetPrunableAudioRefs_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetRefJournal provides a mock function for the type Store
 func (_mock *Store) GetRefJournal(ctx context.Context, arg database.GetRefJournalParams) ([]database.AudioRefJournal, error) {
 	ret := _mock.Called(ctx, arg)

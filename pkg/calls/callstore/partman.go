@@ -78,10 +78,18 @@ type PartitionManager interface {
 
 type partman struct {
 	db      database.Store
-	calls   *store
+	calls   PartmanCallAudioManager
 	cfg     config.Partition
 	intv    common.Interval
 	bounder *common.TimeBounder
+}
+
+type PartmanCallAudioManager interface {
+	// DerefSweptCallAudios resolves all audio_refs of swept calls and puts the audio into audio_blob.
+	DerefSweptCallAudios(ctx context.Context, tx database.Store) error
+
+	// PruneAudioPrefix schedules for pruning (backend-specific) all call audios with partPrefix.
+	PruneAudioPrefix(ctx context.Context, partPrefix string, pStart, pEnd pgtype.Timestamptz) error
 }
 
 func (pm *partman) Interval() common.Interval {
@@ -253,12 +261,18 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Part
 	}
 	log.Debug().Int64("rows", swept).Time("start", s).Time("end", e).Msg("cleaned up swept calls")
 
-	err = pm.calls.derefSweptCallAudios(ctx, tx)
+	// go through swept calls and resolve all audio references.
+	// in the future, we may make this configurable along with the necessary changes to
+	// audioBackends to exclude calls from the pruning that happens below.
+	err = pm.calls.DerefSweptCallAudios(ctx, tx)
 	if err != nil {
 		return err
 	}
 
-	// TODO: queue up any external audio cleanup here!
+	err = pm.calls.PruneAudioPrefix(ctx, p.Prefix(), start, end)
+	if err != nil {
+		return err
+	}
 
 	log.Info().Str("partition", fullPartName).Msg("detaching partition")
 	err = tx.DetachPartition(ctx, CallsTable, fullPartName)
@@ -276,7 +290,7 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Part
 
 func (pm *partman) Check(ctx context.Context, now time.Time) error {
 	return pm.db.InTx(ctx, func(db database.Store) error {
-		// by default, we want to make sure a partition exists for this and next month
+		// by default, we want to make sure a partition exists for this and next interval
 		// since we run this at startup, it's safe to do only that.
 		partitions, err := db.GetTablePartitions(ctx, pm.cfg.Schema, CallsTable)
 		if err != nil {
@@ -315,6 +329,10 @@ func (pm *partman) Check(ctx context.Context, now time.Time) error {
 
 func (p Partition) PartitionName() string {
 	return p.Name
+}
+
+func (p Partition) Prefix() string {
+	return strings.Split(p.Name, "calls_p_")[1]
 }
 
 func (pm *partman) createPartition(ctx context.Context, tx database.Store, part Partition) error {

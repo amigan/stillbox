@@ -52,6 +52,7 @@ type Querier interface {
 	GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetIncidentCallsRow, error)
 	GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error)
 	GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error)
+	GetPrunableAudioRefs(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]GetPrunableAudioRefsRow, error)
 	GetRefJournal(ctx context.Context, arg GetRefJournalParams) ([]AudioRefJournal, error)
 	GetSetting(ctx context.Context, name string) ([]byte, error)
 	GetShare(ctx context.Context, id string) (Share, error)

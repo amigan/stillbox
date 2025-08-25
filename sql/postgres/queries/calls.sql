@@ -368,7 +368,7 @@ WHERE
 	CASE WHEN sqlc.narg('since')::TIMESTAMPTZ IS NOT NULL THEN last_try > @since ELSE TRUE END AND
 	CASE WHEN sqlc.narg('until')::TIMESTAMPTZ IS NOT NULL THEN last_try <= @until ELSE TRUE END
 ORDER BY last_try ASC
-LIMIT @num;
+LIMIT (CASE WHEN sqlc.narg('num')::INTEGER IS NOT NULL THEN @num ELSE 10000000000 END);
 
 -- name: DetailedCountRefJournal :many
 SELECT
@@ -390,3 +390,16 @@ WHERE
 	CASE WHEN sqlc.narg('since')::TIMESTAMPTZ IS NOT NULL THEN last_try > @since ELSE TRUE END AND
 	CASE WHEN sqlc.narg('until')::TIMESTAMPTZ IS NOT NULL THEN last_try <= @until ELSE TRUE END
 ;
+
+-- name: GetPrunableAudioRefs :many
+SELECT
+	r.backend::TEXT backend,
+	LEFT(r.ref, POSITION('/' IN r.ref)) path_first
+FROM
+	calls
+CROSS JOIN
+	jsonb_each_text(audio_ref) AS r (backend, ref)
+WHERE
+	call_date > @partition_start AND call_date <= @partition_end
+GROUP BY
+	r.backend, path_first;

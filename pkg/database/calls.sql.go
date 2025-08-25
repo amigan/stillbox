@@ -591,6 +591,45 @@ func (q *Queries) GetDatabaseSize(ctx context.Context) (string, error) {
 	return pg_size_pretty, err
 }
 
+const getPrunableAudioRefs = `-- name: GetPrunableAudioRefs :many
+SELECT
+	r.backend::TEXT backend,
+	LEFT(r.ref, POSITION('/' IN r.ref)) path_first
+FROM
+	calls
+CROSS JOIN
+	jsonb_each_text(audio_ref) AS r (backend, ref)
+WHERE
+	call_date > $1 AND call_date <= $2
+GROUP BY
+	r.backend, path_first
+`
+
+type GetPrunableAudioRefsRow struct {
+	Backend   string `json:"backend"`
+	PathFirst string `json:"pathFirst"`
+}
+
+func (q *Queries) GetPrunableAudioRefs(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]GetPrunableAudioRefsRow, error) {
+	rows, err := q.db.Query(ctx, getPrunableAudioRefs, partitionStart, partitionEnd)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPrunableAudioRefsRow
+	for rows.Next() {
+		var i GetPrunableAudioRefsRow
+		if err := rows.Scan(&i.Backend, &i.PathFirst); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRefJournal = `-- name: GetRefJournal :many
 SELECT id, call_id, backend, ref, prune_after, last_try, tries
 FROM
@@ -605,14 +644,14 @@ WHERE
 	CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN last_try > $2 ELSE TRUE END AND
 	CASE WHEN $3::TIMESTAMPTZ IS NOT NULL THEN last_try <= $3 ELSE TRUE END
 ORDER BY last_try ASC
-LIMIT $4
+LIMIT (CASE WHEN $4::INTEGER IS NOT NULL THEN $4 ELSE 10000000000 END)
 `
 
 type GetRefJournalParams struct {
 	Missing *bool              `json:"missing"`
 	Since   pgtype.Timestamptz `json:"since"`
 	Until   pgtype.Timestamptz `json:"until"`
-	Num     int32              `json:"num"`
+	Num     *int32             `json:"num"`
 }
 
 func (q *Queries) GetRefJournal(ctx context.Context, arg GetRefJournalParams) ([]AudioRefJournal, error) {

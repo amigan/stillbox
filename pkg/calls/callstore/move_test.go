@@ -37,10 +37,12 @@ func fillCtx(t *testing.T, ctx context.Context) context.Context {
 	return authz.CtxWithRBAC(ctx, rm)
 }
 
-var backendCfg []config.CallStorage = []config.CallStorage{
-	{
-		Name:    "test",
-		Backend: "test",
+var callStorage config.CallStorage = config.CallStorage{
+	Backends: []config.StorageBackendConfig{
+		{
+			Name:    "test",
+			Backend: "test",
+		},
 	},
 }
 
@@ -70,6 +72,10 @@ func (m *mockAudioBackend) DeleteBulk(ctx context.Context, refs []AudioRef) erro
 
 func (m *mockAudioBackend) Type() string {
 	return "test"
+}
+
+func (m *mockAudioBackend) Prune(ctx context.Context, audioRef AudioRef, pruneAfter *time.Time) (newPruneAfter *time.Time, err error) {
+	return nil, nil
 }
 
 func (m *mockAudioBackend) makeCalls(ctx context.Context, n int) []database.GetCallAudioRow {
@@ -165,7 +171,7 @@ func TestMove(t *testing.T) {
 		}
 		met := metrics.NewNoOp()
 		tgc := tgstore.NewCache(db, met)
-		st, err := NewStore(ctx, db, tgc, met, backendCfg, tc.partConfig)
+		st, err := NewStore(ctx, db, tgc, met, callStorage, tc.partConfig)
 		require.NoError(t, err)
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.canceler != nil {

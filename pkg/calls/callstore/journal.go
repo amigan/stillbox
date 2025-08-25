@@ -55,14 +55,14 @@ type refJournal struct {
 }
 
 func (rs *refJournal) AddCreate(ctx context.Context, callID uuid.UUID, backend string) (id JournalID, err error) {
-	return rs.add(ctx, &callID, backend, nil, nil, true, 1)
+	return rs.add(ctx, &callID, backend, nil, nil, 1)
 }
 
 func (rs *refJournal) AddDelete(ctx context.Context, backend string, ref json.RawMessage, pruneAfter *time.Time) (id JournalID, err error) {
-	return rs.add(ctx, nil, backend, ref, pruneAfter, false, 1)
+	return rs.add(ctx, nil, backend, ref, pruneAfter, 1)
 }
 
-func (rs *refJournal) add(ctx context.Context, callID *uuid.UUID, backend string, ref json.RawMessage, pruneAfter *time.Time, missing bool, tries int) (JournalID, error) {
+func (rs *refJournal) add(ctx context.Context, callID *uuid.UUID, backend string, ref json.RawMessage, pruneAfter *time.Time, tries int) (JournalID, error) {
 	var pA pgtype.Timestamptz
 	if pruneAfter != nil {
 		pA = pgtype.Timestamptz{Time: *pruneAfter, Valid: true}
@@ -103,6 +103,7 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 
 	err = rs.store.db.GetAudioRefJournalCb(ctx, arg, func(fr database.AudioRefJournal) {
 		create := fr.Ref == nil
+		
 		var ref AudioRef
 		rerr := json.Unmarshal(fr.Ref, &ref)
 		if rerr != nil && errCh != nil {
@@ -122,6 +123,12 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 			return
 		}
 
+		jErr := func(err error) {
+			errCh <- err
+
+			rs.ab.JournalGCErrorMetric(back.Name, create).Inc()
+		}
+
 		var pruneAfter *time.Time
 		if fr.PruneAfter.Valid {
 			pruneAfter = &fr.PruneAfter.Time
@@ -133,14 +140,14 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 			if fr.CallID.Valid {
 				rerr = rs.store.StoreAudioFromDB(ctx, uuid.UUID(fr.CallID.Bytes), back)
 			} else { // shouldn't happen
-				errCh <- ErrCallAudioNotFound
+				jErr(ErrCallAudioNotFound)
 				return
 			}
 		case false: // delete
 			newPruneAfter, rerr = back.Prune(ctx, ref, pruneAfter)
 		}
 		if rerr != nil {
-			errCh <- rerr
+			jErr(rerr)
 			errCounts[back] = errCounts[back] + 1
 			if terr := rs.Increment(ctx, JournalID(fr.ID)); terr != nil {
 				log.Error().Err(terr).Int64("journalEntry", fr.ID).Msg("tries increment")
@@ -152,14 +159,14 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 		if newPruneAfter != nil {
 			rerr = rs.UpdatePruneAfter(ctx, JournalID(fr.ID), newPruneAfter)
 			if rerr != nil {
-				errCh <- rerr
+				jErr(rerr)
 				return
 			}
 		} else {
 			// drop the journal entry
 			rerr = rs.Drop(ctx, JournalID(fr.ID))
 			if rerr != nil {
-				errCh <- rerr
+				jErr(rerr)
 
 				return
 			}
