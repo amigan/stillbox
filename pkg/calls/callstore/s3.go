@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 
@@ -321,10 +322,16 @@ func newS3backend(s Store, cfg config.ConfigMap) (AudioBackend, error) {
 		return nil, err
 	}
 
+	var rt http.RoundTripper
+	if sb.Trace {
+		rt = common.LoggingRoundTripper()
+	}
+
 	cli, err := minio.New(sb.Endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(sb.KeyID, sb.SecretKey, ""),
-		Secure: sb.Secure,
-		Region: sb.Region,
+		Creds:     credentials.NewStaticV4(sb.KeyID, sb.SecretKey, ""),
+		Secure:    sb.Secure,
+		Region:    sb.Region,
+		Transport: rt,
 	})
 	if err != nil {
 		return nil, err
