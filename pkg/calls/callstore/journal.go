@@ -103,7 +103,7 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 
 	err = rs.store.db.GetAudioRefJournalCb(ctx, arg, func(fr database.AudioRefJournal) {
 		create := fr.Ref == nil
-		
+
 		var ref AudioRef
 		rerr := json.Unmarshal(fr.Ref, &ref)
 		if rerr != nil && errCh != nil {

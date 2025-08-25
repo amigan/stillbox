@@ -173,9 +173,13 @@ func (sb *s3Backend) addRmRule(ctx context.Context, refPath string) error {
 	log.Debug().Str("prefix", refPath).Msg("add rm rule")
 	lcCfg.Rules = append(lcCfg.Rules, lifecycle.Rule{
 		ID:     refPath,
-		Prefix: refPath,
+		Status: "Enabled",
+		RuleFilter: lifecycle.Filter{
+			Prefix: refPath,
+		},
 		Expiration: lifecycle.Expiration{
-			Days: lifecycle.ExpirationDays(1),
+			Days:      lifecycle.ExpirationDays(1),
+			DeleteAll: true,
 		},
 	})
 

@@ -126,10 +126,10 @@ type audioStorageBackend struct {
 }
 
 type audioStorageMetrics struct {
-	TotalStores  *prometheus.CounterVec `help:"Total call stores" labels:"backend,type"`
-	FailedStores *prometheus.CounterVec `help:"Failed call storage attempts by backend" labels:"backend,type"`
-	JournalSize  *prometheus.GaugeVec   `help:"AudioRef journal size" labels:"backend,kind"`
-	JournalGCError *prometheus.CounterVec `help:"Journal garbage collection error count" labels:"backend,kind"` 
+	TotalStores    *prometheus.CounterVec `help:"Total call stores" labels:"backend,type"`
+	FailedStores   *prometheus.CounterVec `help:"Failed call storage attempts by backend" labels:"backend,type"`
+	JournalSize    *prometheus.GaugeVec   `help:"AudioRef journal size" labels:"backend,kind"`
+	JournalGCError *prometheus.CounterVec `help:"Journal garbage collection error count" labels:"backend,kind"`
 }
 
 const (
