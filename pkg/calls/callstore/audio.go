@@ -455,12 +455,12 @@ func (s *store) MakeBackends(ctx context.Context, fc tgstore.FilterCache, met me
 	return ab, nil
 }
 
-func (s *store) PruneAudioPrefix(ctx context.Context, partPrefix string, pStart, pEnd pgtype.Timestamptz) error {
+func (s *store) PruneAudioPrefix(ctx context.Context, tx database.Store, partPrefix string, pStart, pEnd pgtype.Timestamptz) error {
 	if s.audioBackends.disablePrune || s.audioBackends.Count() < 1 {
 		return nil
 	}
 
-	prunableRefs, err := s.db.GetPrunableAudioRefs(ctx, pStart, pEnd)
+	prunableRefs, err := tx.GetPrunableAudioRefs(ctx, pStart, pEnd)
 	if err != nil {
 		return err
 	}

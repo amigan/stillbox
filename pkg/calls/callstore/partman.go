@@ -89,7 +89,7 @@ type PartmanCallAudioManager interface {
 	DerefSweptCallAudios(ctx context.Context, tx database.Store) error
 
 	// PruneAudioPrefix schedules for pruning (backend-specific) all call audios with partPrefix.
-	PruneAudioPrefix(ctx context.Context, partPrefix string, pStart, pEnd pgtype.Timestamptz) error
+	PruneAudioPrefix(ctx context.Context, tx database.Store, partPrefix string, pStart, pEnd pgtype.Timestamptz) error
 }
 
 func (pm *partman) Interval() common.Interval {
@@ -269,7 +269,7 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Part
 		return err
 	}
 
-	err = pm.calls.PruneAudioPrefix(ctx, p.Prefix(), start, end)
+	err = pm.calls.PruneAudioPrefix(ctx, tx, p.Prefix(), start, end)
 	if err != nil {
 		return err
 	}
