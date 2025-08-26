@@ -98,11 +98,13 @@ func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, m
 	defer cancel()
 	errCh := make(chan error)
 	go func() {
-		select {
-		case err := <-errCh:
-			log.Error().Err(err).Msg("init call audio cleanup error")
-		case <-ctx.Done():
-			return
+		for {
+			select {
+			case err := <-errCh:
+				log.Error().Err(err).Msg("init call audio cleanup error")
+			case <-ctx.Done():
+				return
+			}
 		}
 	}()
 	gcCount, err := st.audioBackends.journal.GC(ctx, database.GetRefJournalParams{}, errCh)

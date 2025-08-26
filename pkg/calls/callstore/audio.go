@@ -348,11 +348,13 @@ func (s *store) GoGC(ctx context.Context) {
 	}
 	errCh := make(chan error)
 	go func() {
-		select {
-		case err := <-errCh:
-			log.Error().Err(err).Msg("call audio cleanup error")
-		case <-ctx.Done():
-			return
+		for {
+			select {
+			case err := <-errCh:
+				log.Error().Err(err).Msg("call audio cleanup error")
+			case <-ctx.Done():
+				return
+			}
 		}
 	}()
 	doGC := func() {
@@ -367,12 +369,14 @@ func (s *store) GoGC(ctx context.Context) {
 
 	tick := time.NewTicker(CheckInterval)
 
-	select {
-	case <-tick.C:
-		doGC()
-	case <-ctx.Done():
-		close(errCh)
-		return
+	for {
+		select {
+		case <-tick.C:
+			doGC()
+		case <-ctx.Done():
+			close(errCh)
+			return
+		}
 	}
 }
 

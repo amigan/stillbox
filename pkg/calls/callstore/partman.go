@@ -127,14 +127,16 @@ func (pm *partman) Go(ctx context.Context) {
 	ctx = entities.CtxWithServiceSubject(ctx, "partman")
 	tick := time.NewTicker(CheckInterval)
 
-	select {
-	case now := <-tick.C:
-		err := pm.Check(ctx, now)
-		if err != nil {
-			log.Error().Err(err).Msg("partman check failed")
+	for {
+		select {
+		case now := <-tick.C:
+			err := pm.Check(ctx, now)
+			if err != nil {
+				log.Error().Err(err).Msg("partman check failed")
+			}
+		case <-ctx.Done():
+			return
 		}
-	case <-ctx.Done():
-		return
 	}
 }
 
