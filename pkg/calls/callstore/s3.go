@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -334,7 +335,7 @@ func newS3backend(s Store, cfg config.ConfigMap) (AudioBackend, error) {
 	}
 
 	var rt http.RoundTripper
-	if sb.Trace {
+	if sb.Trace || os.Getenv("STILLBOX_S3_TRACE") == "true" {
 		rt = common.LoggingRoundTripper()
 	}
 

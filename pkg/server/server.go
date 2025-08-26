@@ -317,6 +317,7 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	go s.nex.Go(ctx)
 	go s.alerter.Go(ctx)
 	go s.share.Go(ctx)
+	go s.calls.GoGC(ctx)
 
 	if pm := s.partman; pm != nil {
 		go pm.Go(ctx)
