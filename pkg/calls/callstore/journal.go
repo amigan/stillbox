@@ -102,7 +102,7 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 	errCounts := make(map[*audioStorageBackend]int)
 
 	err = rs.store.db.GetAudioRefJournalCb(ctx, arg, func(fr database.AudioRefJournal) {
-		log.Debug().Interface("journalEntry", fr).Msg("journ")
+		log.Debug().Interface("journalEntry", fmt.Sprintf("%+v", fr)).Str("ref", string(fr.Ref)).Msg("journ")
 		create := fr.Ref == nil
 
 		var ref AudioRef
@@ -146,6 +146,9 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 			}
 		case false: // delete
 			newPruneAfter, rerr = back.Prune(ctx, ref, pruneAfter)
+			if rerr != nil {
+				rerr = fmt.Errorf("%v: %w", ref, rerr)
+			}
 		}
 		if rerr != nil {
 			jErr(rerr)

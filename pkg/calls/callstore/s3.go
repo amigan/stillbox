@@ -160,26 +160,31 @@ func (sb *s3Backend) isNoSuchLifecycleConfig(err error) bool {
 	return errors.As(err, &erR) && erR.Code == "NoSuchLifecycleConfiguration"
 }
 
+func (sb *s3Backend) ruleID(prefix string) string {
+	return "sb_" + prefix
+}
+
 func (sb *s3Backend) addRmRule(ctx context.Context, refPath string) error {
 	lcCfg, err := sb.getRules(ctx)
 	if err != nil {
 		return err
 	}
 
-	if _, exists := sb.lc.ruleMap[refPath]; exists {
+	ruleID := sb.ruleID(refPath)
+
+	if _, exists := sb.lc.ruleMap[ruleID]; exists {
 		return fmt.Errorf("rule exists for '%s'", refPath)
 	}
 
 	log.Debug().Str("prefix", refPath).Msg("add rm rule")
 	lcCfg.Rules = append(lcCfg.Rules, lifecycle.Rule{
-		ID:     refPath,
+		ID:     ruleID,
 		Status: "Enabled",
 		RuleFilter: lifecycle.Filter{
 			Prefix: refPath,
 		},
 		Expiration: lifecycle.Expiration{
-			Days:      lifecycle.ExpirationDays(1),
-			DeleteAll: true,
+			Days: lifecycle.ExpirationDays(1),
 		},
 	})
 
@@ -192,14 +197,16 @@ func (sb *s3Backend) pruneRmRule(ctx context.Context, refPath string) error {
 		return err
 	}
 
-	if _, exists := sb.lc.ruleMap[refPath]; !exists {
+	ruleID := sb.ruleID(refPath)
+
+	if _, exists := sb.lc.ruleMap[ruleID]; !exists {
 		return fmt.Errorf("rule doesn't exist for '%s'", refPath)
 	}
 
 	// filter
 	r := lcCfg.Rules[:0]
 	for _, x := range lcCfg.Rules {
-		if x.ID == refPath {
+		if x.ID == ruleID {
 			r = append(r, x)
 		}
 	}
@@ -223,7 +230,7 @@ func (lc *s3LifecycleCache) set(cfg *lifecycle.Configuration) {
 	lc.tm = time.Now()
 	lc.ruleMap = make(map[string]lifecycle.Rule, len(lc.cfg.Rules))
 	for _, r := range lc.cfg.Rules {
-		lc.ruleMap[r.Prefix] = r
+		lc.ruleMap[r.ID] = r
 	}
 }
 
