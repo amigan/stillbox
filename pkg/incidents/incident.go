@@ -22,7 +22,7 @@ type Incident struct {
 	CreatedAt   jsontypes.Time     `json:"createdAt"`
 	StartTime   *jsontypes.Time    `json:"startTime,omitempty"`
 	EndTime     *jsontypes.Time    `json:"endTime,omitempty"`
-	Location    jsontypes.Location `json:"location,omitempty"`
+	Location    jsontypes.Location `json:"location"`
 	Metadata    jsontypes.Metadata `json:"metadata,omitempty"`
 	Calls       []IncidentCall     `json:"calls"`
 }

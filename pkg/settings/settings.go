@@ -34,8 +34,7 @@ type Store interface {
 	Delete(ctx context.Context, name string) error
 }
 
-type Setting interface {
-}
+type Setting any
 
 type postgresStore struct {
 	c        cache.Cache[string, Setting]
