@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
@@ -34,6 +35,7 @@ var (
 	username = flag.String("user", "", "username")
 	password = flag.String("password", "", "password")
 	secure   = flag.Bool("s", false, "secure (https/wss)")
+	debug    = flag.Bool("d", false, "emit HTTP response")
 
 	uaString = version.HttpString(AppName)
 )
@@ -110,11 +112,16 @@ func main() {
 		log.Fatal(err)
 	}
 
+	var body io.Reader = resp.Body
+	if *debug {
+		body = io.TeeReader(resp.Body, os.Stderr)
+	}
+
 	jwt := struct {
 		JWT string `json:"jwt"`
 	}{}
 
-	err = json.NewDecoder(resp.Body).Decode(&jwt)
+	err = json.NewDecoder(body).Decode(&jwt)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -182,6 +189,8 @@ func main() {
 						Command: &pb.Command_LiveCommand{
 							LiveCommand: &pb.Live{
 								State: common.PtrTo(pb.LiveState_LS_LIVE),
+								Calls: true,
+								Transcripts: true,
 							},
 						},
 					}
