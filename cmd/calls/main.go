@@ -188,8 +188,8 @@ func main() {
 					msg := &pb.Command{
 						Command: &pb.Command_LiveCommand{
 							LiveCommand: &pb.Live{
-								State: common.PtrTo(pb.LiveState_LS_LIVE),
-								Calls: true,
+								State:       common.PtrTo(pb.LiveState_LS_LIVE),
+								Calls:       true,
 								Transcripts: true,
 							},
 						},

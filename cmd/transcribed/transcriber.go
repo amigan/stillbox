@@ -215,23 +215,15 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 
 		var f32w audio.Float32Writer
 
-		if dec.SampleRate != whisper.SampleRate {
-			frs, err := resample.New(&f32w, float64(dec.SampleRate), whisper.SampleRate, 1, resample.I16, resample.F32, resample.HighQ)
-			if err != nil {
-				return nil, err
-			}
-			_, err = frs.Write(data)
-			if err != nil {
-				return nil, err
-			}
-			frs.Close()
-
-		} else {
-			_, err := f32w.Write(data)
-			if err != nil {
-				return nil, err
-			}
+		frs, err := resample.New(&f32w, float64(dec.SampleRate), whisper.SampleRate, 1, resample.I16, resample.F32, resample.HighQ)
+		if err != nil {
+			return nil, err
 		}
+		_, err = frs.Write(data)
+		if err != nil {
+			return nil, err
+		}
+		frs.Close()
 
 		f32le = f32w.Buffer()
 	case "audio/wav":
