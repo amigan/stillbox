@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
@@ -33,6 +35,7 @@ const (
 var (
 	ErrNoCall          = errors.New("no call specified")
 	ErrMustBePlaintext = errors.New("content type must be text/plain")
+	ErrMustBeJSON      = errors.New("content type must be application/json")
 )
 
 type callsAPI struct {
@@ -55,7 +58,7 @@ func (ca *callsAPI) Subrouter() http.Handler {
 	r.Get(`/{call:[a-f0-9-]+}`, ca.getAudioRoute)
 	r.Get(`/{call:[a-f0-9-]+}/info`, ca.getCallInfoRoute)
 	r.Get(`/{call:[a-f0-9-]+}/{download:download}`, ca.getAudioRoute)
-	r.Put(`/{call:[a-f0-9-]+}/transcript`, ca.transcriptRoute)
+	r.Post(`/{call:[a-f0-9-]+}/transcript`, ca.transcriptRoute)
 	r.Post(`/transcribe`, ca.dispatchTranscriptRoute)
 	r.Post(`/`, ca.listCalls)
 	r.Get(`/stats/{interval}`, ca.getCallStats)
@@ -116,6 +119,10 @@ func (ca *callsAPI) dispatchTranscriptRoute(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// entityReplacer turns quote entities back into quotes; there does not seem to be a way to make
+// bluemonday pass them through.
+var entityReplacer = strings.NewReplacer("&#39;", "'", "&#34;", `"`)
+
 func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
 	p := struct {
 		CallID uuid.UUID `param:"call"`
@@ -128,18 +135,29 @@ func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	contentType := strings.Split(r.Header.Get("Content-Type"), ";")[0]
-	if contentType != "text/plain" {
-		wErr(w, r, badRequestErrText(ErrMustBePlaintext))
+	if contentType != "application/json" {
+		wErr(w, r, badRequestErrText(ErrMustBeJSON))
 		return
 	}
 
 	ctx := r.Context()
 
-	sani := ca.htmlSani.SanitizeReader(r.Body)
+	txc := struct {
+		Text      string `json:"text"`
+		ElapsedMS *int   `json:"elapsedMS"`
+	}{}
+
+	err = json.NewDecoder(r.Body).Decode(&txc)
+	if err != nil {
+		wErr(w, r, badRequestErrText(err))
+		return
+	}
+
+	sani := ca.htmlSani.Sanitize(txc.Text)
 
 	var txv *string
-	if sani.Len() >= 0 {
-		xsc := strings.Trim(sani.String(), " \t")
+	if len(sani) > 0 {
+		xsc := strings.Trim(entityReplacer.Replace(sani), " \t")
 		if xsc != "" {
 			txv = &xsc
 		}
@@ -151,7 +169,13 @@ func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ca.nex.Broadcast(tsc)
+	if txc.ElapsedMS != nil {
+		ca.transcripts.TranscribeDuration(time.Duration(*txc.ElapsedMS) * time.Millisecond)
+	}
+
+	if ctx.Err() == nil {
+		ca.nex.Broadcast(tsc)
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
