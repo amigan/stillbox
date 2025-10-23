@@ -53,8 +53,7 @@ func (rt ShareRequestType) IsValid() bool {
 	return false
 }
 
-type ID interface {
-}
+type ID any
 
 type ShareHandlerFunc func(id ID, w http.ResponseWriter, r *http.Request)
 type ShareHandlers map[ShareRequestType]ShareHandlerFunc

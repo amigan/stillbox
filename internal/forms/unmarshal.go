@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -132,11 +133,8 @@ func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error
 		if has {
 			tAr = strings.Split(formTag, ",")
 			formField = tAr[0]
-			for _, v := range tAr[1:] {
-				if v == "omitempty" {
-					omitEmpty = true
-					break
-				}
+			if slices.Contains(tAr[1:], "omitempty") {
+				omitEmpty = true
 			}
 		}
 

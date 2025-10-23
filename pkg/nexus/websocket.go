@@ -179,7 +179,7 @@ func (conn *wsConn) writeToClient(w io.WriteCloser, msg ToClient) {
 
 	// add queued messages to current payload
 	nQ := len(conn.out)
-	for i := 0; i < nQ; i++ {
+	for range nQ {
 		packWrite(<-conn.out)
 	}
 }
