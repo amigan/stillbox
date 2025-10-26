@@ -261,7 +261,7 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Part
 	if err != nil {
 		return err
 	}
-	log.Debug().Int64("rows", swept).Time("start", s).Time("end", e).Msg("cleaned up swept calls")
+	log.Info().Int64("rows", swept).Time("start", s).Time("end", e).Msg("cleaned up swept calls")
 
 	// go through swept calls and resolve all audio references.
 	// in the future, we may make this configurable along with the necessary changes to

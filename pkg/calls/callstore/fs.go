@@ -133,6 +133,9 @@ func (fsb *fsBackend) checkPath(audioRef AudioRef) (composedPath string, isDir b
 	}
 
 	isDir = st.IsDir()
+	if isDir {
+		composedPath += "/"
+	}
 
 	if os.SameFile(st, fsb.rootStat) {
 		err = errors.New("audio ref is the root")
@@ -166,6 +169,7 @@ func (fsb *fsBackend) DeleteBulk(ctx context.Context, refs []AudioRef) error {
 	return nil
 }
 
+// callPath composes an absolute path to the given call filename.
 func (fsb *fsBackend) callPath(blobPath string) string {
 	return path.Join(fsb.Root, blobPath)
 }
