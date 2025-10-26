@@ -199,8 +199,6 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 	eg, wctx := errgroup.WithContext(ctx)
 	eg.SetLimit(m.numWorkers)
 	for count > 0 {
-		log.Debug().Str("start", dbPar.Start.Time.String()).Msg("iter")
-
 		m.dbMtx.Lock()
 		rows, err := m.dbTx.GetCallAudio(wctx, dbPar)
 		m.dbMtx.Unlock()
@@ -340,7 +338,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 			if err != nil {
 				log.Error().Err(err).Msg("move tx commit")
 			} else {
-				log.Debug().Msg("move tx commit finished")
+				log.Debug().Msg("move commit finished")
 			}
 		}()
 	}

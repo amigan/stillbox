@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"os"
@@ -100,6 +101,10 @@ func (fsb *fsBackend) Prune(ctx context.Context, audioRef AudioRef, pruneAfter *
 
 	composedPath, isDir, err := fsb.checkPath(audioRef)
 	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			// ENOENT; our work here is done
+			return nil, nil
+		}
 		return nil, err
 	}
 
