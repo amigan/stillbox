@@ -297,13 +297,13 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, re
 
 		pruneAfter, err := be.Prune(ctx, ref, nil) // nil pruneAfter because this is initial
 		if err != nil {
-			perr := PruneErr(err, jeid, false)
+			log.Error().Str("backend", be.Name).Interface("ref", ref).Err(err).Msg("prune failure")
 			ierr := ab.journal.Increment(ctx, jeid)
 			if ierr != nil {
-				perr = multierror.Append(perr, ierr)
+				log.Error().Int64("jeid", int64(jeid)).Msg("journal increment failure")
 			}
 
-			return perr
+			continue
 		}
 
 		if pruneAfter != nil {

@@ -101,7 +101,7 @@ func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, m
 		for {
 			select {
 			case err := <-errCh:
-				log.Error().Err(err).Msg("init call audio cleanup error")
+				log.Error().Err(err).Msg("call audio prune fail")
 			case <-ctx.Done():
 				return
 			}
