@@ -101,23 +101,78 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 	arg.Missing = common.PtrTo(false)
 	errCounts := make(map[*audioStorageBackend]int)
 
+	var back *audioStorageBackend
+	var pj PruneJob
+
+	commitPJ := func() {
+		if pj != nil {
+			// if there is an active prune job, try to commit it
+			err := pj.Commit(ctx)
+			if err != nil {
+				errCh <- err
+			}
+			pj = nil
+		}
+	}
+
+	// if NewPruneJob for a given backend fails, it will be in here
+	newPruneJobErrors := make(map[*audioStorageBackend]error)
+
 	err = rs.store.db.GetAudioRefJournalCb(ctx, arg, func(fr database.AudioRefJournal) {
-		log.Debug().Interface("journalEntry", fmt.Sprintf("%+v", fr)).Str("ref", string(fr.Ref)).Msg("journ")
 		create := fr.Ref == nil
 
 		var ref AudioRef
 		rerr := json.Unmarshal(fr.Ref, &ref)
-		if rerr != nil && errCh != nil {
-			errCh <- rerr
+		if rerr != nil {
+			if errCh != nil {
+				errCh <- rerr
+			}
+			return
 		}
 
-		back := rs.ab.Backend(fr.Backend)
-		if back == nil {
-			if errCh != nil {
-				errCh <- fmt.Errorf("%w '%s'", ErrNXBackend, fr.Backend)
+		incrementTries := func() {
+			errCounts[back]++
+			if terr := rs.Increment(ctx, JournalID(fr.ID)); terr != nil {
+				log.Error().Err(terr).Int64("journalEntry", fr.ID).Msg("tries increment")
+			}
+		}
+
+		rowIsNewBackend := false
+		// if this is the first row, or if we are onto a new backend (query is ordered by backend)
+		if back == nil || back.Name != fr.Backend {
+			commitPJ()
+
+			back = rs.ab.Backend(fr.Backend)
+			if back == nil {
+				if errCh != nil {
+					errCh <- fmt.Errorf("%w '%s'", ErrNXBackend, fr.Backend)
+				}
+				return
 			}
 
+			rowIsNewBackend = true
+		}
+
+		// if we could not create a prunejob for this backend, fail all others for it
+		if _, hasErr := newPruneJobErrors[back]; hasErr {
+			incrementTries()
 			return
+		}
+
+		if rowIsNewBackend {
+			if p, isBatchPruner := back.AudioBackend.(BatchPruner); !create && isBatchPruner {
+				var err error
+				pj, err = p.NewPruneJob(ctx)
+				if err != nil {
+					newPruneJobErrors[back] = err
+					if errCh != nil {
+						errCh <- fmt.Errorf("NewPruneJob '%s': %w", fr.Backend, err)
+					}
+					incrementTries()
+
+					return
+				}
+			}
 		}
 
 		if rs.errThreshold > 0 && errCounts[back] > rs.errThreshold {
@@ -145,17 +200,18 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 				return
 			}
 		case false: // delete
-			newPruneAfter, rerr = back.Prune(ctx, ref, pruneAfter)
+			mctx := ctx
+			if pj != nil {
+				mctx = CtxWithPruneJob(ctx, pj)
+			}
+			newPruneAfter, rerr = back.Prune(mctx, ref, pruneAfter)
 			if rerr != nil {
 				rerr = fmt.Errorf("%v: %w", ref, rerr)
 			}
 		}
 		if rerr != nil {
 			jErr(rerr)
-			errCounts[back] = errCounts[back] + 1
-			if terr := rs.Increment(ctx, JournalID(fr.ID)); terr != nil {
-				log.Error().Err(terr).Int64("journalEntry", fr.ID).Msg("tries increment")
-			}
+			incrementTries()
 
 			return
 		}
@@ -181,6 +237,8 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 
 		count++
 	})
+
+	commitPJ()
 
 	return
 }

@@ -36,19 +36,146 @@ type s3Backend struct {
 	Timeout        time.Duration `yaml:"timeout"`
 	Trace          bool          `yaml:"trace"`
 
-	lc  s3LifecycleCache
 	cli *minio.Client
 	st  Store
+	rj  *ruleJob
 }
 
 func (*s3Backend) Type() string { return "s3" }
 
 const S3LifecycleTTL = 10 * time.Minute
 
-type s3LifecycleCache struct {
+type ruleJob struct {
 	cfg     *lifecycle.Configuration
-	tm      time.Time
+	be      *s3Backend
 	ruleMap map[string]lifecycle.Rule
+	adds    []lifecycle.Rule
+	dels    map[string]struct{} // keys to delete
+}
+
+func (rj *ruleJob) delete(id string) {
+	rj.dels[id] = struct{}{}
+	delete(rj.ruleMap, id)
+}
+
+func (rj *ruleJob) add(r lifecycle.Rule) error {
+	if _, has := rj.ruleMap[r.ID]; has {
+		return errors.New("rule already exists")
+	}
+
+	rj.ruleMap[r.ID] = r
+
+	rj.adds = append(rj.adds, r)
+
+	return nil
+}
+
+func (rj *ruleJob) lifecycleConfig() *lifecycle.Configuration {
+	i := 0
+	for _, r := range rj.cfg.Rules {
+		if _, hasDel := rj.dels[r.ID]; !hasDel {
+			rj.cfg.Rules[i] = r
+			i++
+		}
+	}
+
+	// erase truncated Values
+	for j := i; j < len(rj.cfg.Rules); j++ {
+		rj.cfg.Rules[j] = lifecycle.Rule{}
+	}
+	rj.cfg.Rules = rj.cfg.Rules[:i]
+
+	rj.cfg.Rules = append(rj.cfg.Rules, rj.adds...)
+
+	return rj.cfg
+}
+
+func (rj *ruleJob) addRmRule(refPath string) error {
+	ruleID := s3ruleID(refPath)
+
+	log.Debug().Str("prefix", refPath).Msg("add rm rule")
+	return rj.add(lifecycle.Rule{
+		ID:     ruleID,
+		Status: "Enabled",
+		RuleFilter: lifecycle.Filter{
+			Prefix: refPath,
+		},
+		Expiration: lifecycle.Expiration{
+			Days: lifecycle.ExpirationDays(1),
+		},
+	})
+}
+
+func (rj *ruleJob) pruneRmRule(refPath string) error {
+	rj.delete(s3ruleID(refPath))
+
+	return nil
+}
+
+func (sb *s3Backend) NewPruneJob(ctx context.Context) (PruneJob, error) {
+	return sb.newRuleJob(ctx)
+}
+
+func (*ruleJob) IsPruneJob() {}
+
+func (sb *s3Backend) newRuleJob(ctx context.Context) (*ruleJob, error) {
+	rj := &ruleJob{
+		ruleMap: make(map[string]lifecycle.Rule),
+		be:      sb,
+		dels:    make(map[string]struct{}),
+	}
+
+	lc, err := sb.cli.GetBucketLifecycle(ctx, sb.Bucket)
+	if err != nil {
+		if !sb.isNoSuchLifecycleConfig(err) {
+			return nil, err
+		}
+
+		lc = lifecycle.NewConfiguration()
+	}
+
+	rj.cfg = lc
+
+	for _, r := range rj.cfg.Rules {
+		rj.ruleMap[r.ID] = r
+	}
+
+	return rj, nil
+}
+
+func ruleJobFromCtx(ctx context.Context) *ruleJob {
+	pjfc := PruneJobFromContext(ctx)
+	if pjfc == nil {
+		return nil
+	}
+
+	return pjfc.(*ruleJob)
+}
+
+func (rj *ruleJob) Begin(ctx context.Context) error {
+	return nil
+}
+
+func (rj *ruleJob) Commit(ctx context.Context) error {
+	if rj == nil || (len(rj.adds) == 0 && len(rj.dels) == 0) {
+		return nil
+	}
+
+	return rj.be.commitRuleJob(ctx, rj)
+}
+
+func (rj *ruleJob) Rollback(ctx context.Context) error {
+	// do nothing
+	return nil
+}
+
+func (sb *s3Backend) commitRuleJob(ctx context.Context, rj *ruleJob) error {
+	err := sb.cli.SetBucketLifecycle(ctx, sb.Bucket, rj.lifecycleConfig())
+	if err != nil {
+		return fmt.Errorf("set bucket lifecycle: %w", err)
+	}
+
+	return nil
 }
 
 func (sb *s3Backend) Store(ctx context.Context, call *calls.CallAudio) (AudioRef, error) {
@@ -133,13 +260,19 @@ func (sb *s3Backend) Prune(ctx context.Context, audioRef AudioRef, pruneAfter *t
 		return nil, ErrBadAudioRef
 	}
 
+	// get the ruleJob out of the context
+	rj := ruleJobFromCtx(ctx)
+	if rj == nil {
+		return nil, fmt.Errorf("rule job not set in context")
+	}
+
 	if pruneAfter != nil { // this has already been pruned, now check if the rule needs to be removed yet
 		if !time.Now().After(*pruneAfter) {
 			// this probably won't ever happen
 			return nil, ErrNotYetPruneTime
 		}
 
-		return nil, sb.pruneRmRule(ctx, refPath)
+		return nil, rj.pruneRmRule(refPath)
 	}
 
 	if !strings.HasSuffix(refPath, "/") {
@@ -147,7 +280,7 @@ func (sb *s3Backend) Prune(ctx context.Context, audioRef AudioRef, pruneAfter *t
 		return nil, sb.delete(ctx, refPath)
 	}
 
-	err := sb.addRmRule(ctx, refPath)
+	err := rj.addRmRule(refPath)
 	if err != nil {
 		return nil, fmt.Errorf("add lifecycle rule: %w", err)
 	}
@@ -161,99 +294,8 @@ func (sb *s3Backend) isNoSuchLifecycleConfig(err error) bool {
 	return errors.As(err, &erR) && erR.Code == "NoSuchLifecycleConfiguration"
 }
 
-func (sb *s3Backend) ruleID(prefix string) string {
+func s3ruleID(prefix string) string {
 	return "sb_" + prefix
-}
-
-func (sb *s3Backend) addRmRule(ctx context.Context, refPath string) error {
-	lcCfg, err := sb.getRules(ctx)
-	if err != nil {
-		return err
-	}
-
-	ruleID := sb.ruleID(refPath)
-
-	if _, exists := sb.lc.ruleMap[ruleID]; exists {
-		return fmt.Errorf("rule exists for '%s'", refPath)
-	}
-
-	log.Debug().Str("prefix", refPath).Msg("add rm rule")
-	lcCfg.Rules = append(lcCfg.Rules, lifecycle.Rule{
-		ID:     ruleID,
-		Status: "Enabled",
-		RuleFilter: lifecycle.Filter{
-			Prefix: refPath,
-		},
-		Expiration: lifecycle.Expiration{
-			Days: lifecycle.ExpirationDays(1),
-		},
-	})
-
-	return sb.setRules(ctx, lcCfg)
-}
-
-func (sb *s3Backend) pruneRmRule(ctx context.Context, refPath string) error {
-	lcCfg, err := sb.getRules(ctx)
-	if err != nil {
-		return err
-	}
-
-	ruleID := sb.ruleID(refPath)
-
-	if _, exists := sb.lc.ruleMap[ruleID]; !exists {
-		return fmt.Errorf("rule doesn't exist for '%s'", refPath)
-	}
-
-	// filter
-	r := lcCfg.Rules[:0]
-	for _, x := range lcCfg.Rules {
-		if x.ID == ruleID {
-			r = append(r, x)
-		}
-	}
-
-	return sb.setRules(ctx, lcCfg)
-}
-
-func (sb *s3Backend) setRules(ctx context.Context, cfg *lifecycle.Configuration) error {
-	err := sb.cli.SetBucketLifecycle(ctx, sb.Bucket, cfg)
-	if err != nil {
-		return fmt.Errorf("set bucket lifecycle: %w", err)
-	}
-
-	sb.lc.set(cfg)
-
-	return nil
-}
-
-func (lc *s3LifecycleCache) set(cfg *lifecycle.Configuration) {
-	lc.cfg = cfg
-	lc.tm = time.Now()
-	lc.ruleMap = make(map[string]lifecycle.Rule, len(lc.cfg.Rules))
-	for _, r := range lc.cfg.Rules {
-		lc.ruleMap[r.ID] = r
-	}
-}
-
-func (sb *s3Backend) getRules(ctx context.Context) (*lifecycle.Configuration, error) {
-	now := time.Now()
-
-	if now.After(sb.lc.tm.Add(S3LifecycleTTL)) {
-		lc, err := sb.cli.GetBucketLifecycle(ctx, sb.Bucket)
-		if err != nil {
-			if !sb.isNoSuchLifecycleConfig(err) {
-				return nil, err
-			}
-
-			lc = lifecycle.NewConfiguration()
-		}
-
-		sb.lc.set(lc)
-
-		return lc, nil
-	}
-
-	return sb.lc.cfg, nil
 }
 
 func (sb *s3Backend) delete(ctx context.Context, objKey string) error {

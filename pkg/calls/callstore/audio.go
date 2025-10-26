@@ -77,9 +77,9 @@ type AudioBackends interface {
 	// If io.EOF is returned as the error, the call audio was successfully sent over the wire and nothing more should be written to the connection.
 	CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) error
 
-	// Prune delete the provided ref from the provided backend using the journal.
+	// PruneBackendRefs delete the provided refs from the provided backend using the journal.
 	// Semantics are similar to AudioBackend#Prune.
-	Prune(ctx context.Context, beName string, ref AudioRef) error
+	PruneBackendRefs(ctx context.Context, beName string, refs []AudioRef) error
 
 	// Backend looks up a backend by name.
 	Backend(name string) *audioStorageBackend
@@ -219,7 +219,37 @@ func PruneErr(err error, jeid JournalID, dropErr bool) error {
 	}
 }
 
-func (ab *audioBackends) Prune(ctx context.Context, beName string, ref AudioRef) error {
+type PruneJob interface {
+	IsPruneJob()
+	Begin(context.Context) error
+	Commit(context.Context) error
+	Rollback(context.Context) error
+}
+
+// A BatchPruner is an AudioBackend that must batch together prefix delete operations.
+// This is primarily for S3 lifecycle policy prefix pruning; see s3Backend.
+type BatchPruner interface {
+	NewPruneJob(context.Context) (PruneJob, error)
+}
+
+type pjCtxKey string
+
+const pjCtxKeyString pjCtxKey = "pruneJob"
+
+func CtxWithPruneJob(ctx context.Context, pj PruneJob) context.Context {
+	return context.WithValue(ctx, pjCtxKeyString, pj)
+}
+
+func PruneJobFromContext(ctx context.Context) PruneJob {
+	pj := ctx.Value(pjCtxKeyString)
+	if pj == nil {
+		return nil
+	}
+
+	return pj.(PruneJob)
+}
+
+func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, refs []AudioRef) (err error) {
 	be := ab.Backend(beName)
 	if be == nil {
 		return ErrNXBackend
@@ -229,42 +259,69 @@ func (ab *audioBackends) Prune(ctx context.Context, beName string, ref AudioRef)
 		return nil
 	}
 
-	rj, err := json.Marshal(ref)
-	if err != nil {
-		return err
-	}
-
-	jeid, err := ab.journal.AddDelete(ctx, beName, rj, nil)
-	if err != nil {
-		return err
-	}
-
-	pruneAfter, err := be.Prune(ctx, ref, nil) // nil pruneAfter because this is initial
-	if err != nil {
-		perr := PruneErr(err, jeid, false)
-		ierr := ab.journal.Increment(ctx, jeid)
-		if ierr != nil {
-			perr = multierror.Append(perr, ierr)
-		}
-
-		return perr
-	}
-
-	if pruneAfter != nil {
-		err := ab.journal.UpdatePruneAfter(ctx, jeid, pruneAfter)
+	if p, isBatchPruner := be.AudioBackend.(BatchPruner); isBatchPruner {
+		pj, err := p.NewPruneJob(ctx)
 		if err != nil {
-			return PruneErr(err, jeid, false)
+			return err
 		}
 
-		return nil
+		err = pj.Begin(ctx)
+		if err != nil {
+			return err
+		}
+
+		ctx = CtxWithPruneJob(ctx, pj)
+
+		defer func() {
+			if err != nil {
+				rbe := pj.Rollback(ctx)
+				if rbe != nil {
+					err = multierror.Append(err, rbe)
+				}
+			} else {
+				err = pj.Commit(ctx)
+			}
+		}()
 	}
 
-	err = ab.journal.Drop(ctx, jeid)
-	if err != nil {
-		return PruneErr(err, jeid, true)
-	}
+	for _, ref := range refs {
+		rj, err := json.Marshal(ref)
+		if err != nil {
+			return err
+		}
 
-	ab.RefTracker().ab.JournalSizeMetric(be.Name, false).Dec()
+		jeid, err := ab.journal.AddDelete(ctx, beName, rj, nil)
+		if err != nil {
+			return err
+		}
+
+		pruneAfter, err := be.Prune(ctx, ref, nil) // nil pruneAfter because this is initial
+		if err != nil {
+			perr := PruneErr(err, jeid, false)
+			ierr := ab.journal.Increment(ctx, jeid)
+			if ierr != nil {
+				perr = multierror.Append(perr, ierr)
+			}
+
+			return perr
+		}
+
+		if pruneAfter != nil {
+			err := ab.journal.UpdatePruneAfter(ctx, jeid, pruneAfter)
+			if err != nil {
+				return PruneErr(err, jeid, false)
+			}
+
+			return nil
+		}
+
+		err = ab.journal.Drop(ctx, jeid)
+		if err != nil {
+			return PruneErr(err, jeid, true)
+		}
+
+		ab.RefTracker().ab.JournalSizeMetric(be.Name, false).Dec()
+	}
 
 	return nil
 }
@@ -469,13 +526,18 @@ func (s *store) PruneAudioPrefix(ctx context.Context, tx database.Store, partPre
 		return err
 	}
 
+	bm := make(map[string][]AudioRef, len(prunableRefs))
 	for i := range prunableRefs {
 		backend, pathFirst := prunableRefs[i].Backend, prunableRefs[i].PathFirst
 		if pathFirst != "_/" {
 			continue
 		}
 
-		err := s.audioBackends.Prune(ctx, backend, AudioRef(partPrefix+"/"))
+		bm[backend] = append(bm[backend], AudioRef(partPrefix+"/"))
+	}
+
+	for backend, audioRefs := range bm {
+		err := s.audioBackends.PruneBackendRefs(ctx, backend, audioRefs)
 		if err != nil {
 			return err
 		}

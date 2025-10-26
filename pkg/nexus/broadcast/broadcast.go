@@ -1,6 +1,8 @@
 package broadcast
 
-import "dynatron.me/x/stillbox/pkg/talkgroups"
+import (
+	"dynatron.me/x/stillbox/pkg/talkgroups"
+)
 
 type Type int
 

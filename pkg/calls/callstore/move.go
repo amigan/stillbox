@@ -121,7 +121,7 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 		// store in backend
 		crRef, err := m.dst.Store(ctx, ca)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("store: %w", err)
 		}
 
 		// storage succeeded, log the creation
@@ -228,7 +228,12 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 					}
 				}()
 
-				return m.moveWorker(wctx, &row)
+				err = m.moveWorker(wctx, &row)
+				if err != nil && !errors.Is(err, context.Canceled) {
+					log.Error().Err(err).Msg("moveWorker")
+				}
+
+				return err
 			})
 		}
 	}
@@ -309,7 +314,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		numRows = m.completedRows.Load()
 
 		if par.ProgressChan != nil {
-			par.ProgressChan <- numRows
+			par.ProgressChan <- numRows - 1
 		}
 
 		return err

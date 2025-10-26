@@ -367,7 +367,7 @@ WHERE
 	END AND
 	CASE WHEN sqlc.narg('since')::TIMESTAMPTZ IS NOT NULL THEN last_try > @since ELSE TRUE END AND
 	CASE WHEN sqlc.narg('until')::TIMESTAMPTZ IS NOT NULL THEN last_try <= @until ELSE TRUE END
-ORDER BY last_try ASC
+ORDER BY backend, last_try ASC
 LIMIT (CASE WHEN sqlc.narg('num')::INTEGER IS NOT NULL THEN @num ELSE 10000000000 END);
 
 -- name: DetailedCountRefJournal :many

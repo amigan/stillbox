@@ -727,6 +727,8 @@ func (t *cache) LearnSystem(ctx context.Context, call *calls.Call) error {
 		return err
 	}
 
+	log.Info().Int("system", call.System).Msg("learning system")
+
 	return t.db.CreateSystem(ctx, call.System, fmt.Sprintf("System %d", call.System), true)
 }
 
@@ -745,6 +747,8 @@ func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, er
 			return nil, fmt.Errorf("%w: learning failed with %w", ErrNoSuchSystem, err)
 		}
 	}
+
+	log.Info().Int("system", c.System).Int("talkgroup", c.Talkgroup).Interface("alpha", c.TGAlphaTag).Msg("learning talkgroup")
 
 	tgm, err := db.AddLearnedTalkgroup(ctx, database.AddLearnedTalkgroupParams{
 		SystemID: int32(c.System),
