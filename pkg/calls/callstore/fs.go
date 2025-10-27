@@ -213,7 +213,7 @@ func (fsb *fsBackend) Store(_ context.Context, call *calls.CallAudio) (AudioRef,
 }
 
 func init() {
-	registerAudioBackend("fs", newFSbackend)
+	RegisterAudioBackend("fs", newFSbackend)
 }
 
 func newFSbackend(st Store, cfg config.ConfigMap) (AudioBackend, error) {

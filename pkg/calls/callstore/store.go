@@ -72,6 +72,8 @@ type Store interface {
 
 	// GoGC starts the audio garbage collector thread.
 	GoGC(ctx context.Context)
+
+	PartmanCallAudioManager
 }
 
 type store struct {

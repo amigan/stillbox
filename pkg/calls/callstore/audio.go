@@ -380,7 +380,7 @@ type backendRegistry map[string]BackendFactory
 
 var backendsRegistry = make(backendRegistry)
 
-func registerAudioBackend(name string, f BackendFactory) {
+func RegisterAudioBackend(name string, f BackendFactory) {
 	backendsRegistry[name] = f
 }
 

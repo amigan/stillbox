@@ -104,7 +104,7 @@ type Partition struct {
 	Time        time.Time
 }
 
-func NewPartitionManager(db database.Store, callStore *store, cfg config.Partition) (*partman, error) {
+func NewPartitionManager(db database.Store, callStore Store, cfg config.Partition) (*partman, error) {
 	intv := common.Interval(cfg.Interval)
 	if !intv.IsValid() {
 		return nil, common.ErrInvalidInterval(intv)

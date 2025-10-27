@@ -63,7 +63,7 @@ const (
 	progressInterval = 50
 )
 
-func getCallAudioRowToSkinnyCallAudio(row *database.GetCallAudioRow) *calls.CallAudio {
+func GetCallAudioRowToSkinnyCallAudio(row *database.GetCallAudioRow) *calls.CallAudio {
 	return &calls.CallAudio{
 		ID:        row.ID,
 		CallDate:  jsontypes.Time(row.CallDate.Time),
@@ -85,7 +85,7 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 	}
 
 	// prepare a CallAudio without the blob
-	ca := getCallAudioRowToSkinnyCallAudio(row)
+	ca := GetCallAudioRowToSkinnyCallAudio(row)
 
 	// the blob comes from the database
 	if row.AudioBlob != nil {

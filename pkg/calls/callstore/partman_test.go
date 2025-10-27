@@ -1,4 +1,4 @@
-package callstore
+package callstore_test
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/mocks"
@@ -38,6 +39,8 @@ type partSpec struct {
 
 func TestPartman(t *testing.T) {
 	ctx := context.Background()
+
+	disCfg := config.Partition{}
 
 	timeInUTC := func(s string) time.Time {
 		t, err := time.ParseInLocation("2006-01-02 15:04:05", s, time.UTC)
@@ -380,7 +383,7 @@ func TestPartman(t *testing.T) {
 				partResult("calls_p_2024_08", "2024-08-01", "2024-09-01"),
 				partResult("calls_p_2024_07", "2024-07-01", "2024-08-01"),
 			},
-			expectErr: ErrDifferentInterval,
+			expectErr: callstore.ErrDifferentInterval,
 		},
 		{
 			name:       "monthly wrong schema",
@@ -400,7 +403,7 @@ func TestPartman(t *testing.T) {
 				partResult("calls_p_2024_08", "2024-08-01", "2024-09-01"),
 				partResult("calls_p_2024_07", "2024-07-01", "2024-08-01"),
 			},
-			expectErr: ErrWrongSchema,
+			expectErr: callstore.ErrWrongSchema,
 		},
 	}
 
@@ -466,14 +469,15 @@ func TestPartman(t *testing.T) {
 					Run(func(ctx context.Context, parentTable, partName string) {
 						detachedPartitions = append(detachedPartitions, partName)
 					}).Return(nil)
+				db.EXPECT().GetPrunableAudioRefs(mock.Anything, mock.AnythingOfType("pgtype.Timestamptz"), mock.AnythingOfType("pgtype.Timestamptz")).Return(nil, nil)
 			}
 
 			inTx(db)
 
 			db.EXPECT().GetTablePartitions(mctx, "public", "calls").Return(tc.extant, nil)
+			refJournalMockExpect(db)
 
-			pm, err := NewPartitionManager(db, nil, tc.cfg)
-			require.NoError(t, err)
+			pm, err := callstore.NewPartitionManager(db, setupStore(t.Context(), t, db, disCfg), tc.cfg)
 
 			partPrefix := pm.PartitionPrefix(tc.now)
 			assert.Equal(t, tc.partPrefix, partPrefix, "prefix of %s", tc.now.String())

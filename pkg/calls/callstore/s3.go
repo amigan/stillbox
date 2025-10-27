@@ -349,7 +349,7 @@ func (sb *s3Backend) ctxTimeout(ctx context.Context) (context.Context, context.C
 }
 
 func init() {
-	registerAudioBackend("s3", newS3backend)
+	RegisterAudioBackend("s3", newS3backend)
 }
 
 func newS3backend(s Store, cfg config.ConfigMap) (AudioBackend, error) {
