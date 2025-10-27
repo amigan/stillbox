@@ -478,6 +478,7 @@ func TestPartman(t *testing.T) {
 			refJournalMockExpect(db)
 
 			pm, err := callstore.NewPartitionManager(db, setupStore(t.Context(), t, db, disCfg), tc.cfg)
+			require.NoError(t, err)
 
 			partPrefix := pm.PartitionPrefix(tc.now)
 			assert.Equal(t, tc.partPrefix, partPrefix, "prefix of %s", tc.now.String())
