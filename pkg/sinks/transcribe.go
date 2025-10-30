@@ -40,6 +40,7 @@ type workers robin.Robin[transcribeTransport]
 type Transcriber interface {
 	Sink
 	UnfilteredCall(ctx context.Context, call *calls.Call) error
+	TranscribeDuration(d time.Duration)
 	HUP(*config.Config)
 }
 
@@ -71,6 +72,7 @@ type transcriber struct {
 type transcriberMetrics struct {
 	TranscribeDispatched *prometheus.CounterVec `help:"Dispatched transcriptions" labels:"type,id"`
 	TranscribeFailed     *prometheus.CounterVec `help:"Failed transcription dispatches" labels:"type,id"`
+	TranscribeMS         prometheus.Histogram   `help:"Transcription elapsed time" buckets:"500,1000,1500,2000,5000,10000,20000,50000"`
 }
 
 func (s *transcriber) Call(ctx context.Context, call *calls.Call) error {
@@ -82,6 +84,10 @@ func (s *transcriber) Call(ctx context.Context, call *calls.Call) error {
 	}
 
 	return s.dispatch(ctx, call)
+}
+
+func (s *transcriber) TranscribeDuration(t time.Duration) {
+	s.metrics.TranscribeMS.Observe(float64(t.Milliseconds()))
 }
 
 // dispatch requires transcriber be locked!

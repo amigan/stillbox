@@ -139,6 +139,45 @@ func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) error {
 	return err
 }
 
+const addRefJournal = `-- name: AddRefJournal :one
+INSERT INTO audio_ref_journal (
+	call_id,
+	backend,
+	ref,
+	prune_after,
+	last_try,
+	tries
+) VALUES (
+	$1,
+	$2,
+	$3,
+	$4,
+	NOW(),
+	$5
+) RETURNING id
+`
+
+type AddRefJournalParams struct {
+	CallID     pgtype.UUID        `json:"callId"`
+	Backend    string             `json:"backend"`
+	Ref        []byte             `json:"ref"`
+	PruneAfter pgtype.Timestamptz `json:"pruneAfter"`
+	Tries      int                `json:"tries"`
+}
+
+func (q *Queries) AddRefJournal(ctx context.Context, arg AddRefJournalParams) (int64, error) {
+	row := q.db.QueryRow(ctx, addRefJournal,
+		arg.CallID,
+		arg.Backend,
+		arg.Ref,
+		arg.PruneAfter,
+		arg.Tries,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const cleanupSweptCalls = `-- name: CleanupSweptCalls :execrows
 WITH to_sweep AS (
 	SELECT id FROM calls
@@ -159,12 +198,77 @@ func (q *Queries) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Times
 	return result.RowsAffected(), nil
 }
 
+const countRefJournal = `-- name: CountRefJournal :one
+SELECT COUNT(*)
+FROM
+audio_ref_journal
+WHERE
+	(prune_after IS NULL OR NOW() > prune_after) AND
+	CASE
+		WHEN $1::BOOLEAN IS TRUE THEN ref IS NULL
+		WHEN $1::BOOLEAN IS FALSE THEN ref IS NOT NULL
+		ELSE TRUE
+	END AND
+	CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN last_try > $2 ELSE TRUE END AND
+	CASE WHEN $3::TIMESTAMPTZ IS NOT NULL THEN last_try <= $3 ELSE TRUE END
+`
+
+func (q *Queries) CountRefJournal(ctx context.Context, missing *bool, since pgtype.Timestamptz, until pgtype.Timestamptz) (int64, error) {
+	row := q.db.QueryRow(ctx, countRefJournal, missing, since, until)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const deleteCall = `-- name: DeleteCall :exec
 DELETE FROM calls WHERE id = $1
 `
 
 func (q *Queries) DeleteCall(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCall, id)
+	return err
+}
+
+const detailedCountRefJournal = `-- name: DetailedCountRefJournal :many
+SELECT
+COUNT(*), backend, (ref IS NULL)::BOOLEAN has_ref
+FROM audio_ref_journal
+GROUP BY backend, has_ref
+`
+
+type DetailedCountRefJournalRow struct {
+	Count   int64  `json:"count"`
+	Backend string `json:"backend"`
+	HasRef  bool   `json:"hasRef"`
+}
+
+func (q *Queries) DetailedCountRefJournal(ctx context.Context) ([]DetailedCountRefJournalRow, error) {
+	rows, err := q.db.Query(ctx, detailedCountRefJournal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DetailedCountRefJournalRow
+	for rows.Next() {
+		var i DetailedCountRefJournalRow
+		if err := rows.Scan(&i.Count, &i.Backend, &i.HasRef); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const dropRefJournal = `-- name: DropRefJournal :exec
+DELETE FROM audio_ref_journal
+WHERE id = $1
+`
+
+func (q *Queries) DropRefJournal(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, dropRefJournal, id)
 	return err
 }
 
@@ -487,6 +591,132 @@ func (q *Queries) GetDatabaseSize(ctx context.Context) (string, error) {
 	return pg_size_pretty, err
 }
 
+const getPrunableAudioRefs = `-- name: GetPrunableAudioRefs :many
+SELECT
+	r.backend::TEXT backend,
+	LEFT(r.ref, POSITION('/' IN r.ref)) path_first
+FROM
+	calls
+CROSS JOIN
+	jsonb_each_text(audio_ref) AS r (backend, ref)
+WHERE
+	call_date > $1 AND call_date <= $2
+GROUP BY
+	r.backend, path_first
+`
+
+type GetPrunableAudioRefsRow struct {
+	Backend   string `json:"backend"`
+	PathFirst string `json:"pathFirst"`
+}
+
+func (q *Queries) GetPrunableAudioRefs(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]GetPrunableAudioRefsRow, error) {
+	rows, err := q.db.Query(ctx, getPrunableAudioRefs, partitionStart, partitionEnd)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPrunableAudioRefsRow
+	for rows.Next() {
+		var i GetPrunableAudioRefsRow
+		if err := rows.Scan(&i.Backend, &i.PathFirst); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRefJournal = `-- name: GetRefJournal :many
+SELECT id, call_id, backend, ref, prune_after, last_try, tries
+FROM
+audio_ref_journal
+WHERE
+	(prune_after IS NULL OR NOW() > prune_after) AND
+	CASE
+		WHEN $1::BOOLEAN IS TRUE THEN ref IS NULL
+		WHEN $1::BOOLEAN IS FALSE THEN ref IS NOT NULL
+		ELSE TRUE
+	END AND
+	CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN last_try > $2 ELSE TRUE END AND
+	CASE WHEN $3::TIMESTAMPTZ IS NOT NULL THEN last_try <= $3 ELSE TRUE END
+ORDER BY backend, last_try ASC
+LIMIT (CASE WHEN $4::INTEGER IS NOT NULL THEN $4 ELSE 10000000000 END)
+`
+
+type GetRefJournalParams struct {
+	Missing *bool              `json:"missing"`
+	Since   pgtype.Timestamptz `json:"since"`
+	Until   pgtype.Timestamptz `json:"until"`
+	Num     *int32             `json:"num"`
+}
+
+func (q *Queries) GetRefJournal(ctx context.Context, arg GetRefJournalParams) ([]AudioRefJournal, error) {
+	rows, err := q.db.Query(ctx, getRefJournal,
+		arg.Missing,
+		arg.Since,
+		arg.Until,
+		arg.Num,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AudioRefJournal
+	for rows.Next() {
+		var i AudioRefJournal
+		if err := rows.Scan(
+			&i.ID,
+			&i.CallID,
+			&i.Backend,
+			&i.Ref,
+			&i.PruneAfter,
+			&i.LastTry,
+			&i.Tries,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSweptCallsWithRef = `-- name: GetSweptCallsWithRef :many
+SELECT id, audio_ref, audio_blob FROM swept_calls WHERE audio_ref IS NOT NULL
+`
+
+type GetSweptCallsWithRefRow struct {
+	ID        uuid.UUID `json:"id"`
+	AudioRef  []byte    `json:"audioRef"`
+	AudioBlob []byte    `json:"audioBlob"`
+}
+
+func (q *Queries) GetSweptCallsWithRef(ctx context.Context) ([]GetSweptCallsWithRefRow, error) {
+	rows, err := q.db.Query(ctx, getSweptCallsWithRef)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetSweptCallsWithRefRow
+	for rows.Next() {
+		var i GetSweptCallsWithRefRow
+		if err := rows.Scan(&i.ID, &i.AudioRef, &i.AudioBlob); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTranscriptsContext = `-- name: GetTranscriptsContext :many
 SELECT c.call_date, c.transcript FROM calls c
 WHERE
@@ -535,6 +765,18 @@ func (q *Queries) GetTranscriptsContext(ctx context.Context, arg GetTranscriptsC
 		return nil, err
 	}
 	return items, nil
+}
+
+const incrementRefJournal = `-- name: IncrementRefJournal :exec
+UPDATE audio_ref_journal SET
+	tries = tries + 1,
+	last_try = NOW()
+WHERE id = $1
+`
+
+func (q *Queries) IncrementRefJournal(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, incrementRefJournal, id)
+	return err
 }
 
 const listCallsCount = `-- name: ListCallsCount :one
@@ -758,6 +1000,27 @@ func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcrip
 		&i.Patches,
 	)
 	return i, err
+}
+
+const setRefJournalPrune = `-- name: SetRefJournalPrune :exec
+UPDATE audio_ref_journal SET
+	prune_after = $2
+WHERE
+	id = $1
+`
+
+func (q *Queries) SetRefJournalPrune(ctx context.Context, iD int64, pruneAfter pgtype.Timestamptz) error {
+	_, err := q.db.Exec(ctx, setRefJournalPrune, iD, pruneAfter)
+	return err
+}
+
+const setSweptAudioAndClearRef = `-- name: SetSweptAudioAndClearRef :exec
+UPDATE swept_calls SET audio_blob = $1, audio_ref = NULL WHERE id = $2
+`
+
+func (q *Queries) SetSweptAudioAndClearRef(ctx context.Context, audioBlob []byte, iD uuid.UUID) error {
+	_, err := q.db.Exec(ctx, setSweptAudioAndClearRef, audioBlob, iD)
+	return err
 }
 
 const setSweptCallAudio = `-- name: SetSweptCallAudio :exec

@@ -18,7 +18,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/database/partman"
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/nexus"
@@ -58,7 +57,7 @@ type Server struct {
 	signals     chan os.Signal
 	tgs         tgstore.Store
 	rest        rest.APIRoot
-	partman     partman.PartitionManager
+	partman     callstore.PartitionManager
 	users       users.Store
 	calls       callstore.Store
 	incidents   incstore.Store
@@ -113,7 +112,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
-	callStore, err := callstore.NewStore(ctx, db, tgCache, met, cfg.CallStorage)
+	callStore, err := callstore.NewStore(ctx, db, tgCache, met, cfg.CallStorage, cfg.DB.Partition)
 	if err != nil {
 		return nil, err
 	}
@@ -152,18 +151,6 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 	srv.rest = api
 
 	srv.metrics.Register("http", &srv.srvMetrics)
-
-	if cfg.DB.Partition.Enabled {
-		srv.partman, err = partman.New(db, cfg.DB.Partition)
-		if err != nil {
-			return nil, err
-		}
-
-		err = srv.partman.Check(ctx, time.Now())
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	srv.sinks.Register(sinks.NewCallstoreSink(callStore, tgCache), sinks.RequiredFlag)
 	srv.sinks.Register(sinks.NewNexusSink(srv.nex))
@@ -330,6 +317,7 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	go s.nex.Go(ctx)
 	go s.alerter.Go(ctx)
 	go s.share.Go(ctx)
+	go s.calls.GoGC(ctx)
 
 	if pm := s.partman; pm != nil {
 		go pm.Go(ctx)

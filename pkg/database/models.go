@@ -80,6 +80,16 @@ type ApiKey struct {
 	ApiKey    string           `json:"apiKey,omitempty"`
 }
 
+type AudioRefJournal struct {
+	ID         int64              `json:"id,omitempty"`
+	CallID     pgtype.UUID        `json:"callId,omitempty"`
+	Backend    string             `json:"backend,omitempty"`
+	Ref        []byte             `json:"ref,omitempty"`
+	PruneAfter pgtype.Timestamptz `json:"pruneAfter,omitempty"`
+	LastTry    pgtype.Timestamptz `json:"lastTry,omitempty"`
+	Tries      int                `json:"tries,omitempty"`
+}
+
 type Call struct {
 	ID          uuid.UUID          `json:"id,omitempty"`
 	Submitter   *int32             `json:"submitter,omitempty"`

@@ -41,7 +41,7 @@ type loggingRoundTripper struct{}
 
 func (ct loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	curlCmd, _ := http2curl.GetCurlCommand(req)
-	log.Debug().Msgf("curl %s", curlCmd.String())
+	log.Debug().Msgf("%s", curlCmd.String())
 	return http.DefaultTransport.RoundTrip(req)
 }
 

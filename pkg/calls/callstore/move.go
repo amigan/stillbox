@@ -21,6 +21,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// NB: None of the move code uses the ref journal. This probably won't change unless a good reason arises.
+
 // number of store workers
 const numStoreWorkers = 16
 const numStoreWorkersLimit = 128
@@ -61,7 +63,7 @@ const (
 	progressInterval = 50
 )
 
-func getCallAudioRowToSkinnyCallAudio(row *database.GetCallAudioRow) *calls.CallAudio {
+func GetCallAudioRowToSkinnyCallAudio(row *database.GetCallAudioRow) *calls.CallAudio {
 	return &calls.CallAudio{
 		ID:        row.ID,
 		CallDate:  jsontypes.Time(row.CallDate.Time),
@@ -83,7 +85,7 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 	}
 
 	// prepare a CallAudio without the blob
-	ca := getCallAudioRowToSkinnyCallAudio(row)
+	ca := GetCallAudioRowToSkinnyCallAudio(row)
 
 	// the blob comes from the database
 	if row.AudioBlob != nil {
@@ -101,7 +103,7 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 
 	// if we aren't copying, queue a clear of all existing audiorefs
 	if !m.par.Copy && len(cao.audioRefOut) > 0 {
-		if err := m.refs.QueueDeleteAll(cao.audioRefOut); err != nil {
+		if err := m.refs.QueueDeleteAll(cao.audioRefOut, ca.CallDate.Time()); err != nil {
 			return nil, nil, err
 		}
 		clear(cao.audioRefOut)
@@ -119,11 +121,11 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 		// store in backend
 		crRef, err := m.dst.Store(ctx, ca)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("store: %w", err)
 		}
 
 		// storage succeeded, log the creation
-		m.refs.Created(m.dst, crRef)
+		m.refs.Created(m.dst, AbsoluteRef(crRef.Ref(m.refs.st.partMan(), row.CallDate.Time)))
 
 		if cao.audioRefOut == nil {
 			cao.audioRefOut = make(AudioRefList)
@@ -197,8 +199,6 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 	eg, wctx := errgroup.WithContext(ctx)
 	eg.SetLimit(m.numWorkers)
 	for count > 0 {
-		log.Debug().Str("start", dbPar.Start.Time.String()).Msg("iter")
-
 		m.dbMtx.Lock()
 		rows, err := m.dbTx.GetCallAudio(wctx, dbPar)
 		m.dbMtx.Unlock()
@@ -226,7 +226,12 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 					}
 				}()
 
-				return m.moveWorker(wctx, &row)
+				err = m.moveWorker(wctx, &row)
+				if err != nil && !errors.Is(err, context.Canceled) {
+					log.Error().Err(err).Msg("moveWorker")
+				}
+
+				return err
 			})
 		}
 	}
@@ -299,7 +304,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		NotHasBackend: par.DestBackend, // not already moved
 	}
 
-	refT := newRefTracker(s.audioBackends)
+	refT := newRefTracker(s.audioBackends, s, nil)
 
 	err = s.db.InTx(context.WithoutCancel(ctx), func(tx database.Store) error {
 		m := s.newMover(dst, tx, refT, par)
@@ -307,7 +312,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		numRows = m.completedRows.Load()
 
 		if par.ProgressChan != nil {
-			par.ProgressChan <- numRows
+			par.ProgressChan <- numRows - 1
 		}
 
 		return err
@@ -333,7 +338,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 			if err != nil {
 				log.Error().Err(err).Msg("move tx commit")
 			} else {
-				log.Debug().Msg("move tx commit finished")
+				log.Debug().Msg("move commit finished")
 			}
 		}()
 	}

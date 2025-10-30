@@ -223,6 +223,72 @@ func (_c *Store_AddLearnedTalkgroup_Call) RunAndReturn(run func(ctx context.Cont
 	return _c
 }
 
+// AddRefJournal provides a mock function for the type Store
+func (_mock *Store) AddRefJournal(ctx context.Context, arg database.AddRefJournalParams) (int64, error) {
+	ret := _mock.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddRefJournal")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.AddRefJournalParams) (int64, error)); ok {
+		return returnFunc(ctx, arg)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.AddRefJournalParams) int64); ok {
+		r0 = returnFunc(ctx, arg)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, database.AddRefJournalParams) error); ok {
+		r1 = returnFunc(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_AddRefJournal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddRefJournal'
+type Store_AddRefJournal_Call struct {
+	*mock.Call
+}
+
+// AddRefJournal is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.AddRefJournalParams
+func (_e *Store_Expecter) AddRefJournal(ctx interface{}, arg interface{}) *Store_AddRefJournal_Call {
+	return &Store_AddRefJournal_Call{Call: _e.mock.On("AddRefJournal", ctx, arg)}
+}
+
+func (_c *Store_AddRefJournal_Call) Run(run func(ctx context.Context, arg database.AddRefJournalParams)) *Store_AddRefJournal_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 database.AddRefJournalParams
+		if args[1] != nil {
+			arg1 = args[1].(database.AddRefJournalParams)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_AddRefJournal_Call) Return(n int64, err error) *Store_AddRefJournal_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *Store_AddRefJournal_Call) RunAndReturn(run func(ctx context.Context, arg database.AddRefJournalParams) (int64, error)) *Store_AddRefJournal_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // AddToIncident provides a mock function for the type Store
 func (_mock *Store) AddToIncident(ctx context.Context, incidentID uuid.UUID, callIds []uuid.UUID, notes [][]byte) error {
 	ret := _mock.Called(ctx, incidentID, callIds, notes)
@@ -495,6 +561,84 @@ func (_c *Store_CleanupSweptCalls_Call) Return(n int64, err error) *Store_Cleanu
 }
 
 func (_c *Store_CleanupSweptCalls_Call) RunAndReturn(run func(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)) *Store_CleanupSweptCalls_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CountRefJournal provides a mock function for the type Store
+func (_mock *Store) CountRefJournal(ctx context.Context, missing *bool, since pgtype.Timestamptz, until pgtype.Timestamptz) (int64, error) {
+	ret := _mock.Called(ctx, missing, since, until)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CountRefJournal")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *bool, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)); ok {
+		return returnFunc(ctx, missing, since, until)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *bool, pgtype.Timestamptz, pgtype.Timestamptz) int64); ok {
+		r0 = returnFunc(ctx, missing, since, until)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *bool, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+		r1 = returnFunc(ctx, missing, since, until)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_CountRefJournal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountRefJournal'
+type Store_CountRefJournal_Call struct {
+	*mock.Call
+}
+
+// CountRefJournal is a helper method to define mock.On call
+//   - ctx context.Context
+//   - missing *bool
+//   - since pgtype.Timestamptz
+//   - until pgtype.Timestamptz
+func (_e *Store_Expecter) CountRefJournal(ctx interface{}, missing interface{}, since interface{}, until interface{}) *Store_CountRefJournal_Call {
+	return &Store_CountRefJournal_Call{Call: _e.mock.On("CountRefJournal", ctx, missing, since, until)}
+}
+
+func (_c *Store_CountRefJournal_Call) Run(run func(ctx context.Context, missing *bool, since pgtype.Timestamptz, until pgtype.Timestamptz)) *Store_CountRefJournal_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *bool
+		if args[1] != nil {
+			arg1 = args[1].(*bool)
+		}
+		var arg2 pgtype.Timestamptz
+		if args[2] != nil {
+			arg2 = args[2].(pgtype.Timestamptz)
+		}
+		var arg3 pgtype.Timestamptz
+		if args[3] != nil {
+			arg3 = args[3].(pgtype.Timestamptz)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_CountRefJournal_Call) Return(n int64, err error) *Store_CountRefJournal_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *Store_CountRefJournal_Call) RunAndReturn(run func(ctx context.Context, missing *bool, since pgtype.Timestamptz, until pgtype.Timestamptz) (int64, error)) *Store_CountRefJournal_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1506,6 +1650,68 @@ func (_c *Store_DetachPartition_Call) RunAndReturn(run func(ctx context.Context,
 	return _c
 }
 
+// DetailedCountRefJournal provides a mock function for the type Store
+func (_mock *Store) DetailedCountRefJournal(ctx context.Context) ([]database.DetailedCountRefJournalRow, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DetailedCountRefJournal")
+	}
+
+	var r0 []database.DetailedCountRefJournalRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]database.DetailedCountRefJournalRow, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []database.DetailedCountRefJournalRow); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.DetailedCountRefJournalRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_DetailedCountRefJournal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DetailedCountRefJournal'
+type Store_DetailedCountRefJournal_Call struct {
+	*mock.Call
+}
+
+// DetailedCountRefJournal is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *Store_Expecter) DetailedCountRefJournal(ctx interface{}) *Store_DetailedCountRefJournal_Call {
+	return &Store_DetailedCountRefJournal_Call{Call: _e.mock.On("DetailedCountRefJournal", ctx)}
+}
+
+func (_c *Store_DetailedCountRefJournal_Call) Run(run func(ctx context.Context)) *Store_DetailedCountRefJournal_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_DetailedCountRefJournal_Call) Return(detailedCountRefJournalRows []database.DetailedCountRefJournalRow, err error) *Store_DetailedCountRefJournal_Call {
+	_c.Call.Return(detailedCountRefJournalRows, err)
+	return _c
+}
+
+func (_c *Store_DetailedCountRefJournal_Call) RunAndReturn(run func(ctx context.Context) ([]database.DetailedCountRefJournalRow, error)) *Store_DetailedCountRefJournal_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DropPartition provides a mock function for the type Store
 func (_mock *Store) DropPartition(ctx context.Context, partitionName string) error {
 	ret := _mock.Called(ctx, partitionName)
@@ -1559,6 +1765,63 @@ func (_c *Store_DropPartition_Call) Return(err error) *Store_DropPartition_Call 
 }
 
 func (_c *Store_DropPartition_Call) RunAndReturn(run func(ctx context.Context, partitionName string) error) *Store_DropPartition_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DropRefJournal provides a mock function for the type Store
+func (_mock *Store) DropRefJournal(ctx context.Context, id int64) error {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DropRefJournal")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) error); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_DropRefJournal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DropRefJournal'
+type Store_DropRefJournal_Call struct {
+	*mock.Call
+}
+
+// DropRefJournal is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int64
+func (_e *Store_Expecter) DropRefJournal(ctx interface{}, id interface{}) *Store_DropRefJournal_Call {
+	return &Store_DropRefJournal_Call{Call: _e.mock.On("DropRefJournal", ctx, id)}
+}
+
+func (_c *Store_DropRefJournal_Call) Run(run func(ctx context.Context, id int64)) *Store_DropRefJournal_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_DropRefJournal_Call) Return(err error) *Store_DropRefJournal_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_DropRefJournal_Call) RunAndReturn(run func(ctx context.Context, id int64) error) *Store_DropRefJournal_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1761,6 +2024,69 @@ func (_c *Store_GetAppPrefs_Call) Return(bytes []byte, err error) *Store_GetAppP
 }
 
 func (_c *Store_GetAppPrefs_Call) RunAndReturn(run func(ctx context.Context, appName string, uid int) ([]byte, error)) *Store_GetAppPrefs_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetAudioRefJournalCb provides a mock function for the type Store
+func (_mock *Store) GetAudioRefJournalCb(ctx context.Context, arg database.GetRefJournalParams, sendEntry func(database.AudioRefJournal)) error {
+	ret := _mock.Called(ctx, arg, sendEntry)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAudioRefJournalCb")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetRefJournalParams, func(database.AudioRefJournal)) error); ok {
+		r0 = returnFunc(ctx, arg, sendEntry)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_GetAudioRefJournalCb_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAudioRefJournalCb'
+type Store_GetAudioRefJournalCb_Call struct {
+	*mock.Call
+}
+
+// GetAudioRefJournalCb is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.GetRefJournalParams
+//   - sendEntry func(database.AudioRefJournal)
+func (_e *Store_Expecter) GetAudioRefJournalCb(ctx interface{}, arg interface{}, sendEntry interface{}) *Store_GetAudioRefJournalCb_Call {
+	return &Store_GetAudioRefJournalCb_Call{Call: _e.mock.On("GetAudioRefJournalCb", ctx, arg, sendEntry)}
+}
+
+func (_c *Store_GetAudioRefJournalCb_Call) Run(run func(ctx context.Context, arg database.GetRefJournalParams, sendEntry func(database.AudioRefJournal))) *Store_GetAudioRefJournalCb_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 database.GetRefJournalParams
+		if args[1] != nil {
+			arg1 = args[1].(database.GetRefJournalParams)
+		}
+		var arg2 func(database.AudioRefJournal)
+		if args[2] != nil {
+			arg2 = args[2].(func(database.AudioRefJournal))
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetAudioRefJournalCb_Call) Return(err error) *Store_GetAudioRefJournalCb_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_GetAudioRefJournalCb_Call) RunAndReturn(run func(ctx context.Context, arg database.GetRefJournalParams, sendEntry func(database.AudioRefJournal)) error) *Store_GetAudioRefJournalCb_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2655,6 +2981,148 @@ func (_c *Store_GetIncidentTalkgroups_Call) RunAndReturn(run func(ctx context.Co
 	return _c
 }
 
+// GetPrunableAudioRefs provides a mock function for the type Store
+func (_mock *Store) GetPrunableAudioRefs(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]database.GetPrunableAudioRefsRow, error) {
+	ret := _mock.Called(ctx, partitionStart, partitionEnd)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPrunableAudioRefs")
+	}
+
+	var r0 []database.GetPrunableAudioRefsRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) ([]database.GetPrunableAudioRefsRow, error)); ok {
+		return returnFunc(ctx, partitionStart, partitionEnd)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) []database.GetPrunableAudioRefsRow); ok {
+		r0 = returnFunc(ctx, partitionStart, partitionEnd)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetPrunableAudioRefsRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+		r1 = returnFunc(ctx, partitionStart, partitionEnd)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetPrunableAudioRefs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPrunableAudioRefs'
+type Store_GetPrunableAudioRefs_Call struct {
+	*mock.Call
+}
+
+// GetPrunableAudioRefs is a helper method to define mock.On call
+//   - ctx context.Context
+//   - partitionStart pgtype.Timestamptz
+//   - partitionEnd pgtype.Timestamptz
+func (_e *Store_Expecter) GetPrunableAudioRefs(ctx interface{}, partitionStart interface{}, partitionEnd interface{}) *Store_GetPrunableAudioRefs_Call {
+	return &Store_GetPrunableAudioRefs_Call{Call: _e.mock.On("GetPrunableAudioRefs", ctx, partitionStart, partitionEnd)}
+}
+
+func (_c *Store_GetPrunableAudioRefs_Call) Run(run func(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz)) *Store_GetPrunableAudioRefs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgtype.Timestamptz
+		if args[1] != nil {
+			arg1 = args[1].(pgtype.Timestamptz)
+		}
+		var arg2 pgtype.Timestamptz
+		if args[2] != nil {
+			arg2 = args[2].(pgtype.Timestamptz)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetPrunableAudioRefs_Call) Return(getPrunableAudioRefsRows []database.GetPrunableAudioRefsRow, err error) *Store_GetPrunableAudioRefs_Call {
+	_c.Call.Return(getPrunableAudioRefsRows, err)
+	return _c
+}
+
+func (_c *Store_GetPrunableAudioRefs_Call) RunAndReturn(run func(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]database.GetPrunableAudioRefsRow, error)) *Store_GetPrunableAudioRefs_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetRefJournal provides a mock function for the type Store
+func (_mock *Store) GetRefJournal(ctx context.Context, arg database.GetRefJournalParams) ([]database.AudioRefJournal, error) {
+	ret := _mock.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRefJournal")
+	}
+
+	var r0 []database.AudioRefJournal
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetRefJournalParams) ([]database.AudioRefJournal, error)); ok {
+		return returnFunc(ctx, arg)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetRefJournalParams) []database.AudioRefJournal); ok {
+		r0 = returnFunc(ctx, arg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.AudioRefJournal)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, database.GetRefJournalParams) error); ok {
+		r1 = returnFunc(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetRefJournal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetRefJournal'
+type Store_GetRefJournal_Call struct {
+	*mock.Call
+}
+
+// GetRefJournal is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.GetRefJournalParams
+func (_e *Store_Expecter) GetRefJournal(ctx interface{}, arg interface{}) *Store_GetRefJournal_Call {
+	return &Store_GetRefJournal_Call{Call: _e.mock.On("GetRefJournal", ctx, arg)}
+}
+
+func (_c *Store_GetRefJournal_Call) Run(run func(ctx context.Context, arg database.GetRefJournalParams)) *Store_GetRefJournal_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 database.GetRefJournalParams
+		if args[1] != nil {
+			arg1 = args[1].(database.GetRefJournalParams)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetRefJournal_Call) Return(audioRefJournals []database.AudioRefJournal, err error) *Store_GetRefJournal_Call {
+	_c.Call.Return(audioRefJournals, err)
+	return _c
+}
+
+func (_c *Store_GetRefJournal_Call) RunAndReturn(run func(ctx context.Context, arg database.GetRefJournalParams) ([]database.AudioRefJournal, error)) *Store_GetRefJournal_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetSetting provides a mock function for the type Store
 func (_mock *Store) GetSetting(ctx context.Context, name string) ([]byte, error) {
 	ret := _mock.Called(ctx, name)
@@ -2919,6 +3387,68 @@ func (_c *Store_GetSharesPCount_Call) Return(n int64, err error) *Store_GetShare
 }
 
 func (_c *Store_GetSharesPCount_Call) RunAndReturn(run func(ctx context.Context, owner *int32) (int64, error)) *Store_GetSharesPCount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetSweptCallsWithRef provides a mock function for the type Store
+func (_mock *Store) GetSweptCallsWithRef(ctx context.Context) ([]database.GetSweptCallsWithRefRow, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSweptCallsWithRef")
+	}
+
+	var r0 []database.GetSweptCallsWithRefRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]database.GetSweptCallsWithRefRow, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []database.GetSweptCallsWithRefRow); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetSweptCallsWithRefRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetSweptCallsWithRef_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSweptCallsWithRef'
+type Store_GetSweptCallsWithRef_Call struct {
+	*mock.Call
+}
+
+// GetSweptCallsWithRef is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *Store_Expecter) GetSweptCallsWithRef(ctx interface{}) *Store_GetSweptCallsWithRef_Call {
+	return &Store_GetSweptCallsWithRef_Call{Call: _e.mock.On("GetSweptCallsWithRef", ctx)}
+}
+
+func (_c *Store_GetSweptCallsWithRef_Call) Run(run func(ctx context.Context)) *Store_GetSweptCallsWithRef_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetSweptCallsWithRef_Call) Return(getSweptCallsWithRefRows []database.GetSweptCallsWithRefRow, err error) *Store_GetSweptCallsWithRef_Call {
+	_c.Call.Return(getSweptCallsWithRefRows, err)
+	return _c
+}
+
+func (_c *Store_GetSweptCallsWithRef_Call) RunAndReturn(run func(ctx context.Context) ([]database.GetSweptCallsWithRefRow, error)) *Store_GetSweptCallsWithRef_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -4362,6 +4892,63 @@ func (_c *Store_InTx_Call) RunAndReturn(run func(context1 context.Context, fn fu
 	return _c
 }
 
+// IncrementRefJournal provides a mock function for the type Store
+func (_mock *Store) IncrementRefJournal(ctx context.Context, id int64) error {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IncrementRefJournal")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) error); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_IncrementRefJournal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IncrementRefJournal'
+type Store_IncrementRefJournal_Call struct {
+	*mock.Call
+}
+
+// IncrementRefJournal is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int64
+func (_e *Store_Expecter) IncrementRefJournal(ctx interface{}, id interface{}) *Store_IncrementRefJournal_Call {
+	return &Store_IncrementRefJournal_Call{Call: _e.mock.On("IncrementRefJournal", ctx, id)}
+}
+
+func (_c *Store_IncrementRefJournal_Call) Run(run func(ctx context.Context, id int64)) *Store_IncrementRefJournal_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_IncrementRefJournal_Call) Return(err error) *Store_IncrementRefJournal_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_IncrementRefJournal_Call) RunAndReturn(run func(ctx context.Context, id int64) error) *Store_IncrementRefJournal_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListCallsCount provides a mock function for the type Store
 func (_mock *Store) ListCallsCount(ctx context.Context, arg database.ListCallsCountParams) (int64, error) {
 	ret := _mock.Called(ctx, arg)
@@ -5177,6 +5764,69 @@ func (_c *Store_SetCallTranscript_Call) RunAndReturn(run func(ctx context.Contex
 	return _c
 }
 
+// SetRefJournalPrune provides a mock function for the type Store
+func (_mock *Store) SetRefJournalPrune(ctx context.Context, iD int64, pruneAfter pgtype.Timestamptz) error {
+	ret := _mock.Called(ctx, iD, pruneAfter)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetRefJournalPrune")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, pgtype.Timestamptz) error); ok {
+		r0 = returnFunc(ctx, iD, pruneAfter)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_SetRefJournalPrune_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetRefJournalPrune'
+type Store_SetRefJournalPrune_Call struct {
+	*mock.Call
+}
+
+// SetRefJournalPrune is a helper method to define mock.On call
+//   - ctx context.Context
+//   - iD int64
+//   - pruneAfter pgtype.Timestamptz
+func (_e *Store_Expecter) SetRefJournalPrune(ctx interface{}, iD interface{}, pruneAfter interface{}) *Store_SetRefJournalPrune_Call {
+	return &Store_SetRefJournalPrune_Call{Call: _e.mock.On("SetRefJournalPrune", ctx, iD, pruneAfter)}
+}
+
+func (_c *Store_SetRefJournalPrune_Call) Run(run func(ctx context.Context, iD int64, pruneAfter pgtype.Timestamptz)) *Store_SetRefJournalPrune_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 pgtype.Timestamptz
+		if args[2] != nil {
+			arg2 = args[2].(pgtype.Timestamptz)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_SetRefJournalPrune_Call) Return(err error) *Store_SetRefJournalPrune_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_SetRefJournalPrune_Call) RunAndReturn(run func(ctx context.Context, iD int64, pruneAfter pgtype.Timestamptz) error) *Store_SetRefJournalPrune_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetSetting provides a mock function for the type Store
 func (_mock *Store) SetSetting(ctx context.Context, name string, updatedBy *int32, value []byte) error {
 	ret := _mock.Called(ctx, name, updatedBy, value)
@@ -5242,6 +5892,69 @@ func (_c *Store_SetSetting_Call) Return(err error) *Store_SetSetting_Call {
 }
 
 func (_c *Store_SetSetting_Call) RunAndReturn(run func(ctx context.Context, name string, updatedBy *int32, value []byte) error) *Store_SetSetting_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetSweptAudioAndClearRef provides a mock function for the type Store
+func (_mock *Store) SetSweptAudioAndClearRef(ctx context.Context, audioBlob []byte, iD uuid.UUID) error {
+	ret := _mock.Called(ctx, audioBlob, iD)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetSweptAudioAndClearRef")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []byte, uuid.UUID) error); ok {
+		r0 = returnFunc(ctx, audioBlob, iD)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_SetSweptAudioAndClearRef_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetSweptAudioAndClearRef'
+type Store_SetSweptAudioAndClearRef_Call struct {
+	*mock.Call
+}
+
+// SetSweptAudioAndClearRef is a helper method to define mock.On call
+//   - ctx context.Context
+//   - audioBlob []byte
+//   - iD uuid.UUID
+func (_e *Store_Expecter) SetSweptAudioAndClearRef(ctx interface{}, audioBlob interface{}, iD interface{}) *Store_SetSweptAudioAndClearRef_Call {
+	return &Store_SetSweptAudioAndClearRef_Call{Call: _e.mock.On("SetSweptAudioAndClearRef", ctx, audioBlob, iD)}
+}
+
+func (_c *Store_SetSweptAudioAndClearRef_Call) Run(run func(ctx context.Context, audioBlob []byte, iD uuid.UUID)) *Store_SetSweptAudioAndClearRef_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []byte
+		if args[1] != nil {
+			arg1 = args[1].([]byte)
+		}
+		var arg2 uuid.UUID
+		if args[2] != nil {
+			arg2 = args[2].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_SetSweptAudioAndClearRef_Call) Return(err error) *Store_SetSweptAudioAndClearRef_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_SetSweptAudioAndClearRef_Call) RunAndReturn(run func(ctx context.Context, audioBlob []byte, iD uuid.UUID) error) *Store_SetSweptAudioAndClearRef_Call {
 	_c.Call.Return(run)
 	return _c
 }

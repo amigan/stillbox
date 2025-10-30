@@ -116,9 +116,6 @@ CREATE INDEX IF NOT EXISTS calls_transcript_idx ON calls USING GIN (to_tsvector(
 CREATE INDEX IF NOT EXISTS calls_call_date_tg_idx ON calls(call_date, talkgroup, system);
 CREATE INDEX IF NOT EXISTS calls_call_date_brin_idx ON calls USING brin (call_date);
 CREATE INDEX IF NOT EXISTS calls_talker_alias ON calls(talker_alias);
--- These indices were not found to have any effect.
--- CREATE INDEX IF NOT EXISTS calls_call_date_hash_idx ON calls using hash (call_date);
--- CREATE INDEX IF NOT EXISTS calls_call_date_desc_idx ON calls(call_date DC);
 
 CREATE TABLE swept_calls (
 	id UUID PRIMARY KEY,
@@ -191,3 +188,14 @@ CREATE TABLE IF NOT EXISTS shares(
 	expiration TIMESTAMPTZ NULL
 );
 
+CREATE TABLE IF NOT EXISTS audio_ref_journal(
+	id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	call_id UUID,
+	backend TEXT NOT NULL,
+	ref JSONB,
+	prune_after TIMESTAMPTZ,
+	last_try TIMESTAMPTZ NOT NULL, -- when tries = 0, last_try means creation time of the entry
+	tries INTEGER NOT NULL,
+	CHECK(ref IS NOT NULL OR call_id IS NOT NULL),
+	UNIQUE NULLS NOT DISTINCT (call_id, backend, ref)
+);

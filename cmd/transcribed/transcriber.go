@@ -1,10 +1,12 @@
 //go:build whisper
 // +build whisper
+
 package main
 
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -95,6 +97,7 @@ func (t *transcriber) Go(ctx context.Context) {
 				continue
 			}
 			elapsed := time.Since(rq.t)
+			transcription.ElapsedMS = int(elapsed.Milliseconds())
 
 			log.Printf("Call [Q%d] %s %s %d:%d %s", len(t.ch), elapsed.Round(time.Millisecond).String(), rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text)
 			if t.noCallback {
@@ -154,13 +157,18 @@ func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *transcriber) txCallback(rq *pb.CallTranscribeRequest, tx *Transcription) error {
-	req, err := http.NewRequest("PUT", rq.Callback, bytes.NewReader([]byte(tx.Text)))
+	enc, err := json.Marshal(tx)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", rq.Callback, bytes.NewReader(enc))
 	if err != nil {
 		return err
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", rq.Token))
-	req.Header.Add("Content-Type", "text/plain")
+	req.Header.Add("Content-Type", "application/json")
 	req.Header.Set("User-Agent", UserAgent)
 
 	resp, err := t.cli.Do(req)
@@ -181,6 +189,7 @@ func (t *transcriber) txCallback(rq *pb.CallTranscribeRequest, tx *Transcription
 
 type Transcription struct {
 	Text string `json:"text"`
+	ElapsedMS int `json:"elapsedMS"`
 }
 
 var SpaceReplacer = strings.NewReplacer("    ", " ", "   ", " ", "  ", " ")
@@ -206,23 +215,15 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 
 		var f32w audio.Float32Writer
 
-		if dec.SampleRate != whisper.SampleRate {
-			frs, err := resample.New(&f32w, float64(dec.SampleRate), whisper.SampleRate, 1, resample.I16, resample.F32, resample.HighQ)
-			if err != nil {
-				return nil, err
-			}
-			_, err = frs.Write(data)
-			if err != nil {
-				return nil, err
-			}
-			frs.Close()
-
-		} else {
-			_, err := f32w.Write(data)
-			if err != nil {
-				return nil, err
-			}
+		frs, err := resample.New(&f32w, float64(dec.SampleRate), whisper.SampleRate, 1, resample.I16, resample.F32, resample.HighQ)
+		if err != nil {
+			return nil, err
 		}
+		_, err = frs.Write(data)
+		if err != nil {
+			return nil, err
+		}
+		frs.Close()
 
 		f32le = f32w.Buffer()
 	case "audio/wav":

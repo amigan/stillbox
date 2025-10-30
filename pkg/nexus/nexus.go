@@ -65,11 +65,7 @@ func (n *nexus) Go(ctx context.Context) {
 	ctx = entities.CtxWithServiceSubject(ctx, "nexus")
 	for {
 		select {
-		case msg, ok := <-n.bcastChan:
-			if !ok {
-				return
-			}
-
+		case msg := <-n.bcastChan:
 			n.broadcastToClients(ctx, msg)
 		case <-ctx.Done():
 			n.Shutdown()
@@ -140,8 +136,6 @@ func (n *nexus) Unregister(c Client) {
 func (n *nexus) Shutdown() {
 	n.Lock()
 	defer n.Unlock()
-
-	close(n.bcastChan)
 
 	for c := range n.clients {
 		c.Shutdown()

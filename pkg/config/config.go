@@ -25,7 +25,7 @@ type Config struct {
 	Alerting      Alerting      `yaml:"alerting"`
 	Log           []Logger      `yaml:"log"`
 	Notify        Notify        `yaml:"notify"`
-	CallStorage   []CallStorage `yaml:"callStorage"`
+	CallStorage   CallStorage   `yaml:"callStorage"`
 	Relay         []Relay       `yaml:"relay"`
 	Transcription Transcription `yaml:"transcription"`
 	Metrics       Metrics       `yaml:"metrics"`
@@ -120,19 +120,25 @@ type NotifyService struct {
 type ConfigMap map[string]any
 
 type CallStorage struct {
-	Name    string             `yaml:"name"`
-	Ingest  bool               `yaml:"ingest"`
-	Backend string             `yaml:"backend"`
-	Filter  ConfigMap          `yaml:"filter"`
-	Config  ConfigMap          `yaml:"config"`
-	OnError StorageDisposition `yaml:"onError"`
+	OnExhaust    *StorageDisposition    `yaml:"onExhaust"`
+	DisablePrune bool                   `yaml:"disablePrune"`
+	Backends     []StorageBackendConfig `yaml:"backends"`
+}
+
+type StorageBackendConfig struct {
+	Name         string             `yaml:"name"`
+	Ingest       bool               `yaml:"ingest"`
+	Backend      string             `yaml:"backend"`
+	Filter       ConfigMap          `yaml:"filter"`
+	Config       ConfigMap          `yaml:"config"`
+	OnError      StorageDisposition `yaml:"onError"`
+	DisablePrune bool               `yaml:"disablePrune"`
 }
 
 type StorageDisposition int
 
 const (
-	OnErrorNextThenFail StorageDisposition = iota
-	OnErrorNextThenDB
+	OnErrorNext StorageDisposition = iota
 	OnErrorFail
 	OnErrorDB
 )
@@ -140,10 +146,9 @@ const (
 func (sd *StorageDisposition) UnmarshalText(s []byte) error {
 	t := strings.ToLower(string(s))
 	d, h := map[string]StorageDisposition{
-		"next-then-fail": OnErrorNextThenFail,
-		"next-then-db":   OnErrorNextThenDB,
-		"fail":           OnErrorFail,
-		"db":             OnErrorDB,
+		"next": OnErrorNext,
+		"fail": OnErrorFail,
+		"db":   OnErrorDB,
 	}[t]
 	if !h {
 		return fmt.Errorf("invalid storage disposition '%s'", t)

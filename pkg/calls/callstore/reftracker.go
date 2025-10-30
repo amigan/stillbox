@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 )
 
-type beRefMap map[AudioBackend][]AudioRef
+type beRefMap map[AudioBackend][]AbsoluteRef
 
 func (brm beRefMap) reset() {
 	for k := range brm {
@@ -16,13 +17,15 @@ func (brm beRefMap) reset() {
 	}
 }
 
-// A refTracker gives us transaction-ish semantics for audio storage backends.
+// A refTracker gives us transaction-ish semantics for audio storage backends. It is similar to a refJournal but without persistence, for increased performance for operations such as moving.
 type refTracker struct {
 	sync.Mutex
 	del beRefMap // deletes are queued until transaction commit
 	cre beRefMap // but creates are tracked for deletion on rollback
 
-	ab AudioBackends
+	ab      AudioBackends
+	journal RefJournal
+	st      Store
 }
 
 func (rt *refTracker) Reset() {
@@ -77,7 +80,7 @@ func (rt *refTracker) Commit(ctx context.Context) error {
 	return nil
 }
 
-func (rt *refTracker) QueueDeleteAll(ar AudioRefList) error {
+func (rt *refTracker) QueueDeleteAll(ar AudioRefList, callDate time.Time) error {
 	for ben, loc := range ar {
 		if ben == "" {
 			continue
@@ -88,30 +91,33 @@ func (rt *refTracker) QueueDeleteAll(ar AudioRefList) error {
 			return fmt.Errorf("queue delete all: no such backend '%s'", ben)
 		}
 
-		rt.QueueDelete(be, loc)
+		rt.QueueDelete(be, AbsoluteRef(loc.Ref(rt.st.partMan(), callDate)))
 	}
 
 	return nil
 }
 
-func (rt *refTracker) QueueDelete(be AudioBackend, ar AudioRef) {
+func (rt *refTracker) QueueDelete(be AudioBackend, ar AbsoluteRef) {
 	rt.Lock()
 	defer rt.Unlock()
 
 	rt.del[be] = append(rt.del[be], ar)
 }
 
-func (rt *refTracker) Created(be AudioBackend, ar AudioRef) {
+func (rt *refTracker) Created(be AudioBackend, ar AbsoluteRef) {
 	rt.Lock()
 	defer rt.Unlock()
 
 	rt.cre[be] = append(rt.cre[be], ar)
 }
 
-func newRefTracker(ab AudioBackends) *refTracker {
+// newRefTracker creates a new ref tracker. If journal is nil, journaling is disabled.
+func newRefTracker(ab AudioBackends, st Store, journal RefJournal) *refTracker {
 	return &refTracker{
-		ab:  ab,
-		cre: make(beRefMap),
-		del: make(beRefMap),
+		ab:      ab,
+		cre:     make(beRefMap),
+		del:     make(beRefMap),
+		journal: journal,
+		st:      st,
 	}
 }

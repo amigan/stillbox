@@ -160,7 +160,7 @@ func checkGranularities(granularities []Granularity) error {
 		return ErrBadGranularities
 	}
 	last := time.Duration(0)
-	for i := 0; i < len(granularities); i++ {
+	for i := range granularities {
 		if granularities[i].Count == 0 {
 			return ErrBadGranularities
 		}

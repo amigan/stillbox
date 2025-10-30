@@ -2,24 +2,30 @@ package callstore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"github.com/go-viper/mapstructure/v2"
-	"github.com/rs/zerolog/log"
 )
 
 type fsBackend struct {
-	Root string `yaml:"root"`
+	Root     string `yaml:"root"`
+	rootStat os.FileInfo
+
+	st Store
 }
 
 func (*fsBackend) Type() string { return "fs" }
@@ -49,14 +55,8 @@ func (fsb *fsBackend) serveFile(w ZeroCopyResponseWriter, file *os.File, call *c
 	return io.EOF // io.EOF is the sentinel that everything is all done
 }
 
-func (fsb *fsBackend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRef, opts *CallAudioOptions) ([]byte, *url.URL, error) {
-	refPath, ok := ref.(string)
-	if !ok {
-		log.Error().Str("refPath", fmt.Sprint(refPath)).Msg("call path was not a string")
-		return nil, nil, ErrBadAudioRef
-	}
-
-	cPath := fsb.callPath(refPath)
+func (fsb *fsBackend) Get(ctx context.Context, call *calls.CallAudio, refPath AudioRef, opts *CallAudioOptions) ([]byte, *url.URL, error) {
+	cPath := fsb.callPath(refPath.Ref(fsb.st.partMan(), call.CallDate.Time()))
 
 	file, err := os.Open(cPath)
 	if err != nil {
@@ -86,18 +86,82 @@ func (fsb *fsBackend) Get(ctx context.Context, call *calls.CallAudio, ref AudioR
 	return audio, nil, nil
 }
 
-func (fsb *fsBackend) Delete(_ context.Context, audioRef AudioRef) error {
-	refPath, ok := audioRef.(string)
-	if !ok {
-		return ErrBadAudioRef
+func (fsb *fsBackend) Prune(ctx context.Context, audioRef string, pruneAfter *time.Time) (*time.Time, error) {
+	if pruneAfter != nil && !time.Now().After(*pruneAfter) {
+		// this probably won't ever happen
+		return nil, ErrNotYetPruneTime
 	}
 
-	return os.Remove(path.Join(fsb.Root, refPath))
+	composedPath, isDir, err := fsb.checkPath(audioRef)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			// ENOENT; our work here is done
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if !isDir { // single file remove
+		return nil, os.Remove(composedPath)
+	}
+
+	if !strings.HasSuffix(composedPath, "/") {
+		return nil, fmt.Errorf("'%s' is a directory but path does not end in '/'", composedPath)
+	}
+
+	return nil, os.RemoveAll(composedPath)
 }
 
-func (fsb *fsBackend) DeleteBulk(ctx context.Context, refs []AudioRef) error {
+func (fsb *fsBackend) checkPath(refPath string) (composedPath string, isDir bool, err error) {
+	if refPath == "" {
+		err = ErrBadAudioRef
+		return
+	}
+
+	if !filepath.IsLocal(refPath) {
+		err = ErrBadAudioRef
+		return
+	}
+
+	composedPath = fsb.callPath(refPath)
+	st, err := os.Stat(composedPath)
+	if err != nil {
+		return
+	}
+
+	isDir = st.IsDir()
+	if isDir {
+		composedPath += "/"
+	}
+
+	if os.SameFile(st, fsb.rootStat) {
+		err = errors.New("audio ref is the root")
+		return
+	}
+
+	return
+}
+
+func (fsb *fsBackend) Delete(_ context.Context, call *calls.CallAudio, audioRef AudioRef) error {
+	return fsb.delete(audioRef.Ref(fsb.st.partMan(), call.CallDate.Time()))
+}
+
+func (fsb *fsBackend) delete(path string) error {
+	composedPath, isDir, err := fsb.checkPath(path)
+	if err != nil {
+		return err
+	}
+
+	if isDir {
+		return fmt.Errorf("'%s' is a directory", composedPath)
+	}
+
+	return os.Remove(composedPath)
+}
+
+func (fsb *fsBackend) DeleteBulk(ctx context.Context, refs []AbsoluteRef) error {
 	for _, r := range refs {
-		rErr := fsb.Delete(ctx, r)
+		rErr := fsb.delete(r.String())
 		if rErr != nil {
 			return rErr
 		}
@@ -106,38 +170,52 @@ func (fsb *fsBackend) DeleteBulk(ctx context.Context, refs []AudioRef) error {
 	return nil
 }
 
+// callPath composes an absolute path to the given call filename.
 func (fsb *fsBackend) callPath(blobPath string) string {
 	return path.Join(fsb.Root, blobPath)
 }
 
+const (
+	// this could be configurable someday?
+	FSDefaultMode          = 0640
+	FSDefaultDirectoryMode = 0755
+)
+
 func (fsb *fsBackend) Store(_ context.Context, call *calls.CallAudio) (AudioRef, error) {
-	blobp := blobPath(call)
-	p := fsb.callPath(blobp)
-	err := os.WriteFile(p, call.AudioBlob, 0640)
+	audPath, audRef := fsb.st.BlobPath(call)
+	p := fsb.callPath(audPath)
+	err := os.WriteFile(p, call.AudioBlob, FSDefaultMode)
 	if err != nil {
-		if os.IsNotExist(err) {
+		switch os.IsNotExist(err) {
+		case true:
+			// try creating missing directories
 			cdir := path.Dir(p)
-			err := os.MkdirAll(cdir, 0755)
+			err := os.MkdirAll(cdir, FSDefaultDirectoryMode)
 			if err != nil {
 				return nil, err
 			}
-		}
 
-		err := os.WriteFile(p, call.AudioBlob, 0644)
-		if err != nil {
+			// try to write again
+			err = os.WriteFile(p, call.AudioBlob, FSDefaultMode)
+			if err != nil {
+				return nil, err
+			}
+		case false:
 			return nil, err
 		}
 	}
 
-	return blobp, nil
+	return makeAudioRef(audRef), nil
 }
 
 func init() {
-	registerAudioBackend("fs", newFSbackend)
+	RegisterAudioBackend("fs", newFSbackend)
 }
 
-func newFSbackend(cfg config.ConfigMap) (AudioBackend, error) {
-	fsb := new(fsBackend)
+func newFSbackend(st Store, cfg config.ConfigMap) (AudioBackend, error) {
+	fsb := &fsBackend{
+		st: st,
+	}
 
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Metadata:         nil,
@@ -168,6 +246,8 @@ func newFSbackend(cfg config.ConfigMap) (AudioBackend, error) {
 	if !fi.IsDir() {
 		return nil, fmt.Errorf("fs backend root '%s' is not a directory", fsb.Root)
 	}
+
+	fsb.rootStat = fi
 
 	return fsb, nil
 }

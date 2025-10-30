@@ -75,10 +75,7 @@ func (p *progresser) ttyCb(msg client.ProgressMsg) {
 		)
 	case msg.Final != nil:
 		if p.pb != nil {
-			err := p.pb.Set64(*msg.Final)
-			if err != nil {
-				panic(err)
-			}
+			_ = p.pb.Set64(*msg.Final)
 			_ = p.pb.Exit()
 			p.pb = nil
 		}

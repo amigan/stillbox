@@ -118,48 +118,63 @@ relay:
 # ingest specifies whether to try to store audio in this backend
 # if none are configured/evaluate during ingestion, calls are simply stored as blobs in the DB
 callStorage:
-  # name of the backend ends up being stored in the DB and
-  # should not change once chosen, otherwise every record must be
-  # updated.
-  - name: s3
-    backend: s3
-    # if this backend fails:
-    # next-then-fail (default) - try next backend (including filter), if no other backends store then fail ingest
-    # next-then-db - try next backend (including filter) or ultimately the DB
-    # fail - fail the ingest immediately
-    # db - stop processing backends, store in DB
-    onError: next-then-fail
-    # ingest specifies whether this is not to be used to store new calls
-    # but exists to serve requests for calls referencing this backend in the DB
-    ingest: true
-    # filter is same as below, or can be null or unspecified
-#   filter:
-#     talkgroups:
-#       - "197:10101"
-#     talkgroupTagsAny:
-#       - fire dispatch
-#       - law dispatch
-    config:
-      bucket: 'stillbox'
-      # secure is whether to use https when accessing the endpoint.
-      secure: false
-      # endpoint is how stillbox will access the object server
-      endpoint: 'garage:3900'
-      region: 'garage'
-      # if externalHost is set, this host will be used to generate presigned URLs
-      # for call audio redirect to clients rather than endpoint above
-      externalHost: 'garage.example.com'
-      # if externalHost is set, externalSecure specifies whether to use https for presigned URLs
-      externalSecure: true
-      # timeout is the amount of time for S3 request deadline before next action (store in DB or fail)
-      timeout: 10s
-      keyID: 'GK7894947fffaacacd83664923'
-      secretKey: 'bacba7892843792347987293874923847293487239487234987234bababababa'
-  - name: fs
-    backend: fs
-    config:
-      # root path to store call audio in, must be a directory
-      root: "/tank/stillbox"
+  # if all backends exhausted (have failed or passed and none shunt to DB or to ingest failure)
+  # fail - fail the ingest (i.e. return error to client for HTTP ingest)
+  # db - store audio in DB (the default)
+  onExhaust: db
+  # disablePrune disables all audio storage pruning. when true, it overrides all per-backend disablePrune config
+  # you may wish to set this true when detaching rather than dropping partitions, default is false
+  disablePrune: false
+  backends:
+      # name of the backend ends up being stored in the DB and
+      # should not change once chosen, otherwise every record must be
+      # updated.
+    - name: s3
+      # backend is the driver (s3 or fs)
+      backend: s3
+      # if this backend fails:
+      # next - try next backend (default)
+      # fail - fail the ingest immediately
+      # db - stop processing backends, store in DB
+      onError: next
+      # ingest specifies whether this is not to be used to store new calls
+      # but exists to serve requests for calls referencing this backend in the DB
+      ingest: true
+      # disablePrune excludes this backend from audio pruning when a partition is pruned.
+      # Normally you will not need this; the default is false.
+      disablePrune: false
+      # filter is same as below, or can be null or unspecified
+  #   filter:
+  #     talkgroups:
+  #       - "197:10101"
+  #     talkgroupTagsAny:
+  #       - fire dispatch
+  #       - law dispatch
+      config:
+        bucket: 'stillbox'
+        # secure is whether to use https when accessing the endpoint.
+        secure: false
+        # endpoint is how stillbox will access the object server
+        endpoint: 'garage:3900'
+        region: 'garage'
+        # if externalHost is set, this host will be used to generate presigned URLs
+        # for call audio redirect to clients rather than endpoint above
+        externalHost: 'garage.example.com'
+        # if externalHost is set, externalSecure specifies whether to use https for presigned URLs
+        externalSecure: true
+        # timeout is the amount of time for S3 request deadline before next action (store in DB or fail)
+        timeout: 10s
+        keyID: 'GK7894947fffaacacd83664923'
+        secretKey: 'bacba7892843792347987293874923847293487239487234987234bababababa'
+    - name: fs
+      disablePrune: false
+      filter: null
+      backend: fs
+      ingest: true
+      onError: next
+      config:
+        # root path to store call audio in, must be a directory
+        root: "/tank/stillbox"
 
 transcription:
 # - type: http

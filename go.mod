@@ -6,6 +6,7 @@ require (
 	dynatron.me/x/go-minimp3 v0.0.0-20250314003403-7c2c5bbc9d65
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/el-mike/restrict/v2 v2.0.0
+	github.com/felixge/fgprof v0.9.5
 	github.com/gaissmai/bart v0.20.4
 	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20250423062438-8b92060a10a8
 	github.com/go-audio/wav v1.1.0
@@ -34,6 +35,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/minio/minio-go/v7 v7.0.92
+	github.com/moul/http2curl v1.0.0
 	github.com/nikoksr/notify v1.3.0
 	github.com/prometheus/client_golang v1.11.1
 	github.com/rs/zerolog v1.34.0
@@ -59,7 +61,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/felixge/fgprof v0.9.5 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-audio/audio v1.0.0 // indirect
 	github.com/go-audio/riff v1.0.0 // indirect
@@ -90,7 +91,6 @@ require (
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/moul/http2curl v1.0.0 // indirect
 	github.com/philhofer/fwd v1.1.3-0.20240916144458-20a13a1f6b7c // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
@@ -100,6 +100,7 @@ require (
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
+	github.com/smartystreets/goconvey v1.8.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/tinylib/msgp v1.3.0 // indirect
 	github.com/urfave/cli/v2 v2.27.5 // indirect

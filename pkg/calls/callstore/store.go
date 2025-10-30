@@ -65,31 +65,77 @@ type Store interface {
 
 	// MoveCallAudio moves call audio from one backend to another.
 	MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows int64, err error)
+
+	// BlobPath generates the audio path for FS and S3 backends. audioPath is the real path into
+	// the store, while audioRef will contain a leading `_/` if partitioning is enabled.
+	BlobPath(call *calls.CallAudio) (audioPath, audioRef string)
+
+	// GoGC starts the audio garbage collector thread.
+	GoGC(ctx context.Context)
+
+	PartmanCallAudioManager
+	partMan() PartitionManager
 }
 
 type store struct {
-	db             database.Store
-	audioBackends  AudioBackends
-	refTrackerPool sync.Pool
+	db            database.Store
+	audioBackends *audioBackends
+	partman       PartitionManager
 
 	moveInProgress sync.Mutex
 }
 
-func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, audioBE []config.CallStorage) (*store, error) {
-	be, err := MakeBackends(ctx, tgc, met, audioBE)
+func (s *store) partMan() PartitionManager {
+	return s.partman
+}
+
+func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, callStorage config.CallStorage, partConfig config.Partition) (*store, error) {
+	st := &store{
+		db: db,
+	}
+
+	be, err := st.MakeBackends(ctx, tgc, met, callStorage)
 	if err != nil {
 		return nil, fmt.Errorf("call storage: %w", err)
 	}
 
-	return &store{
-		db:            db,
-		audioBackends: be,
-		refTrackerPool: sync.Pool{
-			New: func() any {
-				return newRefTracker(be)
-			},
-		},
-	}, nil
+	st.audioBackends = be
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	errCh := make(chan error)
+	go func() {
+		for {
+			select {
+			case err := <-errCh:
+				log.Error().Err(err).Msg("call audio prune fail")
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	gcCount, err := st.audioBackends.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
+	if err != nil {
+		return nil, err
+	}
+
+	if gcCount > 0 {
+		log.Info().Int64("count", gcCount).Msg("call audio garbage collected")
+	}
+
+	if partConfig.Enabled {
+		st.partman, err = NewPartitionManager(db, st, partConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		err = st.partman.Check(ctx, time.Now())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return st, nil
 }
 
 type storeCtxKey string
@@ -149,10 +195,10 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
 		return err
 	}
 
-	rt := s.refTrackerPool.Get().(*refTracker)
+	rt := s.audioBackends.RefTracker()
 	rt.Reset()
 	defer func() {
-		s.refTrackerPool.Put(rt)
+		s.audioBackends.PutRefTracker(rt)
 	}()
 
 	blob := call.Audio
@@ -164,7 +210,7 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
 
 	if audioRef != nil { // was stored in a backend
 		blob = nil
-		rt.Created(audioRef.Backend, audioRef.Ref)
+		rt.Created(audioRef.Backend, AbsoluteRef(audioRef.Ref.Ref(s.partman, call.DateTime)))
 
 		refMap := map[string]AudioRef{
 			audioRef.Backend.Name: audioRef.Ref,
@@ -298,6 +344,7 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID, opts ...CallAudioOp
 	}
 
 	call := &calls.CallAudio{
+		ID:        id,
 		CallDate:  jsontypes.Time(dbCall.CallDate.Time),
 		AudioName: dbCall.AudioName,
 		AudioType: audioMime(dbCall.AudioType),
