@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users(
 	password TEXT NOT NULL,
 	email TEXT UNIQUE NOT NULL,
 	roles TEXT[],
+	disabled_at TIMESTAMPTZ,
 	last_login_at TIMESTAMPTZ,
 	last_login_from INET,
 	password_set_at TIMESTAMPTZ NOT NULL,

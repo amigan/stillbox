@@ -53,7 +53,7 @@ INSERT INTO users (
 		roles,
 		password_set_at
 	) VALUES ($1, $2, $3, $4, NOW())
-RETURNING id, username, password, email, roles, last_login_at, last_login_from, password_set_at, prefs
+RETURNING id, username, password, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs
 `
 
 type CreateUserParams struct {
@@ -77,6 +77,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Password,
 		&i.Email,
 		&i.Roles,
+		&i.DisabledAt,
 		&i.LastLoginAt,
 		&i.LastLoginFrom,
 		&i.PasswordSetAt,
@@ -100,6 +101,15 @@ DELETE FROM users WHERE username = $1
 
 func (q *Queries) DeleteUser(ctx context.Context, username string) error {
 	_, err := q.db.Exec(ctx, deleteUser, username)
+	return err
+}
+
+const disableUser = `-- name: DisableUser :exec
+UPDATE users SET disabled_at = NOW() WHERE username = $1
+`
+
+func (q *Queries) DisableUser(ctx context.Context, username string) error {
+	_, err := q.db.Exec(ctx, disableUser, username)
 	return err
 }
 
@@ -157,7 +167,7 @@ func (q *Queries) GetAppPrefs(ctx context.Context, appName string, uid int) ([]b
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, password, email, roles, last_login_at, last_login_from, password_set_at, prefs FROM users
+SELECT id, username, password, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs FROM users
 WHERE id = $1
 `
 
@@ -170,6 +180,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int) (User, error) {
 		&i.Password,
 		&i.Email,
 		&i.Roles,
+		&i.DisabledAt,
 		&i.LastLoginAt,
 		&i.LastLoginFrom,
 		&i.PasswordSetAt,
@@ -179,8 +190,8 @@ func (q *Queries) GetUserByID(ctx context.Context, id int) (User, error) {
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password, email, roles, last_login_at, last_login_from, password_set_at, prefs FROM users
-WHERE username = $1
+SELECT id, username, password, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs FROM users
+WHERE username = $1 AND disabled_at IS NULL
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
@@ -192,6 +203,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.Password,
 		&i.Email,
 		&i.Roles,
+		&i.DisabledAt,
 		&i.LastLoginAt,
 		&i.LastLoginFrom,
 		&i.PasswordSetAt,
@@ -201,7 +213,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, username, password, email, roles, last_login_at, last_login_from, password_set_at, prefs FROM users
+SELECT id, username, password, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -219,6 +231,7 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 			&i.Password,
 			&i.Email,
 			&i.Roles,
+			&i.DisabledAt,
 			&i.LastLoginAt,
 			&i.LastLoginFrom,
 			&i.PasswordSetAt,
@@ -270,7 +283,7 @@ UPDATE users SET
 	roles = COALESCE($3, roles)
 WHERE
 	username = $1
-RETURNING id, username, password, email, roles, last_login_at, last_login_from, password_set_at, prefs
+RETURNING id, username, password, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs
 `
 
 func (q *Queries) UpdateUser(ctx context.Context, username string, email *string, roles []string) (User, error) {
@@ -282,6 +295,7 @@ func (q *Queries) UpdateUser(ctx context.Context, username string, email *string
 		&i.Password,
 		&i.Email,
 		&i.Roles,
+		&i.DisabledAt,
 		&i.LastLoginAt,
 		&i.LastLoginFrom,
 		&i.PasswordSetAt,

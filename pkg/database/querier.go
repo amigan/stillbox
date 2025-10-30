@@ -35,6 +35,7 @@ type Querier interface {
 	DeleteTalkgroup(ctx context.Context, systemID int32, tGID int32) error
 	DeleteUser(ctx context.Context, username string) error
 	DetailedCountRefJournal(ctx context.Context) ([]DetailedCountRefJournalRow, error)
+	DisableUser(ctx context.Context, username string) error
 	DropRefJournal(ctx context.Context, id int64) error
 	GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, error)
 	GetAllTalkgroupTags(ctx context.Context) ([]string, error)
