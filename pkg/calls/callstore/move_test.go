@@ -51,20 +51,20 @@ type mockAudioBackend struct {
 
 func (m *mockAudioBackend) Store(ctx context.Context, ca *calls.CallAudio) (callstore.AudioRef, error) {
 	m.calls[ca.ID.String()] = ca
-	return ca.ID.String(), nil
+	return callstore.AbsoluteRef(ca.ID.String()), nil
 }
 
 func (m *mockAudioBackend) Get(ctx context.Context, call *calls.CallAudio, audioRef callstore.AudioRef, opts *callstore.CallAudioOptions) (blob []byte, audioURL *url.URL, err error) {
-	*call = *m.calls[audioRef.(string)]
+	*call = *m.calls[audioRef.String()]
 	return call.AudioBlob, call.AudioURL, nil
 }
 
-func (m *mockAudioBackend) Delete(ctx context.Context, audioRef callstore.AudioRef) error {
-	delete(m.calls, audioRef.(string))
+func (m *mockAudioBackend) Delete(ctx context.Context, _ *calls.CallAudio, audioRef callstore.AudioRef) error {
+	delete(m.calls, audioRef.String())
 	return nil
 }
 
-func (m *mockAudioBackend) DeleteBulk(ctx context.Context, refs []callstore.AudioRef) error {
+func (m *mockAudioBackend) DeleteBulk(ctx context.Context, refs []callstore.AbsoluteRef) error {
 	return nil
 }
 
@@ -72,7 +72,7 @@ func (m *mockAudioBackend) Type() string {
 	return "test"
 }
 
-func (m *mockAudioBackend) Prune(ctx context.Context, audioRef callstore.AudioRef, pruneAfter *time.Time) (newPruneAfter *time.Time, err error) {
+func (m *mockAudioBackend) Prune(ctx context.Context, audioRef string, pruneAfter *time.Time) (newPruneAfter *time.Time, err error) {
 	return nil, nil
 }
 
