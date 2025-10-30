@@ -2,9 +2,6 @@ package database
 
 import (
 	"context"
-	"errors"
-
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type talkgroupQuerier interface {
@@ -26,15 +23,6 @@ func IsTGConstraintViolation(e error) bool {
 
 func IsSystemConstraintViolation(e error) bool {
 	return IsConstraintViolation(e, SysConstraintName)
-}
-
-func IsConstraintViolation(e error, constraintName string) bool {
-	var err *pgconn.PgError
-	if errors.As(e, &err) && (err.Code == "23503" || err.Code == "23505") && err.ConstraintName == constraintName {
-		return true
-	}
-
-	return false
 }
 
 func MakeTGTuples(cap int) TGTuples {

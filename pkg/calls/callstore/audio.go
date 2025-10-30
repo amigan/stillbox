@@ -366,7 +366,11 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, pr
 	for _, prefix := range prefixes {
 		jeid, err := ab.journal.AddDelete(ctx, beName, prefix, nil)
 		if err != nil {
-			return err
+			if database.IsConstraintViolation(err, "audio_ref_journal_call_id_backend_ref_key") {
+				log.Warn().Str("backend", beName).Str("prefix", prefix).Msg("duplicate delete entry in ref journal")
+			} else {
+				return err
+			}
 		}
 
 		pruneAfter, err := be.Prune(ctx, prefix, nil) // nil pruneAfter because this is initial
@@ -628,7 +632,10 @@ func (s *store) DerefSweptCallAudios(ctx context.Context, tx database.Store) err
 	}
 
 	for _, ca := range cas {
-		var out calls.CallAudio
+		out := calls.CallAudio{
+			ID:       ca.ID,
+			CallDate: jsontypes.Time(ca.CallDate.Time),
+		}
 		err := s.audioBackends.CallAudio(ctx, &out, ca.AudioRef, &CallAudioOptions{resolveBlob: true})
 		if err != nil {
 			return err

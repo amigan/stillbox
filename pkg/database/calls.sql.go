@@ -688,13 +688,14 @@ func (q *Queries) GetRefJournal(ctx context.Context, arg GetRefJournalParams) ([
 }
 
 const getSweptCallsWithRef = `-- name: GetSweptCallsWithRef :many
-SELECT id, audio_ref, audio_blob FROM swept_calls WHERE audio_ref IS NOT NULL
+SELECT id, call_date, audio_ref, audio_blob FROM swept_calls WHERE audio_ref IS NOT NULL
 `
 
 type GetSweptCallsWithRefRow struct {
-	ID        uuid.UUID `json:"id"`
-	AudioRef  []byte    `json:"audioRef"`
-	AudioBlob []byte    `json:"audioBlob"`
+	ID        uuid.UUID          `json:"id"`
+	CallDate  pgtype.Timestamptz `json:"callDate"`
+	AudioRef  []byte             `json:"audioRef"`
+	AudioBlob []byte             `json:"audioBlob"`
 }
 
 func (q *Queries) GetSweptCallsWithRef(ctx context.Context) ([]GetSweptCallsWithRefRow, error) {
@@ -706,7 +707,12 @@ func (q *Queries) GetSweptCallsWithRef(ctx context.Context) ([]GetSweptCallsWith
 	var items []GetSweptCallsWithRefRow
 	for rows.Next() {
 		var i GetSweptCallsWithRefRow
-		if err := rows.Scan(&i.ID, &i.AudioRef, &i.AudioBlob); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.CallDate,
+			&i.AudioRef,
+			&i.AudioBlob,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -1040,7 +1046,7 @@ WITH to_sweep AS (
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= $1 AND calls.call_date < $2
-) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_ref, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep
+) INSERT INTO swept_calls SELECT id, submitter, system, talkgroup, call_date, audio_name, audio_blob, duration, audio_type, audio_ref, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript FROM to_sweep ON CONFLICT DO NOTHING
 `
 
 // This is used to sweep calls that are part of an incident prior to pruning a partition.

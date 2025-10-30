@@ -60,7 +60,7 @@ WHERE sc.id = @id
 ;
 
 -- name: GetSweptCallsWithRef :many
-SELECT id, audio_ref, audio_blob FROM swept_calls WHERE audio_ref IS NOT NULL;
+SELECT id, call_date, audio_ref, audio_blob FROM swept_calls WHERE audio_ref IS NOT NULL;
 
 -- name: SetSweptAudioAndClearRef :exec
 UPDATE swept_calls SET audio_blob = @audio_blob, audio_ref = NULL WHERE id = @id;
@@ -178,7 +178,7 @@ WITH to_sweep AS (
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= @range_start AND calls.call_date < @range_end
-) INSERT INTO swept_calls SELECT * FROM to_sweep;
+) INSERT INTO swept_calls SELECT * FROM to_sweep ON CONFLICT DO NOTHING;
 
 -- name: CleanupSweptCalls :execrows
 WITH to_sweep AS (
