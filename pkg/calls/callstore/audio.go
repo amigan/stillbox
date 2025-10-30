@@ -39,7 +39,49 @@ const (
 	JournalErrThreshold = 4
 )
 
-type AudioRef any
+type AudioRef interface {
+	Ref(PartitionManager, time.Time) string
+	String() string
+}
+
+type AbsoluteRef string
+
+func (ar AbsoluteRef) Ref(_ PartitionManager, _ time.Time) string {
+	return string(ar)
+}
+
+func (ar AbsoluteRef) String() string {
+	return string(ar)
+}
+
+type PartitionRelativeRef string
+
+func (prr PartitionRelativeRef) Ref(pm PartitionManager, callTime time.Time) string {
+	if pm == nil {
+		return string(prr)
+	}
+
+	pre := pm.PartitionPrefix(callTime)
+
+	return pre + "/" + string(prr)
+}
+
+func (prr PartitionRelativeRef) RelPath() string {
+	return "_/" + string(prr)
+}
+
+func (prr PartitionRelativeRef) String() string {
+	return "_/" + string(prr)
+}
+
+func makeAudioRef(s string) AudioRef {
+	if strings.HasPrefix(s, "_/") {
+		return PartitionRelativeRef(s[2:])
+	}
+
+	return AbsoluteRef(s)
+}
+
 type AudioRefJSON []byte
 type AudioRefFQ struct {
 	Backend *audioStorageBackend
@@ -54,13 +96,13 @@ type AudioBackend interface {
 	Get(ctx context.Context, call *calls.CallAudio, audioRef AudioRef, opts *CallAudioOptions) (blob []byte, audioURL *url.URL, err error)
 
 	// Delete deletes a call from the backend.
-	Delete(ctx context.Context, audioRef AudioRef) error
+	Delete(ctx context.Context, call *calls.CallAudio, audioRef AudioRef) error
 
 	// Prune either does a special pruning operation (i.e. for S3, deletes a lifecycle rule) or deletes a call or prefix from the backend.
-	Prune(ctx context.Context, audioRef AudioRef, pruneAfter *time.Time) (newPruneAfter *time.Time, err error)
+	Prune(ctx context.Context, audioRef string, pruneAfter *time.Time) (newPruneAfter *time.Time, err error)
 
 	// DeleteBulk bulk deletes calls from the backend.
-	DeleteBulk(ctx context.Context, refs []AudioRef) error
+	DeleteBulk(ctx context.Context, refs []AbsoluteRef) error
 
 	// Type returns the backend's type.
 	Type() string
@@ -79,7 +121,7 @@ type AudioBackends interface {
 
 	// PruneBackendRefs delete the provided refs from the provided backend using the journal.
 	// Semantics are similar to AudioBackend#Prune.
-	PruneBackendRefs(ctx context.Context, beName string, refs []AudioRef) error
+	PruneBackendRefs(ctx context.Context, beName string, prefixes []string) error
 
 	// Backend looks up a backend by name.
 	Backend(name string) *audioStorageBackend
@@ -159,15 +201,51 @@ var _ AudioBackends = (*audioBackends)(nil)
 
 type AudioRefList map[string]AudioRef
 
-func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) (err error) {
-	var refm AudioRefList
-	if opts != nil && opts.audioRefOut != nil {
-		refm = opts.audioRefOut
+func (arr *AudioRefList) UnmarshalJSON(b []byte) error {
+	res := make(AudioRefList)
+
+	var m map[string]string
+
+	err := json.Unmarshal(b, &m)
+	if err != nil {
+		return err
 	}
 
+	for k, v := range m {
+		res[k] = makeAudioRef(v)
+	}
+
+	*arr = res
+
+	return nil
+}
+
+func (arr AudioRefList) MarshalJSON() ([]byte, error) {
+	rlo := make(map[string]string, len(arr))
+
+	for k, v := range arr {
+		switch tv := v.(type) {
+		case PartitionRelativeRef:
+			rlo[k] = tv.RelPath()
+		default:
+			rlo[k] = tv.String()
+		}
+	}
+
+	return json.Marshal(rlo)
+}
+
+var _ json.Unmarshaler = (*AudioRefList)(nil)
+
+func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) (err error) {
+	var refm AudioRefList
 	err = json.Unmarshal(audioRef, &refm)
 	if err != nil {
 		return
+	}
+
+	if opts != nil && opts.audioRefOut != nil {
+		opts.audioRefOut = refm
 	}
 
 	for backend, location := range refm {
@@ -181,6 +259,7 @@ func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, a
 		case nil, io.EOF:
 			return
 		default:
+			log.Error().Err(err).Msg("CallAudio failure")
 			continue // try next backend
 		}
 	}
@@ -249,7 +328,7 @@ func PruneJobFromContext(ctx context.Context) PruneJob {
 	return pj.(PruneJob)
 }
 
-func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, refs []AudioRef) (err error) {
+func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, prefixes []string) (err error) {
 	be := ab.Backend(beName)
 	if be == nil {
 		return ErrNXBackend
@@ -284,20 +363,15 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, re
 		}()
 	}
 
-	for _, ref := range refs {
-		rj, err := json.Marshal(ref)
+	for _, prefix := range prefixes {
+		jeid, err := ab.journal.AddDelete(ctx, beName, prefix, nil)
 		if err != nil {
 			return err
 		}
 
-		jeid, err := ab.journal.AddDelete(ctx, beName, rj, nil)
+		pruneAfter, err := be.Prune(ctx, prefix, nil) // nil pruneAfter because this is initial
 		if err != nil {
-			return err
-		}
-
-		pruneAfter, err := be.Prune(ctx, ref, nil) // nil pruneAfter because this is initial
-		if err != nil {
-			log.Error().Str("backend", be.Name).Interface("ref", ref).Err(err).Msg("prune failure")
+			log.Error().Str("backend", be.Name).Interface("ref", prefix).Err(err).Msg("prune failure")
 			ierr := ab.journal.Increment(ctx, jeid)
 			if ierr != nil {
 				log.Error().Int64("jeid", int64(jeid)).Msg("journal increment failure")
@@ -458,7 +532,7 @@ func (s *store) MakeBackends(ctx context.Context, fc tgstore.FilterCache, met me
 
 	ab.refTrackerPool = sync.Pool{
 		New: func() any {
-			return newRefTracker(ab, ab.journal)
+			return newRefTracker(ab, s, ab.journal)
 		},
 	}
 
@@ -526,18 +600,18 @@ func (s *store) PruneAudioPrefix(ctx context.Context, tx database.Store, partPre
 		return err
 	}
 
-	bm := make(map[string][]AudioRef, len(prunableRefs))
+	prefixBEMap := make(map[string][]string, len(prunableRefs))
 	for i := range prunableRefs {
 		backend, pathFirst := prunableRefs[i].Backend, prunableRefs[i].PathFirst
 		if pathFirst != "_/" {
 			continue
 		}
 
-		bm[backend] = append(bm[backend], AudioRef(partPrefix+"/"))
+		prefixBEMap[backend] = append(prefixBEMap[backend], partPrefix+"/")
 	}
 
-	for backend, audioRefs := range bm {
-		err := s.audioBackends.PruneBackendRefs(ctx, backend, audioRefs)
+	for backend, prefixes := range prefixBEMap {
+		err := s.audioBackends.PruneBackendRefs(ctx, backend, prefixes)
 		if err != nil {
 			return err
 		}
@@ -575,17 +649,6 @@ func (s *store) callPartitionPrefix(ca *calls.CallAudio) string {
 	}
 
 	return ""
-}
-
-// partitionizePath replaces any leading underscore components `_/` in path with the current partiiton prefix.
-func (s *store) partitionizePath(path string, ca *calls.CallAudio) string {
-	if s.partman == nil || !strings.HasPrefix(path, "_/") {
-		return path
-	}
-
-	pre := s.partman.PartitionPrefix(ca.CallDate.Time())
-
-	return pre + path[1:]
 }
 
 // BlobPath generates the audio path for FS and S3 backends. audioPath is the real path into

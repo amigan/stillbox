@@ -23,7 +23,7 @@ type RefJournal interface {
 	AddCreate(ctx context.Context, callID uuid.UUID, backend string) (id JournalID, err error)
 
 	// AddDelete adds a delete ref operation to the journal.
-	AddDelete(ctx context.Context, backend string, ref json.RawMessage, pruneAfter *time.Time) (id JournalID, err error)
+	AddDelete(ctx context.Context, backend string, ref string, pruneAfter *time.Time) (id JournalID, err error)
 
 	// GC gets all failed refs meeting passed criteria and tries to prune them.
 	// It returns the number of successful operations.
@@ -55,23 +55,32 @@ type refJournal struct {
 }
 
 func (rs *refJournal) AddCreate(ctx context.Context, callID uuid.UUID, backend string) (id JournalID, err error) {
-	return rs.add(ctx, &callID, backend, nil, nil, 1)
+	return rs.add(ctx, &callID, backend, "", nil, 1)
 }
 
-func (rs *refJournal) AddDelete(ctx context.Context, backend string, ref json.RawMessage, pruneAfter *time.Time) (id JournalID, err error) {
+func (rs *refJournal) AddDelete(ctx context.Context, backend string, ref string, pruneAfter *time.Time) (id JournalID, err error) {
 	return rs.add(ctx, nil, backend, ref, pruneAfter, 1)
 }
 
-func (rs *refJournal) add(ctx context.Context, callID *uuid.UUID, backend string, ref json.RawMessage, pruneAfter *time.Time, tries int) (JournalID, error) {
+func (rs *refJournal) add(ctx context.Context, callID *uuid.UUID, backend string, ref string, pruneAfter *time.Time, tries int) (JournalID, error) {
 	var pA pgtype.Timestamptz
 	if pruneAfter != nil {
 		pA = pgtype.Timestamptz{Time: *pruneAfter, Valid: true}
 	}
 
+	var refJSON []byte
+	var err error
+	if ref != "" {
+		refJSON, err = json.Marshal(ref)
+		if err != nil {
+			return JournalID(0), err
+		}
+	}
+
 	jid, err := rs.store.db.AddRefJournal(ctx, database.AddRefJournalParams{
 		CallID:     common.PGUUID(callID),
 		Backend:    backend,
-		Ref:        ref,
+		Ref:        refJSON,
 		PruneAfter: pA,
 		Tries:      tries,
 	})
@@ -121,7 +130,7 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 	err = rs.store.db.GetAudioRefJournalCb(ctx, arg, func(fr database.AudioRefJournal) {
 		create := fr.Ref == nil
 
-		var ref AudioRef
+		var ref string
 		rerr := json.Unmarshal(fr.Ref, &ref)
 		if rerr != nil {
 			if errCh != nil {

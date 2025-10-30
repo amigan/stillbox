@@ -194,7 +194,7 @@ func (sb *s3Backend) Store(ctx context.Context, call *calls.CallAudio) (AudioRef
 		return nil, err
 	}
 
-	return audioRef, nil
+	return makeAudioRef(audioRef), nil
 }
 
 func (sb *s3Backend) getBlob(ctx context.Context, objKey string) ([]byte, error) {
@@ -240,10 +240,7 @@ func (sb *s3Backend) generateSignedURL(ctx context.Context, audioName *string, o
 }
 
 func (sb *s3Backend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRef, opts *CallAudioOptions) (blob []byte, audioURL *url.URL, err error) {
-	objKey, ok := ref.(string)
-	if !ok {
-		return nil, nil, ErrBadAudioRef
-	}
+	objKey := ref.Ref(sb.st.partMan(), call.CallDate.Time())
 
 	if opts != nil && opts.resolveBlob {
 		blob, err = sb.getBlob(ctx, objKey)
@@ -254,12 +251,7 @@ func (sb *s3Backend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRe
 	return
 }
 
-func (sb *s3Backend) Prune(ctx context.Context, audioRef AudioRef, pruneAfter *time.Time) (*time.Time, error) {
-	refPath, ok := audioRef.(string)
-	if !ok {
-		return nil, ErrBadAudioRef
-	}
-
+func (sb *s3Backend) Prune(ctx context.Context, refPath string, pruneAfter *time.Time) (*time.Time, error) {
 	// get the ruleJob out of the context
 	rj := ruleJobFromCtx(ctx)
 	if rj == nil {
@@ -302,23 +294,18 @@ func (sb *s3Backend) delete(ctx context.Context, objKey string) error {
 	return sb.cli.RemoveObject(ctx, sb.Bucket, objKey, minio.RemoveObjectOptions{})
 }
 
-func (sb *s3Backend) Delete(ctx context.Context, audioRef AudioRef) error {
-	objKey, ok := audioRef.(string)
-	if !ok {
-		return ErrBadAudioRef
-	}
-	return sb.delete(ctx, objKey)
+func (sb *s3Backend) Delete(ctx context.Context, call *calls.CallAudio, objKey AudioRef) error {
+	return sb.delete(ctx, objKey.Ref(sb.st.partMan(), call.CallDate.Time()))
 }
 
-func (sb *s3Backend) DeleteBulk(ctx context.Context, refs []AudioRef) error {
+func (sb *s3Backend) DeleteBulk(ctx context.Context, refs []AbsoluteRef) error {
 	objCh := make(chan minio.ObjectInfo)
 
 	go func() {
 		defer close(objCh)
 
 		for _, ref := range refs {
-			ref := ref.(string)
-			objCh <- minio.ObjectInfo{Key: ref}
+			objCh <- minio.ObjectInfo{Key: ref.String()}
 		}
 	}()
 

@@ -74,6 +74,7 @@ type Store interface {
 	GoGC(ctx context.Context)
 
 	PartmanCallAudioManager
+	partMan() PartitionManager
 }
 
 type store struct {
@@ -82,6 +83,10 @@ type store struct {
 	partman       PartitionManager
 
 	moveInProgress sync.Mutex
+}
+
+func (s *store) partMan() PartitionManager {
+	return s.partman
 }
 
 func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, callStorage config.CallStorage, partConfig config.Partition) (*store, error) {
@@ -205,7 +210,7 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
 
 	if audioRef != nil { // was stored in a backend
 		blob = nil
-		rt.Created(audioRef.Backend, audioRef.Ref)
+		rt.Created(audioRef.Backend, AbsoluteRef(audioRef.Ref.Ref(s.partman, call.DateTime)))
 
 		refMap := map[string]AudioRef{
 			audioRef.Backend.Name: audioRef.Ref,
@@ -339,6 +344,7 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID, opts ...CallAudioOp
 	}
 
 	call := &calls.CallAudio{
+		ID:        id,
 		CallDate:  jsontypes.Time(dbCall.CallDate.Time),
 		AudioName: dbCall.AudioName,
 		AudioType: audioMime(dbCall.AudioType),

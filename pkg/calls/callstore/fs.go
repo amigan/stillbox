@@ -19,7 +19,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"github.com/go-viper/mapstructure/v2"
-	"github.com/rs/zerolog/log"
 )
 
 type fsBackend struct {
@@ -56,14 +55,8 @@ func (fsb *fsBackend) serveFile(w ZeroCopyResponseWriter, file *os.File, call *c
 	return io.EOF // io.EOF is the sentinel that everything is all done
 }
 
-func (fsb *fsBackend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRef, opts *CallAudioOptions) ([]byte, *url.URL, error) {
-	refPath, ok := ref.(string)
-	if !ok {
-		log.Error().Str("refPath", fmt.Sprint(refPath)).Msg("call path was not a string")
-		return nil, nil, ErrBadAudioRef
-	}
-
-	cPath := fsb.callPath(refPath)
+func (fsb *fsBackend) Get(ctx context.Context, call *calls.CallAudio, refPath AudioRef, opts *CallAudioOptions) ([]byte, *url.URL, error) {
+	cPath := fsb.callPath(refPath.Ref(fsb.st.partMan(), call.CallDate.Time()))
 
 	file, err := os.Open(cPath)
 	if err != nil {
@@ -93,7 +86,7 @@ func (fsb *fsBackend) Get(ctx context.Context, call *calls.CallAudio, ref AudioR
 	return audio, nil, nil
 }
 
-func (fsb *fsBackend) Prune(ctx context.Context, audioRef AudioRef, pruneAfter *time.Time) (*time.Time, error) {
+func (fsb *fsBackend) Prune(ctx context.Context, audioRef string, pruneAfter *time.Time) (*time.Time, error) {
 	if pruneAfter != nil && !time.Now().After(*pruneAfter) {
 		// this probably won't ever happen
 		return nil, ErrNotYetPruneTime
@@ -119,9 +112,8 @@ func (fsb *fsBackend) Prune(ctx context.Context, audioRef AudioRef, pruneAfter *
 	return nil, os.RemoveAll(composedPath)
 }
 
-func (fsb *fsBackend) checkPath(audioRef AudioRef) (composedPath string, isDir bool, err error) {
-	refPath, ok := audioRef.(string)
-	if !ok || len(refPath) < 1 {
+func (fsb *fsBackend) checkPath(refPath string) (composedPath string, isDir bool, err error) {
+	if refPath == "" {
 		err = ErrBadAudioRef
 		return
 	}
@@ -150,8 +142,12 @@ func (fsb *fsBackend) checkPath(audioRef AudioRef) (composedPath string, isDir b
 	return
 }
 
-func (fsb *fsBackend) Delete(_ context.Context, audioRef AudioRef) error {
-	composedPath, isDir, err := fsb.checkPath(audioRef)
+func (fsb *fsBackend) Delete(_ context.Context, call *calls.CallAudio, audioRef AudioRef) error {
+	return fsb.delete(audioRef.Ref(fsb.st.partMan(), call.CallDate.Time()))
+}
+
+func (fsb *fsBackend) delete(path string) error {
+	composedPath, isDir, err := fsb.checkPath(path)
 	if err != nil {
 		return err
 	}
@@ -163,9 +159,9 @@ func (fsb *fsBackend) Delete(_ context.Context, audioRef AudioRef) error {
 	return os.Remove(composedPath)
 }
 
-func (fsb *fsBackend) DeleteBulk(ctx context.Context, refs []AudioRef) error {
+func (fsb *fsBackend) DeleteBulk(ctx context.Context, refs []AbsoluteRef) error {
 	for _, r := range refs {
-		rErr := fsb.Delete(ctx, r)
+		rErr := fsb.delete(r.String())
 		if rErr != nil {
 			return rErr
 		}
@@ -209,7 +205,7 @@ func (fsb *fsBackend) Store(_ context.Context, call *calls.CallAudio) (AudioRef,
 		}
 	}
 
-	return audRef, nil
+	return makeAudioRef(audRef), nil
 }
 
 func init() {

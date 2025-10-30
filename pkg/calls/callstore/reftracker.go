@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 )
 
-type beRefMap map[AudioBackend][]AudioRef
+type beRefMap map[AudioBackend][]AbsoluteRef
 
 func (brm beRefMap) reset() {
 	for k := range brm {
@@ -24,6 +25,7 @@ type refTracker struct {
 
 	ab      AudioBackends
 	journal RefJournal
+	st      Store
 }
 
 func (rt *refTracker) Reset() {
@@ -78,7 +80,7 @@ func (rt *refTracker) Commit(ctx context.Context) error {
 	return nil
 }
 
-func (rt *refTracker) QueueDeleteAll(ar AudioRefList) error {
+func (rt *refTracker) QueueDeleteAll(ar AudioRefList, callDate time.Time) error {
 	for ben, loc := range ar {
 		if ben == "" {
 			continue
@@ -89,20 +91,20 @@ func (rt *refTracker) QueueDeleteAll(ar AudioRefList) error {
 			return fmt.Errorf("queue delete all: no such backend '%s'", ben)
 		}
 
-		rt.QueueDelete(be, loc)
+		rt.QueueDelete(be, AbsoluteRef(loc.Ref(rt.st.partMan(), callDate)))
 	}
 
 	return nil
 }
 
-func (rt *refTracker) QueueDelete(be AudioBackend, ar AudioRef) {
+func (rt *refTracker) QueueDelete(be AudioBackend, ar AbsoluteRef) {
 	rt.Lock()
 	defer rt.Unlock()
 
 	rt.del[be] = append(rt.del[be], ar)
 }
 
-func (rt *refTracker) Created(be AudioBackend, ar AudioRef) {
+func (rt *refTracker) Created(be AudioBackend, ar AbsoluteRef) {
 	rt.Lock()
 	defer rt.Unlock()
 
@@ -110,11 +112,12 @@ func (rt *refTracker) Created(be AudioBackend, ar AudioRef) {
 }
 
 // newRefTracker creates a new ref tracker. If journal is nil, journaling is disabled.
-func newRefTracker(ab AudioBackends, journal RefJournal) *refTracker {
+func newRefTracker(ab AudioBackends, st Store, journal RefJournal) *refTracker {
 	return &refTracker{
 		ab:      ab,
 		cre:     make(beRefMap),
 		del:     make(beRefMap),
 		journal: journal,
+		st:      st,
 	}
 }

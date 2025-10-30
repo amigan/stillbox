@@ -103,7 +103,7 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 
 	// if we aren't copying, queue a clear of all existing audiorefs
 	if !m.par.Copy && len(cao.audioRefOut) > 0 {
-		if err := m.refs.QueueDeleteAll(cao.audioRefOut); err != nil {
+		if err := m.refs.QueueDeleteAll(cao.audioRefOut, ca.CallDate.Time()); err != nil {
 			return nil, nil, err
 		}
 		clear(cao.audioRefOut)
@@ -125,7 +125,7 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 		}
 
 		// storage succeeded, log the creation
-		m.refs.Created(m.dst, crRef)
+		m.refs.Created(m.dst, AbsoluteRef(crRef.Ref(m.refs.st.partMan(), row.CallDate.Time)))
 
 		if cao.audioRefOut == nil {
 			cao.audioRefOut = make(AudioRefList)
@@ -304,7 +304,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		NotHasBackend: par.DestBackend, // not already moved
 	}
 
-	refT := newRefTracker(s.audioBackends, nil)
+	refT := newRefTracker(s.audioBackends, s, nil)
 
 	err = s.db.InTx(context.WithoutCancel(ctx), func(tx database.Store) error {
 		m := s.newMover(dst, tx, refT, par)
