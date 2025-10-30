@@ -13,6 +13,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
 	"github.com/rs/zerolog/log"
@@ -191,4 +192,15 @@ func CtxWithDB(ctx context.Context, conn Store) context.Context {
 // no rows error.
 func IsNoRows(err error) bool {
 	return errors.Is(err, pgx.ErrNoRows)
+}
+
+// IsConstraintViolation is a convenience function to test whether an error is a PgError
+// indicating constraint violation.
+func IsConstraintViolation(e error, constraintName string) bool {
+	var err *pgconn.PgError
+	if errors.As(e, &err) && (err.Code == "23503" || err.Code == "23505") && err.ConstraintName == constraintName {
+		return true
+	}
+
+	return false
 }

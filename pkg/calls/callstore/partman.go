@@ -253,7 +253,10 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Part
 	// sweep calls that are referenced by an incident into swept_calls
 	swept, err := tx.SweepCalls(ctx, start, end)
 	if err != nil {
-		return err
+		if !database.IsConstraintViolation(err, "swept_calls_pkey") {
+			return err
+		}
+		log.Warn().Msg("unique constraint violation while sweeping calls")
 	}
 	log.Info().Int64("rows", swept).Time("start", s).Time("end", e).Msg("swept calls")
 
@@ -312,7 +315,7 @@ func (pm *partman) Check(ctx context.Context, now time.Time) error {
 			for _, p := range unexpected {
 				err := pm.prunePartition(ctx, db, p)
 				if err != nil {
-					return err
+					log.Error().Err(err).Str("partition", p.PartitionName()).Msg("prune partition failed")
 				}
 			}
 		}
