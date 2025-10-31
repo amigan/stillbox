@@ -248,6 +248,10 @@ func (sb *s3Backend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRe
 		audioURL, err = sb.generateSignedURL(ctx, call.AudioName, objKey)
 	}
 
+	if err != nil {
+		err = fmt.Errorf("%s: %w", objKey, err)
+	}
+
 	return
 }
 

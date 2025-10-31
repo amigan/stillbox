@@ -259,7 +259,7 @@ func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, a
 		case nil, io.EOF:
 			return
 		default:
-			log.Error().Err(err).Msg("CallAudio failure")
+			log.Warn().Err(err).Str("backend", be.Name).Str("id", location.String()).Msg("CallAudio failure")
 			continue // try next backend
 		}
 	}

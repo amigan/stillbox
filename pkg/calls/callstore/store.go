@@ -384,9 +384,18 @@ func (s *store) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*call
 			sub = common.PtrTo(users.UserID(*c.Submitter))
 		}
 
+		// set this up in case we need to resolve from backend
+		callAud := calls.CallAudio{
+			ID:        c.ID,
+			CallDate:  jsontypes.Time(c.CallDate.Time),
+			AudioBlob: c.AudioBlob,
+		}
+
 		if c.AudioBlob == nil {
-			// XXX
-			panic("not impl")
+			err := s.audioBackends.CallAudio(ctx, &callAud, c.AudioRef, &CallAudioOptions{resolveBlob: true})
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		cs = append(cs, &calls.Call{
@@ -395,7 +404,7 @@ func (s *store) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*call
 			System:         c.System,
 			Talkgroup:      c.Talkgroup,
 			DateTime:       c.CallDate.Time,
-			Audio:          c.AudioBlob,
+			Audio:          callAud.AudioBlob,
 			AudioName:      common.ZeroIfNil(c.AudioName),
 			AudioType:      string(c.AudioType.AudioMIME),
 			Duration:       calls.CallDuration(time.Duration(common.ZeroIfNil(c.Duration)) * time.Millisecond),
