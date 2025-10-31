@@ -173,12 +173,69 @@ SELECT pg_size_pretty(pg_database_size(current_database()));
 -- name: SweepCalls :execrows
 -- This is used to sweep calls that are part of an incident prior to pruning a partition.
 WITH to_sweep AS (
-	SELECT id, submitter, system, talkgroup, calls.call_date, audio_name, audio_blob, duration, audio_type,
-		audio_ref, frequency, frequencies, patches, talker_alias, tg_label, tg_alpha_tag, tg_group, source, transcript
+	SELECT id,
+	submitter,
+	system,
+	talkgroup,
+	calls.call_date,
+	audio_name,
+	audio_blob,
+	duration,
+	audio_type,
+	audio_ref,
+	frequency,
+	frequencies,
+	patches,
+	talker_alias,
+	tg_label,
+	tg_alpha_tag,
+	tg_group,
+	source,
+	transcript
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= @range_start AND calls.call_date < @range_end
-) INSERT INTO swept_calls SELECT * FROM to_sweep ON CONFLICT DO NOTHING;
+) INSERT INTO swept_calls (
+	id,
+	submitter,
+	system,
+	talkgroup,
+	call_date,
+	audio_name,
+	audio_blob,
+	duration,
+	audio_type,
+	audio_ref,
+	frequency,
+	frequencies,
+	patches,
+	talker_alias,
+	tg_label,
+	tg_alpha_tag,
+	tg_group,
+	source,
+	transcript
+) SELECT 
+	id,
+	submitter,
+	system,
+	talkgroup,
+	call_date,
+	audio_name,
+	audio_blob,
+	duration,
+	audio_type,
+	audio_ref,
+	frequency,
+	frequencies,
+	patches,
+	talker_alias,
+	tg_label,
+	tg_alpha_tag,
+	tg_group,
+	source,
+	transcript
+FROM to_sweep ON CONFLICT DO NOTHING;
 
 -- name: CleanupSweptCalls :execrows
 WITH to_sweep AS (

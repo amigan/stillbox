@@ -74,7 +74,7 @@ type Partition struct {
 	Interval     string `yaml:"interval"`
 	Retain       int    `yaml:"retain"`
 	PreProvision *int   `yaml:"preProvision"`
-	Drop         bool   `yaml:"detach"`
+	Drop         bool   `yaml:"drop"`
 }
 
 type Logger struct {
