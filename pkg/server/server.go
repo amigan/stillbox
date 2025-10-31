@@ -136,16 +136,16 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		settings:  settings.New(settings.ConfigDefaults),
 	}
 
-	srv.pipeline, err = pipeline.New(authenticator, srv.calls, srv.tgs, srv.metrics, srv.alerter, srv.nex, srv.conf)
+	srv.metrics.Register("http", &srv.srvMetrics)
+
+	ctx = srv.fillCtx(ctx)
+
+	srv.pipeline, err = pipeline.New(ctx, authenticator, srv.calls, srv.tgs, srv.metrics, srv.alerter, srv.nex, srv.conf)
 	if err != nil {
 		return nil, err
 	}
 
 	srv.rest = rest.New(cfg.Server.BaseURL.URL(), nex, srv.pipeline)
-
-	srv.metrics.Register("http", &srv.srvMetrics)
-
-	ctx = srv.fillCtx(ctx)
 
 	r.Use(middleware.RequestID)
 

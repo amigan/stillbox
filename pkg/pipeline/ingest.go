@@ -2,11 +2,15 @@ package pipeline
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"dynatron.me/x/stillbox/pkg/alerting"
 	"dynatron.me/x/stillbox/pkg/authn"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
+	"dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/nexus"
@@ -15,24 +19,31 @@ import (
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog/log"
 )
 
 type pipe struct {
+	// protects ingest filters
+	sync.Mutex
+
 	sources     sources.Sources
 	sinks       sinks.Sinks
 	transcriber sinks.Transcriber
 	relayer     *sinks.RelayManager
 	metrics     pipeMetrics
-	filters     []filter
+	filters     []ingestFilter
+	ifCfgHash   int64
+	tgstore     tgstore.Store
 }
 
 type pipeMetrics struct {
 	IngestedCallsCount prometheus.Counter `help:"Total ingested calls"`
+	FilteredCallsCount prometheus.Counter `help:"Count of calls rejected by ingest filters"`
 }
 
 type Pipeline interface {
 	Transcriber() sinks.Transcriber
-	HUP(*config.Config)
+	HUPCtx(context.Context, *config.Config)
 	PublicRoutes(chi.Router)
 	Shutdown()
 }
@@ -40,6 +51,7 @@ type Pipeline interface {
 var _ Pipeline = (*pipe)(nil)
 
 func New(
+	ctx context.Context,
 	authenticator authn.Authn,
 	callStore callstore.Store,
 	tgs tgstore.Store,
@@ -48,7 +60,10 @@ func New(
 	nex nexus.Nexus,
 	cfg *config.Configuration,
 ) (*pipe, error) {
+	ctx = entities.CtxWithServiceSubject(ctx, "pipeline")
+
 	sinkMgr := sinks.NewSinkManager()
+
 	transcriber, err := sinks.NewTranscriber(sinkMgr, authenticator, tgs, met, cfg.Transcription)
 	if err != nil {
 		return nil, err
@@ -56,6 +71,7 @@ func New(
 	p := &pipe{
 		sinks:       sinkMgr,
 		transcriber: transcriber,
+		tgstore:     tgs,
 	}
 
 	p.sinks.Register(sinks.NewCallstoreSink(callStore, tgs), sinks.RequiredFlag)
@@ -73,7 +89,7 @@ func New(
 		return nil, err
 	}
 
-	err = p.buildIngestFilters(cfg.Ingest)
+	p.filters, err = buildIngestFilters(ctx, cfg.Ingest)
 	if err != nil {
 		return nil, err
 	}
@@ -85,14 +101,56 @@ func New(
 	return p, nil
 }
 
-type filter struct {
+type ingestFilter struct {
+	filter *filter.Filter
+	dur    time.Duration
 }
 
-func (p *pipe) buildIngestFilters(_ []config.IngestFilter) error {
-	return nil
+func buildIngestFilters(ctx context.Context, flt []config.IngestFilter) ([]ingestFilter, error) {
+	if len(flt) < 1 {
+		return nil, nil
+	}
+
+	flts := make([]ingestFilter, 0, len(flt))
+	for _, f := range flt {
+		filt, err := filter.FromMap(f.Match)
+		if err != nil {
+			return nil, err
+		}
+
+		err = filt.Recompile(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		flts = append(flts, ingestFilter{
+			filter: filt,
+			dur:    f.MinDuration,
+		})
+	}
+
+	return flts, nil
+}
+
+func (p *pipe) testIngest(ctx context.Context, call *calls.Call) bool {
+	p.Lock()
+	defer p.Unlock()
+
+	for _, f := range p.filters {
+		if f.filter.Test(ctx, call) {
+			return call.Duration.Duration() >= f.dur
+		}
+	}
+
+	return true
 }
 
 func (p *pipe) Ingest(ctx context.Context, call *calls.Call) error {
+	if !p.testIngest(ctx, call) {
+		p.metrics.FilteredCallsCount.Add(1)
+		return nil
+	}
+
 	ctx = context.WithoutCancel(ctx)
 	err := p.sinks.EmitCall(ctx, call)
 	if err != nil {
@@ -108,9 +166,21 @@ func (p *pipe) Transcriber() sinks.Transcriber {
 	return p.transcriber
 }
 
-func (p *pipe) HUP(cfg *config.Config) {
+func (p *pipe) HUPCtx(ctx context.Context, cfg *config.Config) {
+	p.Lock()
+	defer p.Unlock()
+	ctx = entities.CtxWithServiceSubject(ctx, "pipeline")
+
 	p.transcriber.HUP(cfg)
 	p.relayer.HUP(cfg)
+
+	flt, err := buildIngestFilters(ctx, cfg.Ingest)
+	if err != nil {
+		log.Error().Err(err).Msg("build ingest filters failed, keeping old set")
+	} else {
+		log.Info().Msg("rebuilt ingest filters")
+		p.filters = flt
+	}
 }
 
 func (p *pipe) Shutdown() {

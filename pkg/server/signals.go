@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,6 +14,10 @@ type hupper interface {
 	HUP(*config.Config)
 }
 
+type hupSvc interface {
+	HUPCtx(context.Context, *config.Config)
+}
+
 func (s *Server) huppers() []hupper {
 	return []hupper{
 		s.logger,
@@ -20,6 +25,11 @@ func (s *Server) huppers() []hupper {
 		s.tgs,
 		s.alerter,
 		s.users,
+	}
+}
+
+func (s *Server) hupSvcs() []hupSvc {
+	return []hupSvc{
 		s.pipeline,
 	}
 }
@@ -34,6 +44,12 @@ func (s *Server) sighup() {
 	hs := s.huppers()
 	for _, h := range hs {
 		h.HUP(&s.conf.Config)
+	}
+
+	ctx := s.fillCtx(context.Background())
+
+	for _, h := range s.hupSvcs() {
+		h.HUPCtx(ctx, &s.conf.Config)
 	}
 }
 
