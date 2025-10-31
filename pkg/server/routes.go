@@ -58,7 +58,7 @@ func (s *Server) setupRoutes(ctx context.Context) error {
 		r.Use(s.auth.PublicSubjectMiddleware())
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		// public routes
-		s.sources.PublicRoutes(r)
+		s.pipeline.PublicRoutes(r)
 	})
 
 	r.Group(func(r chi.Router) {

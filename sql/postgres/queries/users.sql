@@ -4,7 +4,7 @@ WHERE id = $1;
 
 -- name: GetUserByUsername :one
 SELECT * FROM users
-WHERE username = $1;
+WHERE username = $1 AND disabled_at IS NULL;
 
 -- name: GetUsers :many
 SELECT * FROM users;
@@ -71,3 +71,6 @@ SELECT (prefs->>(@app_name::TEXT))::JSONB FROM users WHERE id = @uid;
 
 -- name: SetAppPrefs :exec
 UPDATE users SET prefs = COALESCE(prefs, '{}'::JSONB) || jsonb_build_object(@app_name::TEXT, @prefs::JSONB) WHERE id = @uid;
+
+-- name: DisableUser :exec
+UPDATE users SET disabled_at = NOW() WHERE username = @username;

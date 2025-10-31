@@ -69,6 +69,7 @@ type User struct {
 	Password      string
 	Email         string
 	Roles         []string
+	DisabledAt    *jsontypes.Time
 	LastLoginAt   *jsontypes.Time
 	LastLoginFrom *netip.Addr
 	Prefs         json.RawMessage
@@ -103,9 +104,13 @@ func (u *User) Mask() *User {
 }
 
 func FromDBUser(dbu database.User) *User {
-	var lastLoginAt *jsontypes.Time
+	var lastLoginAt, disabledAt *jsontypes.Time
 	if dbu.LastLoginAt.Valid {
 		lastLoginAt = (*jsontypes.Time)(&dbu.LastLoginAt.Time)
+	}
+
+	if dbu.DisabledAt.Valid {
+		disabledAt = (*jsontypes.Time)(&dbu.DisabledAt.Time)
 	}
 
 	return &User{
@@ -115,6 +120,7 @@ func FromDBUser(dbu database.User) *User {
 		Email:         dbu.Email,
 		Roles:         dbu.Roles,
 		Prefs:         dbu.Prefs,
+		DisabledAt:    disabledAt,
 		LastLoginAt:   lastLoginAt,
 		LastLoginFrom: dbu.LastLoginFrom,
 		PasswordSetAt: dbu.PasswordSetAt.Time,

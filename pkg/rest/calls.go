@@ -19,7 +19,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/nexus"
-	"dynatron.me/x/stillbox/pkg/sinks"
+	"dynatron.me/x/stillbox/pkg/pipeline/sinks"
 	"dynatron.me/x/stillbox/pkg/stats"
 
 	"github.com/go-chi/chi/v5"

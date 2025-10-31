@@ -1712,6 +1712,63 @@ func (_c *Store_DetailedCountRefJournal_Call) RunAndReturn(run func(ctx context.
 	return _c
 }
 
+// DisableUser provides a mock function for the type Store
+func (_mock *Store) DisableUser(ctx context.Context, username string) error {
+	ret := _mock.Called(ctx, username)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DisableUser")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = returnFunc(ctx, username)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_DisableUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DisableUser'
+type Store_DisableUser_Call struct {
+	*mock.Call
+}
+
+// DisableUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - username string
+func (_e *Store_Expecter) DisableUser(ctx interface{}, username interface{}) *Store_DisableUser_Call {
+	return &Store_DisableUser_Call{Call: _e.mock.On("DisableUser", ctx, username)}
+}
+
+func (_c *Store_DisableUser_Call) Run(run func(ctx context.Context, username string)) *Store_DisableUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_DisableUser_Call) Return(err error) *Store_DisableUser_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_DisableUser_Call) RunAndReturn(run func(ctx context.Context, username string) error) *Store_DisableUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DropPartition provides a mock function for the type Store
 func (_mock *Store) DropPartition(ctx context.Context, partitionName string) error {
 	ret := _mock.Called(ctx, partitionName)

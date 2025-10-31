@@ -104,6 +104,14 @@ notify:
     config:
       webhookURL: "http://somewhere"
 
+# ingest filters
+ingest:
+  # require calls to be at least this long when from the specified filter is matched
+  match:
+    talkgroupTagsAny:
+      - nbfm
+  minDuration: 900ms
+
 # configure upstream relays here
 relay:
     # `url` is the root of the instance

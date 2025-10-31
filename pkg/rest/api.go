@@ -10,9 +10,9 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/nexus"
+	"dynatron.me/x/stillbox/pkg/pipeline"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/shares"
-	"dynatron.me/x/stillbox/pkg/sinks"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/users"
 
@@ -50,12 +50,12 @@ func (a *api) ShareRouter() http.Handler {
 	return a.shares.RootRouter()
 }
 
-func New(baseURL url.URL, nex nexus.Nexus, transcriber sinks.Transcriber) *api {
+func New(baseURL url.URL, nex nexus.Nexus, pipe pipeline.Pipeline) *api {
 	s := &api{
 		baseURL:   &baseURL,
 		nex:       nex,
 		tgs:       new(talkgroupAPI),
-		calls:     newCallsAPI(nex, transcriber),
+		calls:     newCallsAPI(nex, pipe.Transcriber()),
 		incidents: newIncidentsAPI(&baseURL),
 		users:     new(usersAPI),
 		apiKeys:   new(apiKeyAPI),
