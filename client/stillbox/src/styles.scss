@@ -6,7 +6,8 @@
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
 // Be sure that you only ever include this mixin once!
-@include mat.core();
+@include mat.elevation-classes();
+@include mat.app-background();
 @include mat.elevation-classes();
 @include mat.app-background();
 
@@ -57,7 +58,7 @@ html {
   --color-dark-header-button-fg: #000;
   --color-dark-header-button-bg: #d0ff00;
   //--mat-toolbar-title-text-font: "Warnes";
-  --mdc-filled-text-field-focus-label-text-color: #fff;
+  --mat-form-field-filled-focus-label-text-color: #fff;
   --mat-list-active-indicator-color: rgb(157, 157, 157);
 }
 
