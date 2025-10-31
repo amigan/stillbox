@@ -3,11 +3,11 @@ import * as d3 from 'd3';
 import { CallsService } from '../calls/calls.service';
 import { Observable, switchMap } from 'rxjs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { NgIf } from '@angular/common';
+
 
 @Component({
   selector: 'chart',
-  imports: [NgIf, MatProgressSpinnerModule],
+  imports: [MatProgressSpinnerModule],
   templateUrl: './charts.component.html',
   styleUrl: './charts.component.scss',
 })

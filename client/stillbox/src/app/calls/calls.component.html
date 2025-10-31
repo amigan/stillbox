@@ -8,7 +8,7 @@
         name="start"
         placeholder="Start date"
         formControlName="start"
-      />
+        />
     </mat-form-field>
     <mat-form-field subscriptSizing="dynamic" class="timeFilterBox">
       <mat-label>End</mat-label>
@@ -18,7 +18,7 @@
         name="end"
         placeholder="End date"
         formControlName="end"
-      />
+        />
     </mat-form-field>
     <mat-form-field subscriptSizing="dynamic" class="durationFilter">
       <mat-label>Dur (s) &gt;</mat-label>
@@ -28,7 +28,7 @@
         name="duration"
         placeholder="Seconds"
         formControlName="duration"
-      />
+        />
     </mat-form-field>
     <mat-form-field class="filterBox" subscriptSizing="dynamic">
       <mat-label>Filter</mat-label>
@@ -38,16 +38,17 @@
         type="text"
         autocomplete="off"
         formControlName="filter"
-      />
-      <button
-        class="clearBtn"
-        *ngIf="form.controls['filter'].value"
-        matSuffix
-        mat-icon-button
-        (click)="form.controls['filter'].setValue('')"
-      >
-        <mat-icon>close</mat-icon>
-      </button>
+        />
+      @if (form.controls['filter'].value) {
+        <button
+          class="clearBtn"
+          matSuffix
+          mat-icon-button
+          (click)="form.controls['filter'].setValue('')"
+          >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
     </mat-form-field>
     <mat-form-field class="filterBox" subscriptSizing="dynamic">
       <mat-label>Source Filter</mat-label>
@@ -57,40 +58,43 @@
         type="text"
         autocomplete="off"
         formControlName="sourceFilter"
-      />
-      <button
-        class="clearBtn"
-        *ngIf="form.controls['sourceFilter'].value"
-        matSuffix
-        mat-icon-button
-        (click)="form.controls['sourceFilter'].setValue('')"
-      >
-        <mat-icon>close</mat-icon>
-      </button>
+        />
+      @if (form.controls['sourceFilter'].value) {
+        <button
+          class="clearBtn"
+          matSuffix
+          mat-icon-button
+          (click)="form.controls['sourceFilter'].setValue('')"
+          >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
     </mat-form-field>
-    <mat-form-field
-      *ngIf="showTranscripts | async"
-      class="filterBox"
-      subscriptSizing="dynamic"
-    >
-      <mat-label>Transcript</mat-label>
-      <input
-        matInput
-        name="transcriptSearch"
-        type="text"
-        autocomplete="off"
-        formControlName="transcriptSearch"
-      />
-      <button
-        class="clearBtn"
-        *ngIf="form.controls['transcriptSearch'].value !== null"
-        matSuffix
-        mat-icon-button
-        (click)="form.controls['transcriptSearch'].setValue(null)"
-      >
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-form-field>
+    @if (showTranscripts | async) {
+      <mat-form-field
+        class="filterBox"
+        subscriptSizing="dynamic"
+        >
+        <mat-label>Transcript</mat-label>
+        <input
+          matInput
+          name="transcriptSearch"
+          type="text"
+          autocomplete="off"
+          formControlName="transcriptSearch"
+          />
+        @if (form.controls['transcriptSearch'].value !== null) {
+          <button
+            class="clearBtn"
+            matSuffix
+            mat-icon-button
+            (click)="form.controls['transcriptSearch'].setValue(null)"
+            >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    }
     <mat-form-field class="tagSelect" subscriptSizing="dynamic">
       <mat-label>Any Tags</mat-label>
       <mat-select
@@ -98,7 +102,7 @@
         name="tagsAny"
         formControlName="tagsAny"
         multiple
-      >
+        >
         @for (tag of tgSvc.allTags() | async; track tag) {
           <mat-option value="{{ tag }}">{{ tag }}</mat-option>
         }
@@ -112,32 +116,34 @@
         class="tagSelect"
         formControlName="tagsNot"
         multiple
-      >
+        >
         @for (tag of tgSvc.allTags() | async; track tag) {
           <mat-option value="{{ tag }}">{{ tag }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
     <div class="toolbarButtons">
-      <input
-        *ngIf="showTranscripts | async"
-        class="tsCheck"
-        type="checkbox"
-        formControlName="showTranscripts"
-        name="showTranscripts"
-      />
-      <button
-        *ngIf="showTranscripts | async"
-        title="Always show transcripts"
-        class="sbButton"
+      @if (showTranscripts | async) {
+        <input
+          class="tsCheck"
+          type="checkbox"
+          formControlName="showTranscripts"
+          name="showTranscripts"
+          />
+      }
+      @if (showTranscripts | async) {
+        <button
+          title="Always show transcripts"
+          class="sbButton"
         (click)="
           this.form.controls.showTranscripts.setValue(
             !this.form.controls.showTranscripts.value
           )
         "
-      >
-        <mat-icon>subtitles</mat-icon>
-      </button>
+          >
+          <mat-icon>subtitles</mat-icon>
+        </button>
+      }
       <button class="sbButton" matIconButton (click)="resetFilter()">
         <mat-icon class="material-symbols-outlined">reset_settings</mat-icon>
       </button>
@@ -148,7 +154,7 @@
         matIconButton
         [ngClass]="{ sbButton: true, hidden: !callsTable.selection.hasValue() }"
         [matMenuTriggerFor]="callMenu"
-      >
+        >
         <mat-icon>playlist_add</mat-icon>
       </button>
       <mat-menu #callMenu="matMenu">

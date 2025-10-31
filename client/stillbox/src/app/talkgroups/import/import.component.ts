@@ -7,13 +7,13 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { Router, ActivatedRoute } from '@angular/router';
 import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-import',
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './import.component.html',
   styleUrl: './import.component.scss',
 })
