@@ -19,16 +19,17 @@ type Configuration struct {
 }
 
 type Config struct {
-	Server        Server        `yaml:"server"`
-	DB            DB            `yaml:"db"`
-	Auth          Auth          `yaml:"auth"`
-	Alerting      Alerting      `yaml:"alerting"`
-	Log           []Logger      `yaml:"log"`
-	Notify        Notify        `yaml:"notify"`
-	CallStorage   CallStorage   `yaml:"callStorage"`
-	Relay         []Relay       `yaml:"relay"`
-	Transcription Transcription `yaml:"transcription"`
-	Metrics       Metrics       `yaml:"metrics"`
+	Server        Server         `yaml:"server"`
+	DB            DB             `yaml:"db"`
+	Auth          Auth           `yaml:"auth"`
+	Alerting      Alerting       `yaml:"alerting"`
+	Ingest        []IngestFilter `yaml:"ingest"`
+	Log           []Logger       `yaml:"log"`
+	Notify        Notify         `yaml:"notify"`
+	CallStorage   CallStorage    `yaml:"callStorage"`
+	Relay         []Relay        `yaml:"relay"`
+	Transcription Transcription  `yaml:"transcription"`
+	Metrics       Metrics        `yaml:"metrics"`
 }
 
 type Server struct {
@@ -115,6 +116,11 @@ type NotifyService struct {
 	SubjectTemplate *string   `yaml:"subjectTemplate" json:"subjectTemplate"`
 	BodyTemplate    *string   `yaml:"bodyTemplate" json:"bodyTemplate"`
 	Config          ConfigMap `yaml:"config" json:"config"`
+}
+
+type IngestFilter struct {
+	Match       ConfigMap     `yaml:"match"`
+	MinDuration time.Duration `yaml:"minDuration"`
 }
 
 type ConfigMap map[string]any

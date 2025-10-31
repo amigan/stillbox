@@ -4,12 +4,15 @@ import (
 	"context"
 
 	"dynatron.me/x/stillbox/pkg/calls"
-
 	"github.com/go-chi/chi/v5"
 )
 
 type Source interface {
 	SourceType() string
+}
+
+type Ingestor interface {
+	Ingest(context.Context, *calls.Call) error
 }
 
 type sourceInstance struct {
@@ -32,10 +35,6 @@ func (s *Sources) PublicRoutes(r chi.Router) {
 			rs.InstallPublicRoutes(r)
 		}
 	}
-}
-
-type Ingestor interface {
-	Ingest(context.Context, *calls.Call) error
 }
 
 type PublicRouteSource interface {

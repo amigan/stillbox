@@ -20,8 +20,7 @@ func (s *Server) huppers() []hupper {
 		s.tgs,
 		s.alerter,
 		s.users,
-		s.transcriber,
-		s.relayer,
+		s.pipeline,
 	}
 }
 

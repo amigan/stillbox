@@ -18,7 +18,7 @@ Primary differences:
 
  - [x] No directory watch source, for now
  
-   This is not a feature I need personally, but would be simple to implement as another [source](pkg/sources/).
+   This is not a feature I need personally, but would be simple to implement as another [source](pkg/pipeline/sources/).
 
  - [x] Only supports Postgres DB right now. May add SQLite someday.
 

@@ -16,7 +16,7 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/calls"
-	"dynatron.me/x/stillbox/pkg/sources"
+	"dynatron.me/x/stillbox/pkg/pipeline/sources"
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/google/uuid"

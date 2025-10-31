@@ -22,12 +22,11 @@ import (
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
+	"dynatron.me/x/stillbox/pkg/pipeline"
 	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/shares"
-	"dynatron.me/x/stillbox/pkg/sinks"
-	"dynatron.me/x/stillbox/pkg/sources"
 	"dynatron.me/x/stillbox/pkg/stats"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"dynatron.me/x/stillbox/pkg/users"
@@ -42,37 +41,33 @@ import (
 const shutdownTimeout = 5 * time.Second
 
 type Server struct {
-	auth        authn.Authn
-	conf        *config.Configuration
-	db          database.Store
-	r           *chi.Mux
-	sources     sources.Sources
-	sinks       sinks.Sinks
-	relayer     *sinks.RelayManager
-	transcriber sinks.Transcriber
-	nex         nexus.Nexus
-	logger      *Logger
-	alerter     alerting.Alerter
-	notifier    notify.Notifier
-	signals     chan os.Signal
-	tgs         tgstore.Store
-	rest        rest.APIRoot
-	partman     callstore.PartitionManager
-	users       users.Store
-	calls       callstore.Store
-	incidents   incstore.Store
-	share       shares.Service
-	rbac        authz.RBAC
-	stats       stats.Stats
-	settings    settings.Store
-	metrics     metrics.Metrics
-	srvMetrics  srvMetrics
+	auth       authn.Authn
+	conf       *config.Configuration
+	db         database.Store
+	r          *chi.Mux
+	logger     *Logger
+	alerter    alerting.Alerter
+	notifier   notify.Notifier
+	signals    chan os.Signal
+	tgs        tgstore.Store
+	rest       rest.APIRoot
+	partman    callstore.PartitionManager
+	users      users.Store
+	calls      callstore.Store
+	incidents  incstore.Store
+	share      shares.Service
+	rbac       authz.RBAC
+	stats      stats.Stats
+	settings   settings.Store
+	metrics    metrics.Metrics
+	pipeline   pipeline.Pipeline
+	srvMetrics srvMetrics
+	nex        nexus.Nexus
 }
 
 type srvMetrics struct {
-	Requests      *prometheus.CounterVec `help:"Requests" labels:"code,method"`
-	RequestMS     prometheus.Histogram   `help:"Request durations" buckets:"1,5,10,30,100,200,500"`
-	IngestedCalls prometheus.Counter     `help:"Total ingested calls"`
+	RequestsCount     *prometheus.CounterVec `help:"Requests count" labels:"code,method"`
+	RequestDurationMS prometheus.Histogram   `help:"Request durations" buckets:"1,5,10,30,100,200,500"`
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
@@ -131,7 +126,6 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		alerter:   alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
 		notifier:  notifier,
 		tgs:       tgCache,
-		sinks:     sinks.NewSinkManager(),
 		share:     shares.NewService(),
 		users:     ust,
 		metrics:   met,
@@ -142,32 +136,14 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		settings:  settings.New(settings.ConfigDefaults),
 	}
 
-	srv.transcriber, err = sinks.NewTranscriber(srv.sinks, authenticator, srv.tgs, met, cfg.Transcription)
+	srv.pipeline, err = pipeline.New(authenticator, srv.calls, srv.tgs, srv.metrics, srv.alerter, srv.nex, srv.conf)
 	if err != nil {
 		return nil, err
 	}
 
-	api := rest.New(cfg.Server.BaseURL.URL(), nex, srv.transcriber)
-	srv.rest = api
+	srv.rest = rest.New(cfg.Server.BaseURL.URL(), nex, srv.pipeline)
 
 	srv.metrics.Register("http", &srv.srvMetrics)
-
-	srv.sinks.Register(sinks.NewCallstoreSink(callStore, tgCache), sinks.RequiredFlag)
-	srv.sinks.Register(sinks.NewNexusSink(srv.nex))
-	srv.sinks.Register(srv.transcriber)
-
-	if srv.alerter.Enabled() {
-		srv.sinks.Register(srv.alerter)
-	}
-
-	srv.sources.Register("rdio-http", sources.NewRdioHTTP(authenticator, srv))
-
-	relayer, err := sinks.NewRelayManager(srv.sinks, met, cfg.Relay)
-	if err != nil {
-		return nil, err
-	}
-
-	srv.relayer = relayer
 
 	ctx = srv.fillCtx(ctx)
 
@@ -246,10 +222,10 @@ func (s *Server) MetricsLogger() func(next http.Handler) http.Handler {
 					"reqID":       middleware.GetReqID(r.Context()),
 				}).Msg("incoming_request")
 
-				s.srvMetrics.Requests.WithLabelValues(strconv.Itoa(status), r.Method).Inc()
+				s.srvMetrics.RequestsCount.WithLabelValues(strconv.Itoa(status), r.Method).Inc()
 
 				// milliseconds
-				s.srvMetrics.RequestMS.Observe(float64(dur.Microseconds()) / 1000)
+				s.srvMetrics.RequestDurationMS.Observe(float64(dur.Microseconds()) / 1000)
 			}()
 			next.ServeHTTP(ww, r)
 		}
@@ -325,7 +301,7 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 
 	<-ctx.Done()
 
-	s.sinks.Shutdown()
+	s.pipeline.Shutdown()
 
 	ctxShutdown, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()

@@ -18,7 +18,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/notify"
-	"dynatron.me/x/stillbox/pkg/sinks"
+	"dynatron.me/x/stillbox/pkg/pipeline/sinks"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
