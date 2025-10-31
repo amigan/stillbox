@@ -66,6 +66,7 @@ type TimeBounder struct {
 }
 
 func (tb *TimeBounder) GetDailyBounds(date time.Time) (lowerBound, upperBound time.Time) {
+	date = date.In(tb.loc)
 	lowerBound = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, tb.loc)
 	upperBound = lowerBound.AddDate(0, 0, 1)
 
@@ -73,6 +74,7 @@ func (tb *TimeBounder) GetDailyBounds(date time.Time) (lowerBound, upperBound ti
 }
 
 func (tb *TimeBounder) GetWeeklyBounds(date time.Time) (lowerBound, upperBound time.Time) {
+	date = date.In(tb.loc)
 	lowerBound = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, tb.loc).AddDate(0, 0, -int(date.Weekday()-time.Monday))
 	upperBound = lowerBound.AddDate(0, 0, DaysInWeek)
 
@@ -80,6 +82,7 @@ func (tb *TimeBounder) GetWeeklyBounds(date time.Time) (lowerBound, upperBound t
 }
 
 func (tb *TimeBounder) GetMonthlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
+	date = date.In(tb.loc)
 	lowerBound = time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, tb.loc)
 	upperBound = lowerBound.AddDate(0, 1, 0)
 
@@ -87,6 +90,7 @@ func (tb *TimeBounder) GetMonthlyBounds(date time.Time) (lowerBound, upperBound 
 }
 
 func (tb *TimeBounder) GetQuarterlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
+	date = date.In(tb.loc)
 	year, _, _ := date.Date()
 
 	quarter := (int(date.Month()) - 1) / MonthsInQuarter
@@ -99,6 +103,7 @@ func (tb *TimeBounder) GetQuarterlyBounds(date time.Time) (lowerBound, upperBoun
 }
 
 func (tb *TimeBounder) GetYearlyBounds(date time.Time) (lowerBound, upperBound time.Time) {
+	date = date.In(tb.loc)
 	lowerBound = time.Date(date.Year(), 1, 1, 0, 0, 0, 0, tb.loc)
 	upperBound = lowerBound.AddDate(1, 0, 0)
 
