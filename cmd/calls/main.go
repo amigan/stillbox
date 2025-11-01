@@ -179,7 +179,9 @@ func main() {
 					log.Printf("call tg %d:%d%s (%s) [Q: %d]", v.Call.System, v.Call.Talkgroup, talker, timeLength(v.Call.Duration), play.Queue())
 					play.Play(v.Call.Audio, v.Call.AudioType)
 				case *pb.Message_Transcription:
-					log.Printf("callTx tg %d:%d [Q: %d]: %s", v.Transcription.System, v.Transcription.Talkgroup, play.Queue(), v.Transcription.Transcript)
+					q := play.Queue()
+					log.Printf("callTx tg %d:%d %s", v.Transcription.System, v.Transcription.Talkgroup, v.Transcription.Transcript)
+					fmt.Printf("> [Q: %d]\r", q)	
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
 				case *pb.Message_Hello:
