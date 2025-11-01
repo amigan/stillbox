@@ -23,7 +23,16 @@ INSERT INTO shares (
 DELETE FROM shares WHERE id = @id;
 
 -- name: PruneShares :exec
-DELETE FROM shares WHERE expiration < NOW();
+DELETE FROM shares WHERE shares.id IN (
+	SELECT shares.id FROM shares
+	LEFT JOIN calls ON shares.entity_id = calls.id
+	LEFT JOIN swept_calls ON shares.entity_id = swept_calls.id
+	LEFT JOIN incidents ON shares.entity_id = incidents.id
+	WHERE
+		(shares.entity_type = 'call' AND calls.id IS NULL AND swept_calls.id IS NULL) OR
+		(shares.entity_type = 'incident' AND incidents.id IS NULL) OR
+		expiration < NOW()
+);
 
 -- name: GetSharesP :many
 SELECT

@@ -149,6 +149,7 @@ func (p *Player) Go(done <-chan struct{}) {
 							return
 
 						}
+						fmt.Printf("> [Q: %d]\r", pl-1)
 						pr := p.q.Remove()
 						p.Unlock()
 
