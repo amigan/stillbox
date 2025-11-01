@@ -116,6 +116,8 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	nex := nexus.New(tgCache, met)
 
+	alerter := alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier), alerting.WithMetrics(met))
+
 	srv := &Server{
 		auth:      authenticator,
 		conf:      cfg,
@@ -123,7 +125,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		r:         r,
 		nex:       nex,
 		logger:    logger,
-		alerter:   alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier)),
+		alerter:   alerter,
 		notifier:  notifier,
 		tgs:       tgCache,
 		share:     shares.NewService(),

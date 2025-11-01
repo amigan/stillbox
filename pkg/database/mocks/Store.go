@@ -43,63 +43,6 @@ func (_m *Store) EXPECT() *Store_Expecter {
 	return &Store_Expecter{mock: &_m.Mock}
 }
 
-// AddAlert provides a mock function for the type Store
-func (_mock *Store) AddAlert(ctx context.Context, arg database.AddAlertParams) error {
-	ret := _mock.Called(ctx, arg)
-
-	if len(ret) == 0 {
-		panic("no return value specified for AddAlert")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.AddAlertParams) error); ok {
-		r0 = returnFunc(ctx, arg)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// Store_AddAlert_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddAlert'
-type Store_AddAlert_Call struct {
-	*mock.Call
-}
-
-// AddAlert is a helper method to define mock.On call
-//   - ctx context.Context
-//   - arg database.AddAlertParams
-func (_e *Store_Expecter) AddAlert(ctx interface{}, arg interface{}) *Store_AddAlert_Call {
-	return &Store_AddAlert_Call{Call: _e.mock.On("AddAlert", ctx, arg)}
-}
-
-func (_c *Store_AddAlert_Call) Run(run func(ctx context.Context, arg database.AddAlertParams)) *Store_AddAlert_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 database.AddAlertParams
-		if args[1] != nil {
-			arg1 = args[1].(database.AddAlertParams)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_AddAlert_Call) Return(err error) *Store_AddAlert_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *Store_AddAlert_Call) RunAndReturn(run func(ctx context.Context, arg database.AddAlertParams) error) *Store_AddAlert_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // AddCall provides a mock function for the type Store
 func (_mock *Store) AddCall(ctx context.Context, arg database.AddCallParams) error {
 	ret := _mock.Called(ctx, arg)

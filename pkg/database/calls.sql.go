@@ -12,46 +12,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const addAlert = `-- name: AddAlert :exec
-INSERT INTO alerts (time, tgid, system_id, weight, score, orig_score, notified, metadata)
-VALUES
-(
-	$1,
-	$2,
-	$3,
-	$4,
-	$5,
-	$6,
-	$7,
-	$8
-)
-`
-
-type AddAlertParams struct {
-	Time      pgtype.Timestamptz `json:"time"`
-	TGID      int                `json:"tgid"`
-	SystemID  int                `json:"systemId"`
-	Weight    *float32           `json:"weight"`
-	Score     *float32           `json:"score"`
-	OrigScore *float32           `json:"origScore"`
-	Notified  bool               `json:"notified"`
-	Metadata  []byte             `json:"metadata"`
-}
-
-func (q *Queries) AddAlert(ctx context.Context, arg AddAlertParams) error {
-	_, err := q.db.Exec(ctx, addAlert,
-		arg.Time,
-		arg.TGID,
-		arg.SystemID,
-		arg.Weight,
-		arg.Score,
-		arg.OrigScore,
-		arg.Notified,
-		arg.Metadata,
-	)
-	return err
-}
-
 const addCall = `-- name: AddCall :exec
 INSERT INTO calls (
 id,
