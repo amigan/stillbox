@@ -118,12 +118,14 @@ func (ts tagSet) filter(_ context.Context, all, anyS, not []string) talkgroups.I
 	return r
 }
 
-func tgsMock(t *testing.T, ts tagSet) tgstore.Store {
+func tgsMock(t *testing.T, ts tagSet, noLookup bool) tgstore.Store {
 	s := tgsmocks.NewStore(t)
 
-	s.On("TGsByTags", mock.AnythingOfType("*context.valueCtx"),
-		mock.AnythingOfType("[]string"), mock.AnythingOfType("[]string"), mock.AnythingOfType("[]string")).
-		Return(ts.filter, nil)
+	if !noLookup {
+		s.On("TGsByTags", mock.AnythingOfType("*context.valueCtx"),
+			mock.AnythingOfType("[]string"), mock.AnythingOfType("[]string"), mock.AnythingOfType("[]string")).
+			Return(ts.filter, nil)
+	}
 
 	return s
 }
@@ -133,6 +135,7 @@ func TestFilterCompile(t *testing.T) {
 		desc       string
 		filter     *filter.Filter
 		tgTags     tagSet
+		noLookup   bool
 		testVector tvector
 	}{
 		{
@@ -165,6 +168,58 @@ func TestFilterCompile(t *testing.T) {
 				"197:10001": false,
 			},
 		},
+		{
+			desc: "all case",
+			tgTags: tagSet{
+				"197:10101": "law,dispatch,providence",
+				"197:1372":  "fire,fireground,statewide",
+				"197:1736":  "law,statewide,law-talk",
+				"197:1796":  "law,statewide,law-talk,tac1",
+				"197:1296":  "law,statewide,law-talk,tac2",
+				"197:1196":  "law,statewide,law-tac,tac2",
+				"197:10001": "law,providence,law-talk,tac2",
+			},
+			filter: &filter.Filter{
+				All: true,
+			},
+			noLookup: true,
+			testVector: tvector{
+				"197:10101": true,
+				"197:1372":  true,
+				"197:1736":  true,
+				"197:1796":  true,
+				"197:1196":  true,
+				"197:1296":  true,
+				"197:1657":  true,
+				"197:1658":  true,
+				"197:10001": true,
+			},
+		},
+		{
+			desc: "nil case",
+			tgTags: tagSet{
+				"197:10101": "law,dispatch,providence",
+				"197:1372":  "fire,fireground,statewide",
+				"197:1736":  "law,statewide,law-talk",
+				"197:1796":  "law,statewide,law-talk,tac1",
+				"197:1296":  "law,statewide,law-talk,tac2",
+				"197:1196":  "law,statewide,law-tac,tac2",
+				"197:10001": "law,providence,law-talk,tac2",
+			},
+			filter:   nil,
+			noLookup: true,
+			testVector: tvector{
+				"197:10101": true,
+				"197:1372":  true,
+				"197:1736":  true,
+				"197:1796":  true,
+				"197:1196":  true,
+				"197:1296":  true,
+				"197:1657":  true,
+				"197:1658":  true,
+				"197:10001": true,
+			},
+		},
 	}
 
 	dbMock := dbmocks.NewStore(t)
@@ -172,7 +227,7 @@ func TestFilterCompile(t *testing.T) {
 	ctx := database.CtxWithDB(context.Background(), dbMock)
 
 	for _, tc := range tests {
-		tgS := tgsMock(t, tc.tgTags)
+		tgS := tgsMock(t, tc.tgTags, tc.noLookup)
 		ctx = tgstore.CtxWithStore(ctx, tgS)
 		t.Run(tc.desc, func(t *testing.T) {
 			for tgS, expectedResult := range tc.testVector {

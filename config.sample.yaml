@@ -153,11 +153,18 @@ callStorage:
       disablePrune: false
       # filter is same as below, or can be null or unspecified
   #   filter:
+  #     all: false
   #     talkgroups:
   #       - "197:10101"
+  #     talkgroupsNot:
+  #       - "197:10111"
   #     talkgroupTagsAny:
   #       - fire dispatch
   #       - law dispatch
+  #     talkgroupTagsNot:
+  #       - law talk
+  #     talkgroupTagsAll:
+  #       - law talk
       config:
         bucket: 'stillbox'
         # secure is whether to use https when accessing the endpoint.

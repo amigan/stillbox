@@ -112,6 +112,7 @@ message Filter {
   repeated string talkgroup_tags_all = 3;
   repeated string talkgroup_tags_any = 4;
   repeated string talkgroup_tags_not = 5;
+  bool all = 6;
 }
 
 message Search {

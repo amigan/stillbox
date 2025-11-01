@@ -392,6 +392,7 @@ func (s *store) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*call
 		}
 
 		if c.AudioBlob == nil {
+			// will fill in callAud.AudioBlob
 			err := s.audioBackends.CallAudio(ctx, &callAud, c.AudioRef, &CallAudioOptions{resolveBlob: true})
 			if err != nil {
 				return nil, err

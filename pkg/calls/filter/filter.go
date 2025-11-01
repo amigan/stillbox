@@ -22,6 +22,8 @@ type Filter struct {
 	TalkgroupTagsAny []string `json:"talkgroupTagsAny,omitempty" form:"talkgroupTagsAny"`
 	TalkgroupTagsNot []string `json:"talkgroupTagsNot,omitempty" form:"talkgroupTagsNot"`
 
+	All bool `json:"all,omitzero" form:"all"`
+
 	sync.RWMutex
 	talkgroups map[tgsp.ID]bool `json:"-"`
 }
@@ -63,7 +65,7 @@ func (f *Filter) Tuples(ctx context.Context) (database.TGTuples, error) {
 }
 
 func (f *Filter) ensureCompiled(ctx context.Context) error {
-	if f.talkgroups == nil {
+	if !f.All && f.talkgroups == nil {
 		return f.compile(ctx)
 	}
 
@@ -81,6 +83,10 @@ func (f *Filter) TagRefs() []string {
 func (f *Filter) IsEmpty() bool {
 	if f == nil {
 		return true
+	}
+
+	if f.All {
+		return false
 	}
 
 	f.RLock()
@@ -158,6 +164,10 @@ func (f *Filter) compile(ctx context.Context) error {
 	f.Lock()
 	defer f.Unlock()
 
+	if f.All {
+		return nil
+	}
+
 	f.talkgroups = make(map[tgsp.ID]bool)
 	for _, tg := range f.Talkgroups {
 		f.talkgroups[tg] = true
@@ -184,7 +194,7 @@ func (f *Filter) compile(ctx context.Context) error {
 }
 
 func (f *Filter) Test(ctx context.Context, msgEnvelope broadcast.Envelope) bool {
-	if f == nil { // no filter means all calls
+	if f == nil || f.All { // no filter means all calls
 		return true
 	}
 
