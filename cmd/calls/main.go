@@ -212,6 +212,18 @@ func main() {
 		}
 	}()
 
+	go func() {
+		rdr := bufio.NewReader(os.Stdin)
+		for {
+			_, err := rdr.ReadString('\n')
+			if err != nil {
+				continue
+			}
+
+			play.stopChan <- struct{}{}
+		}
+	}()
+
 	for {
 		select {
 		case <-done:

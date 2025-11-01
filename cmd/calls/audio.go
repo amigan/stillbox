@@ -1,45 +1,56 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"dynatron.me/x/go-minimp3"
-	"github.com/hajimehoshi/oto"
+	"dynatron.me/x/stillbox/internal/queue"
+	"github.com/ebitengine/oto/v3"
 )
 
 type Player struct {
-	c          chan playReq
-	ctx        *oto.Context
-	sampleRate int
-	channels   int
+	sync.Mutex
+	c                  chan playReq
+	playDone, stopChan chan struct{}
+	playing            bool
+	q                  *queue.Queue[playReq]
+	ctx                *oto.Context
+	sampleRate         int
+	channels           int
 }
 
 func NewPlayer() *Player {
 	p := &Player{
-		c: make(chan playReq, 256),
+		q:        queue.New[playReq](),
+		c:        make(chan playReq),
+		playDone: make(chan struct{}),
+		stopChan: make(chan struct{}, 2),
 	}
 
 	return p
 }
 
 func (p *Player) Queue() int {
-	return len(p.c)
+	return p.q.Length()
 }
 
 func (p *Player) initOto(samp, channels int) error {
 	if samp != p.sampleRate || channels != p.channels {
-		if p.ctx != nil {
-			err := p.ctx.Close()
-			if err != nil {
-				return err
-			}
+		op := oto.NewContextOptions{
+			SampleRate:   samp,
+			ChannelCount: channels,
+			Format:       oto.FormatSignedInt16LE,
 		}
-
-		var err error
-		if p.ctx, err = oto.NewContext(samp, channels, 2, 1024); err != nil {
+		otoCtx, readyChan, err := oto.NewContext(&op)
+		if err != nil {
 			return err
 		}
+		<-readyChan
+		p.ctx = otoCtx
 
 		p.sampleRate = samp
 		p.channels = channels
@@ -50,6 +61,7 @@ func (p *Player) initOto(samp, channels int) error {
 
 func (p *Player) playMP3(audio []byte) error {
 	dec, data, err := minimp3.DecodeFull[byte](audio)
+
 	if err != nil {
 		return err
 	}
@@ -59,18 +71,28 @@ func (p *Player) playMP3(audio []byte) error {
 		return err
 	}
 
-	var player = p.ctx.NewPlayer()
-	_, err = player.Write(data)
-	if err != nil {
-		return err
+	var player = p.ctx.NewPlayer(bytes.NewReader(data))
+
+	for len(p.stopChan) > 0 {
+		// drain
+		<-p.stopChan
 	}
 
-	dec.Close()
-	if err = player.Close(); err != nil {
-		return err
-	}
+	player.Play()
+	defer dec.Close()
 
-	return nil
+	t := time.NewTicker(5 * time.Millisecond)
+	for {
+		select {
+		case <-t.C:
+			if !player.IsPlaying() {
+				return nil
+			}
+		case <-p.stopChan:
+			player.Pause()
+			return nil
+		}
+	}
 }
 
 type playReq struct {
@@ -93,25 +115,53 @@ func (p *Player) play(req playReq) error {
 	}
 }
 
+func (p *Player) AddQueue(req playReq) int {
+	p.Lock()
+	defer p.Unlock()
+
+	p.q.Add(req)
+
+	return p.Queue()
+}
+
 func (p *Player) Go(done <-chan struct{}) {
 	for {
 		select {
 		case <-done:
-			close(p.c)
-			p.ctx.Close()
 			return
 		case r, ok := <-p.c:
 			if !ok {
-				p.ctx.Close()
 				return
 			}
 
-			fmt.Printf("> [Q: %d]\r", p.Queue())
-			err := p.play(r)
-			fmt.Printf("\033[2K")
-			if err != nil {
-				log.Println(err)
+			q := p.AddQueue(r)
+
+			fmt.Printf("> [Q: %d]\r", q)
+			if !p.playing {
+				p.playing = true
+				go func(dch chan struct{}) {
+					for {
+						p.Lock()
+						pl := p.q.Length()
+						if pl == 0 {
+							dch <- struct{}{}
+							p.Unlock()
+							return
+
+						}
+						pr := p.q.Remove()
+						p.Unlock()
+
+						err := p.play(pr)
+						if err != nil {
+							log.Println(err)
+						}
+						fmt.Printf("\033[2K")
+					}
+				}(p.playDone)
 			}
+		case <-p.playDone:
+			p.playing = false
 		}
 	}
 }
