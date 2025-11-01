@@ -60,6 +60,11 @@ html {
   //--mat-toolbar-title-text-font: "Warnes";
   --mat-form-field-filled-focus-label-text-color: #fff;
   --mat-list-active-indicator-color: rgb(157, 157, 157);
+  // Customize the entire app. Change :root to your selector if you want to scope the styles.
+  @include mat.toolbar-overrides((
+    container-background-color: rgba(83, 83, 83, 0.5),
+    container-text-color:silver,
+  ));
 }
 
 @font-face {
@@ -141,6 +146,7 @@ a:visited {
   font-family: "Warnes";
   font-size: 20pt;
   cursor: pointer;
+  color: silver;
 }
 
 header.topHeader {
@@ -225,6 +231,12 @@ main {
 }
 
 app-calls {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+}
+
+app-home {
   display: flex;
   flex-direction: column;
   flex: 1 0 auto;
