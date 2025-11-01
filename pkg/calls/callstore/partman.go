@@ -130,7 +130,7 @@ func (pm *partman) Go(ctx context.Context) {
 	for {
 		select {
 		case now := <-tick.C:
-			err := pm.Check(ctx, now)
+			err := pm.Check(ctx, now.UTC())
 			if err != nil {
 				log.Error().Err(err).Msg("partman check failed")
 			}

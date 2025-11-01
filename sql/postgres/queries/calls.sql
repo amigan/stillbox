@@ -153,20 +153,6 @@ WHERE id = $1;
 UPDATE calls SET transcript = $2 WHERE id = $1
 RETURNING call_date, system, talkgroup, patches;
 
--- name: AddAlert :exec
-INSERT INTO alerts (time, tgid, system_id, weight, score, orig_score, notified, metadata)
-VALUES
-(
-	sqlc.arg(time),
-	sqlc.arg(tgid),
-	sqlc.arg(system_id),
-	sqlc.arg(weight),
-	sqlc.arg(score),
-	sqlc.arg(orig_score),
-	sqlc.arg(notified),
-	sqlc.arg(metadata)
-);
-
 -- name: GetDatabaseSize :one
 SELECT pg_size_pretty(pg_database_size(current_database()));
 
