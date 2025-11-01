@@ -17,6 +17,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/pipeline/sinks"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
@@ -25,6 +26,7 @@ import (
 	"dynatron.me/x/stillbox/internal/timeseries"
 	"dynatron.me/x/stillbox/internal/trending"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
 
@@ -62,6 +64,12 @@ type alerter struct {
 	notifier   notify.Notifier
 	tgCache    tgstore.Store
 	ignoreList map[talkgroups.ID]int
+	metrics    metrics.Metrics
+	aMetrics   alertMetrics
+}
+
+type alertMetrics struct {
+	AlertCount prometheus.Counter `help:"Count of alerts"`
 }
 
 func (a *alerter) Name() string {
@@ -99,6 +107,12 @@ func WithNotifier(n notify.Notifier) AlertOption {
 	}
 }
 
+func WithMetrics(met metrics.Metrics) AlertOption {
+	return func(as *alerter) {
+		as.metrics = met
+	}
+}
+
 // New creates a new Alerter using the provided configuration.
 func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerter {
 	if !cfg.Enable {
@@ -129,6 +143,10 @@ func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerte
 		trending.WithCountThreshold[talkgroups.ID](CountThreshold),
 		trending.WithClock[talkgroups.ID](as.clock),
 	)
+
+	if as.metrics != nil {
+		as.metrics.Register("alerting", &as.aMetrics)
+	}
 
 	return as
 }
@@ -186,8 +204,6 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 	as.Lock()
 	defer as.Unlock()
 
-	db := database.FromCtx(ctx)
-
 	var notifications []alert.Alert
 	for _, s := range as.scores {
 		if as.ignoreList[s.ID] > IgnoreFailureCountThreshold {
@@ -225,11 +241,8 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 
 				as.alertCache[s.ID] = a
 
-				if !testMode {
-					err = db.AddAlert(ctx, a.ToAddAlertParams())
-					if err != nil {
-						return nil, fmt.Errorf("addAlert: %w", err)
-					}
+				if !testMode && as.aMetrics.AlertCount != nil {
+					as.aMetrics.AlertCount.Add(1)
 				}
 
 				if !a.Suppressed {

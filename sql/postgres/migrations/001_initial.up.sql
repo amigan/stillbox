@@ -75,18 +75,6 @@ CREATE TABLE IF NOT EXISTS talkgroup_versions(
 	ignored BOOLEAN
 );
 
-CREATE TABLE IF NOT EXISTS alerts(
-	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	time TIMESTAMPTZ NOT NULL, 
-	tgid INTEGER NOT NULL,
-	system_id INTEGER REFERENCES systems(id) NOT NULL,
-	weight REAL,
-	score REAL,
-	orig_score REAL,
-	notified BOOLEAN NOT NULL DEFAULT 'false',
-	metadata JSONB
-);
-
 CREATE TYPE audio_mime AS ENUM ('audio/mpeg', 'audio/wav');
 
 CREATE TABLE IF NOT EXISTS calls(

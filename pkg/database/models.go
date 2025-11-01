@@ -58,18 +58,6 @@ func (ns NullAudioMIME) Value() (driver.Value, error) {
 	return string(ns.AudioMIME), nil
 }
 
-type Alert struct {
-	ID        int                `json:"id,omitempty"`
-	Time      pgtype.Timestamptz `json:"time,omitempty"`
-	TGID      int                `json:"tgid,omitempty"`
-	SystemID  int                `json:"systemId,omitempty"`
-	Weight    *float32           `json:"weight,omitempty"`
-	Score     *float32           `json:"score,omitempty"`
-	OrigScore *float32           `json:"origScore,omitempty"`
-	Notified  bool               `json:"notified,omitempty"`
-	Metadata  []byte             `json:"metadata,omitempty"`
-}
-
 type ApiKey struct {
 	ID        int              `json:"id,omitempty"`
 	Owner     int              `json:"owner,omitempty"`
