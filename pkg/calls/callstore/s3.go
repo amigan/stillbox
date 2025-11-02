@@ -281,7 +281,8 @@ func (sb *s3Backend) Prune(ctx context.Context, refPath string, pruneAfter *time
 		return nil, fmt.Errorf("add lifecycle rule: %w", err)
 	}
 
-	newPruneAfter := time.Now().Add(48 * time.Hour)
+	// prune after 3 days
+	newPruneAfter := time.Now().Add(72 * time.Hour)
 	return &newPruneAfter, nil
 }
 
