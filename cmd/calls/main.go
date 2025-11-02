@@ -59,6 +59,7 @@ func getCreds() {
 	if password == nil || *password == "" {
 		fmt.Print("Password: ")
 		bytePass, err := term.ReadPassword(int(syscall.Stdin))
+		os.Stderr.Write([]byte{'\n'})
 		if err != nil {
 			panic(err)
 		}
@@ -115,6 +116,11 @@ func main() {
 	var body io.Reader = resp.Body
 	if *debug {
 		body = io.TeeReader(resp.Body, os.Stderr)
+	}
+
+	if resp.StatusCode != 200 {
+		msg, _ := io.ReadAll(resp.Body)
+		log.Fatalf("response %s: %s", resp.Status, string(msg))
 	}
 
 	jwt := struct {
