@@ -114,13 +114,13 @@ func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, m
 			}
 		}
 	}()
-	gcCount, err := st.audioBackends.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
+	gcCount, gcAttempted, err := st.audioBackends.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
 	if err != nil {
 		return nil, err
 	}
 
-	if gcCount > 0 {
-		log.Info().Int64("count", gcCount).Msg("call audio garbage collected")
+	if gcAttempted > 0 {
+		log.Info().Int64("count", gcCount).Int64("attempted", gcAttempted).Msg("call audio garbage collected")
 	}
 
 	if partConfig.Enabled {

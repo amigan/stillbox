@@ -187,7 +187,7 @@ func main() {
 				case *pb.Message_Transcription:
 					q := play.Queue()
 					log.Printf("callTx tg %d:%d %s", v.Transcription.System, v.Transcription.Talkgroup, v.Transcription.Transcript)
-					fmt.Printf("> [Q: %d]\r", q)	
+					fmt.Printf("> [Q: %d]\r", q)
 				case *pb.Message_Notification:
 					log.Println(v.Notification.Msg)
 				case *pb.Message_Hello:

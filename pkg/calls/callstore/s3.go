@@ -255,6 +255,33 @@ func (sb *s3Backend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRe
 	return
 }
 
+func (sb *s3Backend) prefixExists(ctx context.Context, prefix string) (bool, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	counter := 0
+	for ob := range sb.cli.ListObjects(ctx, sb.Bucket, minio.ListObjectsOptions{
+		Prefix:    prefix,
+		Recursive: true,
+		MaxKeys:   1,
+	}) {
+		if ob.Err != nil {
+			if errors.Is(ob.Err, context.Canceled) {
+				return counter > 0, nil
+			}
+
+			return counter > 0, ob.Err
+		}
+
+		if counter > 0 {
+			cancel()
+		}
+
+		counter++
+	}
+
+	return counter > 0, nil
+}
+
 func (sb *s3Backend) Prune(ctx context.Context, refPath string, pruneAfter *time.Time) (*time.Time, error) {
 	// get the ruleJob out of the context
 	rj := ruleJobFromCtx(ctx)
@@ -262,18 +289,32 @@ func (sb *s3Backend) Prune(ctx context.Context, refPath string, pruneAfter *time
 		return nil, fmt.Errorf("rule job not set in context")
 	}
 
+	isPrefix := strings.HasSuffix(refPath, "/")
+	if !isPrefix {
+		// singleton remove
+		return nil, sb.delete(ctx, refPath)
+	}
+
+	// prune after 3 days
+	newPruneAfter := time.Now().Add(72 * time.Hour)
+
 	if pruneAfter != nil { // this has already been pruned, now check if the rule needs to be removed yet
 		if !time.Now().After(*pruneAfter) {
 			// this probably won't ever happen
 			return nil, ErrNotYetPruneTime
 		}
 
-		return nil, rj.pruneRmRule(refPath)
-	}
+		exists, err := sb.prefixExists(ctx, refPath)
+		if err != nil {
+			return pruneAfter, err
+		}
 
-	if !strings.HasSuffix(refPath, "/") {
-		// singleton remove
-		return nil, sb.delete(ctx, refPath)
+		if exists {
+			log.Debug().Str("prefix", refPath).Msg("prefix still exists")
+			return &newPruneAfter, nil
+		}
+
+		return nil, rj.pruneRmRule(refPath)
 	}
 
 	err := rj.addRmRule(refPath)
@@ -281,8 +322,6 @@ func (sb *s3Backend) Prune(ctx context.Context, refPath string, pruneAfter *time
 		return nil, fmt.Errorf("add lifecycle rule: %w", err)
 	}
 
-	// prune after 3 days
-	newPruneAfter := time.Now().Add(72 * time.Hour)
 	return &newPruneAfter, nil
 }
 

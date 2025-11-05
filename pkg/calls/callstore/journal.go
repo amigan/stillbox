@@ -28,7 +28,7 @@ type RefJournal interface {
 	// GC gets all failed refs meeting passed criteria and tries to prune them.
 	// It returns the number of successful operations.
 	// If errCh is not nil, errors are sent to it.
-	GC(ctx context.Context, arg database.GetRefJournalParams, errCh chan<- error) (int64, error)
+	GC(ctx context.Context, arg database.GetRefJournalParams, errCh chan<- error) (count, pruneCount int64, err error)
 
 	// Increment increments the failure count of the operation.
 	Increment(ctx context.Context, id JournalID) error
@@ -106,7 +106,7 @@ func (rs *refJournal) Drop(ctx context.Context, id JournalID) error {
 
 // GC enumerates the audio ref journal and attempts to prune any due entries.
 // It removes any successful prunes and increments Tries on any failures.
-func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, errCh chan<- error) (count int64, err error) {
+func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, errCh chan<- error) (count, attempted int64, err error) {
 	arg.Missing = common.PtrTo(false)
 	errCounts := make(map[*audioStorageBackend]int)
 
@@ -242,9 +242,9 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 
 			// Decrement journal size
 			rs.ab.JournalSizeMetric(back.Name, create).Dec()
+			count++
 		}
-
-		count++
+		attempted++
 	})
 
 	commitPJ()
