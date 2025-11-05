@@ -493,12 +493,12 @@ func (s *store) GoGC(ctx context.Context) {
 		}
 	}()
 	doGC := func() {
-		gcCount, err := s.audioBackends.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
+		gcCount, gcAttempted, err := s.audioBackends.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
 		if err != nil {
 			s.audioBackends.JournalGCErrorMetric("", false).Inc()
 			errCh <- err
-		} else if gcCount > 0 {
-			log.Info().Int64("count", gcCount).Msg("call audio garbage collected")
+		} else if gcAttempted > 0 {
+			log.Info().Int64("count", gcCount).Int64("attempted", gcAttempted).Msg("call audio garbage collected")
 		}
 	}
 
