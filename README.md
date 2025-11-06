@@ -54,7 +54,7 @@ Primary differences:
 
  - [x] No premiumization nags or advertising of any kind
 
-   Another thing that drove me to start this project. It's either open source, or it isn't, folks.
+   Another thing that drove me to start this project. It's either Free Software, or it isn't, folks.
 
  - [x] 3-clause BSD license
 
@@ -77,6 +77,7 @@ Licensed under the 3-clause BSD license. See LICENSE for details.
 
 Thanks to, among others:
 * rdio-scanner for the original inspiration
+* [sdrtrunk](https://github.com/DSheirer/sdrtrunk), without which this would all be moot
 * [go-trending](https://github.com/codesuki/go-trending) and [go-time-series](https://github.com/codesuki/go-time-series)
 * [isoweek](https://github.com/snabb/isoweek)
 * [minimp3](https://github.com/tosone/minimp3)
