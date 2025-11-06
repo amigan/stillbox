@@ -2,6 +2,8 @@
 
 *"When they say stillbox, you know it's real."*
 
+![Calls View Screenshot](doc/calls.png)
+
 A Golang scanner call server and Angular frontend. Basically a rewrite of [rdio-scanner](https://github.com/chuot/rdio-scanner)
 with a cleaner *backend* (not frontend, so far; I am not a frontend guy and it shows) and a more opinionated featureset.
 
