@@ -1,5 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import {
@@ -37,7 +37,6 @@ const reqPageSize = 200;
     FmtDatePipe,
     MatInputModule,
     MatCheckboxModule,
-    CommonModule,
     MatProgressSpinnerModule,
   ],
   templateUrl: './shares.component.html',

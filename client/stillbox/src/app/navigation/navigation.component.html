@@ -37,15 +37,16 @@
           <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
         </button>
         @if (tcSvc.filterBtn | async) {
-          <button
-            *ngIf="showFilter"
-            type="button"
-            aria-label="Toggle filters"
-            mat-icon-button
-            (click)="toggleFilterPanel()"
-          >
-            <mat-icon aria-label="Filter toggle icon">tune</mat-icon>
-          </button>
+          @if (showFilter) {
+            <button
+              type="button"
+              aria-label="Toggle filters"
+              mat-icon-button
+              (click)="toggleFilterPanel()"
+            >
+              <mat-icon aria-label="Filter toggle icon">tune</mat-icon>
+            </button>
+          }
         }
       </div>
     }

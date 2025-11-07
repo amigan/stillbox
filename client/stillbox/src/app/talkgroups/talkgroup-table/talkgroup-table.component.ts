@@ -13,7 +13,7 @@ import { TalkgroupService, TalkgroupsPaginated } from '../talkgroups.service';
 import { TGID, Talkgroup, iconMapping } from '../../talkgroup';
 import { ActivatedRoute } from '@angular/router';
 import { RouterModule, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import {
@@ -70,7 +70,6 @@ export class SanitizeHtmlPipe implements PipeTransform {
   imports: [
     RouterModule,
     MatIconModule,
-    CommonModule,
     IconifyPipe,
     MatTableModule,
     MatPaginatorModule,

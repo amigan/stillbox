@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { CommonModule } from '@angular/common';
+
 import { AuthService } from './login/auth.service';
 import { NavigationComponent } from './navigation/navigation.component';
 import { Subject, Subscription } from 'rxjs';
@@ -20,7 +20,6 @@ import { ErrorsComponent } from './errors/errors.component';
 @Component({
   selector: 'app-root',
   imports: [
-    CommonModule,
     RouterModule,
     MatToolbarModule,
     FormsModule,

@@ -3,7 +3,7 @@ import { TalkgroupService, TalkgroupsPaginated } from './talkgroups.service';
 import { ActivatedRoute } from '@angular/router';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { RouterModule, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { TalkgroupTableComponent } from './talkgroup-table/talkgroup-table.component';
 import { PageEvent } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -20,7 +20,6 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [
     RouterModule,
     RouterLink,
-    CommonModule,
     TalkgroupTableComponent,
     MatToolbarModule,
     MatInputModule,

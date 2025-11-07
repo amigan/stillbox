@@ -3,11 +3,10 @@ import * as d3 from 'd3';
 import { CallsService } from '../calls/calls.service';
 import { Observable, switchMap } from 'rxjs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'chart',
-  imports: [NgIf, MatProgressSpinnerModule],
+  imports: [MatProgressSpinnerModule],
   templateUrl: './charts.component.html',
   styleUrl: './charts.component.scss',
 })
@@ -76,13 +75,14 @@ export class ChartsComponent {
         // set the dimensions and margins of the graph
         var margin = { top: 30, right: 30, bottom: 70, left: 60 },
           widthVal = 600,
-          heightVal = 600;
+          heightVal = 250;
         // clear the old one
         d3.select(this.elementRef.nativeElement).select('.chart').html('');
         let svg = d3
           .select(this.elementRef.nativeElement)
           .select('.chart')
           .append('svg')
+          .attr('preserveAspectRatio', 'xMinYMin meet')
           .attr('viewBox', `0 0 ${widthVal} ${heightVal}`)
           .append('g')
           .attr(

@@ -39,15 +39,16 @@
         autocomplete="off"
         formControlName="filter"
       />
-      <button
-        class="clearBtn"
-        *ngIf="form.controls['filter'].value"
-        matSuffix
-        mat-icon-button
-        (click)="form.controls['filter'].setValue('')"
-      >
-        <mat-icon>close</mat-icon>
-      </button>
+      @if (form.controls["filter"].value) {
+        <button
+          class="clearBtn"
+          matSuffix
+          mat-icon-button
+          (click)="form.controls['filter'].setValue('')"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
     </mat-form-field>
     <mat-form-field class="filterBox" subscriptSizing="dynamic">
       <mat-label>Source Filter</mat-label>
@@ -58,39 +59,39 @@
         autocomplete="off"
         formControlName="sourceFilter"
       />
-      <button
-        class="clearBtn"
-        *ngIf="form.controls['sourceFilter'].value"
-        matSuffix
-        mat-icon-button
-        (click)="form.controls['sourceFilter'].setValue('')"
-      >
-        <mat-icon>close</mat-icon>
-      </button>
+      @if (form.controls["sourceFilter"].value) {
+        <button
+          class="clearBtn"
+          matSuffix
+          mat-icon-button
+          (click)="form.controls['sourceFilter'].setValue('')"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
     </mat-form-field>
-    <mat-form-field
-      *ngIf="showTranscripts | async"
-      class="filterBox"
-      subscriptSizing="dynamic"
-    >
-      <mat-label>Transcript</mat-label>
-      <input
-        matInput
-        name="transcriptSearch"
-        type="text"
-        autocomplete="off"
-        formControlName="transcriptSearch"
-      />
-      <button
-        class="clearBtn"
-        *ngIf="form.controls['transcriptSearch'].value !== null"
-        matSuffix
-        mat-icon-button
-        (click)="form.controls['transcriptSearch'].setValue(null)"
-      >
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-form-field>
+    @if (showTranscripts | async) {
+      <mat-form-field class="filterBox" subscriptSizing="dynamic">
+        <mat-label>Transcript</mat-label>
+        <input
+          matInput
+          name="transcriptSearch"
+          type="text"
+          autocomplete="off"
+          formControlName="transcriptSearch"
+        />
+        @if (form.controls["transcriptSearch"].value !== null) {
+          <button
+            class="clearBtn"
+            matSuffix
+            mat-icon-button
+            (click)="form.controls['transcriptSearch'].setValue(null)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    }
     <mat-form-field class="tagSelect" subscriptSizing="dynamic">
       <mat-label>Any Tags</mat-label>
       <mat-select
@@ -119,25 +120,27 @@
       </mat-select>
     </mat-form-field>
     <div class="toolbarButtons">
-      <input
-        *ngIf="showTranscripts | async"
-        class="tsCheck"
-        type="checkbox"
-        formControlName="showTranscripts"
-        name="showTranscripts"
-      />
-      <button
-        *ngIf="showTranscripts | async"
-        title="Always show transcripts"
-        class="sbButton"
-        (click)="
-          this.form.controls.showTranscripts.setValue(
-            !this.form.controls.showTranscripts.value
-          )
-        "
-      >
-        <mat-icon>subtitles</mat-icon>
-      </button>
+      @if (showTranscripts | async) {
+        <input
+          class="tsCheck"
+          type="checkbox"
+          formControlName="showTranscripts"
+          name="showTranscripts"
+        />
+      }
+      @if (showTranscripts | async) {
+        <button
+          title="Always show transcripts"
+          class="sbButton"
+          (click)="
+            this.form.controls.showTranscripts.setValue(
+              !this.form.controls.showTranscripts.value
+            )
+          "
+        >
+          <mat-icon>subtitles</mat-icon>
+        </button>
+      }
       <button class="sbButton" matIconButton (click)="resetFilter()">
         <mat-icon class="material-symbols-outlined">reset_settings</mat-icon>
       </button>

@@ -8,15 +8,16 @@
       autocomplete="off"
       [formControl]="filter"
     />
-    <button
-      class="clearBtn"
-      *ngIf="filter.value"
-      matSuffix
-      mat-icon-button
-      (click)="filter.setValue('')"
-    >
-      <mat-icon>close</mat-icon>
-    </button>
+    @if (filter.value) {
+      <button
+        class="clearBtn"
+        matSuffix
+        mat-icon-button
+        (click)="filter.setValue('')"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    }
   </mat-form-field>
   <div class="addTag"></div>
   <div class="impExp">
@@ -24,15 +25,15 @@
     <button class="sbButton" [routerLink]="'/talkgroups/export'">Export</button>
   </div>
 </div>
-<talkgroup-table
-  *ngIf="tgs; else spinner"
-  [talkgroups]="tgs"
-  [resetPage]="pageReset.asObservable()"
-  (switchPage)="switchPage($event)"
-  (changeFilter)="changeFilter($event)"
-></talkgroup-table>
-<ng-template #spinner>
+@if (tgs) {
+  <talkgroup-table
+    [talkgroups]="tgs"
+    [resetPage]="pageReset.asObservable()"
+    (switchPage)="switchPage($event)"
+    (changeFilter)="changeFilter($event)"
+  ></talkgroup-table>
+} @else {
   <div class="spinner">
     <mat-spinner></mat-spinner>
   </div>
-</ng-template>
+}
