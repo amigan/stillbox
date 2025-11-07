@@ -27,8 +27,8 @@ import { MatIconModule } from '@angular/material/icon';
     ReactiveFormsModule,
     FormsModule,
     MatProgressSpinnerModule,
-    MatIconModule
-],
+    MatIconModule,
+  ],
   templateUrl: './talkgroups.component.html',
   styleUrl: './talkgroups.component.scss',
   providers: [],

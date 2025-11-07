@@ -337,7 +337,9 @@ export class CallsComponent {
         this.playerSvc.setQueue(cr);
       }),
     );
-    this.fetchCalls.next(this.buildParams(this.curPage, this.curPage.pageIndex));
+    this.fetchCalls.next(
+      this.buildParams(this.curPage, this.curPage.pageIndex),
+    );
   }
 
   resetFilter() {

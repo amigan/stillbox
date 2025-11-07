@@ -1,7 +1,9 @@
-mat-card.chart {
-  max-height: calc((100vh) + 7px);
-  width: 500px;
-  overflow: auto;
+.chart {
+  display: flex;
+  flex: 1 0 0;
+  flex-direction: column;
+  width: auto;
+  overflow: hidden;
 }
 
 mat-card div {

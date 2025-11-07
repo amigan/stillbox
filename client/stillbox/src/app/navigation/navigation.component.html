@@ -5,7 +5,7 @@
     [attr.role]="(tcSvc.isHandset$ | async) ? 'dialog' : 'navigation'"
     [mode]="(tcSvc.isHandset$ | async) ? 'over' : 'side'"
     [opened]="(tcSvc.isHandset$ | async) === false"
-    >
+  >
     <mat-nav-list>
       @for (r of homeRoutes; track r) {
         <a
@@ -16,7 +16,7 @@
           #routerLinkActiveInstance="routerLinkActive"
           [activated]="routerLinkActiveInstance.isActive"
           mat-list-item
-          >
+        >
           <mat-icon>{{ r.icon }}</mat-icon>
           @if (isExpanded) {
             <span class="sbLabel">{{ r.name }}</span>
@@ -33,7 +33,7 @@
           aria-label="Toggle sidenav"
           mat-icon-button
           (click)="drawer.toggle()"
-          >
+        >
           <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
         </button>
         @if (tcSvc.filterBtn | async) {
@@ -43,7 +43,7 @@
               aria-label="Toggle filters"
               mat-icon-button
               (click)="toggleFilterPanel()"
-              >
+            >
               <mat-icon aria-label="Filter toggle icon">tune</mat-icon>
             </button>
           }

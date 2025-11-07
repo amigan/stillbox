@@ -8,7 +8,7 @@
         name="start"
         placeholder="Start date"
         formControlName="start"
-        />
+      />
     </mat-form-field>
     <mat-form-field subscriptSizing="dynamic" class="timeFilterBox">
       <mat-label>End</mat-label>
@@ -18,7 +18,7 @@
         name="end"
         placeholder="End date"
         formControlName="end"
-        />
+      />
     </mat-form-field>
     <mat-form-field class="filterBox" subscriptSizing="dynamic">
       <mat-label>Filter</mat-label>
@@ -28,14 +28,14 @@
         type="text"
         autocomplete="off"
         formControlName="filter"
-        />
-      @if (form.controls['filter'].value) {
+      />
+      @if (form.controls["filter"].value) {
         <button
           class="clearBtn"
           matSuffix
           mat-icon-button
           (click)="form.controls['filter'].setValue('')"
-          >
+        >
           <mat-icon>close</mat-icon>
         </button>
       }
@@ -59,7 +59,7 @@
             (change)="$event ? masterToggle() : null"
             [checked]="selection.hasValue() && isAllSelected()"
             [indeterminate]="selection.hasValue() && !isAllSelected()"
-            >
+          >
           </mat-checkbox>
         </th>
         <td mat-cell *matCellDef="let row">
@@ -67,7 +67,7 @@
             (click)="$event.stopPropagation()"
             (change)="$event ? selection.toggle(row) : null"
             [checked]="selection.isSelected(row)"
-            >
+          >
           </mat-checkbox>
         </td>
       </ng-container>
@@ -79,7 +79,11 @@
       </ng-container>
       <ng-container matColumnDef="endTime">
         <th mat-header-cell *matHeaderCellDef>End</th>
-        <td [title]="incident.incident_date" mat-cell *matCellDef="let incident">
+        <td
+          [title]="incident.incident_date"
+          mat-cell
+          *matCellDef="let incident"
+        >
           {{ incident.endTime | fmtDate }}
         </td>
       </ng-container>
@@ -123,6 +127,6 @@
     [pageSizeOptions]="pageSizeOptions"
     [pageIndex]="curPage.pageIndex"
     aria-label="Select page"
-    >
+  >
   </mat-paginator>
 </div>

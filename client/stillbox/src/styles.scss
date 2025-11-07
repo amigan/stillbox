@@ -61,10 +61,12 @@ html {
   --mat-form-field-filled-focus-label-text-color: #fff;
   --mat-list-active-indicator-color: rgb(157, 157, 157);
   // Customize the entire app. Change :root to your selector if you want to scope the styles.
-  @include mat.toolbar-overrides((
-    container-background-color: rgba(83, 83, 83, 0.5),
-    container-text-color:silver,
-  ));
+  @include mat.toolbar-overrides(
+    (
+      container-background-color: rgba(83, 83, 83, 0.5),
+      container-text-color: silver,
+    )
+  );
 }
 
 @font-face {

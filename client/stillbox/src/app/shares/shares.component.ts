@@ -37,8 +37,8 @@ const reqPageSize = 200;
     FmtDatePipe,
     MatInputModule,
     MatCheckboxModule,
-    MatProgressSpinnerModule
-],
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './shares.component.html',
   styleUrl: './shares.component.scss',
 })

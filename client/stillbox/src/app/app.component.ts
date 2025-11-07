@@ -25,8 +25,8 @@ import { ErrorsComponent } from './errors/errors.component';
     FormsModule,
     NavigationComponent,
     UpdateNagComponent,
-    ErrorsComponent
-],
+    ErrorsComponent,
+  ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })

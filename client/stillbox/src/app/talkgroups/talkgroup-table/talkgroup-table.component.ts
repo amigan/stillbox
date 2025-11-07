@@ -74,8 +74,8 @@ export class SanitizeHtmlPipe implements PipeTransform {
     MatTableModule,
     MatPaginatorModule,
     MatCheckboxModule,
-    MatChipsModule
-],
+    MatChipsModule,
+  ],
   templateUrl: './talkgroup-table.component.html',
   styleUrl: './talkgroup-table.component.scss',
   providers: [],
