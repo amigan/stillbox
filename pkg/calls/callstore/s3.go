@@ -36,6 +36,10 @@ type s3Backend struct {
 	Timeout        time.Duration `yaml:"timeout"`
 	Trace          bool          `yaml:"trace"`
 
+	// TopLevelPrefix puts <Prefix/> right under the <Rule>. If it is false, modern S3-style
+	// <Filter><Prefix/></Filter> is used. Some "S3 compatible" APIs require this.
+	TopLevelPrefix bool `yaml:"topLevelPrefix"`
+
 	cli *minio.Client
 	st  Store
 	rj  *ruleJob
@@ -94,16 +98,23 @@ func (rj *ruleJob) addRmRule(refPath string) error {
 	ruleID := s3ruleID(refPath)
 
 	log.Debug().Str("prefix", refPath).Msg("add rm rule")
-	return rj.add(lifecycle.Rule{
+	lr := lifecycle.Rule{
 		ID:     ruleID,
 		Status: "Enabled",
-		RuleFilter: lifecycle.Filter{
-			Prefix: refPath,
-		},
 		Expiration: lifecycle.Expiration{
 			Days: lifecycle.ExpirationDays(1),
 		},
-	})
+	}
+
+	if rj.be.TopLevelPrefix {
+		lr.Prefix = refPath
+	} else {
+		lr.RuleFilter = lifecycle.Filter{
+			Prefix: refPath,
+		}
+	}
+
+	return rj.add(lr)
 }
 
 func (rj *ruleJob) pruneRmRule(refPath string) error {

@@ -177,6 +177,10 @@ callStorage:
         externalHost: 'garage.example.com'
         # if externalHost is set, externalSecure specifies whether to use https for presigned URLs
         externalSecure: true
+
+        # topLevelPrefix puts <Prefix/> right under the <Rule>. If it is false, modern S3-style
+        # <Filter><Prefix/></Filter> is used. Some "S3 compatible" APIs require this.
+        topLevelPrefix: true
         # timeout is the amount of time for S3 request deadline before next action (store in DB or fail)
         timeout: 10s
         keyID: 'GK7894947fffaacacd83664923'
