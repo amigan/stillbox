@@ -36,9 +36,9 @@ type s3Backend struct {
 	Timeout        time.Duration `yaml:"timeout"`
 	Trace          bool          `yaml:"trace"`
 
-	// TopLevelPrefix puts <Prefix/> right under the <Rule>. If it is false, modern S3-style
+	// LegacyPrefix puts <Prefix/> right under the <Rule>. If it is false, modern S3-style
 	// <Filter><Prefix/></Filter> is used. Some "S3 compatible" APIs require this.
-	TopLevelPrefix bool `yaml:"topLevelPrefix"`
+	LegacyPrefix bool `yaml:"legacyPrefix"`
 
 	cli *minio.Client
 	st  Store
@@ -106,7 +106,7 @@ func (rj *ruleJob) addRmRule(refPath string) error {
 		},
 	}
 
-	if rj.be.TopLevelPrefix {
+	if rj.be.LegacyPrefix {
 		lr.Prefix = refPath
 	} else {
 		lr.RuleFilter = lifecycle.Filter{
