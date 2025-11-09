@@ -14,6 +14,9 @@ export class AvatarComponent {
     let uname = this.userSvc.selfUser()?.realName;
     if (uname == null || uname == undefined) {
       uname = this.userSvc.selfUser()?.username;
+      if (uname == null || uname == undefined) {
+        return "";
+      }
     } else {
       let names = uname!.split(' ');
       return names[0][0].toUpperCase() + names[1][0].toUpperCase();
