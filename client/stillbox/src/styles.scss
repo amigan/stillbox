@@ -317,9 +317,8 @@ app-root {
   height: 100vh;
 }
 
-$colors: #bbff00, #6b5b95, #feb236, #d64161, #ff7b25, #b2ad7f, #878f99;
-
 avatar {
+  background-color: #bbff00;
   color: #555555;
   padding: 2px;
   display: flex;
@@ -329,13 +328,6 @@ avatar {
   width: 40px;
   height: 40px;
   font-weight: 600;
-  text-shadow: 1px 1px 2px rgb(255, 0, 0);
-}
-
-@for $i from 1 through length($colors) {
-  avatar:nth-child(#{length($colors)}n + #{$i}) {
-    background: lighten(nth($colors, $i), 20%);
-  }
 }
 
 a > avatar {
