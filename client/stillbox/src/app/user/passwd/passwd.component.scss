@@ -1,3 +1,9 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+}
+
 .password-change,
 form {
   flex: 0 1 auto;

@@ -232,52 +232,10 @@ main {
   flex-direction: column;
 }
 
-app-calls,
-app-profile {
-  display: flex;
-  flex-direction: column;
-  flex: 1 0 auto;
-}
-
-password-change {
-  display: flex;
-  flex-direction: column;
-  flex: 1 0 auto;
-}
-
-app-home {
-  display: flex;
-  flex-direction: column;
-  flex: 1 0 auto;
-}
-
-app-root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
   overscroll-behavior: contain;
-}
-
-app-navigation {
-  flex: 1 0 auto;
-  display: flex;
-  flex-direction: column;
-}
-
-talkgroups {
-  display: flex;
-  flex-direction: column;
-}
-
-app-shares {
-  display: flex;
-  flex-direction: column;
-  flex: 1 0 0;
 }
 
 .sidenav {
@@ -315,19 +273,7 @@ app-root {
   flex-direction: column;
   flex-grow: 1;
   height: 100vh;
-}
-
-avatar {
-  background-color: #bbff00;
-  color: #555555;
-  padding: 2px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 100%;
-  width: 40px;
-  height: 40px;
-  font-weight: 600;
+  min-height: 100vh;
 }
 
 a > avatar {

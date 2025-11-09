@@ -1,3 +1,9 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+}
+
 .profileCont {
   padding: 30px 30px 30px 30px;
 }
