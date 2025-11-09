@@ -27,10 +27,7 @@ export class PasswdComponent {
     private errorSvc: ErrorsService,
   ) {
     this.form = new FormGroup({
-      oldPassword: new FormControl(
-        '',
-        this.userSvc.selfUser()?.isAdmin ? [] : [Validators.required],
-      ),
+      oldPassword: new FormControl('', [Validators.required]),
       newPassword: new FormControl('', [Validators.required]),
       newAgain: new FormControl('', [
         Validators.required,
