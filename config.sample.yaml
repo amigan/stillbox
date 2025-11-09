@@ -48,6 +48,7 @@ auth:
   # this instead changes the meaning of allowInsecureFor to the cookie being marked
   # Secure, but SameSite will be set to None
   sameSiteNoneForInsecure: false
+  # specifies the minimum password entropy for unprivileged password changes. 
   # only allow API key authenticated requests according to ACL
   # If this is totally unset, the default is deny
   apiKeyACL:

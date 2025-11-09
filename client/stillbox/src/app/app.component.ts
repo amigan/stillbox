@@ -12,10 +12,13 @@ import {
   RouterModule,
   NavigationEnd,
   ActivatedRoute,
+  RouterLink,
 } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { NowPlayingComponent } from './calls/now-playing/now-playing.component';
 import { ErrorsComponent } from './errors/errors.component';
+import { AvatarComponent } from './user/avatar/avatar.component';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-root',
@@ -26,6 +29,10 @@ import { ErrorsComponent } from './errors/errors.component';
     NavigationComponent,
     UpdateNagComponent,
     ErrorsComponent,
+    AvatarComponent,
+    MatMenuModule,
+    RouterModule,
+    RouterLink,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],

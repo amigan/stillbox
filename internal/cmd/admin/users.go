@@ -25,7 +25,7 @@ var (
 )
 
 // AddUser adds a new user to the database. It asks for the password on the terminal.
-func AddUser(ctx context.Context, username, email string, isAdmin bool) error {
+func AddUser(ctx context.Context, username, realName, email string, isAdmin bool) error {
 	if username == "" || email == "" {
 		return ErrInvalidArguments
 	}
@@ -55,6 +55,11 @@ func AddUser(ctx context.Context, username, email string, isAdmin bool) error {
 		return err
 	}
 
+	var realNameP *string
+	if realName != "" {
+		realNameP = &realName
+	}
+
 	var roles []string
 	if isAdmin {
 		roles = []string{entities.RoleAdmin}
@@ -63,6 +68,7 @@ func AddUser(ctx context.Context, username, email string, isAdmin bool) error {
 	_, err = db.CreateUser(ctx, database.CreateUserParams{
 		Username: username,
 		Password: string(hashpw),
+		RealName: realNameP,
 		Email:    email,
 		Roles:    roles,
 	})
@@ -154,8 +160,9 @@ func addUserCommand(cfg *config.Config) *cli.Command {
 			username := cmd.Args().Get(0)
 			isAdmin := cmd.Bool("admin")
 			email := cmd.String("email")
+			realName := cmd.String("real-name")
 
-			return AddUser(database.CtxWithDB(ctx, db), username, email, isAdmin)
+			return AddUser(database.CtxWithDB(ctx, db), username, realName, email, isAdmin)
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
@@ -168,6 +175,11 @@ func addUserCommand(cfg *config.Config) *cli.Command {
 				Name:    "email",
 				Usage:   "email address",
 				Aliases: []string{"m"},
+			},
+			&cli.StringFlag{
+				Name:    "real-name",
+				Usage:   "real name",
+				Aliases: []string{"N"},
 			},
 		},
 	}

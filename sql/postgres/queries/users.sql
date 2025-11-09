@@ -14,9 +14,10 @@ INSERT INTO users (
 		username,
 		password,
 		email,
+		real_name,
 		roles,
 		password_set_at
-	) VALUES ($1, $2, $3, $4, NOW())
+	) VALUES (@username, @password, @email, @real_name, @roles, NOW())
 RETURNING *;
 
 -- name: DeleteUser :exec
@@ -28,6 +29,7 @@ UPDATE users SET password = $2, password_set_at = NOW() WHERE username = $1;
 -- name: UpdateUser :one
 UPDATE users SET
 	email = COALESCE(sqlc.narg('email'), email),
+	real_name = COALESCE(sqlc.narg('real_name'), real_name),
 	roles = COALESCE(sqlc.narg('roles'), roles)
 WHERE
 	username = $1

@@ -101,7 +101,7 @@ type Querier interface {
 	UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error)
 	UpdatePassword(ctx context.Context, username string, password string) error
 	UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error)
-	UpdateUser(ctx context.Context, username string, email *string, roles []string) (User, error)
+	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpsertTalkgroup(ctx context.Context, arg []UpsertTalkgroupParams) *UpsertTalkgroupBatchResults
 }
 

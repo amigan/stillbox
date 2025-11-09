@@ -147,7 +147,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
-	srv.rest = rest.New(cfg.Server.BaseURL.URL(), nex, srv.pipeline)
+	srv.rest = rest.New(cfg.Server.BaseURL.URL(), nex, srv.pipeline, srv.auth)
 
 	r.Use(middleware.RequestID)
 

@@ -34,7 +34,7 @@ require (
 	github.com/matoous/go-nanoid v1.5.1
 	github.com/mattn/go-isatty v0.0.20
 	github.com/microcosm-cc/bluemonday v1.0.27
-	github.com/minio/minio-go/v7 v7.0.95
+	github.com/minio/minio-go/v7 v7.0.98-0.20251108224027-b39277664ca4
 	github.com/moul/http2curl v1.0.0
 	github.com/nikoksr/notify v1.3.0
 	github.com/prometheus/client_golang v1.23.2
@@ -45,6 +45,7 @@ require (
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	github.com/urfave/cli/v3 v3.5.0
 	github.com/urfave/sflags v0.4.1
+	github.com/wagslane/go-password-validator v0.3.0
 	golang.org/x/crypto v0.43.0
 	golang.org/x/sync v0.17.0
 	golang.org/x/term v0.36.0
@@ -108,8 +109,6 @@ require (
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/net v0.46.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 )
-
-replace github.com/minio/minio-go/v7 => github.com/amigan/minio-go v0.0.0-20251108055142-0e23fc2a16be

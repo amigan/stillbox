@@ -1,0 +1,38 @@
+<div class="password-change">
+  <h4>Change Password</h4>
+  <form id="passwdForm" [formGroup]="form">
+    @if (!userSvc.selfUser()?.isAdmin) {
+      <mat-form-field appearance="outline">
+        <mat-label>Old Password</mat-label>
+        <input
+          matInput
+          name="oldPassword"
+          type="password"
+          formControlName="oldPassword"
+        />
+      </mat-form-field>
+    }
+    <mat-form-field appearance="outline">
+      <mat-label>New Password</mat-label>
+      <input
+        matInput
+        name="newPassword"
+        type="password"
+        formControlName="newPassword"
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Again</mat-label>
+      <input
+        matInput
+        name="newAgain"
+        type="password"
+        formControlName="newAgain"
+      />
+      @if (form.get("newAgain")?.hasError("notSame")) {
+        <mat-error>Passwords do not match</mat-error>
+      }
+    </mat-form-field>
+    <button class="login sbButton" (click)="onSubmit()">Change Password</button>
+  </form>
+</div>

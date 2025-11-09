@@ -1,0 +1,5 @@
+@let self = userSvc.selfUser();
+<div class="profileCont">
+  <h3 class="header">Hello, {{ self?.realName || self?.username }}</h3>
+  <password-change></password-change>
+</div>

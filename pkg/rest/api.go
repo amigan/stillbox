@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"dynatron.me/x/stillbox/internal/common"
+	"dynatron.me/x/stillbox/pkg/authn"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
@@ -50,14 +51,14 @@ func (a *api) ShareRouter() http.Handler {
 	return a.shares.RootRouter()
 }
 
-func New(baseURL url.URL, nex nexus.Nexus, pipe pipeline.Pipeline) *api {
+func New(baseURL url.URL, nex nexus.Nexus, pipe pipeline.Pipeline, auth authn.Authn) *api {
 	s := &api{
 		baseURL:   &baseURL,
 		nex:       nex,
 		tgs:       new(talkgroupAPI),
 		calls:     newCallsAPI(nex, pipe.Transcriber()),
 		incidents: newIncidentsAPI(&baseURL),
-		users:     new(usersAPI),
+		users:     newUsersAPI(auth),
 		apiKeys:   new(apiKeyAPI),
 		prefs:     new(prefsAPI),
 		admin:     new(adminAPI),
@@ -198,6 +199,8 @@ var statusMapping = map[error]errResponder{
 	callstore.ErrMoveInProgress:    tooManyRequestsErrText,
 	users.ErrNoUIDSpecified:        badRequestErrText,
 	users.ErrDuplicateName:         badRequestErrText,
+	authn.ErrBadPassword:           badRequestErrText,
+	authn.ErrPasswordValidation:    badRequestErrText,
 }
 
 func autoError(err error) render.Renderer {

@@ -82,6 +82,14 @@ export const routes: Routes = [
           import('./shares/shares.component').then((m) => m.SharesComponent),
         data: { title: 'Shares' },
       },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./user/profile/profile.component').then(
+            (m) => m.ProfileComponent,
+          ),
+        data: { title: 'Profile' },
+      },
     ],
   },
 ];

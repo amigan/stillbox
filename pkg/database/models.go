@@ -205,6 +205,7 @@ type User struct {
 	ID            int                `json:"id,omitempty"`
 	Username      string             `json:"username,omitempty"`
 	Password      string             `json:"password,omitempty"`
+	RealName      *string            `json:"realName,omitempty"`
 	Email         string             `json:"email,omitempty"`
 	Roles         []string           `json:"roles,omitempty"`
 	DisabledAt    pgtype.Timestamptz `json:"disabledAt,omitempty"`

@@ -6,6 +6,12 @@
   overflow: hidden;
 }
 
+.chart form,
+.chart chart {
+  flex: 1 0 0;
+  flex-direction: column;
+}
+
 mat-card div {
   padding-left: 10px;
   padding-top: 10px;

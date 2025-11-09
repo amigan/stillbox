@@ -6562,8 +6562,8 @@ func (_c *Store_UpdateTalkgroup_Call) RunAndReturn(run func(ctx context.Context,
 }
 
 // UpdateUser provides a mock function for the type Store
-func (_mock *Store) UpdateUser(ctx context.Context, username string, email *string, roles []string) (database.User, error) {
-	ret := _mock.Called(ctx, username, email, roles)
+func (_mock *Store) UpdateUser(ctx context.Context, arg database.UpdateUserParams) (database.User, error) {
+	ret := _mock.Called(ctx, arg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateUser")
@@ -6571,16 +6571,16 @@ func (_mock *Store) UpdateUser(ctx context.Context, username string, email *stri
 
 	var r0 database.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *string, []string) (database.User, error)); ok {
-		return returnFunc(ctx, username, email, roles)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.UpdateUserParams) (database.User, error)); ok {
+		return returnFunc(ctx, arg)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *string, []string) database.User); ok {
-		r0 = returnFunc(ctx, username, email, roles)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.UpdateUserParams) database.User); ok {
+		r0 = returnFunc(ctx, arg)
 	} else {
 		r0 = ret.Get(0).(database.User)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string, *string, []string) error); ok {
-		r1 = returnFunc(ctx, username, email, roles)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, database.UpdateUserParams) error); ok {
+		r1 = returnFunc(ctx, arg)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -6594,36 +6594,24 @@ type Store_UpdateUser_Call struct {
 
 // UpdateUser is a helper method to define mock.On call
 //   - ctx context.Context
-//   - username string
-//   - email *string
-//   - roles []string
-func (_e *Store_Expecter) UpdateUser(ctx interface{}, username interface{}, email interface{}, roles interface{}) *Store_UpdateUser_Call {
-	return &Store_UpdateUser_Call{Call: _e.mock.On("UpdateUser", ctx, username, email, roles)}
+//   - arg database.UpdateUserParams
+func (_e *Store_Expecter) UpdateUser(ctx interface{}, arg interface{}) *Store_UpdateUser_Call {
+	return &Store_UpdateUser_Call{Call: _e.mock.On("UpdateUser", ctx, arg)}
 }
 
-func (_c *Store_UpdateUser_Call) Run(run func(ctx context.Context, username string, email *string, roles []string)) *Store_UpdateUser_Call {
+func (_c *Store_UpdateUser_Call) Run(run func(ctx context.Context, arg database.UpdateUserParams)) *Store_UpdateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
+		var arg1 database.UpdateUserParams
 		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 *string
-		if args[2] != nil {
-			arg2 = args[2].(*string)
-		}
-		var arg3 []string
-		if args[3] != nil {
-			arg3 = args[3].([]string)
+			arg1 = args[1].(database.UpdateUserParams)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
-			arg3,
 		)
 	})
 	return _c
@@ -6634,7 +6622,7 @@ func (_c *Store_UpdateUser_Call) Return(user database.User, err error) *Store_Up
 	return _c
 }
 
-func (_c *Store_UpdateUser_Call) RunAndReturn(run func(ctx context.Context, username string, email *string, roles []string) (database.User, error)) *Store_UpdateUser_Call {
+func (_c *Store_UpdateUser_Call) RunAndReturn(run func(ctx context.Context, arg database.UpdateUserParams) (database.User, error)) *Store_UpdateUser_Call {
 	_c.Call.Return(run)
 	return _c
 }

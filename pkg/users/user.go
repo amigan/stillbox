@@ -68,6 +68,7 @@ type User struct {
 	Username      string
 	Password      string
 	Email         string
+	RealName      *string
 	Roles         []string
 	DisabledAt    *jsontypes.Time
 	LastLoginAt   *jsontypes.Time
@@ -100,6 +101,7 @@ func (u *User) Mask() *User {
 	return &User{
 		ID:       u.ID,
 		Username: u.Username,
+		RealName: u.RealName,
 	}
 }
 
@@ -118,6 +120,7 @@ func FromDBUser(dbu database.User) *User {
 		Username:      dbu.Username,
 		Password:      dbu.Password,
 		Email:         dbu.Email,
+		RealName:      dbu.RealName,
 		Roles:         dbu.Roles,
 		Prefs:         dbu.Prefs,
 		DisabledAt:    disabledAt,

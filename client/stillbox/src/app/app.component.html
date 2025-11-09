@@ -9,9 +9,13 @@
       <div class="centerNav"></div>
       <div class="rightNav">
         @if (auth.isAuth()) {
-          <button class="ybtn sbButton">
-            <a (click)="logout()" class="logout">Logout</a>
-          </button>
+          <mat-menu #userMenu="matMenu">
+            <button mat-menu-item [routerLink]="'/profile'">Profile</button>
+            <button (click)="logout()" mat-menu-item>Logout</button>
+          </mat-menu>
+          <a [matMenuTriggerFor]="userMenu">
+            <avatar />
+          </a>
         }
       </div>
     </div>

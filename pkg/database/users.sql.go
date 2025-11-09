@@ -50,16 +50,18 @@ INSERT INTO users (
 		username,
 		password,
 		email,
+		real_name,
 		roles,
 		password_set_at
-	) VALUES ($1, $2, $3, $4, NOW())
-RETURNING id, username, password, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs
+	) VALUES ($1, $2, $3, $4, $5, NOW())
+RETURNING id, username, password, real_name, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs
 `
 
 type CreateUserParams struct {
 	Username string   `json:"username"`
 	Password string   `json:"password"`
 	Email    string   `json:"email"`
+	RealName *string  `json:"realName"`
 	Roles    []string `json:"roles"`
 }
 
@@ -68,6 +70,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Username,
 		arg.Password,
 		arg.Email,
+		arg.RealName,
 		arg.Roles,
 	)
 	var i User
@@ -75,6 +78,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.ID,
 		&i.Username,
 		&i.Password,
+		&i.RealName,
 		&i.Email,
 		&i.Roles,
 		&i.DisabledAt,
@@ -167,7 +171,7 @@ func (q *Queries) GetAppPrefs(ctx context.Context, appName string, uid int) ([]b
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, password, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs FROM users
+SELECT id, username, password, real_name, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs FROM users
 WHERE id = $1
 `
 
@@ -178,6 +182,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int) (User, error) {
 		&i.ID,
 		&i.Username,
 		&i.Password,
+		&i.RealName,
 		&i.Email,
 		&i.Roles,
 		&i.DisabledAt,
@@ -190,7 +195,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int) (User, error) {
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs FROM users
+SELECT id, username, password, real_name, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs FROM users
 WHERE username = $1 AND disabled_at IS NULL
 `
 
@@ -201,6 +206,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.ID,
 		&i.Username,
 		&i.Password,
+		&i.RealName,
 		&i.Email,
 		&i.Roles,
 		&i.DisabledAt,
@@ -213,7 +219,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, username, password, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs FROM users
+SELECT id, username, password, real_name, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -229,6 +235,7 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 			&i.ID,
 			&i.Username,
 			&i.Password,
+			&i.RealName,
 			&i.Email,
 			&i.Roles,
 			&i.DisabledAt,
@@ -280,19 +287,33 @@ func (q *Queries) UpdatePassword(ctx context.Context, username string, password 
 const updateUser = `-- name: UpdateUser :one
 UPDATE users SET
 	email = COALESCE($2, email),
-	roles = COALESCE($3, roles)
+	real_name = COALESCE($3, real_name),
+	roles = COALESCE($4, roles)
 WHERE
 	username = $1
-RETURNING id, username, password, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs
+RETURNING id, username, password, real_name, email, roles, disabled_at, last_login_at, last_login_from, password_set_at, prefs
 `
 
-func (q *Queries) UpdateUser(ctx context.Context, username string, email *string, roles []string) (User, error) {
-	row := q.db.QueryRow(ctx, updateUser, username, email, roles)
+type UpdateUserParams struct {
+	Username string   `json:"username"`
+	Email    *string  `json:"email"`
+	RealName *string  `json:"realName"`
+	Roles    []string `json:"roles"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUser,
+		arg.Username,
+		arg.Email,
+		arg.RealName,
+		arg.Roles,
+	)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
 		&i.Password,
+		&i.RealName,
 		&i.Email,
 		&i.Roles,
 		&i.DisabledAt,

@@ -9,6 +9,7 @@ type Cache[K comparable, V any] interface {
 	Get(K) (V, bool)
 	Set(K, V)
 	Delete(K)
+	DeleteAndHoldLock(K, func())
 	Clear()
 }
 
@@ -73,6 +74,14 @@ func (c *inMem[K, V]) Set(key K, val V) {
 	}
 
 	c.m[key] = ci
+}
+
+func (c *inMem[K, V]) DeleteAndHoldLock(key K, f func()) {
+	c.Lock()
+	defer c.Unlock()
+
+	delete(c.m, key)
+	f()
 }
 
 func (c *inMem[K, V]) Delete(key K) {

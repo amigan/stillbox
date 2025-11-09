@@ -3,21 +3,30 @@ package authn
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
 	"github.com/rs/zerolog/log"
+	"github.com/wagslane/go-password-validator"
+)
+
+var (
+	ErrBadPassword = errors.New("bad password")
 )
 
 const (
-	CookieName = "stillboxJwt"
+	CookieName             = "stillboxJwt"
+	MinimumPasswordEntropy = 50.0
 )
 
 func (a *authn) Refresh(ctx context.Context, username string, refreshIAT time.Time, source string) (token string, err error) {
@@ -40,18 +49,88 @@ func (a *authn) Refresh(ctx context.Context, username string, refreshIAT time.Ti
 	return a.NewRefreshToken(username)
 }
 
-func (a *authn) Login(ctx context.Context, username, password, source string) (token string, err error) {
-	ust := users.FromCtx(ctx)
+type PasswordValidationErr struct {
+	error
+}
+
+var ErrPasswordValidation = errors.New("password validation error")
+
+func (p PasswordValidationErr) Unwrap() error {
+	return ErrPasswordValidation
+}
+
+func (a *authn) ValidatePassword(ctx context.Context, ust users.Store, username, password string) (*users.User, error) {
 	user, err := ust.GetUser(ctx, username)
 	if err != nil || user == nil {
 		log.Error().Str("username", username).Err(err).Msg("getUsers failed")
 		_ = bcrypt.CompareHashAndPassword([]byte("thisPreventsTimingAttacks"), []byte(password))
-		return "", ErrLoginFailed
+		return user, ErrBadPassword
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return "", ErrLoginFailed
+		return user, ErrBadPassword
+	}
+
+	return user, nil
+}
+
+func (a *authn) ChangePassword(ctx context.Context, username, oldPassword *string, newPassword string) error {
+	ust := users.FromCtx(ctx)
+
+	callerUN := UsernameFrom(ctx)
+	if username == nil && callerUN == nil {
+		return authz.ErrBadSubject
+	}
+
+	if username == nil {
+		username = callerUN
+	}
+
+	targetUser, err := ust.GetUser(ctx, *username)
+	if err != nil {
+		return err
+	}
+
+	callerSubject, err := authz.Check(ctx, targetUser, authz.WithActions(entities.ActionUpdate))
+	if err != nil {
+		return err
+	}
+
+	if !entities.HasRole(callerSubject, entities.RoleAdmin) {
+		if oldPassword == nil {
+			return ErrBadPassword
+		}
+
+		_, err := a.ValidatePassword(ctx, ust, *username, *oldPassword)
+		if err != nil {
+			return err
+		}
+
+		err = passwordvalidator.Validate(newPassword, MinimumPasswordEntropy)
+		if err != nil {
+			return PasswordValidationErr{err}
+		}
+	}
+
+	hashpw, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	return ust.ChangePassword(ctx, *username, string(hashpw))
+}
+
+func (a *authn) Login(ctx context.Context, username, password, source string) (token string, err error) {
+	ust := users.FromCtx(ctx)
+
+	user, err := a.ValidatePassword(ctx, ust, username, password)
+	if err != nil {
+		if errors.Is(err, ErrBadPassword) {
+			err = ErrLoginFailed
+		}
+
+		return "", err
 	}
 
 	err = ust.RecordLogin(ctx, username, source)

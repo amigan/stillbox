@@ -54,6 +54,9 @@ type Store interface {
 	// CreateAPIKey creates a new API key.
 	CreateAPIKey(ctx context.Context, uid *UserID, name *string, expiresAt *time.Time, disabled bool) (*APIKey, error)
 
+	// ChangePassword changes a user's password.
+	ChangePassword(ctx context.Context, username string, newPassword string) error
+
 	// HUP invalidates the cache.
 	HUP(*config.Config)
 }
@@ -96,12 +99,28 @@ func (s *postgresStore) HUP(_ *config.Config) {
 }
 
 type UserUpdate struct {
-	Email *string  `json:"email"`
-	Roles []string `json:"roles"`
+	Email    *string  `json:"email"`
+	RealName *string  `json:"realName"`
+	Roles    []string `json:"roles"`
 }
 
-func (s *postgresStore) UpdateUser(ctx context.Context, username string, user UserUpdate) error {
-	dbu, err := s.db.UpdateUser(ctx, username, user.Email, user.Roles)
+func (s *postgresStore) UpdateUser(ctx context.Context, username string, input UserUpdate) error {
+	dbu, err := s.db.GetUserByUsername(ctx, username)
+	if err != nil {
+		return err
+	}
+
+	_, err = authz.Check(ctx, FromDBUser(dbu), authz.WithActions(entities.ActionUpdate))
+	if err != nil {
+		return err
+	}
+
+	dbu, err = s.db.UpdateUser(ctx, database.UpdateUserParams{
+		Username: username,
+		Email:    input.Email,
+		RealName: input.RealName,
+		Roles:    input.Roles,
+	})
 	if err != nil {
 		return err
 	}
@@ -250,4 +269,12 @@ func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *s
 	ak.Key = &ju
 
 	return ak, nil
+}
+
+func (s *postgresStore) ChangePassword(ctx context.Context, username string, newPassword string) (err error) {
+	s.Cache.DeleteAndHoldLock(username, func() {
+		err = s.db.UpdatePassword(ctx, username, newPassword)
+	})
+
+	return err
 }
