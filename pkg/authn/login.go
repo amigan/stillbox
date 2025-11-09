@@ -97,16 +97,22 @@ func (a *authn) ChangePassword(ctx context.Context, username, oldPassword *strin
 		return err
 	}
 
-	if !entities.HasRole(callerSubject, entities.RoleAdmin) {
-		if oldPassword == nil {
-			return ErrBadPassword
-		}
+	callerIsAdmin := entities.HasRole(callerSubject, entities.RoleAdmin)
+	// if either we are not an admin, or callerUN is set, and we are changing our own (admin) password
+	oldPasswordRequired := !callerIsAdmin || (callerUN != nil && *username == *callerUN)
 
+	if oldPassword == nil && oldPasswordRequired {
+		return ErrBadPassword
+	}
+
+	if oldPasswordRequired {
 		_, err := a.ValidatePassword(ctx, ust, *username, *oldPassword)
 		if err != nil {
 			return err
 		}
+	}
 
+	if !callerIsAdmin {
 		err = passwordvalidator.Validate(newPassword, MinimumPasswordEntropy)
 		if err != nil {
 			return PasswordValidationErr{err}
