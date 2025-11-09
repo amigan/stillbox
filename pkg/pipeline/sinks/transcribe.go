@@ -70,9 +70,9 @@ type transcriber struct {
 }
 
 type transcriberMetrics struct {
-	TranscribeDispatched *prometheus.CounterVec `help:"Dispatched transcriptions" labels:"type,id"`
-	TranscribeFailed     *prometheus.CounterVec `help:"Failed transcription dispatches" labels:"type,id"`
-	TranscribeMS         prometheus.Histogram   `help:"Transcription elapsed time" buckets:"100,200,500,1000,1500,2000,5000,10000,20000,50000"`
+	Dispatched *prometheus.CounterVec `help:"Dispatched transcriptions" labels:"type,id"`
+	Failed     *prometheus.CounterVec `help:"Failed transcription dispatches" labels:"type,id"`
+	ElapsedMS  prometheus.Histogram   `help:"Transcription elapsed time" buckets:"100,200,500,1000,1500,2000,5000,10000,20000,50000"`
 }
 
 func (s *transcriber) Call(ctx context.Context, call *calls.Call) error {
@@ -87,7 +87,7 @@ func (s *transcriber) Call(ctx context.Context, call *calls.Call) error {
 }
 
 func (s *transcriber) TranscribeDuration(t time.Duration) {
-	s.metrics.TranscribeMS.Observe(float64(t.Milliseconds()))
+	s.metrics.ElapsedMS.Observe(float64(t.Milliseconds()))
 }
 
 // dispatch requires transcriber be locked!
@@ -95,11 +95,11 @@ func (s *transcriber) dispatch(ctx context.Context, call *calls.Call) error {
 	wrk := s.workers.Next()
 	err := wrk.Dispatch(ctx, call)
 	if err != nil {
-		s.metrics.TranscribeFailed.WithLabelValues(wrk.Type(), wrk.String()).Inc()
+		s.metrics.Failed.WithLabelValues(wrk.Type(), wrk.String()).Inc()
 		return err
 	}
 
-	s.metrics.TranscribeDispatched.WithLabelValues(wrk.Type(), wrk.String()).Inc()
+	s.metrics.Dispatched.WithLabelValues(wrk.Type(), wrk.String()).Inc()
 
 	return nil
 }

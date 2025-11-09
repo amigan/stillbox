@@ -25,7 +25,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 24,
+  "id": 0,
   "links": [],
   "panels": [
     {
@@ -63,6 +63,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -124,7 +125,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -191,6 +192,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -298,15 +300,15 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "e0ycKTz4k"
           },
-          "editorMode": "builder",
-          "expr": "rate(stillbox_transcribe_transcribe_dispatched{job=\"$prom_job_name\"}[$__rate_interval])",
+          "editorMode": "code",
+          "expr": "rate(stillbox_transcribe_dispatched{job=\"$prom_job_name\"}[$__rate_interval])*60",
           "legendFormat": "OK {{id}} ({{type}})",
           "range": true,
           "refId": "A"
@@ -317,7 +319,7 @@
             "uid": "e0ycKTz4k"
           },
           "editorMode": "code",
-          "expr": "rate(stillbox_transcribe_transcribe_failed{job=\"$prom_job_name\"}[$__rate_interval])",
+          "expr": "rate(stillbox_transcribe_failed{job=\"$prom_job_name\"}[$__rate_interval])*60",
           "hide": false,
           "legendFormat": "FAIL {{id}} ({{type}})",
           "range": true,
@@ -361,6 +363,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -403,7 +406,7 @@
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "super-light-green",
+                  "fixedColor": "#4e42ed6e",
                   "mode": "fixed"
                 }
               }
@@ -499,7 +502,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -603,7 +606,7 @@
           "unit": "ms"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -612,7 +615,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(increase(stillbox_transcribe_transcribe_ms_bucket{job=\"$prom_job_name\"}[$__range])) by (le)",
+          "expr": "sum(increase(stillbox_transcribe_elapsed_ms_bucket{job=\"$prom_job_name\"}[$__range])) by (le)",
           "format": "heatmap",
           "instant": false,
           "interval": "",
@@ -658,6 +661,7 @@
               "type": "linear"
             },
             "showPoints": "never",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -707,7 +711,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -757,6 +761,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -803,7 +808,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -890,6 +895,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -967,7 +973,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -1058,7 +1064,7 @@
           "unit": "ms"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -1113,6 +1119,7 @@
               "type": "linear"
             },
             "showPoints": "never",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -1163,7 +1170,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -1213,6 +1220,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -1272,7 +1280,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -1335,6 +1343,7 @@
               "type": "linear"
             },
             "showPoints": "never",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -1385,7 +1394,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -1405,7 +1414,7 @@
   ],
   "preload": false,
   "refresh": "",
-  "schemaVersion": 41,
+  "schemaVersion": 42,
   "tags": [],
   "templating": {
     "list": [
@@ -1435,7 +1444,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
@@ -1454,5 +1463,5 @@
   "timezone": "",
   "title": "StillboxAPM",
   "uid": "etQuvBTgf",
-  "version": 26
+  "version": 32
 }
