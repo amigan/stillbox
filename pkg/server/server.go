@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/alerting"
 	"dynatron.me/x/stillbox/pkg/authn"
 	"dynatron.me/x/stillbox/pkg/authz"
@@ -285,7 +286,7 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 
 	var err error
 	go func() {
-		log.Info().Str("addr", s.conf.Server.Listen).Msg("listening")
+		log.Info().Str("addr", s.conf.Server.Listen).Str("ver", UserAgent).Str("built", version.Built).Msg("🧯 stillbox started and listening")
 		err = httpSrv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			shutReq <- err
