@@ -43,13 +43,13 @@ WHERE username = $1;
 
 -- name: CreateAPIKey :exec
 INSERT INTO api_keys(
-	owner,
+	owner_id,
 	name,
 	created_at,
 	expires,
 	disabled,
 	api_key
-	) VALUES (@owner, @name, @created_at, @expires, @disabled, @hashed_key);
+	) VALUES (@owner_id, @name, @created_at, @expires, @disabled, @hashed_key);
 
 -- name: DeleteAPIKey :exec
 DELETE FROM api_keys WHERE api_key = $1;
@@ -57,7 +57,7 @@ DELETE FROM api_keys WHERE api_key = $1;
 -- name: GetAPIKey :one
 SELECT
 	a.id,
-	a.owner,
+	a.owner_id,
 	a.name,
 	a.created_at,
 	a.expires,
@@ -65,7 +65,7 @@ SELECT
 	a.api_key,
 	u.username
 FROM api_keys a
-JOIN users u ON (a.owner = u.id)
+JOIN users u ON (a.owner_id = u.id)
 WHERE api_key = $1;
 
 -- name: GetAppPrefs :one

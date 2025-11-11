@@ -222,7 +222,7 @@ func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *s
 	}
 
 	ak := &APIKey{
-		Owner:     userID,
+		OwnerID:   userID,
 		Name:      name,
 		CreatedAt: jsontypes.Time(time.Now()),
 		Expires:   (*jsontypes.Time)(expiresAt),
@@ -251,7 +251,7 @@ func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *s
 	err = s.db.CreateAPIKey(ctx, database.CreateAPIKeyParams{
 		CreatedAt: ak.CreatedAt.Time(),
 		Name:      ak.Name,
-		Owner:     ak.Owner.Int(),
+		OwnerID:   ak.OwnerID.Int(),
 		Expires:   expires,
 		Disabled:  disabled,
 		HashedKey: hashedKey,

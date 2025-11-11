@@ -279,3 +279,10 @@ app-root {
 a > avatar {
   cursor: pointer;
 }
+
+mat-cell,
+.mat-cell {
+  display: block; // flex prevents padding from working
+  min-height: auto; // overrides the 'inherit' that set the min height of the row
+  padding: 12px 16px 12px 0;
+}

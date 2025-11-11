@@ -1,8 +1,14 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, Injectable, Signal, signal } from '@angular/core';
-import { AuthService } from '../login/auth.service';
-import { Observable } from 'rxjs';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { Injectable, Signal } from '@angular/core';
+import {
+  BehaviorSubject,
+  Observable,
+  of,
+  ReplaySubject,
+  share,
+  tap,
+} from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface User {
   uid: number;
@@ -19,11 +25,9 @@ export interface User {
   providedIn: 'root',
 })
 export class UserService {
+  private cache = new Map<string, Observable<User>>();
   public selfUser: Signal<User | undefined>;
-  constructor(
-    private http: HttpClient,
-    private authSvc: AuthService,
-  ) {
+  constructor(private http: HttpClient) {
     this.selfUser = toSignal(this.getSelf());
   }
 
@@ -36,5 +40,40 @@ export class UserService {
       oldPassword: oldPassword,
       newPassword: newPassword,
     });
+  }
+
+  setCacheUser(username: string, user: Observable<User>) {
+    const existing = this.cache.has(username);
+    this.cache.set(username, user);
+  }
+
+  getCacheUser(username: string): Observable<User> | undefined {
+    const user = this.cache.get(username);
+    if (!user) {
+      return undefined;
+    }
+
+    return user;
+  }
+
+  _getUser(username: string): Observable<User> {
+    return this.http.get<User>(`/api/user/${username}`);
+  }
+
+  getUser(username: string): Observable<User> {
+    return this.getCachedUser(username, this._getUser(username));
+  }
+
+  getCachedUser(
+    username: string,
+    fallback: Observable<User>,
+  ): Observable<User> {
+    const existing = this.getCacheUser(username);
+    if (existing) {
+      return existing;
+    }
+
+    this.setCacheUser(username, fallback.pipe(share()));
+    return this.getCacheUser(username)!;
   }
 }

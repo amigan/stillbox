@@ -54,7 +54,7 @@ func recToShare(share database.Share) *Share {
 		EntityID:   share.EntityID,
 		Date:       jsontypes.TimePtrFromTSTZ(share.EntityDate),
 		Expiration: jsontypes.TimePtrFromTSTZ(share.Expiration),
-		Owner:      users.UserID(share.Owner),
+		OwnerID:    users.UserID(share.OwnerID),
 	}
 }
 
@@ -89,7 +89,7 @@ func (s *postgresStore) Create(ctx context.Context, share *Share) error {
 		EntityID:   share.EntityID,
 		EntityDate: share.Date.PGTypeTSTZ(),
 		Expiration: share.Expiration.PGTypeTSTZ(),
-		Owner:      sub.ID.Int(),
+		OwnerID:    sub.ID.Int(),
 	})
 
 	return err
@@ -136,7 +136,7 @@ func (s *postgresStore) Shares(ctx context.Context, p SharesParams) (shares []*S
 
 	offset, perPage := p.Pagination.OffsetPerPage(100)
 	dbParam := database.GetSharesPParams{
-		Owner:     owner,
+		OwnerID:   owner,
 		Direction: p.Direction.DirString(common.DirAsc),
 		Offset:    offset,
 		PerPage:   perPage,
@@ -150,7 +150,7 @@ func (s *postgresStore) Shares(ctx context.Context, p SharesParams) (shares []*S
 	shares = make([]*Share, 0, len(shs))
 	for _, v := range shs {
 		s := recToShare(v.Share)
-		s.OwnerUser = &v.Username
+		s.Owner = &v.Username
 		shares = append(shares, s)
 	}
 

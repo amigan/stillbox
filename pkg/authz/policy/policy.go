@@ -198,7 +198,7 @@ var Policy = &restrict.PolicyDefinition{
 					ID: "isOwner",
 					Left: &restrict.ValueDescriptor{
 						Source: restrict.ResourceField,
-						Field:  "Owner",
+						Field:  "OwnerID",
 					},
 					Right: &restrict.ValueDescriptor{
 						Source: restrict.SubjectField,
@@ -214,7 +214,7 @@ var Policy = &restrict.PolicyDefinition{
 					ID: "isOwner",
 					Left: &restrict.ValueDescriptor{
 						Source: restrict.ResourceField,
-						Field:  "Owner",
+						Field:  "OwnerID",
 					},
 					Right: &restrict.ValueDescriptor{
 						Source: restrict.SubjectField,
@@ -230,7 +230,7 @@ var Policy = &restrict.PolicyDefinition{
 					ID: "isOwner",
 					Left: &restrict.ValueDescriptor{
 						Source: restrict.ResourceField,
-						Field:  "Owner",
+						Field:  "OwnerID",
 					},
 					Right: &restrict.ValueDescriptor{
 						Source: restrict.SubjectField,
@@ -246,7 +246,7 @@ var Policy = &restrict.PolicyDefinition{
 					ID: "isOwner",
 					Left: &restrict.ValueDescriptor{
 						Source: restrict.ResourceField,
-						Field:  "Owner",
+						Field:  "OwnerID",
 					},
 					Right: &restrict.ValueDescriptor{
 						Source: restrict.SubjectField,
@@ -262,7 +262,7 @@ var Policy = &restrict.PolicyDefinition{
 					ID: "isOwner",
 					Left: &restrict.ValueDescriptor{
 						Source: restrict.ResourceField,
-						Field:  "Owner",
+						Field:  "OwnerID",
 					},
 					Right: &restrict.ValueDescriptor{
 						Source: restrict.SubjectField,

@@ -99,7 +99,7 @@ func (s *postgresStore) CreateIncident(ctx context.Context, inc incidents.Incide
 		var err error
 		dbInc, err = db.CreateIncident(ctx, database.CreateIncidentParams{
 			ID:          id,
-			Owner:       user.ID.Int(),
+			OwnerID:     user.ID.Int(),
 			Name:        inc.Name,
 			Description: inc.Description,
 			StartTime:   inc.StartTime.PGTypeTSTZ(),
@@ -229,7 +229,7 @@ func (s *postgresStore) Incidents(ctx context.Context, p IncidentsParams) (incs 
 func fromDBIncident(id uuid.UUID, d database.Incident) incidents.Incident {
 	return incidents.Incident{
 		ID:          id,
-		Owner:       users.UserID(d.Owner),
+		OwnerID:     users.UserID(d.OwnerID),
 		Name:        d.Name,
 		Description: d.Description,
 		CreatedAt:   jsontypes.Time(d.CreatedAt.Time),
@@ -249,7 +249,8 @@ func fromDBListInPRow(id uuid.UUID, d database.ListIncidentsPRow) Incident {
 	return Incident{
 		Incident: incidents.Incident{
 			ID:          id,
-			Owner:       users.UserID(d.Owner),
+			OwnerID:     users.UserID(d.OwnerID),
+			Owner:       d.Owner,
 			Name:        d.Name,
 			Description: d.Description,
 			CreatedAt:   jsontypes.Time(d.CreatedAt.Time),
@@ -308,7 +309,8 @@ func (s *postgresStore) Incident(ctx context.Context, id uuid.UUID) (*incidents.
 			return err
 		}
 
-		r = fromDBIncident(id, inc)
+		r = fromDBIncident(id, inc.Incident)
+		r.Owner = inc.Owner
 		r.Calls = fromDBCalls(calls)
 
 		return nil
@@ -384,7 +386,7 @@ func (s *postgresStore) UpdateNotes(ctx context.Context, incidentID uuid.UUID, c
 
 func (s *postgresStore) Owner(ctx context.Context, id uuid.UUID) (incidents.Incident, error) {
 	owner, err := database.FromCtx(ctx).GetIncidentOwner(ctx, id)
-	return incidents.Incident{ID: id, Owner: users.UserID(owner)}, err
+	return incidents.Incident{ID: id, OwnerID: users.UserID(owner)}, err
 }
 
 func (s *postgresStore) CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUID) (bool, error) {

@@ -16,13 +16,13 @@ CREATE INDEX IF NOT EXISTS users_username_idx ON users(username);
 
 CREATE TABLE IF NOT EXISTS api_keys(
 	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	owner INTEGER REFERENCES users(id) NOT NULL,
+	owner_id INTEGER REFERENCES users(id) NOT NULL,
 	name VARCHAR (255),
 	created_at TIMESTAMP NOT NULL,
 	expires TIMESTAMP,
 	disabled BOOLEAN NOT NULL,
 	api_key TEXT UNIQUE NOT NULL,
-	UNIQUE (owner, name)
+	UNIQUE (owner_id, name)
 );
 
 CREATE TABLE IF NOT EXISTS systems(
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS settings(
 CREATE TABLE IF NOT EXISTS incidents(
 	id UUID PRIMARY KEY,
 	name TEXT NOT NULL,
-	owner INTEGER NOT NULL,
+	owner_id INTEGER NOT NULL,
 	description TEXT,
 	created_at TIMESTAMPTZ,
 	start_time TIMESTAMPTZ,
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS shares(
 	entity_type TEXT NOT NULL,
 	entity_id UUID NOT NULL,
 	entity_date TIMESTAMPTZ,
-	owner INTEGER NOT NULL REFERENCES users(id),
+	owner_id INTEGER NOT NULL REFERENCES users(id),
 	expiration TIMESTAMPTZ NULL
 );
 
