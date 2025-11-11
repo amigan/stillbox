@@ -16,7 +16,8 @@ import (
 
 type Incident struct {
 	ID          uuid.UUID          `json:"id"`
-	Owner       users.UserID       `json:"owner"`
+	OwnerID     users.UserID       `json:"-"`
+	Owner       string             `json:"owner"`
 	Name        string             `json:"name"`
 	Description *string            `json:"description,omitempty"`
 	CreatedAt   jsontypes.Time     `json:"createdAt"`

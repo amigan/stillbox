@@ -48,8 +48,8 @@ type Share struct {
 	ID         string          `json:"id"`
 	Type       EntityType      `json:"entityType"`
 	Date       *jsontypes.Time `json:"entityDate,omitempty"` // we handle this for the user
-	Owner      users.UserID    `json:"-"`
-	OwnerUser  *string         `json:"owner,omitempty"`
+	OwnerID    users.UserID    `json:"-"`
+	Owner      *string         `json:"owner,omitempty"`
 	EntityID   uuid.UUID       `json:"entityID"`
 	Expiration *jsontypes.Time `json:"expiration"`
 }
@@ -129,7 +129,7 @@ func (s *service) NewShare(ctx context.Context, sh CreateShareParams) (*Share, e
 		ID:       id,
 		Type:     sh.Type,
 		Date:     (*jsontypes.Time)(entTime),
-		Owner:    u.ID,
+		OwnerID:  u.ID,
 		EntityID: sh.EntityID,
 	}
 

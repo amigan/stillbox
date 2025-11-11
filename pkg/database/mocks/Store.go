@@ -2714,22 +2714,22 @@ func (_c *Store_GetDatabaseSize_Call) RunAndReturn(run func(ctx context.Context)
 }
 
 // GetIncident provides a mock function for the type Store
-func (_mock *Store) GetIncident(ctx context.Context, id uuid.UUID) (database.Incident, error) {
+func (_mock *Store) GetIncident(ctx context.Context, id uuid.UUID) (database.GetIncidentRow, error) {
 	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetIncident")
 	}
 
-	var r0 database.Incident
+	var r0 database.GetIncidentRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (database.Incident, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (database.GetIncidentRow, error)); ok {
 		return returnFunc(ctx, id)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) database.Incident); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) database.GetIncidentRow); ok {
 		r0 = returnFunc(ctx, id)
 	} else {
-		r0 = ret.Get(0).(database.Incident)
+		r0 = ret.Get(0).(database.GetIncidentRow)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
 		r1 = returnFunc(ctx, id)
@@ -2769,12 +2769,12 @@ func (_c *Store_GetIncident_Call) Run(run func(ctx context.Context, id uuid.UUID
 	return _c
 }
 
-func (_c *Store_GetIncident_Call) Return(incident database.Incident, err error) *Store_GetIncident_Call {
-	_c.Call.Return(incident, err)
+func (_c *Store_GetIncident_Call) Return(getIncidentRow database.GetIncidentRow, err error) *Store_GetIncident_Call {
+	_c.Call.Return(getIncidentRow, err)
 	return _c
 }
 
-func (_c *Store_GetIncident_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) (database.Incident, error)) *Store_GetIncident_Call {
+func (_c *Store_GetIncident_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) (database.GetIncidentRow, error)) *Store_GetIncident_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -3326,8 +3326,8 @@ func (_c *Store_GetSharesP_Call) RunAndReturn(run func(ctx context.Context, arg 
 }
 
 // GetSharesPCount provides a mock function for the type Store
-func (_mock *Store) GetSharesPCount(ctx context.Context, owner *int32) (int64, error) {
-	ret := _mock.Called(ctx, owner)
+func (_mock *Store) GetSharesPCount(ctx context.Context, ownerID *int32) (int64, error) {
+	ret := _mock.Called(ctx, ownerID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSharesPCount")
@@ -3336,15 +3336,15 @@ func (_mock *Store) GetSharesPCount(ctx context.Context, owner *int32) (int64, e
 	var r0 int64
 	var r1 error
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *int32) (int64, error)); ok {
-		return returnFunc(ctx, owner)
+		return returnFunc(ctx, ownerID)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *int32) int64); ok {
-		r0 = returnFunc(ctx, owner)
+		r0 = returnFunc(ctx, ownerID)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, *int32) error); ok {
-		r1 = returnFunc(ctx, owner)
+		r1 = returnFunc(ctx, ownerID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -3358,12 +3358,12 @@ type Store_GetSharesPCount_Call struct {
 
 // GetSharesPCount is a helper method to define mock.On call
 //   - ctx context.Context
-//   - owner *int32
-func (_e *Store_Expecter) GetSharesPCount(ctx interface{}, owner interface{}) *Store_GetSharesPCount_Call {
-	return &Store_GetSharesPCount_Call{Call: _e.mock.On("GetSharesPCount", ctx, owner)}
+//   - ownerID *int32
+func (_e *Store_Expecter) GetSharesPCount(ctx interface{}, ownerID interface{}) *Store_GetSharesPCount_Call {
+	return &Store_GetSharesPCount_Call{Call: _e.mock.On("GetSharesPCount", ctx, ownerID)}
 }
 
-func (_c *Store_GetSharesPCount_Call) Run(run func(ctx context.Context, owner *int32)) *Store_GetSharesPCount_Call {
+func (_c *Store_GetSharesPCount_Call) Run(run func(ctx context.Context, ownerID *int32)) *Store_GetSharesPCount_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -3386,7 +3386,7 @@ func (_c *Store_GetSharesPCount_Call) Return(n int64, err error) *Store_GetShare
 	return _c
 }
 
-func (_c *Store_GetSharesPCount_Call) RunAndReturn(run func(ctx context.Context, owner *int32) (int64, error)) *Store_GetSharesPCount_Call {
+func (_c *Store_GetSharesPCount_Call) RunAndReturn(run func(ctx context.Context, ownerID *int32) (int64, error)) *Store_GetSharesPCount_Call {
 	_c.Call.Return(run)
 	return _c
 }

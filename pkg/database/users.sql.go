@@ -15,7 +15,7 @@ import (
 
 const createAPIKey = `-- name: CreateAPIKey :exec
 INSERT INTO api_keys(
-	owner,
+	owner_id,
 	name,
 	created_at,
 	expires,
@@ -25,7 +25,7 @@ INSERT INTO api_keys(
 `
 
 type CreateAPIKeyParams struct {
-	Owner     int              `json:"owner"`
+	OwnerID   int              `json:"ownerId"`
 	Name      *string          `json:"name"`
 	CreatedAt time.Time        `json:"createdAt"`
 	Expires   pgtype.Timestamp `json:"expires"`
@@ -35,7 +35,7 @@ type CreateAPIKeyParams struct {
 
 func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error {
 	_, err := q.db.Exec(ctx, createAPIKey,
-		arg.Owner,
+		arg.OwnerID,
 		arg.Name,
 		arg.CreatedAt,
 		arg.Expires,
@@ -120,7 +120,7 @@ func (q *Queries) DisableUser(ctx context.Context, username string) error {
 const getAPIKey = `-- name: GetAPIKey :one
 SELECT
 	a.id,
-	a.owner,
+	a.owner_id,
 	a.name,
 	a.created_at,
 	a.expires,
@@ -128,13 +128,13 @@ SELECT
 	a.api_key,
 	u.username
 FROM api_keys a
-JOIN users u ON (a.owner = u.id)
+JOIN users u ON (a.owner_id = u.id)
 WHERE api_key = $1
 `
 
 type GetAPIKeyRow struct {
 	ID        int              `json:"id"`
-	Owner     int              `json:"owner"`
+	OwnerID   int              `json:"ownerId"`
 	Name      *string          `json:"name"`
 	CreatedAt time.Time        `json:"createdAt"`
 	Expires   pgtype.Timestamp `json:"expires"`
@@ -148,7 +148,7 @@ func (q *Queries) GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, e
 	var i GetAPIKeyRow
 	err := row.Scan(
 		&i.ID,
-		&i.Owner,
+		&i.OwnerID,
 		&i.Name,
 		&i.CreatedAt,
 		&i.Expires,

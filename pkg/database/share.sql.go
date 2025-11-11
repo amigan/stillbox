@@ -18,7 +18,7 @@ INSERT INTO shares (
 	entity_type,
 	entity_id,
 	entity_date,
-	owner,
+	owner_id,
 	expiration
 ) VALUES ($1, $2, $3, $4, $5, $6)
 `
@@ -28,7 +28,7 @@ type CreateShareParams struct {
 	EntityType string             `json:"entityType"`
 	EntityID   uuid.UUID          `json:"entityId"`
 	EntityDate pgtype.Timestamptz `json:"entityDate"`
-	Owner      int                `json:"owner"`
+	OwnerID    int                `json:"ownerId"`
 	Expiration pgtype.Timestamptz `json:"expiration"`
 }
 
@@ -38,7 +38,7 @@ func (q *Queries) CreateShare(ctx context.Context, arg CreateShareParams) error 
 		arg.EntityType,
 		arg.EntityID,
 		arg.EntityDate,
-		arg.Owner,
+		arg.OwnerID,
 		arg.Expiration,
 	)
 	return err
@@ -59,7 +59,7 @@ SELECT
 	s.entity_type,
 	s.entity_id,
 	s.entity_date,
-	s.owner,
+	s.owner_id,
 	s.expiration
 FROM shares s
 WHERE s.id = $1
@@ -73,7 +73,7 @@ func (q *Queries) GetShare(ctx context.Context, id string) (Share, error) {
 		&i.EntityType,
 		&i.EntityID,
 		&i.EntityDate,
-		&i.Owner,
+		&i.OwnerID,
 		&i.Expiration,
 	)
 	return i, err
@@ -81,13 +81,13 @@ func (q *Queries) GetShare(ctx context.Context, id string) (Share, error) {
 
 const getSharesP = `-- name: GetSharesP :many
 SELECT
-	s.id, s.entity_type, s.entity_id, s.entity_date, s.owner, s.expiration,
+	s.id, s.entity_type, s.entity_id, s.entity_date, s.owner_id, s.expiration,
 	u.username
 FROM shares s
-JOIN users u ON (s.owner = u.id)
+JOIN users u ON (s.owner_id = u.id)
 WHERE
 CASE WHEN $1::INTEGER IS NOT NULL THEN
-	s.owner = $1 ELSE TRUE END
+	s.owner_id = $1 ELSE TRUE END
 ORDER BY
 CASE WHEN $2::TEXT = 'asc' THEN s.entity_date END ASC,
 CASE WHEN $2::TEXT = 'desc' THEN s.entity_date END DESC
@@ -96,7 +96,7 @@ FETCH NEXT $4 ROWS ONLY
 `
 
 type GetSharesPParams struct {
-	Owner     *int32 `json:"owner"`
+	OwnerID   *int32 `json:"ownerId"`
 	Direction string `json:"direction"`
 	Offset    int32  `json:"offset"`
 	PerPage   int32  `json:"perPage"`
@@ -109,7 +109,7 @@ type GetSharesPRow struct {
 
 func (q *Queries) GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSharesPRow, error) {
 	rows, err := q.db.Query(ctx, getSharesP,
-		arg.Owner,
+		arg.OwnerID,
 		arg.Direction,
 		arg.Offset,
 		arg.PerPage,
@@ -126,7 +126,7 @@ func (q *Queries) GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSh
 			&i.Share.EntityType,
 			&i.Share.EntityID,
 			&i.Share.EntityDate,
-			&i.Share.Owner,
+			&i.Share.OwnerID,
 			&i.Share.Expiration,
 			&i.Username,
 		); err != nil {
@@ -145,11 +145,11 @@ SELECT COUNT(*)
 FROM shares s
 WHERE
 CASE WHEN $1::INTEGER IS NOT NULL THEN
-	s.owner = $1 ELSE TRUE END
+	s.owner_id = $1 ELSE TRUE END
 `
 
-func (q *Queries) GetSharesPCount(ctx context.Context, owner *int32) (int64, error) {
-	row := q.db.QueryRow(ctx, getSharesPCount, owner)
+func (q *Queries) GetSharesPCount(ctx context.Context, ownerID *int32) (int64, error) {
+	row := q.db.QueryRow(ctx, getSharesPCount, ownerID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err

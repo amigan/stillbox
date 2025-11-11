@@ -44,8 +44,8 @@ func TestRBAC(t *testing.T) {
 				Roles: []string{entities.RoleAdmin},
 			},
 			resource: &incidents.Incident{
-				Name:  "test incident",
-				Owner: 4,
+				Name:    "test incident",
+				OwnerID: 4,
 			},
 			action:    entities.ActionUpdate,
 			expectErr: nil,
@@ -56,8 +56,8 @@ func TestRBAC(t *testing.T) {
 				ID: 2,
 			},
 			resource: &incidents.Incident{
-				Name:  "test incident",
-				Owner: 4,
+				Name:    "test incident",
+				OwnerID: 4,
 			},
 			action:    entities.ActionUpdate,
 			expectErr: errors.New(`access denied for Action: "update" on Resource: "Incident"`),
@@ -68,8 +68,8 @@ func TestRBAC(t *testing.T) {
 				ID: 2,
 			},
 			resource: &incidents.Incident{
-				Name:  "test incident",
-				Owner: 2,
+				Name:    "test incident",
+				OwnerID: 2,
 			},
 			action:    entities.ActionUpdate,
 			expectErr: nil,
@@ -80,8 +80,8 @@ func TestRBAC(t *testing.T) {
 				ID: 2,
 			},
 			resource: &incidents.Incident{
-				Name:  "test incident",
-				Owner: 6,
+				Name:    "test incident",
+				OwnerID: 6,
 			},
 			action:    entities.ActionDelete,
 			expectErr: errors.New(`access denied for Action: "delete" on Resource: "Incident"`),
@@ -201,7 +201,7 @@ func TestRBAC(t *testing.T) {
 				ID: 2,
 			},
 			resource: &incidents.Incident{
-				Owner: users.UserID(6),
+				OwnerID: users.UserID(6),
 			},
 			action:    entities.ActionShare,
 			expectErr: errors.New(`access denied for Action: "share" on Resource: "Incident"`),
@@ -213,7 +213,7 @@ func TestRBAC(t *testing.T) {
 				Roles: []string{entities.RoleAdmin},
 			},
 			resource: &incidents.Incident{
-				Owner: users.UserID(6),
+				OwnerID: users.UserID(6),
 			},
 			action:    entities.ActionShare,
 			expectErr: nil,
@@ -224,7 +224,7 @@ func TestRBAC(t *testing.T) {
 				ID: 6,
 			},
 			resource: &incidents.Incident{
-				Owner: users.UserID(6),
+				OwnerID: users.UserID(6),
 			},
 			action:    entities.ActionShare,
 			expectErr: nil,

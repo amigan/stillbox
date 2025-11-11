@@ -40,7 +40,7 @@ SELECT EXISTS
 INSERT INTO incidents (
 	id,
 	name,
-	owner,
+	owner_id,
 	description,
 	created_at,
 	start_time,
@@ -50,7 +50,7 @@ INSERT INTO incidents (
 ) VALUES (
 	@id,
 	@name,
-	@owner,
+	@owner_id,
 	sqlc.narg('description'),
 	NOW(),
 	sqlc.narg('start_time'),
@@ -65,16 +65,18 @@ RETURNING *;
 SELECT
 	i.id,
 	i.name,
-	i.owner,
+	i.owner_id,
 	i.description,
 	i.created_at,
 	i.start_time,
 	i.end_time,
 	i.location,
 	i.metadata,
+	u.username owner,
 	COUNT(ic.incident_id) calls_count
 FROM incidents i
 LEFT JOIN incidents_calls ic ON i.id = ic.incident_id
+JOIN users u ON i.owner_id = u.id
 WHERE
 CASE WHEN sqlc.narg('start')::TIMESTAMPTZ IS NOT NULL THEN
 	i.start_time >= sqlc.narg('start') ELSE TRUE END AND
@@ -84,7 +86,7 @@ CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 		i.name ILIKE '%' || @filter || '%' OR
 		i.description ILIKE '%' || @filter || '%'
 	) ELSE TRUE END)
-GROUP BY i.id
+GROUP BY i.id, u.username
 ORDER BY
 CASE WHEN @direction::TEXT = 'asc' THEN i.start_time END ASC,
 CASE WHEN @direction::TEXT = 'desc' THEN i.start_time END DESC
@@ -162,17 +164,11 @@ ORDER BY ic.call_date ASC;
 
 -- name: GetIncident :one
 SELECT
-	i.id,
-	i.name,
-	i.owner,
-	i.description,
-	i.created_at,
-	i.start_time,
-	i.end_time,
-	i.location,
-	i.metadata
-FROM incidents i
-WHERE i.id = @id;
+	sqlc.embed(incidents),
+	users.username owner
+FROM incidents
+JOIN users ON incidents.owner_id = users.id
+WHERE incidents.id = @id;
 
 -- name: UpdateIncident :one
 UPDATE incidents
@@ -191,4 +187,4 @@ RETURNING *;
 DELETE FROM incidents CASCADE WHERE id = @id;
 
 -- name: GetIncidentOwner :one
-SELECT owner FROM incidents WHERE id = @id;
+SELECT owner_id FROM incidents WHERE id = @id;

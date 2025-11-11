@@ -4,7 +4,7 @@ SELECT
 	s.entity_type,
 	s.entity_id,
 	s.entity_date,
-	s.owner,
+	s.owner_id,
 	s.expiration
 FROM shares s
 WHERE s.id = @id;
@@ -15,9 +15,9 @@ INSERT INTO shares (
 	entity_type,
 	entity_id,
 	entity_date,
-	owner,
+	owner_id,
 	expiration
-) VALUES (@id, @entity_type, @entity_id, sqlc.narg('entity_date'), @owner, sqlc.narg('expiration'));
+) VALUES (@id, @entity_type, @entity_id, sqlc.narg('entity_date'), @owner_id, sqlc.narg('expiration'));
 
 -- name: DeleteShare :exec
 DELETE FROM shares WHERE id = @id;
@@ -39,10 +39,10 @@ SELECT
 	sqlc.embed(s),
 	u.username
 FROM shares s
-JOIN users u ON (s.owner = u.id)
+JOIN users u ON (s.owner_id = u.id)
 WHERE
-CASE WHEN sqlc.narg('owner')::INTEGER IS NOT NULL THEN
-	s.owner = @owner ELSE TRUE END
+CASE WHEN sqlc.narg('owner_id')::INTEGER IS NOT NULL THEN
+	s.owner_id = @owner_id ELSE TRUE END
 ORDER BY
 CASE WHEN @direction::TEXT = 'asc' THEN s.entity_date END ASC,
 CASE WHEN @direction::TEXT = 'desc' THEN s.entity_date END DESC
@@ -54,6 +54,6 @@ FETCH NEXT sqlc.arg('per_page') ROWS ONLY
 SELECT COUNT(*)
 FROM shares s
 WHERE
-CASE WHEN sqlc.narg('owner')::INTEGER IS NOT NULL THEN
-	s.owner = @owner ELSE TRUE END
+CASE WHEN sqlc.narg('owner_id')::INTEGER IS NOT NULL THEN
+	s.owner_id = @owner_id ELSE TRUE END
 ;

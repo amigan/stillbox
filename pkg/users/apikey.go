@@ -6,7 +6,7 @@ import (
 )
 
 type APIKey struct {
-	Owner     UserID          `json:"owner"`
+	OwnerID   UserID          `json:"ownerID"`
 	Name      *string         `json:"name"`
 	CreatedAt jsontypes.Time  `json:"createdAt"`
 	Expires   *jsontypes.Time `json:"expires,omitempty"`

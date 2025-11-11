@@ -60,7 +60,7 @@ func (ns NullAudioMIME) Value() (driver.Value, error) {
 
 type ApiKey struct {
 	ID        int              `json:"id,omitempty"`
-	Owner     int              `json:"owner,omitempty"`
+	OwnerID   int              `json:"ownerId,omitempty"`
 	Name      *string          `json:"name,omitempty"`
 	CreatedAt time.Time        `json:"createdAt,omitempty"`
 	Expires   pgtype.Timestamp `json:"expires,omitempty"`
@@ -103,7 +103,7 @@ type Call struct {
 type Incident struct {
 	ID          uuid.UUID          `json:"id,omitempty"`
 	Name        string             `json:"name,omitempty"`
-	Owner       int                `json:"owner,omitempty"`
+	OwnerID     int                `json:"ownerId,omitempty"`
 	Description *string            `json:"description,omitempty"`
 	CreatedAt   pgtype.Timestamptz `json:"createdAt,omitempty"`
 	StartTime   pgtype.Timestamptz `json:"startTime,omitempty"`
@@ -132,7 +132,7 @@ type Share struct {
 	EntityType string             `json:"entityType,omitempty"`
 	EntityID   uuid.UUID          `json:"entityId,omitempty"`
 	EntityDate pgtype.Timestamptz `json:"entityDate,omitempty"`
-	Owner      int                `json:"owner,omitempty"`
+	OwnerID    int                `json:"ownerId,omitempty"`
 	Expiration pgtype.Timestamptz `json:"expiration,omitempty"`
 }
 
