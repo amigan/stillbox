@@ -13,5 +13,6 @@ export interface IncidentRecord {
   location: Object | null;
   metadata: Object | null;
   calls: IncidentCall[] | null;
+  owner: string | null;
   callCount: number | null;
 }

@@ -28,6 +28,7 @@ import {
 import { MatInputModule } from '@angular/material/input';
 import { debounceTime } from 'rxjs/operators';
 import { ToolbarContextService } from '../navigation/toolbar-context.service';
+import { AvatarComponent } from '../user/avatar/avatar.component';
 
 @Pipe({
   name: 'fmtDate',
@@ -76,6 +77,7 @@ export class FmtDatePipe implements PipeTransform {
     RouterLink,
     CommonModule,
     MatProgressSpinnerModule,
+    AvatarComponent,
   ],
   templateUrl: './incidents.component.html',
   styleUrl: './incidents.component.scss',
@@ -88,7 +90,15 @@ export class IncidentsComponent {
   page = 0;
   perPage = 25;
   pageSizeOptions = [25, 50, 75, 100, 200];
-  columns = ['select', 'startTime', 'endTime', 'name', 'numCalls', 'edit'];
+  columns = [
+    'select',
+    'owner',
+    'startTime',
+    'endTime',
+    'name',
+    'numCalls',
+    'edit',
+  ];
   curPage = <PageEvent>{ pageIndex: 0, pageSize: 0 };
   currentSet!: IncidentRecord[];
   isLoading = true;
