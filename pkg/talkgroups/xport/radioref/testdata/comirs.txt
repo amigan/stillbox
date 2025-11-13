@@ -1,0 +1,626 @@
+Statewide
+
+Statewide is used by the Airwing and Marine units.
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2217	8a9	D	STATE	Statewide	Law Talk
+MSP Troop A
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2073	819	D	A-PTL-1	A Patrol 1 North (A1, A2, A3, A6)	Law Dispatch
+2075	81b	D	A-PTL-2	A Patrol 2 South (A4, A5)	Law Dispatch
+2077	81d	D	A-PTL-3	A Patrol 3 Tactical	Law Tac
+2137	859	D	A GANG	Troop A Gang Unit	Law Tac
+2157	86d	D	A SSS	Troop A Special Services Selection	Law Tac
+2167	877	D	A NARC	Troop A Narcotics Unit	Law Tac
+MSP Troop B
+
+ B8 is the old E3 MassPike Patrol
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2099	833	D	B-PTL-1	Troop B Patrol 1 (B2-B3-B6-B7)	Law Dispatch
+2101	835	D	B-PTL-2 	Troop B Patrol 2 (B1-B4-B5-B8)	Law Dispatch
+2103	837	D	B-PTL-3	Troop B Patrol 3 (Car to Car)	Law Tac
+2141	85d	D	B GANG	Troop B Gang Unit	Law Tac
+2171	87b	D	B DETEC	Troop B Detectives	Law Tac
+2205	89d	D	B EXEC	Troop B Executive Security	Law Tac
+3617	e21	DE	MSP-Tech E	MSP Radio Techs (Encrypted)	Public Works
+MSP Troop C
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2113	841	D	C-PTL-2	C Patrol 2 Tactical	Law Tac
+2115	843	D	C-PTL-3	C Patrol 3	Law Dispatch
+MSP Troop D
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2123	84b	D	D-PTL-1	Troop D Patrol 1 North (D1,D4)	Law Dispatch
+MSP Troop F
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+65	041	D	F ATG	Troop F Announcements	Law Dispatch
+67	043	D	F-PTL-1	Troop F Patrol Logan Airport	Law Dispatch
+69	045	D	F TAC 1	Troop F Tactical 1	Law Tac
+71	047	D	F TAC 2	Troop F Tactical 2	Law Tac
+73	049	DE	F Secure 1	Troop F Secure 1	Law Tac
+75	04b	DE	F Secure 2	Troop F Secure 2	Law Tac
+83	053	D	F-PTL-2	Troop F Patrol 2 Hanscom	Law Dispatch
+85	055	D	F-PTL-3	Troop F Patrol 3 Worcester	Law Dispatch
+2087	827	D	F Detail	Troop F Logan Airport Details	Law Tac
+MSP Troop H
+
+H8 is the former E1 MassPike Patrol
+H9 is the former E4 MassPike Tunnel Patrol
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2079	81f	D	H-PTL-1	H Patrol 1 North Dispatch (H1, H4, H5, H6, H8)	Law Dispatch
+2081	821	D	H-PTL-2	H Patrol 2 South Dispatch (H2, H3, H7)	Law Dispatch
+2083	823	D	H-PTL-3	H Patrol 3 Tunnels H9	Law Dispatch
+2151	867	D	H DETEC	Troop H Detectives	Law Tac
+MSP SOPS
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2085	825	D	SOPS-1	Special Operations 1	Law Tac
+2093	82d	D	SOPS-2	Special Operations 2	Law Tac
+2105	839	D	SOPS-3	Special Operations 3	Law Tac
+2107	83b	D	SOPS-4	Special Operations 4	Law Tac
+2117	845	D	SOPS-5	Special Operations 5	Law Tac
+2119	847	D	SOPS-6	Special Operations 6	Law Tac
+2131	853	D	SOPS-7	Special Operations 7	Law Tac
+2133	855	D	SOPS-8	Special Operations 8	Law Tac
+Local Public Safety (LPS)
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2271	8df	D	LPS-1	Local Public Safety 1 (Special Events, Tie to MSP)	Interop
+2273	8e1	D	LPS-2	Local Public Safety 2 (Special Events)	Interop
+2275	8e3	D	LPS-3	Local Public Safety 3 (Special Events, Tie to MSP)	Interop
+2277	8e5	D	LPS-4	Local Public Safety 4 (Special Events)	Interop
+2279	8e7	D	LPS-5	Local Public Safety 5 (Special Events, Tie to MSP)	Interop
+2281	8e9	D	LPS-6	Local Public Safety 6 (Special Events)	Interop
+2283	8eb	D	LPS-7	Local Public Safety 7 (Special Events, Tie to MSP)	Interop
+2285	8ed	D	LPS-8	Local Public Safety 8 (Special Events)	Interop
+2287	8ef	D	LPS-9	Local Public Safety 9 (Special Events 9, Tie to MSP)	Interop
+2289	8f1	D	LPS-10	Local Public Safety 10 (Special Events)	Interop
+State Events
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2049	801	D	Event 1	Events 1	Law Talk
+2051	803	D	Event 2	Events 2	Law Talk
+2053	805	D	Event 3	Events 3	Law Talk
+2055	807	D	Event 4	Events 4	Law Talk
+2057	809	D	Event 5	Events 5	Law Talk
+2059	80b	D	Event 6	Events 6	Law Talk
+2061	80d	D	Event 7	Events 7	Law Talk
+2063	80f	D	Event 8	Events 8	Law Talk
+2048	800	D	Event-9	Events-9	Law Talk
+2050	802	D	Event-10	Events-10	Law Talk
+2052	804	D	Event-11	Events-11	Law Talk
+2054	806	D	Event-12	Events-12	Law Talk
+2056	808	D	Event 13	Events-13	Law Talk
+2058	80a	D	Event-14	Events-14	Law Talk
+2060	80c	D	Event-15	Events-15	Law Talk
+2062	80e	D	Event-16	Events-16	Law Talk
+Law Operations
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2254	8ce	D	LAW OPS 1	Law Operations 1	Law Talk
+2255	8cf	D	LAW OPS 2	Law Operations 2	Law Talk
+2256	8d0	D	LAW OPS 3	Law Operations 3	Law Talk
+2257	8d1	D	LAW OPS 4	Law Operations 4	Law Talk
+2258	8d2	D	LAW OPS 5	Law Operations 5	Law Talk
+2259	8d3	D	LAW OPS 6	Law Operations 6	Law Talk
+2260	8d4	D	LAW OPS 7	Law Operations 7	Law Talk
+2261	8d5	D	LAW OPS 8	Law Operations 8	Law Talk
+2262	8d6	DE	LAW OPS 9e	Law Operations 9e	Law Talk
+2263	8d7	DE	LAW OPS 10e	Law Operations 10e	Law Talk
+2264	8d8	DE	LAW OPS 11e	Law Operations 11e	Law Talk
+2265	8d9	DE	LAW OPS 12e	Law Operations 12e	Law Talk
+2266	8da	DE	LAW OPS 13e	Law Operations 13e	Law Talk
+2267	8db	DE	LAW OPS 14e	Law Operations 14e	Law Talk
+2268	8dc	DE	LAW OPS 15e	Law Operations 15e	Law Talk
+2269	8dd	DE	LAW OPS 16e	Law Operations 16e	Law Talk
+MassDOT
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2003	7d3	D	MassDOT-2	Department of Transportation CH-2 (Roadside Assistance)	Public Works
+2013	7dd	D	MassDOT-7	Department of Transportation CH-7	Public Works
+2015	7df	D	MassDOT-8	Department of Transportation CH-8 (Highway Operations Center)	Public Works
+2035	7f3	D	MassDOT 18	Department of Transportation - CH18	Public Works
+2039	7f7	D	MassDOT 20	Department of transportation - Ch 20	Public Works
+2043	7fb	D	MassDOT - 22	Department of transportation - Ch. 22	Public Works
+Department of Fire Services
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2497	9c1	D	DFS East	Department of Fire Services east	Fire-Tac
+2503	9c7	D	DFS West	Department of Fire Services West	Fire-Tac
+Emergency Management (MEMA)
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2431	97f	D	MEMA Metro	MEMA - Metro Boston Ops	Emergency Ops
+2433	981	D	MEMA East	MEMA - East Ops	Emergency Ops
+2439	987	D	MEMA West	MEMA - West Ops	Emergency Ops
+2441	989	D	MEMA SW	MEMA - Statewide	Emergency Ops
+Environmental Police
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2445	98d	D	MEP 3 West Disp	Massachusetts Environmental Police West Dispatch	Law Dispatch
+2447	98f	D	MEP 1 East Disp	Massachusetts Environmental Police East Dispatch	Law Dispatch
+2449	991	D	MEP 2 East Tac	Massachusetts Environmental Police East Tac	Law Tac
+2451	993	D	MEP 4 West Tac	Massachusetts Environmental Police West Tac	Law Tac
+Water Resources Authority
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+769	301	D	MWRA-8	Mass Water Resources Auth. CH.8 - Support	Public Works
+Department of Conservation and Recreation (DCR)
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+655	28f	D	DCR ATG	DCR All Call	Public Works
+657	291	D	DCR NORTH 1	DCR North 1	Public Works
+659	293	D	DCR NORTH 2	DCR North 2	Public Works
+661	295	D	DCR HARBOR 1	DCR Harbor 1	Public Works
+663	297	D	DCR HARBOR 2	DCR Harbor 2	Public Works
+665	299	T	DCR SOUTH 1	DCR South 1	Public Works
+667	29b	D	DCR SOUTH 2	DCR South 2	Public Works
+669	29d	D	DCR MAINT	DCR Maintenance	Public Works
+671	29f	D	DCR FLD OPS	DCR Field Ops	Public Works
+673	2a1	D	DCR TACT	DCR Tactical	Public Works
+675	2a3	D	DCR EMERG	DCR Emergency Broadcasts	Public Works
+677	2a5	T	DCR STATEHSE	DCR State House	Public Works
+679	2a7	D	DCR ENG 1	DCR Engineering 1	Public Works
+681	2a9	D	DCR ENG 2	DCR Engineering 2	Public Works
+683	2ab	D	DCR 14	DCR 14 Boston Harbor Islands	Public Works
+685	2ad	D	DCR REGRP	DCR Dynamic Regroup	Public Works
+687	2af	D	DCR WATER	DCR Water Shead	Public Works
+689	2b1	D	DCR QUABBIN	DCR Quabbin Reservoir	Public Works
+691	2b3	D	DCR FIRE 1	DCR Fire 1 (West)	Fire-Tac
+693	2b5	D	DCR FIRE 2	DCR Fire 2 (Central,East,South)	Fire-Tac
+Massport
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+131	083	D	ConleyCrn 1	Conley Crane 1	Public Works
+133	085	D	ConleyCrn 2	Conley Crane 2	Public Works
+135	087	D	ConleyCrn 3	Conley Crane 3	Public Works
+137	089	D	ConleyCrn 4	Conley Crane 4	Public Works
+119	077	D	ConleyCrn5	Conley Crane 5	Public Works
+121	079	D	ConleyCrn 6	Conley Crane 6	Public Works
+139	08b	D	ConleyYRDOps	Conley Yard Operations	Public Works
+141	08d	D	Conley Ship	Conley Shipping 	Public Works
+143	08f	D	ConleyMaint1	Conley Maintenance 1	Public Works
+145	091	D	ConleyMaint2	Conley Maintenance 2	Public Works
+147	093	D	BlackFalcon1	Black Falcon Cruise Terminal - 1	Transportation
+149	095	D	BlackFalcon2	Black Falcon Cruise Terminal - 2	Transportation
+151	097	D	BlackFalcon3	Black Falcon Cruise Terminal - 3	Transportation
+153	099	D	MassPort PD1	Massport Police Primary	Law Dispatch
+155	09b	D	MassPort PD2	MassPort PD Tac 2	Law Tac
+157	09d	D	MassPort PD3	MassPort PD Tac 3	Law Tac
+Massport/Logan International Airport
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+3	003	D	MPA OPS 1	Massport Logan Operations 1	Public Works
+5	005	D	MPA CONST	Massport Logan Construction	Public Works
+7	007	DE	MPA Keybase	Massport Logan Keycard Access Control (Encrypted)	Public Works
+9	009	D	MPA CALL-IN	Massport Logan Call-In Communications	Multi-Tac
+11	00b	D	MPA EMERG 1	Massport Logan Emergency 1	Emergency Ops
+13	00d	D	MPA EMERG 2	Massport Logan Emergency 2	Emergency Ops
+15	00f	D	MPA IT	Massport Logan Radio Techs, IT Department	Public Works
+19	013	D	MPA OPS 2	Massport Airport Operations 2	Public Works
+21	015	D	MPA OPS 3	Massport Airport Operations 3	Public Works
+23	017	D	MPA EMERG 3	Massport Logan Emergency 3	Emergency Ops
+35	023	D	MPA FIRE FSA	Massport Logan Fire Station Alerting	Fire Dispatch
+37	025	D	MPA FIRE 1	Massport Logan Fire 1	Fire-Tac
+39	027	D	MPA FIRE 2	Massport Logan Fire 2	Fire-Tac
+41	029	D	MPA FIRE 3	Massport Logan Fire 3	Fire-Tac
+43	02b	D	MPA FIRE 4	Massport Logan Fire 4	Fire-Tac
+47	02f	DE	MPA FIRE ENC	Massport Fire Encrypted	Fire-Talk
+49	031	D	MPA KBED FD	Massport Fire Hanscom TG ( Patch to 856.0875)	Fire-Tac
+53	035	D	MPA Firewide	Massport Fire Wide Area	Fire-Tac
+99	063	D	MPA FAC STREET	Facilities - Street Side	Public Works
+101	065	D	MPA FAC RAMP	Facilities - Ramp Side	Public Works
+103	067	D	MPA FAC ELEC	Massport Logan Facilities Electrical	Public Works
+105	069	D	MPA FAC H2O	Massport Logan Facilties Water Side	Public Works
+163	0a3	D	MPA GTU Taxi	Ground Transportation Unit - Taxis	Transportation
+165	0a5	D	MPA GTU Bus	Ground Transportation Unit - Buses	Transportation
+227	0e3	D	MPA Parking	Parking Operations	Public Works
+257	101	D	KBOS Select	Selectable Patch to Airport Aircraft ops.	Aircraft
+291	123	D	MPA Fueling	Fueling Operations	Other
+301	12d	D	MPA Tech	Radio Shop	Public Works
+Massport/Worcester Regional Airport
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+51	033	D	Worc ORH Fire	Fire Operations	Fire Dispatch
+167	0a7	D	Worc ORH Gnd2	Ground Operations 2	Aircraft
+175	0af	D	Worc ORH IO	Interop	Interop
+177	0b1	D	Worc ORH Em	Emergency	Emergency Ops
+179	0b3	D	Worc ORH Sec	Security	Security
+183	0b7	D	Worc ORH Mnt	Maintenance	Public Works
+185	0b9	D	Worc ORH Ops	Operations	Public Works
+Hanscom
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+31	01f	D	Hanscom Ops1	Operations 1	Public Works
+Massachusetts Bay Transportation Authority (MBTA)
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+3329	d01	D	Transit PD1	MBTA Transit Police 1 Patch (470.6625) 	Law Dispatch
+3331	d03	D	Transit PD2	MBTA Transit Police 2 	Law Talk
+3335	d07	D	TransitPD WA	MBTA Transit Police Wide Area	Law Talk
+Department of Corrections (DOC)
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1237	4d5	D	MCI FraminghamOp	Operations	Corrections
+1249	4e1	D	MCI South Base	South Base Ops	Corrections
+1845	735	D	MCI Norfolk	MCI Norfolk	Corrections
+1873	751	D	MCI Cedar Jct	MCI Cedar Junction in Walpole	Corrections
+1877	755	D	PondvilleCorrCtr	Pondville Corrections Center	Corrections
+1953	7a1	D	DOC Central	Central Transportation	Corrections
+1955	7a3	D	DOC Fugitive	Fugitive Unit	Corrections
+2315	90b	D	DOC Statewide	Statewide Transportation	Corrections
+2469	9a5	D	DOC Northeast	Northeast Transportation	Corrections
+2471	9a7	D	DOC Southeast	Southeast Transportation	Corrections
+2473	9a9	D	DOC West	West Transportation	Corrections
+Boston Regional / BAPERN
+
+ BAPERN is the Boston Area Police Emergency Radio Network, a series of intercity channels used in the Boston area
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2529	9e1	D	BAPERN 3	BAPERN 3	Interop
+2531	9e3	D	BAPERN 4	BAPERN 4	Interop
+2535	9e7	D	BAPERN South	BAPERN South	Interop
+2537	9e9	D	BAPERN West	BAPERN West	Interop
+2539	9eb	D	BAPERN Central	BAPERN Central	Interop
+Boston Regional / Metrofire
+
+MetroFire talkgroups are fixed patches to the UHF frequencies.
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1055	41f	D	MetroFire Centr	MetroFire - Central	Interop
+1057	421	D	MetroFire Red	MetroFire - Red	Interop
+1069	42d	D	MetroFire White	MetroFire - White	Interop
+1089	441	D	MetroFire Admin	MetroFire - Admin	Interop
+1091	443	D	MetroFire North	MetroFire - North	Interop
+Greater Boston Police Council
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2541	9ed	D	BAP NORTHWEST	GBPC-Northwest	Law Talk
+2543	9ef	D	BAP SOUTHEAST	GBPC-Southeast	Law Talk
+2545	9f1	D	BAP SOUTHWEST	GBPC-Southwest	Law Talk
+Boston Marathon
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+3597	e0d	TE	BAA-K3	Marathon Segment Coordinators	Multi-Tac
+12289	3001	D	BAA Med B	Marathon Med B	EMS-Tac
+12291	3003	D	BAA Med C-D	Marathon Med C-D	EMS-Tac
+Western Mass Regional / WMLEC
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2513	9d1	D	WMLEC - PD	WMLEC Police intercity	Interop
+2515	9d3	D	WMLEC - FD	WMLEC Fire Intercity	Interop
+Franklin County
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+3699	e73	D	FranklinCty PD	FRCOG - Police Simulcast	Law Dispatch
+2300	8fc	D	FC-New Salem PD	New Salem PD Simulcast	Law Dispatch
+2302	8fe	D	FC-MtToby PD1	Mount Toby 1 Simulcast	Law Dispatch
+2304	900	D	FC-MtToby PD2	Mount Toby 2 Simulcast	Law Dispatch
+2306	902	D	FC-ShelburnePD1	Shelburne PD - Simulcast	Law Dispatch
+3697	e71	D	FranklinCty FD	FRCOG - Fire Simulcast	Fire Dispatch
+2310	906	D	FC-Fire Tones	FRCOG - Fire Tones	Fire Dispatch
+3701	e75	D	FC-Fire Ops 3	Fire Ops 3	Fire-Tac
+3703	e77	D	FC-Fire Ops 4	Fire Ops 4	Fire-Tac
+3705	e79	D	FC-Fire Ops 5	Fire Ops 5	Fire-Tac
+3707	e7b	D	FC-Fire Ops 6	Fire Ops 6	Fire-Tac
+3709	e7d	D	FC-Fire Ops 7	Fire Ops 7	Fire-Tac
+2293	8f5	D	FC ShelburneCtl2	Shelburne Control Ch 2	Fire-Talk
+Hampshire County
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2307	903	D	HampshireCty PD	County PD Simulcast/Tie	Law Dispatch
+2309	905	D	HampshireCty PD2	County Police 2	Law Tac
+2311	907	D	HampshireCty CMD	County Command	Law Tac
+2313	909	D	HampshireCty TAC	County Police TAC	Law Tac
+Suffolk County
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2963	b93	D	SCSO PrisTrsp	Suffolk County Sheriff Transport	Corrections
+2965	b95	D	SCSO Admin	Suffolk County Sheriff Admin	Corrections
+2967	b97	D	SCSO SOPS	Suffolk County Sheriff Special Ops	Corrections
+2969	b99	D	SCSO HOC	Suffolk County Sheriff HOC Maintenance	Corrections
+2971	b9b	D	SCSO Maint	Suffolk County Sheriff Jail Maintenance	Corrections
+Worcester County
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+625	271	D	Worc EMA AW	Worcester EMA Area Wide	Interop
+627	273	D	WorcFD AWide	Worcester Fire Area Wide	Interop
+629	275	D	WorcPD AWide	Worcester Police Area Wide	Interop
+631	277	D	Worc EMS AWide	Worcester EMS Area Wide	Interop
+2506	9ca	D	District 7 Fire	District 7 Fire tie to 33.6200	Fire-Talk
+2507	9cb	D	District 7 Fire	District 7 Fire tie to 159.4575	Fire-Talk
+2508	9cc	D	District 8 Fire	District 8 Fire tie to 31.10 - 453.750 	Fire-Talk
+2509	9cd	D	Mid State FD	Mid State Fire - Patch to 31.10 	Fire-Talk
+4587	11eb	D	W College PD IO	Worcester Area College Interop	Interop
+New Braintree C8 Towns
+
+Town that operate on C8 (Towns have secondary channels. Towns in Hampden County are noted below)
+100s    Brookfield
+200s    Hardwick 
+300s    North Brookfield 
+400s    East Brookfield        
+500s    Holland    (Part-Time PD) (Hampden County)
+600s    West Brookfield        
+700s    Brimfield (Hampden County)
+800s    New Braintree    Town is patrolled by Hardwick PD    
+900s    Wales (Part-Time PD) (Hampden County)    
+000s    Petersham Part-Time PD (PD operate on local channel)
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2301	8fd	D	N Brntree C8 Dis	C8 New Braintree Dispatch	Law Dispatch
+Belmont
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1101	44d	D	Belmont FD	Fire 800	Fire-Tac
+Boston
+
+Boston Police primarly operates on a set of conventional UHF frequencies.
+Boston Fire primarly operates on a set of conventional UHF frequencies.
+Boston EMS primarly operates on a set of conventional UHF frequencies.
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2915	b63	D	Bos ProtSrvc	Boston Municipal Protective Service Dispatch	Law Dispatch
+3137	c41	DE	BPD 16 COMM	Boston Police Department CH-16 Comm Unit	Law Tac
+3175	c67	D	BPD Fed I/O	Boston Police - Federal Interop	Interop
+3075	c03	D	BFD Ch1Patch	Boston Fire Ch1 Patch	Fire Dispatch
+3077	c05	D	BFD Ch2Patch	Boston Fire Ch2 Patch	Fire-Tac
+3079	c07	D	BFD Ch3Patch	Boston Fire Ch3 Patch	Fire-Tac
+3081	c09	D	BFD Ch4Patch	Boston Fire Ch4 Patch	Fire-Tac
+3073	c01	D	BFD ATG	Boston Fire Announcement	Fire Dispatch
+3083	c0b	DE	BFD CTAC 1	Boston Fire Command Tac 1	Fire-Talk
+3085	c0d	DE	BFD CTAC 2	Boston Fire Command Tac 2	Fire-Talk
+3093	c15	DE	BFD OPS 1	Boston Fire Ops 1	Fire-Tac
+3095	c17	DE	BFD OPS 2	Boston Fire Ops 2	Fire-Tac
+3097	c19	DE	BFD CommTech	Boston Fire Communication Technicians	Fire-Talk
+3099	c1b	D	BFD Line	Boston Fire Line Crews	Fire-Talk
+3101	c1d	D	BFD Fleet	Boston Fire Fleet Maintenance	Fire-Talk
+3103	c1f	D	BFD Em Prep	Boston Fire - Emergency Prepardness	Emergency Ops
+3185	c71	D	BFD Call In	Boston Fire 70 Fire Alarm Call In	Fire-Talk
+3192	c78	DE	BFD AlertD1	Boston Fire District 1 Station Alerting	Fire Dispatch
+3193	c79	DE	BFD AlertD3	Boston Fire District 3 Station Alerting	Fire Dispatch
+3194	c7a	DE	BFD AlertD4	Boston Fire District 4 Station Alerting	Fire Dispatch
+3195	c7b	DE	BFD AlertD6	Boston Fire District 6 Station Alerting	Fire Dispatch
+3197	c7d	DE	BFD AlertD7	Boston Fire District 7 Station Alerting	Fire Dispatch
+3198	c7e	DE	BFD AlertD8	Boston Fire District 8 Station Alerting	Fire Dispatch
+3199	c7f	DE	BFD AlertD9	Boston Fire District 9 Station Alerting	Fire Dispatch
+3196	c7c	DE	BFD AlertD11	Boston Fire District 11 Station Alerting	Fire Dispatch
+3200	c80	DE	BFD AlertD12	Boston Fire District 12 Station Alerting	Fire Dispatch
+2899	b53	D	Bos EMS Wide	Boston EMS Wide Area	EMS-Tac
+3047	be7	D	Bos EMS 1	Boston EMS 1	EMS-Tac
+3049	be9	D	Bos EMS 2	Boston EMS 2	EMS-Tac
+3051	beb	D	Bos EMS 3	Boston EMS 3	EMS-Tac
+3053	bed	D	Bos EMS 4	Boston EMS 4	EMS-Tac
+3055	bef	D	Bos Hosp 1	Boston Hospital 1	Business
+3057	bf1	D	Bos Hosp 2	Boston Hospital 2	Business
+3059	bf3	D	Bos Hosp 3	Boston Hospital 3	Business
+3061	bf5	D	Bos Hosp 4	Boston Hospital 4	Business
+2817	b01	D	Bos CW ATG	Boston Citywide ATG	Interop
+2819	b03	D	Bos CWCallIn	Boston CallIn	Interop
+2821	b05	D	Bos CW 1	Boston Citywide 1 Emergency	Interop
+2823	b07	D	Bos CW 2	Boston Citywide 2 Events	Interop
+2825	b09	D	Bos CW 3	Boston Citywide 3 Talkaround	Interop
+2827	b0b	D	Bos CW 4	Boston Citywide 4 Interop	Interop
+2829	b0d	D	Bos Radio	Boston Radio Shop	Public Works
+2831	b0f	D	Bos DOIT	Boston DOIT Public Safety Group	Public Works
+2877	b3d	D	Bos OEM	Boston Office Emergency Management	Emergency Ops
+2885	b45	D	Bos Parks WA	Boston Parks and Rec Widearea	Public Works
+2901	b55	D	BPHC Wide	Boston Public Health Commission Widearea	Public Works
+2921	b69	D	Bos PropMng1	Boston Property Management Tac 1	Public Works
+2923	b6b	D	Bos PropMng2	Boston Property Management Tac 2	Public Works
+2925	b6d	D	Bos AnimalCtr	Boston Animal Control	Public Works
+2943	b7f	D	Bos Cemetary	Boston Cemetary Maintenance	Public Works
+2945	b81	D	Boston Rgrs Main	Boston Rangers Maintenance	Public Works
+2947	b83	D	Bos Rangers	Boston Parks and Rec Rangers	Public Works
+2949	b85	D	Bos RangerTac	Boston Park Rangers Tac	Public Works
+2953	b89	D	Bos ParksSupv	Boston Park Rangers Supervisors	Public Works
+2955	b8b	D	Bos ParksAdmn	Boston Park Rangers Admin	Public Works
+2979	ba3	D	Bos Eldr Vans	Boston Elderly Affairs Transport Vans	Public Works
+2981	ba5	D	Bos Eldr Admn	Boston Elderly Affairs Administration	Public Works
+2991	baf	D	BTD ATG	Boston Transportation Dept Announcement	Public Works
+2993	bb1	D	BTD Talk	Boston Transportation Dept Talkaround	Public Works
+2995	bb3	D	BTD Ops	Boston Transportation Dept Operations	Public Works
+2997	bb5	D	BTD Parking	Boston Transportation Dept Parking Enforcement	Public Works
+2999	bb7	D	BTD Traffic	Boston Transportation Dept Traffic Enforcement	Public Works
+3001	bb9	D	BTD Towing	Boston Transportation Dept Tow and Hold	Public Works
+3003	bbb	D	BTD Admin	Boston Transportation Dept Administration	Public Works
+3005	bbd	D	BTD 3005	Boston Transportation Dept 3005	Public Works
+3007	bbf	D	BTD 3007	Boston Transportation Dept 3007	Public Works
+3009	bc1	D	Bos DPW ATG	Boston DPW Announcement	Public Works
+3011	bc3	D	Bos DPW1	Boston Public Works 1 Central Office	Public Works
+3013	bc5	D	Bos DPW2	Boston Public Works 2 Highway	Public Works
+3015	bc7	D	Bos DPW3	Boston Public Works 3 Snow Removal	Public Works
+3017	bc9	D	Bos DPW4	Boston Public Works 4 Sanitation	Public Works
+3019	bcb	D	Bos DPW5	Boston Public Works 5 Street Lighting	Public Works
+3021	bcd	D	Bos DPW6	Boston Public Works 6 Engineering	Public Works
+3023	bcf	D	Bos DPW7	Boston Public Works 7 Construction	Public Works
+3025	bd1	D	Bos DPW8	Boston Public Works 8	Public Works
+3031	bd7	D	BPHC ATG	Boston Public Health Commission Announcement	Public Works
+3037	bdd	D	BPHC Common	Boston Public Health Commission Common	Public Works
+3039	bdf	D	BPHC Hmless	Boston Public Health Commission Homeless Vans	Public Works
+3041	be1	D	BPHC Maint	Boston Public Health Commission Property Maagement	Public Works
+3063	bf7	D	BPHC Centers	Boston Public Health Commission Community Centers	Public Works
+3065	bf9	D	BPHC Prep	Boston Public Health Commission Preparedness	Public Works
+Cambridge
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1109	455	De	Camb PD 1	Cambridge Police Patrol 1	Law Dispatch
+1111	457	De	Camb PD 2 	Cambridge Police Inquiry	Law Talk
+1117	45d	D	Camb PD 5	Cambridge PD Citywide	Law Tac
+1119	45f	D	Camb PD 8	Cambridge PD Supervisors	Law Talk
+1135	46f	D	Camb PD 10	Cambridge PD Escorts	Law Talk
+1137	471	D	Camb PD 11 	Cambridge PD Traffic Operations	Law Talk
+1133	46d	DE	Camb PD 12	Police Detectives	Law Talk
+1121	461	D	Camb PD ADMIN	Cambridge Police Admin	Law Talk
+1123	463	DE	Camb PD NARC	Police Narcotics	Law Talk
+1131	46b	DE	Camb PD SRT	Cambridge Police Department Special Response Team	Law Tac
+1199	4af	D	Camb PD Patch	Patch of 851.8000 Patrol Ops 16	Law Tac
+1051	41b	D	Camb FD-F1	Cambridge Fire Department - Channel 1	Fire Dispatch
+1053	41d	De	Camb FD-F2	Cambridge Fire - Citywide	Fire-Tac
+1065	429	DE	Camb FD-F8	Cambridge Fire - Administration	Fire-Talk
+1077	435	D	Camb FD-14	Cambridge Fireground (Patch of 855.5625)	Fire-Talk
+1059	423	De	Camb FD-F5	Cambridge Fire EMS System	Fire-Tac
+1079	437	D	Camb FD-16	Cambridge Fireground (Patch of 854.4875)	Fire-Talk
+1067	42b	DE	Camb FD Inv	Cambridge Fire Investigations	Fire-Talk
+1075	433	De	Camb FD Trng	Cambridge Fire Training	Fire-Tac
+1081	439	D	Camb FD SCN	Cambridge Fire - Scan List TGID	Fire-Talk
+1105	451	DE	Camb Fire Tech 1	Cambridge Fire - Technical Services 1	Fire-Talk
+1107	453	DE	Camb Fire Tech 2	Cambridge Fire - Technical Services 2	Fire-Talk
+1327	52f	DE	Camb FD Alrt	Cambridge Fire - Station Alerting	Fire Dispatch
+1227	4cb	De	Camb Pro EMS	Cambridge - Pro EMS	EMS Dispatch
+1229	4cd	D	Camb EMS - 1	Cambridge EMS - 1	EMS Dispatch
+1231	4cf	D	Camb EMS - 2	Cambridge EMS - 2	EMS-Tac
+1239	4d7	D	Camb Pro INT	Cambridge - Pro Intercept	EMS-Talk
+1301	515	D	EMS to CambH	EMS to Cambridge Hospital	Hospital
+1303	517	D	EMS to MtAbH	EMS to Mount Auburn Hospital	Hospital
+1305	519	D	EMS to SomvH	EMS to Somerville Hospital	Hospital
+1061	425	D	Camb CW 6 I/A	Cambridge Inter-agency PD - FD	Interop
+1063	427	D	Camb PS-Com	Cambridge Public Safety Command	Multi-Tac
+1083	43b	D	Camb PS-Ptch	Cambridge Public Safety Patch	Multi-Dispatch
+1085	43d	De	Camb SOPS-1	Cambridge Special Ops - 1	Multi-Tac
+1087	43f	D	Camb SOPS-2	Cambridge Special Ops - 2	Multi-Tac
+1139	473	De	Camb SOPS-3	Cambridge Special Ops - 3	Multi-Tac
+1141	475	De	Camb SOPS-4	Cambridge Special Ops - 4	Multi-Tac
+1143	477	D	Camb Tac 5	Cambridge Tactical - 5	Multi-Tac
+1181	49d	D	Camb City Ev	Cambridge City Events	Public Works
+1185	4a1	D	Camb ECC Emer	Cambridge ECC Emergency	Law Dispatch
+1025	401	D	Camb DPW 1	Department of Public Works - 1	Public Works
+1027	403	D	Camb DPW-2	Department of Public Works - 2	Public Works
+1029	405	D	Camb DPW-3	Department of Public Works - 3	Public Works
+1031	407	D	Camb DPW-4	Department of Public Works - 4	Public Works
+1033	409	D	Camb DPW-5	Department of Public Works - 5	Public Works
+1041	411	D	Camb House A	Housing Authority	Public Works
+1043	413	D	Camb CommDev	Cambridge Community Development	Public Works
+1045	415	D	CambGolf 1	Cambridge Golf Course 1	Public Works
+1151	47f	D	Camb Tr Pk	Traffic and Parking Channel 2	Law Talk
+1153	481	D	Camb Tr Pk	Traffic and Parking Channel 1	Law Talk
+1155	483	D	Camb H2O 2	Water Department Ch 2	Public Works
+1161	489	D	Camb H2O 1	Water Department Ch 1	Public Works
+1163	48b	D	FreshPondGf2	Fresh Pond Golf Course 2	Business
+1177	499	D	Camb PS Ops	Cambridge Public Schools Operations	Schools
+1223	4c7	D	CambridgeSideSec	CambridgeSide - Security	Security
+1241	4d9	D	Camb Animal C	Cambridge Animal Control	Public Works
+1245	4dd	D	Camb R	Cambridge Rindge and Latin High School	Schools
+1253	4e5	D	Camb Electric	Cambridge Electric Division	Public Works
+1283	503	D	CambCH Fac	City Hospital Facilities Channel 1	Public Works
+1287	507	D	CHA Security	City Hospital Facilities Security	Security
+1289	509	D	CambCH Fac3	City Hospital Facilities Channel 3	Public Works
+1293	50d	D	CambCH Fac2	City Hospital Facilities Channel 2	Public Works
+Chelsea
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+4113	1011	T	Chelsea FD	Fire Operations	Fire Dispatch
+4121	1019	T	Chelsea PD	Police Operations (Tie to UHF)	Law Dispatch
+Everett
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+4129	1021	T	Everett Fire	Fire Operations	Fire Dispatch
+4137	1029	T	Everett PD	Police Operations	Law Dispatch
+Greenfield
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2577	a11	D	Greenfield FD	Fire Operations	Fire Dispatch
+2579	a13	D	Greenfield PD	Police Operations	Law Dispatch
+Harvard University (Cambridge)
+
+ Crimson EMS is Harvard University's EMS service.
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1201	4b1	De	Crimson EMS	Crimson EMS	EMS Dispatch
+Mass. Institute of Technology (MIT) (Cambridge)
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1189	4a5	De	MIT - PTL 1	Police Patrol 1	Law Dispatch
+1191	4a7	D	MIT - TECH	Information Systems and Security	Security
+1193	4a9	D	MIT - EMS	Campus EMS	EMS Dispatch
+1217	4c1	D	MIT - Details	Police Details	Law Tac
+1221	4c5	De	MIT - Events	Events	Multi-Tac
+Mount Auburn Hospital
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1297	511	De	Mt Auburn Sec	Mount Auburn Security	Security
+Montague
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2581	a15	D	Turners Falls FD	Turners Falls - Fire Operations	Fire Dispatch
+2583	a17	D	Montague PD	Police Operations	Law Dispatch
+Orange
+
+Orange Police are also still on the analog trunk, the TGs are cross-patched.
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2291	8f3	D	Orange PD Patch	Patch from Analog TG 36656 - PD Operations	Law Dispatch
+2585	a19	D	Orange FD	Fire Operations	Fire Dispatch
+2587	a1b	D	Orange PD	Police Operations	Law Dispatch
+Revere
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+4161	1041	T	Revere FD	Fire Operations (Tie to UHF)	Fire Dispatch
+Shrewsbury
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+617	269	D	Shrewsbury FDWd	Fire Wide	Fire-Talk
+619	26b	D	Shrewsbury PDWde	PD Wide	Law Talk
+4865	1301	T	Shrewsbury FD Mn	Fire Operations - Main	Fire Dispatch
+4867	1303	T	Shrewsbury FD-A	Fire Operations A	Fire-Tac
+4869	1305	T	Shrewsbury FD-B	Fire Operations B	Fire-Tac
+4871	1307	T	Shrewsbury FD-C	Fire Operations C	Fire-Tac
+4873	1309	TE	Shrewsbury FDT10	Fire - TAC 10	Fire-Tac
+4875	130b	T	Shrewsbury FireT	Fire Training	Fire-Talk
+4883	1313	T	Shrewsbury IO	Interagency Interop	Interop
+4885	1315	T	Shrewsbury PD	Police Operations	Law Dispatch
+4887	1317	T	Shrewsbury PD TF	Police Traffic	Law Talk
+4889	1319	T	Shrewsbury PD3	Police Operations 3	Law Talk
+4891	131b	TE	Shrewsbury PDS	Police - Secure	Law Talk
+4893	131d	T	Shrewsbury PD 5	Police Operations 5	Law Talk
+4895	131f	T	Shrewsbury PD 6	Police Operations 6	Law Tac
+4897	1321	TE	Shewsbury PDT	Police - TAC	Law Tac
+4901	1325	T	Beal School 1	Beal School - Ch 1	Schools
+4903	1327	T	Beal School 2	Beal School - Ch 2	Schools
+4905	1329	T	Shrewsbury Hwy	Highway Department	Public Works
+4907	132b	T	Shewsbury DPW	Public Works	Public Works
+4911	132f	T	Shrewsbury DPW2	Public Works Ch 2	Public Works
+4913	1331	T	Shrewsbury SELCO	Electric and Cable Company	Utilities
+4915	1333	T	Shrewsbury Schls	School Department	Schools
+4917	1335	T	Shrewsbury Fores	Forestry	Public Works
+Watertown
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+1103	44f	D	Watertown FD	Watertown Fire 	Fire-Tac
+Worcester
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+4369	1111	D	Worc PD F1 East	Worcester PD F1 East	Law Dispatch
+4371	1113	D	Worc PD F2 West	Worcester PD F2 West	Law Dispatch
+4373	1115	TE	Worc PD F3 CJIS	Worcester PD F3 CJIS	Law Talk
+4375	1117	TE	Worc PD F4 TAC4	Worcester PD F4 Tac-4	Law Tac
+4385	1121	TE	Worc PD F11 Detl	Worcester PD F11 Details	Law Talk
+4589	11ed	D	Worc MSP Tie	Worcester PD tie to MSP Holden	Interop
+4443	115b	D	Worc FD Disp	Worcester Fire Dispatch	Fire Dispatch
+4435	1153	D	Worc FD OP-A	Worcester Fire Ops A	Fire-Tac
+4437	1155	D	Worc FD OP-B	Worcester Fire Ops B	Fire-Tac
+4439	1157	D	Worc FD OP-C	Worcester Fire Ops C	Fire-Tac
+4441	1159	D	Worc FD OP-D	Worcester Fire Ops D	Fire-Tac
+4445	115d	T	Worc FD TAC10	Worcester Fire Tac 10	Fire-Tac
+4447	115f	T	Worc FD TAC11	Worcester Fire Tac 11	Fire-Tac
+4477	117d	T	Worc FD Mayday	Fire Mayday Training and Testing	Fire-Talk
+4479	117f	D	Worc FD Paging	Worcester Fire Paging	Fire Dispatch
+4433	1151	D	Worc FD ADM	Worcester Fire Admin	Fire-Talk
+4449	1161	TE	WorcFD TAC12	Worcester Fire Tac 12	Fire-Talk
+4451	1163	D	Worc FD Prevn	Worcester Fire Prevention Unit	Fire-Talk
+4453	1165	TE	Worc FD FIU	Fire Investigation Unit	Fire-Talk
+4481	1181	D	WorcEMS CW	Worcester EMS Citywide - EMS Dispatch	EMS Dispatch
+4483	1183	D	WorcEMS 1	Worcester EMS 1	EMS-Tac
+4485	1185	D	WorcEMS 2	Worcester EMS 2	EMS-Tac
+4487	1187	DE	WorcEMS 3	Worcester EMS 3	EMS-Tac
+4489	1189	D	WorcEME CMED	Worcester EMS CMED Interop	Interop
+4353	1101	D	Worc EMA	Worcester Emergency Management	Emergency Ops
+4513	11a1	T	WorcDPW Plows	Worcester DPW Streets Snow Plows	Public Works
+4515	11a3	T	WorcDPW Garg	Worcester DPW Garage	Public Works
+4517	11a5	T	WorcDPW Swer	Worcester DPW Sewer	Public Works
+4519	11a7	T	WorcDPW Sts	Worcester DPW Streets	Public Works
+4521	11a9	T	WorcDPW Wtr	Worcester DPW Water Dept	Public Works
+4523	11ab	T	WorcDPW Eng	Worcester DPW Engineering	Public Works
+4525	11ad	T	WorcDPW Filt	Worcester DPW Water Filtering	Public Works
+4527	11af	T	WorcDPW San	Worcester DPW Sanitation Dept	Public Works
+4529	11b1	T	WorcDPW Pkng	Worcester DPW Parking Control	Public Works
+4531	11b3	T	WorcDPW Park	Worcester DPW Park Maintenance	Public Works
+4533	11b5	T	WorcDPW Parks 2	Worcester DPW Parks Maintenance 2	Public Works
+4535	11b7	T	WorcDPW Cem	Worcester DPW Cemeteries	Public Works
+4537	11b9	T	WorcDPW Tree	Worcester DPW Forestry	Public Works
+4539	11bb	T	WorcDPW Wtr2	Worcester DPW Water Dept 2	Public Works
+4561	11d1	T	WPS BIG BUS	Worcester Schools Full Size Buses	Transportation
+4563	11d3	T	WPS MID BUS	Worcester Schools Medium Size Buses	Transportation
+4565	11d5	T	WPS VANS	Worcester School Vans	Transportation
+4567	11d7	T	WPS Schools	Worcester Schools Admin	Schools
+4569	11d9	T	WPS Maint	Worcester Bus Maintenance	Schools
+4571	11db	T	WPS BUS	Worcester Buses Talk	Transportation
+4573	11dd	T	WPS Test	Worcester Schools Test TG	Transportation
+4577	11e1	T	Worc Event A	Worcester Event A	Multi-Tac
+4579	11e3	T	Worc Event B	Worcester Event B	Multi-Tac
+4581	11e5	T	Worc Event C	Worcester Event C	Multi-Tac
+4583	11e7	D	Worc911 Emrg	Worcester Emergency Call In	Emergency Ops
+4585	11e9	D	Worc Interop	Worcester Public Safety Interagency	Interop
+4359	1107	D	Worc Radio Techs	Radio Technicians	Public Works
+Federal
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+3713	e81	DE	Federal IO	Federal IO	Interop
+UASI
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+2851	b23	D	UASI CALL-IN	UASI CALL-IN	Interop
+2853	b25	D	UASI EMERGEN	UASI EMERGENCY	Interop
+2855	b27	D	UASI EVENT	UASI EVENT	Interop
+2857	b29	D	UASI TALK	UASI TALK	Interop
+2859	b2b	D	UASI COMMAND	UASI COMMAND	Interop
+2861	b2d	D	UASI LAW	UASI LAW	Interop
+2863	b2f	D	UASI FIRE	UASI FIRE	Interop
+2865	b31	D	UASI EMS	UASI EMS	Interop
+2867	b33	D	UASI PUB-SER	UASI PUB-SER	Interop
+2869	b35	D	UASI TAC-1	UASI TAC-1	Interop
+2871	b37	D	UASI TAC-2	UASI TAC-2	Interop
+2873	b39	D	UASI TAC-3	UASI TAC-3	Interop
+2875	b3b	D	UASI TAC-4	UASI TAC-4	Interop
+Technicians
+DEC 	HEX 	Mode 	Alpha Tag	Description	Tag
+521	209	D	MSP Tech	Patch to MSP Radio Techs (TG 8336 on Zone 5)	Public Works
+2207	89f	D	Tech East	Troop A/H Radio Technicians	Public Works
+2209	8a1	D	Tech SW	Techs Statewide	Public Works
+2211	8a3	D	Tech South	Troop D Radio Technicians	Public Works
+2215	8a7	D	Tech West	Troop B Radio Technicians	Public Works
+3589	e05	D	MSP Tech	Tech Statewide P25	Public Works

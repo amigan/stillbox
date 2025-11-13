@@ -54,6 +54,14 @@ func TestRadioRef(t *testing.T) {
 			sysID:    0x197,
 			sysName:  "RISCON",
 		},
+		{
+			name:     "radioreference import 2",
+			impType:  "radioreference",
+			input:    getFixture("comirs.txt"),
+			jsExpect: getFixture("comirs.json"),
+			sysID:    0xD14,
+			sysName:  "CoMIRS",
+		},
 	}
 
 	subject := users.User{Roles: []string{entities.RoleAdmin}}
