@@ -51,7 +51,7 @@ func TestRadioRef(t *testing.T) {
 			impType:  "radioreference",
 			input:    getFixture("riscon.txt"),
 			jsExpect: getFixture("riscon.json"),
-			sysID:    197,
+			sysID:    0x197,
 			sysName:  "RISCON",
 		},
 	}

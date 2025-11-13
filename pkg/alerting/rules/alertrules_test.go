@@ -26,7 +26,7 @@ func TestAlertRules(t *testing.T) {
 	}{
 		{
 			name: "base case",
-			tg:   talkgroups.TG(197, 3),
+			tg:   talkgroups.TG(0x197, 3),
 			conf: `[{"times":["7:00+2h","01:00+1h","16:00+1h","19:00+4h"],"mult":0.2},{"times":["11:00+1h","15:00+30m","16:03+20m"],"mult":2.0}]`,
 			compare: rules.AlertRules{
 				{
@@ -50,7 +50,7 @@ func TestAlertRules(t *testing.T) {
 		},
 		{
 			name:      "bad spec",
-			tg:        talkgroups.TG(197, 3),
+			tg:        talkgroups.TG(0x197, 3),
 			conf:      `[{"times":["26:00+2h","01:00+1h","19:00+4h"],"mult":0.2},{"times":["11:00+1h","15:00+30m"],"mult":2.0}]`,
 			expectErr: errors.New("'26:00+2h': invalid hours"),
 		},
@@ -90,35 +90,35 @@ func TestAlertRules(t *testing.T) {
 	}{
 		{
 			name:        "base eval",
-			tg:          talkgroups.TG(197, 3),
+			tg:          talkgroups.TG(0x197, 3),
 			t:           tMust("1:20"),
 			origScore:   3,
 			expectScore: 0.6,
 		},
 		{
 			name:        "base eval",
-			tg:          talkgroups.TG(197, 3),
+			tg:          talkgroups.TG(0x197, 3),
 			t:           tMust("23:03"),
 			origScore:   3,
 			expectScore: 3,
 		},
 		{
 			name:        "base eval",
-			tg:          talkgroups.TG(197, 3),
+			tg:          talkgroups.TG(0x197, 3),
 			t:           tMust("8:03"),
 			origScore:   1.0,
 			expectScore: 0.2,
 		},
 		{
 			name:        "base eval",
-			tg:          talkgroups.TG(197, 3),
+			tg:          talkgroups.TG(0x197, 3),
 			t:           tMust("15:15"),
 			origScore:   3.0,
 			expectScore: 6.0,
 		},
 		{
 			name:        "overlapping eval",
-			tg:          talkgroups.TG(197, 3),
+			tg:          talkgroups.TG(0x197, 3),
 			t:           tMust("16:10"),
 			origScore:   1.0,
 			expectScore: 0.4,

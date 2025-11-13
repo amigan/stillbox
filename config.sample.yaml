@@ -156,9 +156,9 @@ callStorage:
   #   filter:
   #     all: false
   #     talkgroups:
-  #       - "197:10101"
+  #       - "407:10101"
   #     talkgroupsNot:
-  #       - "197:10111"
+  #       - "407:10111"
   #     talkgroupTagsAny:
   #       - fire dispatch
   #       - law dispatch
@@ -200,7 +200,7 @@ transcription:
 #   atLeastSeconds: 2
 #   filter:
 #     talkgroups:
-#       - "197:10101"
+#       - "407:10101"
 #     talkgroupTagsAny:
 #       - fire dispatch
 #       - law dispatch

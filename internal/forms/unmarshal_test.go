@@ -122,7 +122,7 @@ var (
 		Frequency:      852637500,
 		Key:            "2b7c871b-abcd-defa-0123-456789abcdef",
 		Source:         3237,
-		System:         197,
+		System:         0x197,
 		SystemLabel:    "RISCON",
 		Talkgroup:      2,
 		TalkgroupGroup: "Wide Area",
@@ -139,13 +139,13 @@ var (
 
 	ExpJob1 = xport.ExportJob{
 		Type:             xport.FormatSDRTrunk,
-		SystemID:         197,
+		SystemID:         0x197,
 		Template:         []byte("this is a template\n\r\nthingy"),
 		TemplateFileName: "template.xml",
 
 		Filter: filter.Filter{
 			Talkgroups: []talkgroups.ID{
-				talkgroups.TG(197, 3),
+				talkgroups.TG(0x197, 3),
 				talkgroups.TG(0, 4),
 			},
 		},

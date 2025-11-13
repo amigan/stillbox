@@ -107,7 +107,7 @@ func DefaultIfNilOrZero[T comparable](v *T, def T) T {
 // AtoiU32 is atoi() that supports hex (0x) or dec.
 func AtoiU32(s string) (uint32, error) {
 	if len(s) > 2 && s[0] == '0' && s[1] == 'x' {
-		v, err := strconv.ParseUint(s, 16, 32)
+		v, err := strconv.ParseInt(s[2:], 16, 32)
 		if err != nil {
 			return 0, err
 		}

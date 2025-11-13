@@ -41,7 +41,7 @@ func TestRelay(t *testing.T) {
 			call: calls.Call{
 				ID:        uuid.UUID([16]byte{0x52, 0xfd, 0xfc, 0x07, 0x21, 0x82, 0x45, 0x4f, 0x96, 0x3f, 0x5f, 0x0f, 0x9a, 0x62, 0x1d, 0x72}),
 				Submitter: common.PtrTo(users.UserID(1)),
-				System:    197,
+				System:    0x197,
 				Talkgroup: 10101,
 				DateTime:  time.Date(2024, 11, 10, 23, 33, 02, 0, time.Local),
 				AudioName: "smallest.mp3",

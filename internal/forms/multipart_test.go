@@ -24,7 +24,7 @@ func makeExportRequest(ej *xport.ExportJob, url string) *http.Request {
 
 	perr(body.WriteField("systemID", strconv.Itoa(int(ej.SystemID))))
 
-	perr(body.WriteField("talkgroups", "[197:3,4]"))
+	perr(body.WriteField("talkgroups", "[407:3,4]"))
 
 	w, err := body.CreateFormFile("template", ej.TemplateFileName)
 	perr(err)
