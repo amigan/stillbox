@@ -53,6 +53,7 @@ var (
 type checkOptions struct {
 	actions []string
 	context restrict.Context
+	try     bool
 }
 
 type CheckOption func(*checkOptions)
@@ -66,6 +67,13 @@ func WithActions(actions ...string) CheckOption {
 func WithContext(ctx restrict.Context) CheckOption {
 	return func(o *checkOptions) {
 		o.context = ctx
+	}
+}
+
+// WithTry indicates that failures should not be logged.
+func WithTry() CheckOption {
+	return func(o *checkOptions) {
+		o.try = true
 	}
 }
 
@@ -133,7 +141,9 @@ func (r *rbac) Check(ctx context.Context, res restrict.Resource, opts ...CheckOp
 		if res != nil {
 			resS = res.GetResourceName()
 		}
-		log.Error().Str("resource", resS).Strs("actions", req.Actions).Str("subject", subS).Msg("access denied")
+		if !o.try {
+			log.Error().Str("resource", resS).Strs("actions", req.Actions).Str("subject", subS).Msg("access denied")
+		}
 	}
 
 	return sub, authRes
