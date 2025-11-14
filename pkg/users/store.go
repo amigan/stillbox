@@ -133,7 +133,7 @@ func (s *postgresStore) UpdateUser(ctx context.Context, username string, input U
 // userPrivMask masks privileged fields if the subject is not permitted to read them.
 // It copies the user it is passed.
 func userPrivMask(ctx context.Context, user *User) *User {
-	_, err := authz.Check(ctx, user, authz.WithActions(entities.ActionReadPrivileged))
+	_, err := authz.Check(ctx, user, authz.WithActions(entities.ActionReadPrivileged), authz.WithTry())
 	if err != nil { // mask unprivileged
 		return user.Mask()
 	}

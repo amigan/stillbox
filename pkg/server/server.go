@@ -211,7 +211,7 @@ func (s *Server) MetricsLogger() func(next http.Handler) http.Handler {
 				}
 				status := ww.Status()
 				dur := time.Since(t1)
-				log.Info().Fields(map[string]any{
+				log.Trace().Fields(map[string]any{
 					"remote_addr": r.RemoteAddr,
 					"path":        r.URL.Path,
 					"proto":       r.Proto,

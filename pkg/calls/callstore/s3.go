@@ -185,6 +185,7 @@ func (sb *s3Backend) commitRuleJob(ctx context.Context, rj *ruleJob) error {
 	if err != nil {
 		return fmt.Errorf("set bucket lifecycle: %w", err)
 	}
+	log.Info().Str("bucket", sb.Bucket).Msg("lifecycle policy set")
 
 	return nil
 }
