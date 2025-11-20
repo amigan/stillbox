@@ -14,4 +14,4 @@ RUN go mod download
 COPY . .
 
 # Command to run the tests
-CMD ["go", "test", "-v", "./..."]
+CMD ["go", "test", "-tags", "noclient,musl", "-v", "./..."]
