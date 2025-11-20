@@ -39,7 +39,7 @@ coverage-html:
 	go tool cover -html=cover.out
 
 coverage:
-	go test -coverprofile cover.out
+	go test -tags noclient,musl -coverprofile cover.out
 
 # backup backs up the database without calls
 backup:
@@ -50,6 +50,9 @@ backupplain:
 
 test:
 	go test -race ${GOFLAGS} ${LDFLAGS} -v ./...
+
+citest:
+	go test -tags noclient,musl -coverprofile cover.out ${GOFLAGS} ${LDFLAGS} ./internal/... ./pkg/... ./util/...
 
 run:
 	go run -v ./cmd/stillbox/ serve

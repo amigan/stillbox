@@ -1,0 +1,26 @@
+name: testing
+enable-email-notifications: true
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'trunk'
+  workflow_dispatch:
+
+jobs:
+  unit-test:
+    runs-on: docker
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup-go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 'stable'
+      - name: install deps
+        run: |
+          apt-get update
+          apt-get install -y libsoxr0 libsoxr-dev
+      - name: run tests
+        run: make citest
