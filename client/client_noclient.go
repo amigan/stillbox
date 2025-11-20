@@ -1,4 +1,4 @@
-// build !noclient
+//go:build noclient
 package client
 
 import (
