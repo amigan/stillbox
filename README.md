@@ -69,6 +69,12 @@ If this message is still here, the database schema *initial migration* and proto
 Once `stillbox` is actually usable (but not necessarily feature-complete), I will remove this note, and start using DB migrations and
 protobuf best practices (i.e. not changing field numbers).
 
+## Compatibility
+
+`stillbox` is developed primarily on FreeBSD/amd64, with CI done on Linux/arm64. `calls` is tested primarily on Linux and macOS. The Web client is developed on
+Linux and macOS, and tested on those systems and Android. It is a goal of the project to function on as many systems as possible. Contributions toward this goal, of code
+or bug reports, are always welcome.
+
 ## License and Copyright
 
 © 2024, 2025 Daniel Ponte <dan AT dynatron DOT me>
