@@ -51,6 +51,9 @@ backupplain:
 test:
 	go test -race ${GOFLAGS} ${LDFLAGS} -v ./...
 
+intest:
+	go test -tags=integration -race ${GOFLAGS} ${LDFLAGS} -v ./...
+
 citest:
 	go test -tags noclient,musl -coverprofile cover.out ${GOFLAGS} ${LDFLAGS} ./internal/... ./pkg/... ./util/...
 

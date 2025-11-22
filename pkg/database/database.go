@@ -107,17 +107,17 @@ func Close(c Store) {
 func NewClient(ctx context.Context, conf config.DB) (*Postgres, error) {
 	dir, err := iofs.New(sqlembed.Migrations, "postgres/migrations")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("iofs create: %w", err)
 	}
 
 	m, err := migrate.NewWithSourceInstance("iofs", dir, strings.Replace(conf.Connect, "postgres://", "pgx5://", 1)) // yech
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("new migrate: %w", err)
 	}
 
 	err = m.Up()
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return nil, err
+		return nil, fmt.Errorf("migrate: %w", err)
 	}
 
 	if !errors.Is(err, migrate.ErrNoChange) {
@@ -128,7 +128,7 @@ func NewClient(ctx context.Context, conf config.DB) (*Postgres, error) {
 
 	pgConf, err := pgxpool.ParseConfig(conf.Connect)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse config: %w", err)
 	}
 
 	// Set some optimizations for calls queries.
@@ -141,7 +141,7 @@ func NewClient(ctx context.Context, conf config.DB) (*Postgres, error) {
 		for _, o := range pgQueryOptions {
 			_, err := conn.Exec(ctx, o)
 			if err != nil {
-				return err
+				return fmt.Errorf("set option %s: %w", o, err)
 			}
 		}
 
@@ -157,7 +157,7 @@ func NewClient(ctx context.Context, conf config.DB) (*Postgres, error) {
 
 	pool, err := pgxpool.NewWithConfig(ctx, pgConf)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("new pool: %w", err)
 	}
 
 	db := &Postgres{
