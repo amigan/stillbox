@@ -11,6 +11,12 @@ on:
 jobs:
   unit-test:
     runs-on: docker
+    services:
+      pgsql:
+        image: postgres:17
+        env:
+          POSTGRES_DB: stillbox_test
+          POSTGRES_PASSWORD: postgres
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -23,4 +29,6 @@ jobs:
           apt-get update
           apt-get install -y libsoxr0 libsoxr-dev
       - name: run tests
-        run: make citest
+        run: |
+          export STILLBOX_TESTDB_CONNECT='postgres://postgres:postgres@pgsql:5432/stillbox_test?sslmode=disable'
+          make citest

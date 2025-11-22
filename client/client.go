@@ -1,4 +1,5 @@
 //go:build !noclient
+
 package client
 
 import (
