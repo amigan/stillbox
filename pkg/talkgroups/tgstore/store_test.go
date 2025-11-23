@@ -3,8 +3,10 @@
 package tgstore_test
 
 import (
+	"context"
 	"testing"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/testutil"
 	"dynatron.me/x/stillbox/pkg/authz"
 	authzMocks "dynatron.me/x/stillbox/pkg/authz/mocks"
@@ -57,7 +59,16 @@ func (suite *TestSuite) TearDownTest() {
 	suite.db.Cleanup()
 }
 
-func TestGetTGs(t *testing.T) {
+func (suite *TestSuite) makeStore(t *testing.T) (tgstore.Store, context.Context) {
+	rbacMock := authzMocks.NewRBAC(t)
+	rbacMock.EXPECT().Check(mock.Anything, mock.Anything, mock.Anything).Return(nil, nil)
+	ctx := authz.CtxWithRBAC(t.Context(), rbacMock)
+	metrics, _ := metrics.NewMetrics(config.Metrics{})
+
+	return tgstore.NewCache(suite.db, metrics), ctx
+}
+
+func TestTGs(t *testing.T) {
 	s := SetupTest()
 	defer s.TearDownTest()
 
@@ -68,23 +79,39 @@ func TestGetTGs(t *testing.T) {
 		expectErr   error
 		assertFunc  func(t *testing.T, tgs []*tgsp.Talkgroup)
 		assertAlpha []string
+		assertLen   *int
 	}{
 		{
-			desc:        "base",
+			desc:      "all tgs",
+			assertLen: common.PtrTo(296),
+		},
+		{
+			desc:        "single tg",
 			ids:         tids("407:10101"),
-			assertAlpha: []string{"PPD CH1"},
+			assertAlpha: []string{"PFD DISPATCH"},
+		},
+		{
+			desc:        "two tgs",
+			ids:         tids("407:1001", "407:10101"),
+			assertAlpha: []string{"Narrag PD 1", "PFD DISPATCH"}, // sorted
+		},
+		{
+			desc: "paginated",
+			opts: []tgstore.Option{
+				tgstore.WithPagination(
+					&tgstore.Pagination{
+						Pagination: common.Pagination{
+							Page: common.PtrTo(4),
+						},
+					}, 2, nil),
+			},
+			assertAlpha: []string{"Wide Area 6", "EMA-1"},
 		},
 	}
+
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			ctx := t.Context()
-
-			rbacMock := authzMocks.NewRBAC(t)
-			rbacMock.EXPECT().Check(mock.Anything, mock.Anything, mock.Anything).Return(nil, nil)
-			ctx = authz.CtxWithRBAC(ctx, rbacMock)
-			metrics, _ := metrics.NewMetrics(config.Metrics{})
-
-			st := tgstore.NewCache(s.db, metrics)
+			st, ctx := s.makeStore(t)
 
 			tgs, err := st.TGs(ctx, tc.ids, tc.opts...)
 			if tc.expectErr != nil {
@@ -104,6 +131,10 @@ func TestGetTGs(t *testing.T) {
 					}
 
 					assert.Equal(t, tc.assertAlpha, ats)
+				}
+
+				if tc.assertLen != nil {
+					assert.Len(t, tgs, *tc.assertLen)
 				}
 			}
 		})
