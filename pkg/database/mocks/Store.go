@@ -3820,8 +3820,8 @@ func (_c *Store_GetTalkgroupTags_Call) RunAndReturn(run func(ctx context.Context
 }
 
 // GetTalkgroups provides a mock function for the type Store
-func (_mock *Store) GetTalkgroups(ctx context.Context, filter *string) ([]database.GetTalkgroupsRow, error) {
-	ret := _mock.Called(ctx, filter)
+func (_mock *Store) GetTalkgroups(ctx context.Context, system *int32, withIgnored bool, filter *string) ([]database.GetTalkgroupsRow, error) {
+	ret := _mock.Called(ctx, system, withIgnored, filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTalkgroups")
@@ -3829,18 +3829,18 @@ func (_mock *Store) GetTalkgroups(ctx context.Context, filter *string) ([]databa
 
 	var r0 []database.GetTalkgroupsRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) ([]database.GetTalkgroupsRow, error)); ok {
-		return returnFunc(ctx, filter)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *int32, bool, *string) ([]database.GetTalkgroupsRow, error)); ok {
+		return returnFunc(ctx, system, withIgnored, filter)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) []database.GetTalkgroupsRow); ok {
-		r0 = returnFunc(ctx, filter)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *int32, bool, *string) []database.GetTalkgroupsRow); ok {
+		r0 = returnFunc(ctx, system, withIgnored, filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]database.GetTalkgroupsRow)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, *string) error); ok {
-		r1 = returnFunc(ctx, filter)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *int32, bool, *string) error); ok {
+		r1 = returnFunc(ctx, system, withIgnored, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -3854,24 +3854,36 @@ type Store_GetTalkgroups_Call struct {
 
 // GetTalkgroups is a helper method to define mock.On call
 //   - ctx context.Context
+//   - system *int32
+//   - withIgnored bool
 //   - filter *string
-func (_e *Store_Expecter) GetTalkgroups(ctx interface{}, filter interface{}) *Store_GetTalkgroups_Call {
-	return &Store_GetTalkgroups_Call{Call: _e.mock.On("GetTalkgroups", ctx, filter)}
+func (_e *Store_Expecter) GetTalkgroups(ctx interface{}, system interface{}, withIgnored interface{}, filter interface{}) *Store_GetTalkgroups_Call {
+	return &Store_GetTalkgroups_Call{Call: _e.mock.On("GetTalkgroups", ctx, system, withIgnored, filter)}
 }
 
-func (_c *Store_GetTalkgroups_Call) Run(run func(ctx context.Context, filter *string)) *Store_GetTalkgroups_Call {
+func (_c *Store_GetTalkgroups_Call) Run(run func(ctx context.Context, system *int32, withIgnored bool, filter *string)) *Store_GetTalkgroups_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 *string
+		var arg1 *int32
 		if args[1] != nil {
-			arg1 = args[1].(*string)
+			arg1 = args[1].(*int32)
+		}
+		var arg2 bool
+		if args[2] != nil {
+			arg2 = args[2].(bool)
+		}
+		var arg3 *string
+		if args[3] != nil {
+			arg3 = args[3].(*string)
 		}
 		run(
 			arg0,
 			arg1,
+			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -3882,7 +3894,7 @@ func (_c *Store_GetTalkgroups_Call) Return(getTalkgroupsRows []database.GetTalkg
 	return _c
 }
 
-func (_c *Store_GetTalkgroups_Call) RunAndReturn(run func(ctx context.Context, filter *string) ([]database.GetTalkgroupsRow, error)) *Store_GetTalkgroups_Call {
+func (_c *Store_GetTalkgroups_Call) RunAndReturn(run func(ctx context.Context, system *int32, withIgnored bool, filter *string) ([]database.GetTalkgroupsRow, error)) *Store_GetTalkgroups_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -3955,217 +3967,9 @@ func (_c *Store_GetTalkgroupsBySysTGID_Call) RunAndReturn(run func(ctx context.C
 	return _c
 }
 
-// GetTalkgroupsBySystem provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsBySystem(ctx context.Context, system int32) ([]database.GetTalkgroupsBySystemRow, error) {
-	ret := _mock.Called(ctx, system)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsBySystem")
-	}
-
-	var r0 []database.GetTalkgroupsBySystemRow
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32) ([]database.GetTalkgroupsBySystemRow, error)); ok {
-		return returnFunc(ctx, system)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32) []database.GetTalkgroupsBySystemRow); ok {
-		r0 = returnFunc(ctx, system)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.GetTalkgroupsBySystemRow)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int32) error); ok {
-		r1 = returnFunc(ctx, system)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetTalkgroupsBySystem_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsBySystem'
-type Store_GetTalkgroupsBySystem_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsBySystem is a helper method to define mock.On call
-//   - ctx context.Context
-//   - system int32
-func (_e *Store_Expecter) GetTalkgroupsBySystem(ctx interface{}, system interface{}) *Store_GetTalkgroupsBySystem_Call {
-	return &Store_GetTalkgroupsBySystem_Call{Call: _e.mock.On("GetTalkgroupsBySystem", ctx, system)}
-}
-
-func (_c *Store_GetTalkgroupsBySystem_Call) Run(run func(ctx context.Context, system int32)) *Store_GetTalkgroupsBySystem_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 int32
-		if args[1] != nil {
-			arg1 = args[1].(int32)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsBySystem_Call) Return(getTalkgroupsBySystemRows []database.GetTalkgroupsBySystemRow, err error) *Store_GetTalkgroupsBySystem_Call {
-	_c.Call.Return(getTalkgroupsBySystemRows, err)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsBySystem_Call) RunAndReturn(run func(ctx context.Context, system int32) ([]database.GetTalkgroupsBySystemRow, error)) *Store_GetTalkgroupsBySystem_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetTalkgroupsBySystemCount provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsBySystemCount(ctx context.Context, system int32, filter *string) (int64, error) {
-	ret := _mock.Called(ctx, system, filter)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsBySystemCount")
-	}
-
-	var r0 int64
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, *string) (int64, error)); ok {
-		return returnFunc(ctx, system, filter)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, *string) int64); ok {
-		r0 = returnFunc(ctx, system, filter)
-	} else {
-		r0 = ret.Get(0).(int64)
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int32, *string) error); ok {
-		r1 = returnFunc(ctx, system, filter)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetTalkgroupsBySystemCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsBySystemCount'
-type Store_GetTalkgroupsBySystemCount_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsBySystemCount is a helper method to define mock.On call
-//   - ctx context.Context
-//   - system int32
-//   - filter *string
-func (_e *Store_Expecter) GetTalkgroupsBySystemCount(ctx interface{}, system interface{}, filter interface{}) *Store_GetTalkgroupsBySystemCount_Call {
-	return &Store_GetTalkgroupsBySystemCount_Call{Call: _e.mock.On("GetTalkgroupsBySystemCount", ctx, system, filter)}
-}
-
-func (_c *Store_GetTalkgroupsBySystemCount_Call) Run(run func(ctx context.Context, system int32, filter *string)) *Store_GetTalkgroupsBySystemCount_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 int32
-		if args[1] != nil {
-			arg1 = args[1].(int32)
-		}
-		var arg2 *string
-		if args[2] != nil {
-			arg2 = args[2].(*string)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsBySystemCount_Call) Return(n int64, err error) *Store_GetTalkgroupsBySystemCount_Call {
-	_c.Call.Return(n, err)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsBySystemCount_Call) RunAndReturn(run func(ctx context.Context, system int32, filter *string) (int64, error)) *Store_GetTalkgroupsBySystemCount_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetTalkgroupsBySystemP provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsBySystemP(ctx context.Context, arg database.GetTalkgroupsBySystemPParams) ([]database.GetTalkgroupsBySystemPRow, error) {
-	ret := _mock.Called(ctx, arg)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsBySystemP")
-	}
-
-	var r0 []database.GetTalkgroupsBySystemPRow
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsBySystemPParams) ([]database.GetTalkgroupsBySystemPRow, error)); ok {
-		return returnFunc(ctx, arg)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsBySystemPParams) []database.GetTalkgroupsBySystemPRow); ok {
-		r0 = returnFunc(ctx, arg)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.GetTalkgroupsBySystemPRow)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, database.GetTalkgroupsBySystemPParams) error); ok {
-		r1 = returnFunc(ctx, arg)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetTalkgroupsBySystemP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsBySystemP'
-type Store_GetTalkgroupsBySystemP_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsBySystemP is a helper method to define mock.On call
-//   - ctx context.Context
-//   - arg database.GetTalkgroupsBySystemPParams
-func (_e *Store_Expecter) GetTalkgroupsBySystemP(ctx interface{}, arg interface{}) *Store_GetTalkgroupsBySystemP_Call {
-	return &Store_GetTalkgroupsBySystemP_Call{Call: _e.mock.On("GetTalkgroupsBySystemP", ctx, arg)}
-}
-
-func (_c *Store_GetTalkgroupsBySystemP_Call) Run(run func(ctx context.Context, arg database.GetTalkgroupsBySystemPParams)) *Store_GetTalkgroupsBySystemP_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 database.GetTalkgroupsBySystemPParams
-		if args[1] != nil {
-			arg1 = args[1].(database.GetTalkgroupsBySystemPParams)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsBySystemP_Call) Return(getTalkgroupsBySystemPRows []database.GetTalkgroupsBySystemPRow, err error) *Store_GetTalkgroupsBySystemP_Call {
-	_c.Call.Return(getTalkgroupsBySystemPRows, err)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsBySystemP_Call) RunAndReturn(run func(ctx context.Context, arg database.GetTalkgroupsBySystemPParams) ([]database.GetTalkgroupsBySystemPRow, error)) *Store_GetTalkgroupsBySystemP_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // GetTalkgroupsCount provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsCount(ctx context.Context, filter *string) (int64, error) {
-	ret := _mock.Called(ctx, filter)
+func (_mock *Store) GetTalkgroupsCount(ctx context.Context, system *int32, withIgnored bool, filter *string) (int64, error) {
+	ret := _mock.Called(ctx, system, withIgnored, filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTalkgroupsCount")
@@ -4173,16 +3977,16 @@ func (_mock *Store) GetTalkgroupsCount(ctx context.Context, filter *string) (int
 
 	var r0 int64
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) (int64, error)); ok {
-		return returnFunc(ctx, filter)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *int32, bool, *string) (int64, error)); ok {
+		return returnFunc(ctx, system, withIgnored, filter)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) int64); ok {
-		r0 = returnFunc(ctx, filter)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *int32, bool, *string) int64); ok {
+		r0 = returnFunc(ctx, system, withIgnored, filter)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, *string) error); ok {
-		r1 = returnFunc(ctx, filter)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *int32, bool, *string) error); ok {
+		r1 = returnFunc(ctx, system, withIgnored, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -4196,24 +4000,36 @@ type Store_GetTalkgroupsCount_Call struct {
 
 // GetTalkgroupsCount is a helper method to define mock.On call
 //   - ctx context.Context
+//   - system *int32
+//   - withIgnored bool
 //   - filter *string
-func (_e *Store_Expecter) GetTalkgroupsCount(ctx interface{}, filter interface{}) *Store_GetTalkgroupsCount_Call {
-	return &Store_GetTalkgroupsCount_Call{Call: _e.mock.On("GetTalkgroupsCount", ctx, filter)}
+func (_e *Store_Expecter) GetTalkgroupsCount(ctx interface{}, system interface{}, withIgnored interface{}, filter interface{}) *Store_GetTalkgroupsCount_Call {
+	return &Store_GetTalkgroupsCount_Call{Call: _e.mock.On("GetTalkgroupsCount", ctx, system, withIgnored, filter)}
 }
 
-func (_c *Store_GetTalkgroupsCount_Call) Run(run func(ctx context.Context, filter *string)) *Store_GetTalkgroupsCount_Call {
+func (_c *Store_GetTalkgroupsCount_Call) Run(run func(ctx context.Context, system *int32, withIgnored bool, filter *string)) *Store_GetTalkgroupsCount_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 *string
+		var arg1 *int32
 		if args[1] != nil {
-			arg1 = args[1].(*string)
+			arg1 = args[1].(*int32)
+		}
+		var arg2 bool
+		if args[2] != nil {
+			arg2 = args[2].(bool)
+		}
+		var arg3 *string
+		if args[3] != nil {
+			arg3 = args[3].(*string)
 		}
 		run(
 			arg0,
 			arg1,
+			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -4224,7 +4040,7 @@ func (_c *Store_GetTalkgroupsCount_Call) Return(n int64, err error) *Store_GetTa
 	return _c
 }
 
-func (_c *Store_GetTalkgroupsCount_Call) RunAndReturn(run func(ctx context.Context, filter *string) (int64, error)) *Store_GetTalkgroupsCount_Call {
+func (_c *Store_GetTalkgroupsCount_Call) RunAndReturn(run func(ctx context.Context, system *int32, withIgnored bool, filter *string) (int64, error)) *Store_GetTalkgroupsCount_Call {
 	_c.Call.Return(run)
 	return _c
 }

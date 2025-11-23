@@ -39,7 +39,7 @@ coverage-html:
 	go tool cover -html=cover.out
 
 coverage:
-	go test -tags noclient,musl -coverprofile cover.out
+	go test -tags integration,noclient,musl -coverprofile cover.out ./...
 
 # backup backs up the database without calls
 backup:

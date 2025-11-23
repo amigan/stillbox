@@ -31,58 +31,14 @@ FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE (tg.system_id, tg.tgid) = (@system_id, @tgid);
 
--- name: GetTalkgroupsBySystemP :many
-SELECT
-sqlc.embed(tg), sqlc.embed(sys)
-FROM talkgroups tg
-JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.system_id = @system AND
-(CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
-		tg.tg_group ILIKE '%' || @filter || '%' OR
-		tg.name ILIKE '%' || @filter || '%' OR
-		tg.alpha_tag ILIKE '%' || @filter || '%' OR
-		tg.tags @> ARRAY[LOWER(@filter)]
-	) ELSE TRUE END)
-ORDER BY
-CASE WHEN @order_by::TEXT = 'tgid_asc' THEN (tg.system_id, tg.tgid) END ASC,
-CASE WHEN @order_by = 'tgid_desc' THEN (tg.system_id, tg.tgid) END DESC,
-CASE WHEN @order_by = 'group_asc' THEN tg.tg_group END ASC,
-CASE WHEN @order_by = 'group_desc' THEN tg.tg_group END DESC,
-CASE WHEN @order_by = 'id_asc' THEN tg.id END ASC,
-CASE WHEN @order_by = 'id_desc' THEN tg.id END DESC,
-CASE WHEN @order_by = 'name_asc' THEN tg.name END ASC,
-CASE WHEN @order_by = 'name_desc' THEN tg.name END DESC,
-CASE WHEN @order_by = 'alpha_asc' THEN tg.alpha_tag END ASC,
-CASE WHEN @order_by = 'alpha_desc' THEN tg.alpha_tag END DESC
-OFFSET sqlc.arg('offset') ROWS
-FETCH NEXT sqlc.arg('per_page') ROWS ONLY
-;
-
--- name: GetTalkgroupsBySystemCount :one
-SELECT COUNT(*) FROM talkgroups tg
-WHERE tg.system_id = @system AND
-(CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
-		tg.tg_group ILIKE '%' || @filter || '%' OR
-		tg.name ILIKE '%' || @filter || '%' OR
-		tg.alpha_tag ILIKE '%' || @filter || '%' OR
-		tg.tags @> ARRAY[LOWER(@filter)]
-	) ELSE TRUE END)
-;
-
--- name: GetTalkgroupsBySystem :many
-SELECT
-sqlc.embed(tg), sqlc.embed(sys)
-FROM talkgroups tg
-JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.system_id = @system;
-
 -- name: GetTalkgroups :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-
-WHERE ignored IS NOT TRUE AND
+WHERE
+(CASE WHEN sqlc.narg('system')::INTEGER IS NOT NULL THEN tg.system_id = @system ELSE TRUE END) AND
+(CASE WHEN @with_ignored::BOOLEAN THEN TRUE ELSE ignored IS NOT TRUE END) AND
 (CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
 		tg.tg_group ILIKE '%' || @filter || '%' OR
 		tg.name ILIKE '%' || @filter || '%' OR
@@ -90,13 +46,14 @@ WHERE ignored IS NOT TRUE AND
 		tg.tags @> ARRAY[LOWER(@filter)]
 	) ELSE TRUE END);
 
-
 -- name: GetTalkgroupsP :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE ignored IS NOT TRUE AND
+WHERE
+(CASE WHEN sqlc.narg('system')::INTEGER IS NOT NULL THEN tg.system_id = @system ELSE TRUE END) AND
+(CASE WHEN @with_ignored::BOOLEAN THEN TRUE ELSE ignored IS NOT TRUE END) AND
 (CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
 		tg.tg_group ILIKE '%' || @filter || '%' OR
 		tg.name ILIKE '%' || @filter || '%' OR
@@ -120,7 +77,9 @@ FETCH NEXT sqlc.arg('per_page') ROWS ONLY
 
 -- name: GetTalkgroupsCount :one
 SELECT COUNT(*) FROM talkgroups tg
-WHERE ignored IS NOT TRUE AND
+WHERE
+(CASE WHEN sqlc.narg('system')::INTEGER IS NOT NULL THEN tg.system_id = @system ELSE TRUE END) AND
+(CASE WHEN @with_ignored::BOOLEAN THEN TRUE ELSE ignored IS NOT TRUE END) AND
 (CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
 		tg.tg_group ILIKE '%' || @filter || '%' OR
 		tg.name ILIKE '%' || @filter || '%' OR

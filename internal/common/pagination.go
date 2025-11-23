@@ -6,11 +6,13 @@ var (
 	ErrPageOutOfRange = errors.New("requested page out of range")
 )
 
+// Pagination describes a request for a particular page and records per page.
 type Pagination struct {
 	Page    *int `json:"page"`
 	PerPage *int `json:"perPage"`
 }
 
+// OffsetPerPage computes a sane offset and records per page based on p and perPageDefault.
 func (p Pagination) OffsetPerPage(perPageDefault int) (offset int32, perPage int32) {
 	page := int32(DefaultIfNilOrZero(p.Page, 1))
 	perPage = int32(DefaultIfNilOrZero(p.PerPage, perPageDefault))
@@ -27,6 +29,7 @@ const (
 	DirDesc SortDirection = "desc"
 )
 
+// DirString returns the direction or a default.
 func (t *SortDirection) DirString(def SortDirection) string {
 	if t == nil {
 		return string(def)
@@ -35,6 +38,7 @@ func (t *SortDirection) DirString(def SortDirection) string {
 	return string(*t)
 }
 
+// IsValid returns whether t is valid.
 func (t *SortDirection) IsValid() bool {
 	if t == nil {
 		return true

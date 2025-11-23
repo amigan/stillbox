@@ -3450,3 +3450,23 @@
   alert: true
   weight: 1
   learned: false
+- id: 1957
+  system_id: 3348
+  tgid: 3329
+  name: MBTA Police Channel 1
+  alpha_tag: MBTA PD CH1
+  tg_group: MBTA
+  alert: true
+  weight: 1
+  learned: true
+  tags: RAW=ARRAY['transit']::TEXT[]
+- id: 1959
+  system_id: 3348
+  tgid: 153
+  name: Massport Police 1
+  alpha_tag: MASSPORT PD CH1
+  tg_group: Massport
+  tags: RAW=ARRAY['law-talk']
+  alert: true
+  weight: 1
+  learned: false

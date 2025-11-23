@@ -16,6 +16,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -68,32 +69,149 @@ func (suite *TestSuite) makeStore(t *testing.T) (tgstore.Store, context.Context)
 	return tgstore.NewCache(suite.db, metrics), ctx
 }
 
+type tgsAssertion struct {
+	assertFunc  func(t *testing.T, tgs []*tgsp.Talkgroup)
+	assertAlpha []string
+	assertLen   *int
+	expectErr   error
+}
+
+func (tc tgsAssertion) assert(t *testing.T, tgs []*tgsp.Talkgroup, err error) {
+	if tc.expectErr != nil {
+		assert.ErrorContains(t, err, tc.expectErr.Error())
+	} else {
+		assert.NoError(t, err)
+		if tc.assertFunc != nil {
+			tc.assertFunc(t, tgs)
+		}
+
+		if tc.assertAlpha != nil {
+			ats := make([]string, 0, len(tgs))
+			for _, tg := range tgs {
+				if tg.AlphaTag != nil {
+					ats = append(ats, *tg.AlphaTag)
+				}
+			}
+
+			assert.Equal(t, tc.assertAlpha, ats)
+		}
+
+		if tc.assertLen != nil {
+			assert.Len(t, tgs, *tc.assertLen)
+		}
+	}
+}
+
+func TestSystemTGs(t *testing.T) {
+	s := SetupTest()
+	defer s.TearDownTest()
+
+	tests := []struct {
+		desc      string
+		systemID  int
+		opts      []tgstore.Option
+		expectErr error
+		assert    tgsAssertion
+	}{
+		{
+			desc:     "all tgs",
+			systemID: 407,
+			assert: tgsAssertion{
+				assertLen: common.PtrTo(296),
+			},
+		},
+		{
+			desc:     "all tgs 2",
+			systemID: 3348,
+			assert: tgsAssertion{
+				assertLen: common.PtrTo(2),
+			},
+		},
+		{
+			desc:     "paginated",
+			systemID: 407,
+			opts: []tgstore.Option{
+				tgstore.WithPagination(
+					&tgstore.Pagination{
+						Pagination: common.Pagination{
+							Page: common.PtrTo(4),
+						},
+					}, 2, nil),
+			},
+			assert: tgsAssertion{
+				assertAlpha: []string{"Wide Area 6", "EMA-1"},
+			},
+		},
+		{
+			desc:     "filtered",
+			systemID: 3348,
+			opts: []tgstore.Option{
+				tgstore.WithFilter(common.PtrTo("MBTA")),
+			},
+			assert: tgsAssertion{
+				assertLen: common.PtrTo(1),
+			},
+		},
+		{
+			desc:     "paginated filtered",
+			systemID: 407,
+			opts: []tgstore.Option{
+				tgstore.WithPagination(
+					&tgstore.Pagination{
+						Pagination: common.Pagination{
+							Page: common.PtrTo(4),
+						},
+					}, 2, nil),
+				tgstore.WithFilter(common.PtrTo("Fire")),
+			},
+			assert: tgsAssertion{
+				assertAlpha: []string{"Narrag FDFG2", "Narrag EMS"},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			st, ctx := s.makeStore(t)
+
+			// test case sanity check
+			require.NotZero(t, tc.systemID)
+
+			tgs, err := st.SystemTGs(ctx, tc.systemID, tc.opts...)
+			tc.assert.assert(t, tgs, err)
+		})
+	}
+}
+
 func TestTGs(t *testing.T) {
 	s := SetupTest()
 	defer s.TearDownTest()
 
 	tests := []struct {
-		desc        string
-		ids         tgsp.IDs
-		opts        []tgstore.Option
-		expectErr   error
-		assertFunc  func(t *testing.T, tgs []*tgsp.Talkgroup)
-		assertAlpha []string
-		assertLen   *int
+		desc   string
+		ids    tgsp.IDs
+		opts   []tgstore.Option
+		assert tgsAssertion
 	}{
 		{
-			desc:      "all tgs",
-			assertLen: common.PtrTo(296),
+			desc: "all tgs",
+			assert: tgsAssertion{
+				assertLen: common.PtrTo(298),
+			},
 		},
 		{
-			desc:        "single tg",
-			ids:         tids("407:10101"),
-			assertAlpha: []string{"PFD DISPATCH"},
+			desc: "single tg",
+			ids:  tids("407:10101"),
+			assert: tgsAssertion{
+				assertAlpha: []string{"PFD DISPATCH"},
+			},
 		},
 		{
-			desc:        "two tgs",
-			ids:         tids("407:1001", "407:10101"),
-			assertAlpha: []string{"Narrag PD 1", "PFD DISPATCH"}, // sorted
+			desc: "two tgs",
+			ids:  tids("407:1001", "407:10101"),
+			assert: tgsAssertion{
+				assertAlpha: []string{"Narrag PD 1", "PFD DISPATCH"}, // sorted
+			},
 		},
 		{
 			desc: "paginated",
@@ -105,14 +223,18 @@ func TestTGs(t *testing.T) {
 						},
 					}, 2, nil),
 			},
-			assertAlpha: []string{"Wide Area 6", "EMA-1"},
+			assert: tgsAssertion{
+				assertAlpha: []string{"Wide Area 6", "EMA-1"},
+			},
 		},
 		{
 			desc: "filtered",
 			opts: []tgstore.Option{
 				tgstore.WithFilter(common.PtrTo("Fire")),
 			},
-			assertLen: common.PtrTo(99),
+			assert: tgsAssertion{
+				assertLen: common.PtrTo(99),
+			},
 		},
 		{
 			desc: "paginated filtered",
@@ -125,7 +247,9 @@ func TestTGs(t *testing.T) {
 					}, 2, nil),
 				tgstore.WithFilter(common.PtrTo("Fire")),
 			},
-			assertAlpha: []string{"Narrag FDFG2", "Narrag EMS"},
+			assert: tgsAssertion{
+				assertAlpha: []string{"Narrag FDFG2", "Narrag EMS"},
+			},
 		},
 	}
 
@@ -134,29 +258,7 @@ func TestTGs(t *testing.T) {
 			st, ctx := s.makeStore(t)
 
 			tgs, err := st.TGs(ctx, tc.ids, tc.opts...)
-			if tc.expectErr != nil {
-				assert.ErrorContains(t, err, tc.expectErr.Error())
-			} else {
-				assert.NoError(t, err)
-				if tc.assertFunc != nil {
-					tc.assertFunc(t, tgs)
-				}
-
-				if tc.assertAlpha != nil {
-					ats := make([]string, 0, len(tgs))
-					for _, tg := range tgs {
-						if tg.AlphaTag != nil {
-							ats = append(ats, *tg.AlphaTag)
-						}
-					}
-
-					assert.Equal(t, tc.assertAlpha, ats)
-				}
-
-				if tc.assertLen != nil {
-					assert.Len(t, tgs, *tc.assertLen)
-				}
-			}
+			tc.assert.assert(t, tgs, err)
 		})
 	}
 }
