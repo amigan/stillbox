@@ -164,12 +164,16 @@ func (q *Queries) GetSystemName(ctx context.Context, systemID int) (string, erro
 }
 
 const getTalkgroup = `-- name: GetTalkgroup :one
-SELECT talkgroups.id, talkgroups.system_id, talkgroups.tgid, talkgroups.name, talkgroups.alpha_tag, talkgroups.tg_group, talkgroups.frequency, talkgroups.metadata, talkgroups.tags, talkgroups.alert, talkgroups.alert_rules, talkgroups.weight, talkgroups.learned, talkgroups.ignored FROM talkgroups
-WHERE (system_id, tgid) = ($1, $2)
+SELECT
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name, sys.learned
+FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+WHERE (tg.system_id, tg.tgid) = ($1, $2)
 `
 
 type GetTalkgroupRow struct {
 	Talkgroup Talkgroup `json:"talkgroup"`
+	System    System    `json:"system"`
 }
 
 func (q *Queries) GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error) {
@@ -190,6 +194,9 @@ func (q *Queries) GetTalkgroup(ctx context.Context, systemID int32, tGID int32) 
 		&i.Talkgroup.Weight,
 		&i.Talkgroup.Learned,
 		&i.Talkgroup.Ignored,
+		&i.System.ID,
+		&i.System.Name,
+		&i.System.Learned,
 	)
 	return i, err
 }
@@ -239,42 +246,315 @@ func (q *Queries) GetTalkgroupTags(ctx context.Context, systemID int32, tGID int
 	return tags, err
 }
 
-const getTalkgroupWithLearned = `-- name: GetTalkgroupWithLearned :one
+const getTalkgroups = `-- name: GetTalkgroups :many
 SELECT
 tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name, sys.learned
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE (tg.system_id, tg.tgid) = ($1, $2)
+
+WHERE ignored IS NOT TRUE AND
+(CASE WHEN $1::TEXT IS NOT NULL THEN (
+		tg.tg_group ILIKE '%' || $1 || '%' OR
+		tg.name ILIKE '%' || $1 || '%' OR
+		tg.alpha_tag ILIKE '%' || $1 || '%' OR
+		tg.tags @> ARRAY[LOWER($1)]
+	) ELSE TRUE END)
 `
 
-type GetTalkgroupWithLearnedRow struct {
+type GetTalkgroupsRow struct {
 	Talkgroup Talkgroup `json:"talkgroup"`
 	System    System    `json:"system"`
 }
 
-func (q *Queries) GetTalkgroupWithLearned(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupWithLearnedRow, error) {
-	row := q.db.QueryRow(ctx, getTalkgroupWithLearned, systemID, tGID)
-	var i GetTalkgroupWithLearnedRow
-	err := row.Scan(
-		&i.Talkgroup.ID,
-		&i.Talkgroup.SystemID,
-		&i.Talkgroup.TGID,
-		&i.Talkgroup.Name,
-		&i.Talkgroup.AlphaTag,
-		&i.Talkgroup.TGGroup,
-		&i.Talkgroup.Frequency,
-		&i.Talkgroup.Metadata,
-		&i.Talkgroup.Tags,
-		&i.Talkgroup.Alert,
-		&i.Talkgroup.AlertRules,
-		&i.Talkgroup.Weight,
-		&i.Talkgroup.Learned,
-		&i.Talkgroup.Ignored,
-		&i.System.ID,
-		&i.System.Name,
-		&i.System.Learned,
+func (q *Queries) GetTalkgroups(ctx context.Context, filter *string) ([]GetTalkgroupsRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroups, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTalkgroupsRow
+	for rows.Next() {
+		var i GetTalkgroupsRow
+		if err := rows.Scan(
+			&i.Talkgroup.ID,
+			&i.Talkgroup.SystemID,
+			&i.Talkgroup.TGID,
+			&i.Talkgroup.Name,
+			&i.Talkgroup.AlphaTag,
+			&i.Talkgroup.TGGroup,
+			&i.Talkgroup.Frequency,
+			&i.Talkgroup.Metadata,
+			&i.Talkgroup.Tags,
+			&i.Talkgroup.Alert,
+			&i.Talkgroup.AlertRules,
+			&i.Talkgroup.Weight,
+			&i.Talkgroup.Learned,
+			&i.Talkgroup.Ignored,
+			&i.System.ID,
+			&i.System.Name,
+			&i.System.Learned,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTalkgroupsBySystem = `-- name: GetTalkgroupsBySystem :many
+SELECT
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name, sys.learned
+FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+WHERE tg.system_id = $1
+`
+
+type GetTalkgroupsBySystemRow struct {
+	Talkgroup Talkgroup `json:"talkgroup"`
+	System    System    `json:"system"`
+}
+
+func (q *Queries) GetTalkgroupsBySystem(ctx context.Context, system int32) ([]GetTalkgroupsBySystemRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupsBySystem, system)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTalkgroupsBySystemRow
+	for rows.Next() {
+		var i GetTalkgroupsBySystemRow
+		if err := rows.Scan(
+			&i.Talkgroup.ID,
+			&i.Talkgroup.SystemID,
+			&i.Talkgroup.TGID,
+			&i.Talkgroup.Name,
+			&i.Talkgroup.AlphaTag,
+			&i.Talkgroup.TGGroup,
+			&i.Talkgroup.Frequency,
+			&i.Talkgroup.Metadata,
+			&i.Talkgroup.Tags,
+			&i.Talkgroup.Alert,
+			&i.Talkgroup.AlertRules,
+			&i.Talkgroup.Weight,
+			&i.Talkgroup.Learned,
+			&i.Talkgroup.Ignored,
+			&i.System.ID,
+			&i.System.Name,
+			&i.System.Learned,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTalkgroupsBySystemCount = `-- name: GetTalkgroupsBySystemCount :one
+SELECT COUNT(*) FROM talkgroups tg
+WHERE tg.system_id = $1 AND
+(CASE WHEN $2::TEXT IS NOT NULL THEN (
+		tg.tg_group ILIKE '%' || $2 || '%' OR
+		tg.name ILIKE '%' || $2 || '%' OR
+		tg.alpha_tag ILIKE '%' || $2 || '%' OR
+		tg.tags @> ARRAY[LOWER($2)]
+	) ELSE TRUE END)
+`
+
+func (q *Queries) GetTalkgroupsBySystemCount(ctx context.Context, system int32, filter *string) (int64, error) {
+	row := q.db.QueryRow(ctx, getTalkgroupsBySystemCount, system, filter)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTalkgroupsBySystemP = `-- name: GetTalkgroupsBySystemP :many
+SELECT
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name, sys.learned
+FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+WHERE tg.system_id = $1 AND
+(CASE WHEN $2::TEXT IS NOT NULL THEN (
+		tg.tg_group ILIKE '%' || $2 || '%' OR
+		tg.name ILIKE '%' || $2 || '%' OR
+		tg.alpha_tag ILIKE '%' || $2 || '%' OR
+		tg.tags @> ARRAY[LOWER($2)]
+	) ELSE TRUE END)
+ORDER BY
+CASE WHEN $3::TEXT = 'tgid_asc' THEN (tg.system_id, tg.tgid) END ASC,
+CASE WHEN $3 = 'tgid_desc' THEN (tg.system_id, tg.tgid) END DESC,
+CASE WHEN $3 = 'group_asc' THEN tg.tg_group END ASC,
+CASE WHEN $3 = 'group_desc' THEN tg.tg_group END DESC,
+CASE WHEN $3 = 'id_asc' THEN tg.id END ASC,
+CASE WHEN $3 = 'id_desc' THEN tg.id END DESC,
+CASE WHEN $3 = 'name_asc' THEN tg.name END ASC,
+CASE WHEN $3 = 'name_desc' THEN tg.name END DESC,
+CASE WHEN $3 = 'alpha_asc' THEN tg.alpha_tag END ASC,
+CASE WHEN $3 = 'alpha_desc' THEN tg.alpha_tag END DESC
+OFFSET $4 ROWS
+FETCH NEXT $5 ROWS ONLY
+`
+
+type GetTalkgroupsBySystemPParams struct {
+	System  int32   `json:"system"`
+	Filter  *string `json:"filter"`
+	OrderBy string  `json:"orderBy"`
+	Offset  int32   `json:"offset"`
+	PerPage int32   `json:"perPage"`
+}
+
+type GetTalkgroupsBySystemPRow struct {
+	Talkgroup Talkgroup `json:"talkgroup"`
+	System    System    `json:"system"`
+}
+
+func (q *Queries) GetTalkgroupsBySystemP(ctx context.Context, arg GetTalkgroupsBySystemPParams) ([]GetTalkgroupsBySystemPRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupsBySystemP,
+		arg.System,
+		arg.Filter,
+		arg.OrderBy,
+		arg.Offset,
+		arg.PerPage,
 	)
-	return i, err
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTalkgroupsBySystemPRow
+	for rows.Next() {
+		var i GetTalkgroupsBySystemPRow
+		if err := rows.Scan(
+			&i.Talkgroup.ID,
+			&i.Talkgroup.SystemID,
+			&i.Talkgroup.TGID,
+			&i.Talkgroup.Name,
+			&i.Talkgroup.AlphaTag,
+			&i.Talkgroup.TGGroup,
+			&i.Talkgroup.Frequency,
+			&i.Talkgroup.Metadata,
+			&i.Talkgroup.Tags,
+			&i.Talkgroup.Alert,
+			&i.Talkgroup.AlertRules,
+			&i.Talkgroup.Weight,
+			&i.Talkgroup.Learned,
+			&i.Talkgroup.Ignored,
+			&i.System.ID,
+			&i.System.Name,
+			&i.System.Learned,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTalkgroupsCount = `-- name: GetTalkgroupsCount :one
+SELECT COUNT(*) FROM talkgroups tg
+WHERE ignored IS NOT TRUE AND
+(CASE WHEN $1::TEXT IS NOT NULL THEN (
+		tg.tg_group ILIKE '%' || $1 || '%' OR
+		tg.name ILIKE '%' || $1 || '%' OR
+		tg.alpha_tag ILIKE '%' || $1 || '%' OR
+		tg.tags @> ARRAY[LOWER($1)]
+	) ELSE TRUE END)
+`
+
+func (q *Queries) GetTalkgroupsCount(ctx context.Context, filter *string) (int64, error) {
+	row := q.db.QueryRow(ctx, getTalkgroupsCount, filter)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTalkgroupsP = `-- name: GetTalkgroupsP :many
+SELECT
+tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name, sys.learned
+FROM talkgroups tg
+JOIN systems sys ON tg.system_id = sys.id
+WHERE ignored IS NOT TRUE AND
+(CASE WHEN $1::TEXT IS NOT NULL THEN (
+		tg.tg_group ILIKE '%' || $1 || '%' OR
+		tg.name ILIKE '%' || $1 || '%' OR
+		tg.alpha_tag ILIKE '%' || $1 || '%' OR
+		tg.tags @> ARRAY[LOWER($1)]
+	) ELSE TRUE END)
+ORDER BY
+CASE WHEN $2::TEXT = 'tgid_asc' THEN (tg.system_id, tg.tgid) END ASC,
+CASE WHEN $2 = 'tgid_desc' THEN (tg.system_id, tg.tgid) END DESC,
+CASE WHEN $2 = 'group_asc' THEN tg.tg_group END ASC,
+CASE WHEN $2 = 'group_desc' THEN tg.tg_group END DESC,
+CASE WHEN $2 = 'id_asc' THEN tg.id END ASC,
+CASE WHEN $2 = 'id_desc' THEN tg.id END DESC,
+CASE WHEN $2 = 'name_asc' THEN tg.name END ASC,
+CASE WHEN $2 = 'name_desc' THEN tg.name END DESC,
+CASE WHEN $2 = 'alpha_asc' THEN tg.alpha_tag END ASC,
+CASE WHEN $2 = 'alpha_desc' THEN tg.alpha_tag END DESC
+OFFSET $3 ROWS
+FETCH NEXT $4 ROWS ONLY
+`
+
+type GetTalkgroupsPParams struct {
+	Filter  *string `json:"filter"`
+	OrderBy string  `json:"orderBy"`
+	Offset  int32   `json:"offset"`
+	PerPage int32   `json:"perPage"`
+}
+
+type GetTalkgroupsPRow struct {
+	Talkgroup Talkgroup `json:"talkgroup"`
+	System    System    `json:"system"`
+}
+
+func (q *Queries) GetTalkgroupsP(ctx context.Context, arg GetTalkgroupsPParams) ([]GetTalkgroupsPRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupsP,
+		arg.Filter,
+		arg.OrderBy,
+		arg.Offset,
+		arg.PerPage,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTalkgroupsPRow
+	for rows.Next() {
+		var i GetTalkgroupsPRow
+		if err := rows.Scan(
+			&i.Talkgroup.ID,
+			&i.Talkgroup.SystemID,
+			&i.Talkgroup.TGID,
+			&i.Talkgroup.Name,
+			&i.Talkgroup.AlphaTag,
+			&i.Talkgroup.TGGroup,
+			&i.Talkgroup.Frequency,
+			&i.Talkgroup.Metadata,
+			&i.Talkgroup.Tags,
+			&i.Talkgroup.Alert,
+			&i.Talkgroup.AlertRules,
+			&i.Talkgroup.Weight,
+			&i.Talkgroup.Learned,
+			&i.Talkgroup.Ignored,
+			&i.System.ID,
+			&i.System.Name,
+			&i.System.Learned,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getTalkgroupsWithAllTags = `-- name: GetTalkgroupsWithAllTags :many
@@ -354,310 +634,6 @@ func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) (
 			&i.Talkgroup.Weight,
 			&i.Talkgroup.Learned,
 			&i.Talkgroup.Ignored,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getTalkgroupsWithLearned = `-- name: GetTalkgroupsWithLearned :many
-SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name, sys.learned
-FROM talkgroups tg
-JOIN systems sys ON tg.system_id = sys.id
-WHERE ignored IS NOT TRUE
-`
-
-type GetTalkgroupsWithLearnedRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
-	System    System    `json:"system"`
-}
-
-func (q *Queries) GetTalkgroupsWithLearned(ctx context.Context) ([]GetTalkgroupsWithLearnedRow, error) {
-	rows, err := q.db.Query(ctx, getTalkgroupsWithLearned)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetTalkgroupsWithLearnedRow
-	for rows.Next() {
-		var i GetTalkgroupsWithLearnedRow
-		if err := rows.Scan(
-			&i.Talkgroup.ID,
-			&i.Talkgroup.SystemID,
-			&i.Talkgroup.TGID,
-			&i.Talkgroup.Name,
-			&i.Talkgroup.AlphaTag,
-			&i.Talkgroup.TGGroup,
-			&i.Talkgroup.Frequency,
-			&i.Talkgroup.Metadata,
-			&i.Talkgroup.Tags,
-			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertRules,
-			&i.Talkgroup.Weight,
-			&i.Talkgroup.Learned,
-			&i.Talkgroup.Ignored,
-			&i.System.ID,
-			&i.System.Name,
-			&i.System.Learned,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getTalkgroupsWithLearnedBySystem = `-- name: GetTalkgroupsWithLearnedBySystem :many
-SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name, sys.learned
-FROM talkgroups tg
-JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.system_id = $1
-`
-
-type GetTalkgroupsWithLearnedBySystemRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
-	System    System    `json:"system"`
-}
-
-func (q *Queries) GetTalkgroupsWithLearnedBySystem(ctx context.Context, system int32) ([]GetTalkgroupsWithLearnedBySystemRow, error) {
-	rows, err := q.db.Query(ctx, getTalkgroupsWithLearnedBySystem, system)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetTalkgroupsWithLearnedBySystemRow
-	for rows.Next() {
-		var i GetTalkgroupsWithLearnedBySystemRow
-		if err := rows.Scan(
-			&i.Talkgroup.ID,
-			&i.Talkgroup.SystemID,
-			&i.Talkgroup.TGID,
-			&i.Talkgroup.Name,
-			&i.Talkgroup.AlphaTag,
-			&i.Talkgroup.TGGroup,
-			&i.Talkgroup.Frequency,
-			&i.Talkgroup.Metadata,
-			&i.Talkgroup.Tags,
-			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertRules,
-			&i.Talkgroup.Weight,
-			&i.Talkgroup.Learned,
-			&i.Talkgroup.Ignored,
-			&i.System.ID,
-			&i.System.Name,
-			&i.System.Learned,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getTalkgroupsWithLearnedBySystemCount = `-- name: GetTalkgroupsWithLearnedBySystemCount :one
-SELECT COUNT(*) FROM talkgroups tg
-WHERE tg.system_id = $1 AND
-(CASE WHEN $2::TEXT IS NOT NULL THEN (
-		tg.tg_group ILIKE '%' || $2 || '%' OR
-		tg.name ILIKE '%' || $2 || '%' OR
-		tg.alpha_tag ILIKE '%' || $2 || '%' OR
-		tg.tags @> ARRAY[LOWER($2)]
-	) ELSE TRUE END)
-`
-
-func (q *Queries) GetTalkgroupsWithLearnedBySystemCount(ctx context.Context, system int32, filter *string) (int64, error) {
-	row := q.db.QueryRow(ctx, getTalkgroupsWithLearnedBySystemCount, system, filter)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const getTalkgroupsWithLearnedBySystemP = `-- name: GetTalkgroupsWithLearnedBySystemP :many
-SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name, sys.learned
-FROM talkgroups tg
-JOIN systems sys ON tg.system_id = sys.id
-WHERE tg.system_id = $1 AND
-(CASE WHEN $2::TEXT IS NOT NULL THEN (
-		tg.tg_group ILIKE '%' || $2 || '%' OR
-		tg.name ILIKE '%' || $2 || '%' OR
-		tg.alpha_tag ILIKE '%' || $2 || '%' OR
-		tg.tags @> ARRAY[LOWER($2)]
-	) ELSE TRUE END)
-ORDER BY
-CASE WHEN $3::TEXT = 'tgid_asc' THEN (tg.system_id, tg.tgid) END ASC,
-CASE WHEN $3 = 'tgid_desc' THEN (tg.system_id, tg.tgid) END DESC,
-CASE WHEN $3 = 'group_asc' THEN tg.tg_group END ASC,
-CASE WHEN $3 = 'group_desc' THEN tg.tg_group END DESC,
-CASE WHEN $3 = 'id_asc' THEN tg.id END ASC,
-CASE WHEN $3 = 'id_desc' THEN tg.id END DESC,
-CASE WHEN $3 = 'name_asc' THEN tg.name END ASC,
-CASE WHEN $3 = 'name_desc' THEN tg.name END DESC,
-CASE WHEN $3 = 'alpha_asc' THEN tg.alpha_tag END ASC,
-CASE WHEN $3 = 'alpha_desc' THEN tg.alpha_tag END DESC
-OFFSET $4 ROWS
-FETCH NEXT $5 ROWS ONLY
-`
-
-type GetTalkgroupsWithLearnedBySystemPParams struct {
-	System  int32   `json:"system"`
-	Filter  *string `json:"filter"`
-	OrderBy string  `json:"orderBy"`
-	Offset  int32   `json:"offset"`
-	PerPage int32   `json:"perPage"`
-}
-
-type GetTalkgroupsWithLearnedBySystemPRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
-	System    System    `json:"system"`
-}
-
-func (q *Queries) GetTalkgroupsWithLearnedBySystemP(ctx context.Context, arg GetTalkgroupsWithLearnedBySystemPParams) ([]GetTalkgroupsWithLearnedBySystemPRow, error) {
-	rows, err := q.db.Query(ctx, getTalkgroupsWithLearnedBySystemP,
-		arg.System,
-		arg.Filter,
-		arg.OrderBy,
-		arg.Offset,
-		arg.PerPage,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetTalkgroupsWithLearnedBySystemPRow
-	for rows.Next() {
-		var i GetTalkgroupsWithLearnedBySystemPRow
-		if err := rows.Scan(
-			&i.Talkgroup.ID,
-			&i.Talkgroup.SystemID,
-			&i.Talkgroup.TGID,
-			&i.Talkgroup.Name,
-			&i.Talkgroup.AlphaTag,
-			&i.Talkgroup.TGGroup,
-			&i.Talkgroup.Frequency,
-			&i.Talkgroup.Metadata,
-			&i.Talkgroup.Tags,
-			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertRules,
-			&i.Talkgroup.Weight,
-			&i.Talkgroup.Learned,
-			&i.Talkgroup.Ignored,
-			&i.System.ID,
-			&i.System.Name,
-			&i.System.Learned,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getTalkgroupsWithLearnedCount = `-- name: GetTalkgroupsWithLearnedCount :one
-SELECT COUNT(*) FROM talkgroups tg
-WHERE ignored IS NOT TRUE AND
-(CASE WHEN $1::TEXT IS NOT NULL THEN (
-		tg.tg_group ILIKE '%' || $1 || '%' OR
-		tg.name ILIKE '%' || $1 || '%' OR
-		tg.alpha_tag ILIKE '%' || $1 || '%' OR
-		tg.tags @> ARRAY[LOWER($1)]
-	) ELSE TRUE END)
-`
-
-func (q *Queries) GetTalkgroupsWithLearnedCount(ctx context.Context, filter *string) (int64, error) {
-	row := q.db.QueryRow(ctx, getTalkgroupsWithLearnedCount, filter)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const getTalkgroupsWithLearnedP = `-- name: GetTalkgroupsWithLearnedP :many
-SELECT
-tg.id, tg.system_id, tg.tgid, tg.name, tg.alpha_tag, tg.tg_group, tg.frequency, tg.metadata, tg.tags, tg.alert, tg.alert_rules, tg.weight, tg.learned, tg.ignored, sys.id, sys.name, sys.learned
-FROM talkgroups tg
-JOIN systems sys ON tg.system_id = sys.id
-WHERE ignored IS NOT TRUE AND
-(CASE WHEN $1::TEXT IS NOT NULL THEN (
-		tg.tg_group ILIKE '%' || $1 || '%' OR
-		tg.name ILIKE '%' || $1 || '%' OR
-		tg.alpha_tag ILIKE '%' || $1 || '%' OR
-		tg.tags @> ARRAY[LOWER($1)]
-	) ELSE TRUE END)
-ORDER BY
-CASE WHEN $2::TEXT = 'tgid_asc' THEN (tg.system_id, tg.tgid) END ASC,
-CASE WHEN $2 = 'tgid_desc' THEN (tg.system_id, tg.tgid) END DESC,
-CASE WHEN $2 = 'group_asc' THEN tg.tg_group END ASC,
-CASE WHEN $2 = 'group_desc' THEN tg.tg_group END DESC,
-CASE WHEN $2 = 'id_asc' THEN tg.id END ASC,
-CASE WHEN $2 = 'id_desc' THEN tg.id END DESC,
-CASE WHEN $2 = 'name_asc' THEN tg.name END ASC,
-CASE WHEN $2 = 'name_desc' THEN tg.name END DESC,
-CASE WHEN $2 = 'alpha_asc' THEN tg.alpha_tag END ASC,
-CASE WHEN $2 = 'alpha_desc' THEN tg.alpha_tag END DESC
-OFFSET $3 ROWS
-FETCH NEXT $4 ROWS ONLY
-`
-
-type GetTalkgroupsWithLearnedPParams struct {
-	Filter  *string `json:"filter"`
-	OrderBy string  `json:"orderBy"`
-	Offset  int32   `json:"offset"`
-	PerPage int32   `json:"perPage"`
-}
-
-type GetTalkgroupsWithLearnedPRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
-	System    System    `json:"system"`
-}
-
-func (q *Queries) GetTalkgroupsWithLearnedP(ctx context.Context, arg GetTalkgroupsWithLearnedPParams) ([]GetTalkgroupsWithLearnedPRow, error) {
-	rows, err := q.db.Query(ctx, getTalkgroupsWithLearnedP,
-		arg.Filter,
-		arg.OrderBy,
-		arg.Offset,
-		arg.PerPage,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetTalkgroupsWithLearnedPRow
-	for rows.Next() {
-		var i GetTalkgroupsWithLearnedPRow
-		if err := rows.Scan(
-			&i.Talkgroup.ID,
-			&i.Talkgroup.SystemID,
-			&i.Talkgroup.TGID,
-			&i.Talkgroup.Name,
-			&i.Talkgroup.AlphaTag,
-			&i.Talkgroup.TGGroup,
-			&i.Talkgroup.Frequency,
-			&i.Talkgroup.Metadata,
-			&i.Talkgroup.Tags,
-			&i.Talkgroup.Alert,
-			&i.Talkgroup.AlertRules,
-			&i.Talkgroup.Weight,
-			&i.Talkgroup.Learned,
-			&i.Talkgroup.Ignored,
-			&i.System.ID,
-			&i.System.Name,
-			&i.System.Learned,
 		); err != nil {
 			return nil, err
 		}

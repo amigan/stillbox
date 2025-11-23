@@ -309,9 +309,8 @@ func (t *cache) addSysNoLock(id int, name string) {
 }
 
 type rowType interface {
-	database.GetTalkgroupsRow | database.GetTalkgroupsWithLearnedRow |
-		database.GetTalkgroupsWithLearnedBySystemRow | database.GetTalkgroupWithLearnedRow |
-		database.GetTalkgroupsWithLearnedBySystemPRow | database.GetTalkgroupsWithLearnedPRow
+	database.GetTalkgroupsRow | database.GetTalkgroupsBySystemRow | database.GetTalkgroupRow |
+		database.GetTalkgroupsBySystemPRow | database.GetTalkgroupsPRow
 	row
 }
 
@@ -381,7 +380,7 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 			}
 		}
 
-		tgRecords, err := db.GetTalkgroupsWithLearnedBySysTGID(ctx, toGet.Tuples())
+		tgRecords, err := db.GetTalkgroupsBySysTGID(ctx, toGet.Tuples())
 		if err != nil {
 			return nil, err
 		}
@@ -397,10 +396,10 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 		}
 
 		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
-		var tgRecords []database.GetTalkgroupsWithLearnedPRow
+		var tgRecords []database.GetTalkgroupsPRow
 		err = db.InTx(ctx, func(db database.Store) error {
 			var err error
-			tgRecords, err = db.GetTalkgroupsWithLearnedP(ctx, database.GetTalkgroupsWithLearnedPParams{
+			tgRecords, err = db.GetTalkgroupsP(ctx, database.GetTalkgroupsPParams{
 				Filter:  opt.filter,
 				OrderBy: sortDir,
 				Offset:  offset,
@@ -411,7 +410,7 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 			}
 
 			if opt.totalDest != nil {
-				count, err := db.GetTalkgroupsWithLearnedCount(ctx, opt.filter)
+				count, err := db.GetTalkgroupsCount(ctx, opt.filter)
 				if err != nil {
 					return err
 				}
@@ -429,7 +428,7 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 		return addToRowListS(t, r, tgRecords), nil
 	}
 
-	tgRecords, err := db.GetTalkgroupsWithLearned(ctx)
+	tgRecords, err := db.GetTalkgroups(ctx, opt.filter)
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +437,7 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 
 func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
 	// No need for RBAC checks since this merely primes the cache and returns nothing.
-	tgRecords, err := t.db.GetTalkgroupsWithLearnedBySysTGID(ctx, tgs)
+	tgRecords, err := t.db.GetTalkgroupsBySysTGID(ctx, tgs)
 	if err != nil {
 		return err
 	}
@@ -478,10 +477,10 @@ func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...Option) ([]
 		}
 
 		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
-		var recs []database.GetTalkgroupsWithLearnedBySystemPRow
+		var recs []database.GetTalkgroupsBySystemPRow
 		err = db.InTx(ctx, func(db database.Store) error {
 			var err error
-			recs, err = db.GetTalkgroupsWithLearnedBySystemP(ctx, database.GetTalkgroupsWithLearnedBySystemPParams{
+			recs, err = db.GetTalkgroupsBySystemP(ctx, database.GetTalkgroupsBySystemPParams{
 				System:  int32(systemID),
 				Filter:  opt.filter,
 				OrderBy: sortDir,
@@ -493,7 +492,7 @@ func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...Option) ([]
 			}
 
 			if opt.totalDest != nil {
-				count, err := db.GetTalkgroupsWithLearnedBySystemCount(ctx, int32(systemID), opt.filter)
+				count, err := db.GetTalkgroupsBySystemCount(ctx, int32(systemID), opt.filter)
 				if err != nil {
 					return err
 				}
@@ -511,7 +510,7 @@ func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...Option) ([]
 		return addToRowList(t, recs), nil
 	}
 
-	recs, err := db.GetTalkgroupsWithLearnedBySystem(ctx, int32(systemID))
+	recs, err := db.GetTalkgroupsBySystem(ctx, int32(systemID))
 	if err != nil {
 		return nil, err
 	}
@@ -533,7 +532,7 @@ func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
 	}
 
 	t.metrics.Misses.Inc()
-	record, err := t.db.GetTalkgroupWithLearned(ctx, int32(tg.System), int32(tg.Talkgroup))
+	record, err := t.db.GetTalkgroup(ctx, int32(tg.System), int32(tg.Talkgroup))
 	switch err {
 	case nil:
 	case pgx.ErrNoRows:

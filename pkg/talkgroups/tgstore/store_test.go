@@ -107,6 +107,26 @@ func TestTGs(t *testing.T) {
 			},
 			assertAlpha: []string{"Wide Area 6", "EMA-1"},
 		},
+		{
+			desc: "filtered",
+			opts: []tgstore.Option{
+				tgstore.WithFilter(common.PtrTo("Fire")),
+			},
+			assertLen: common.PtrTo(99),
+		},
+		{
+			desc: "paginated filtered",
+			opts: []tgstore.Option{
+				tgstore.WithPagination(
+					&tgstore.Pagination{
+						Pagination: common.Pagination{
+							Page: common.PtrTo(4),
+						},
+					}, 2, nil),
+				tgstore.WithFilter(common.PtrTo("Fire")),
+			},
+			assertAlpha: []string{"Narrag FDFG2", "Narrag EMS"},
+		},
 	}
 
 	for _, tc := range tests {

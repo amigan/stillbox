@@ -3819,74 +3819,70 @@ func (_c *Store_GetTalkgroupTags_Call) RunAndReturn(run func(ctx context.Context
 	return _c
 }
 
-// GetTalkgroupWithLearned provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupWithLearned(ctx context.Context, systemID int32, tGID int32) (database.GetTalkgroupWithLearnedRow, error) {
-	ret := _mock.Called(ctx, systemID, tGID)
+// GetTalkgroups provides a mock function for the type Store
+func (_mock *Store) GetTalkgroups(ctx context.Context, filter *string) ([]database.GetTalkgroupsRow, error) {
+	ret := _mock.Called(ctx, filter)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupWithLearned")
+		panic("no return value specified for GetTalkgroups")
 	}
 
-	var r0 database.GetTalkgroupWithLearnedRow
+	var r0 []database.GetTalkgroupsRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, int32) (database.GetTalkgroupWithLearnedRow, error)); ok {
-		return returnFunc(ctx, systemID, tGID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) ([]database.GetTalkgroupsRow, error)); ok {
+		return returnFunc(ctx, filter)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, int32) database.GetTalkgroupWithLearnedRow); ok {
-		r0 = returnFunc(ctx, systemID, tGID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) []database.GetTalkgroupsRow); ok {
+		r0 = returnFunc(ctx, filter)
 	} else {
-		r0 = ret.Get(0).(database.GetTalkgroupWithLearnedRow)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetTalkgroupsRow)
+		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int32, int32) error); ok {
-		r1 = returnFunc(ctx, systemID, tGID)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *string) error); ok {
+		r1 = returnFunc(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
 	return r0, r1
 }
 
-// Store_GetTalkgroupWithLearned_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupWithLearned'
-type Store_GetTalkgroupWithLearned_Call struct {
+// Store_GetTalkgroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroups'
+type Store_GetTalkgroups_Call struct {
 	*mock.Call
 }
 
-// GetTalkgroupWithLearned is a helper method to define mock.On call
+// GetTalkgroups is a helper method to define mock.On call
 //   - ctx context.Context
-//   - systemID int32
-//   - tGID int32
-func (_e *Store_Expecter) GetTalkgroupWithLearned(ctx interface{}, systemID interface{}, tGID interface{}) *Store_GetTalkgroupWithLearned_Call {
-	return &Store_GetTalkgroupWithLearned_Call{Call: _e.mock.On("GetTalkgroupWithLearned", ctx, systemID, tGID)}
+//   - filter *string
+func (_e *Store_Expecter) GetTalkgroups(ctx interface{}, filter interface{}) *Store_GetTalkgroups_Call {
+	return &Store_GetTalkgroups_Call{Call: _e.mock.On("GetTalkgroups", ctx, filter)}
 }
 
-func (_c *Store_GetTalkgroupWithLearned_Call) Run(run func(ctx context.Context, systemID int32, tGID int32)) *Store_GetTalkgroupWithLearned_Call {
+func (_c *Store_GetTalkgroups_Call) Run(run func(ctx context.Context, filter *string)) *Store_GetTalkgroups_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 int32
+		var arg1 *string
 		if args[1] != nil {
-			arg1 = args[1].(int32)
-		}
-		var arg2 int32
-		if args[2] != nil {
-			arg2 = args[2].(int32)
+			arg1 = args[1].(*string)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
 }
 
-func (_c *Store_GetTalkgroupWithLearned_Call) Return(getTalkgroupWithLearnedRow database.GetTalkgroupWithLearnedRow, err error) *Store_GetTalkgroupWithLearned_Call {
-	_c.Call.Return(getTalkgroupWithLearnedRow, err)
+func (_c *Store_GetTalkgroups_Call) Return(getTalkgroupsRows []database.GetTalkgroupsRow, err error) *Store_GetTalkgroups_Call {
+	_c.Call.Return(getTalkgroupsRows, err)
 	return _c
 }
 
-func (_c *Store_GetTalkgroupWithLearned_Call) RunAndReturn(run func(ctx context.Context, systemID int32, tGID int32) (database.GetTalkgroupWithLearnedRow, error)) *Store_GetTalkgroupWithLearned_Call {
+func (_c *Store_GetTalkgroups_Call) RunAndReturn(run func(ctx context.Context, filter *string) ([]database.GetTalkgroupsRow, error)) *Store_GetTalkgroups_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -3955,6 +3951,348 @@ func (_c *Store_GetTalkgroupsBySysTGID_Call) Return(getTalkgroupsRows []database
 }
 
 func (_c *Store_GetTalkgroupsBySysTGID_Call) RunAndReturn(run func(ctx context.Context, ids database.TGTuples) ([]database.GetTalkgroupsRow, error)) *Store_GetTalkgroupsBySysTGID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetTalkgroupsBySystem provides a mock function for the type Store
+func (_mock *Store) GetTalkgroupsBySystem(ctx context.Context, system int32) ([]database.GetTalkgroupsBySystemRow, error) {
+	ret := _mock.Called(ctx, system)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTalkgroupsBySystem")
+	}
+
+	var r0 []database.GetTalkgroupsBySystemRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int32) ([]database.GetTalkgroupsBySystemRow, error)); ok {
+		return returnFunc(ctx, system)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int32) []database.GetTalkgroupsBySystemRow); ok {
+		r0 = returnFunc(ctx, system)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetTalkgroupsBySystemRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int32) error); ok {
+		r1 = returnFunc(ctx, system)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetTalkgroupsBySystem_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsBySystem'
+type Store_GetTalkgroupsBySystem_Call struct {
+	*mock.Call
+}
+
+// GetTalkgroupsBySystem is a helper method to define mock.On call
+//   - ctx context.Context
+//   - system int32
+func (_e *Store_Expecter) GetTalkgroupsBySystem(ctx interface{}, system interface{}) *Store_GetTalkgroupsBySystem_Call {
+	return &Store_GetTalkgroupsBySystem_Call{Call: _e.mock.On("GetTalkgroupsBySystem", ctx, system)}
+}
+
+func (_c *Store_GetTalkgroupsBySystem_Call) Run(run func(ctx context.Context, system int32)) *Store_GetTalkgroupsBySystem_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int32
+		if args[1] != nil {
+			arg1 = args[1].(int32)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsBySystem_Call) Return(getTalkgroupsBySystemRows []database.GetTalkgroupsBySystemRow, err error) *Store_GetTalkgroupsBySystem_Call {
+	_c.Call.Return(getTalkgroupsBySystemRows, err)
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsBySystem_Call) RunAndReturn(run func(ctx context.Context, system int32) ([]database.GetTalkgroupsBySystemRow, error)) *Store_GetTalkgroupsBySystem_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetTalkgroupsBySystemCount provides a mock function for the type Store
+func (_mock *Store) GetTalkgroupsBySystemCount(ctx context.Context, system int32, filter *string) (int64, error) {
+	ret := _mock.Called(ctx, system, filter)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTalkgroupsBySystemCount")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, *string) (int64, error)); ok {
+		return returnFunc(ctx, system, filter)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, *string) int64); ok {
+		r0 = returnFunc(ctx, system, filter)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int32, *string) error); ok {
+		r1 = returnFunc(ctx, system, filter)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetTalkgroupsBySystemCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsBySystemCount'
+type Store_GetTalkgroupsBySystemCount_Call struct {
+	*mock.Call
+}
+
+// GetTalkgroupsBySystemCount is a helper method to define mock.On call
+//   - ctx context.Context
+//   - system int32
+//   - filter *string
+func (_e *Store_Expecter) GetTalkgroupsBySystemCount(ctx interface{}, system interface{}, filter interface{}) *Store_GetTalkgroupsBySystemCount_Call {
+	return &Store_GetTalkgroupsBySystemCount_Call{Call: _e.mock.On("GetTalkgroupsBySystemCount", ctx, system, filter)}
+}
+
+func (_c *Store_GetTalkgroupsBySystemCount_Call) Run(run func(ctx context.Context, system int32, filter *string)) *Store_GetTalkgroupsBySystemCount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int32
+		if args[1] != nil {
+			arg1 = args[1].(int32)
+		}
+		var arg2 *string
+		if args[2] != nil {
+			arg2 = args[2].(*string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsBySystemCount_Call) Return(n int64, err error) *Store_GetTalkgroupsBySystemCount_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsBySystemCount_Call) RunAndReturn(run func(ctx context.Context, system int32, filter *string) (int64, error)) *Store_GetTalkgroupsBySystemCount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetTalkgroupsBySystemP provides a mock function for the type Store
+func (_mock *Store) GetTalkgroupsBySystemP(ctx context.Context, arg database.GetTalkgroupsBySystemPParams) ([]database.GetTalkgroupsBySystemPRow, error) {
+	ret := _mock.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTalkgroupsBySystemP")
+	}
+
+	var r0 []database.GetTalkgroupsBySystemPRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsBySystemPParams) ([]database.GetTalkgroupsBySystemPRow, error)); ok {
+		return returnFunc(ctx, arg)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsBySystemPParams) []database.GetTalkgroupsBySystemPRow); ok {
+		r0 = returnFunc(ctx, arg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetTalkgroupsBySystemPRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, database.GetTalkgroupsBySystemPParams) error); ok {
+		r1 = returnFunc(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetTalkgroupsBySystemP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsBySystemP'
+type Store_GetTalkgroupsBySystemP_Call struct {
+	*mock.Call
+}
+
+// GetTalkgroupsBySystemP is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.GetTalkgroupsBySystemPParams
+func (_e *Store_Expecter) GetTalkgroupsBySystemP(ctx interface{}, arg interface{}) *Store_GetTalkgroupsBySystemP_Call {
+	return &Store_GetTalkgroupsBySystemP_Call{Call: _e.mock.On("GetTalkgroupsBySystemP", ctx, arg)}
+}
+
+func (_c *Store_GetTalkgroupsBySystemP_Call) Run(run func(ctx context.Context, arg database.GetTalkgroupsBySystemPParams)) *Store_GetTalkgroupsBySystemP_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 database.GetTalkgroupsBySystemPParams
+		if args[1] != nil {
+			arg1 = args[1].(database.GetTalkgroupsBySystemPParams)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsBySystemP_Call) Return(getTalkgroupsBySystemPRows []database.GetTalkgroupsBySystemPRow, err error) *Store_GetTalkgroupsBySystemP_Call {
+	_c.Call.Return(getTalkgroupsBySystemPRows, err)
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsBySystemP_Call) RunAndReturn(run func(ctx context.Context, arg database.GetTalkgroupsBySystemPParams) ([]database.GetTalkgroupsBySystemPRow, error)) *Store_GetTalkgroupsBySystemP_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetTalkgroupsCount provides a mock function for the type Store
+func (_mock *Store) GetTalkgroupsCount(ctx context.Context, filter *string) (int64, error) {
+	ret := _mock.Called(ctx, filter)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTalkgroupsCount")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) (int64, error)); ok {
+		return returnFunc(ctx, filter)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) int64); ok {
+		r0 = returnFunc(ctx, filter)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *string) error); ok {
+		r1 = returnFunc(ctx, filter)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetTalkgroupsCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsCount'
+type Store_GetTalkgroupsCount_Call struct {
+	*mock.Call
+}
+
+// GetTalkgroupsCount is a helper method to define mock.On call
+//   - ctx context.Context
+//   - filter *string
+func (_e *Store_Expecter) GetTalkgroupsCount(ctx interface{}, filter interface{}) *Store_GetTalkgroupsCount_Call {
+	return &Store_GetTalkgroupsCount_Call{Call: _e.mock.On("GetTalkgroupsCount", ctx, filter)}
+}
+
+func (_c *Store_GetTalkgroupsCount_Call) Run(run func(ctx context.Context, filter *string)) *Store_GetTalkgroupsCount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *string
+		if args[1] != nil {
+			arg1 = args[1].(*string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsCount_Call) Return(n int64, err error) *Store_GetTalkgroupsCount_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsCount_Call) RunAndReturn(run func(ctx context.Context, filter *string) (int64, error)) *Store_GetTalkgroupsCount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetTalkgroupsP provides a mock function for the type Store
+func (_mock *Store) GetTalkgroupsP(ctx context.Context, arg database.GetTalkgroupsPParams) ([]database.GetTalkgroupsPRow, error) {
+	ret := _mock.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTalkgroupsP")
+	}
+
+	var r0 []database.GetTalkgroupsPRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsPParams) ([]database.GetTalkgroupsPRow, error)); ok {
+		return returnFunc(ctx, arg)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsPParams) []database.GetTalkgroupsPRow); ok {
+		r0 = returnFunc(ctx, arg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetTalkgroupsPRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, database.GetTalkgroupsPParams) error); ok {
+		r1 = returnFunc(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetTalkgroupsP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsP'
+type Store_GetTalkgroupsP_Call struct {
+	*mock.Call
+}
+
+// GetTalkgroupsP is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.GetTalkgroupsPParams
+func (_e *Store_Expecter) GetTalkgroupsP(ctx interface{}, arg interface{}) *Store_GetTalkgroupsP_Call {
+	return &Store_GetTalkgroupsP_Call{Call: _e.mock.On("GetTalkgroupsP", ctx, arg)}
+}
+
+func (_c *Store_GetTalkgroupsP_Call) Run(run func(ctx context.Context, arg database.GetTalkgroupsPParams)) *Store_GetTalkgroupsP_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 database.GetTalkgroupsPParams
+		if args[1] != nil {
+			arg1 = args[1].(database.GetTalkgroupsPParams)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsP_Call) Return(getTalkgroupsPRows []database.GetTalkgroupsPRow, err error) *Store_GetTalkgroupsP_Call {
+	_c.Call.Return(getTalkgroupsPRows, err)
+	return _c
+}
+
+func (_c *Store_GetTalkgroupsP_Call) RunAndReturn(run func(ctx context.Context, arg database.GetTalkgroupsPParams) ([]database.GetTalkgroupsPRow, error)) *Store_GetTalkgroupsP_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -4091,478 +4429,6 @@ func (_c *Store_GetTalkgroupsWithAnyTags_Call) Return(getTalkgroupsWithAnyTagsRo
 }
 
 func (_c *Store_GetTalkgroupsWithAnyTags_Call) RunAndReturn(run func(ctx context.Context, tags []string) ([]database.GetTalkgroupsWithAnyTagsRow, error)) *Store_GetTalkgroupsWithAnyTags_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetTalkgroupsWithLearned provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsWithLearned(ctx context.Context) ([]database.GetTalkgroupsWithLearnedRow, error) {
-	ret := _mock.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsWithLearned")
-	}
-
-	var r0 []database.GetTalkgroupsWithLearnedRow
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]database.GetTalkgroupsWithLearnedRow, error)); ok {
-		return returnFunc(ctx)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) []database.GetTalkgroupsWithLearnedRow); ok {
-		r0 = returnFunc(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.GetTalkgroupsWithLearnedRow)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = returnFunc(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetTalkgroupsWithLearned_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearned'
-type Store_GetTalkgroupsWithLearned_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsWithLearned is a helper method to define mock.On call
-//   - ctx context.Context
-func (_e *Store_Expecter) GetTalkgroupsWithLearned(ctx interface{}) *Store_GetTalkgroupsWithLearned_Call {
-	return &Store_GetTalkgroupsWithLearned_Call{Call: _e.mock.On("GetTalkgroupsWithLearned", ctx)}
-}
-
-func (_c *Store_GetTalkgroupsWithLearned_Call) Run(run func(ctx context.Context)) *Store_GetTalkgroupsWithLearned_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		run(
-			arg0,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearned_Call) Return(getTalkgroupsWithLearnedRows []database.GetTalkgroupsWithLearnedRow, err error) *Store_GetTalkgroupsWithLearned_Call {
-	_c.Call.Return(getTalkgroupsWithLearnedRows, err)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearned_Call) RunAndReturn(run func(ctx context.Context) ([]database.GetTalkgroupsWithLearnedRow, error)) *Store_GetTalkgroupsWithLearned_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetTalkgroupsWithLearnedBySysTGID provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsWithLearnedBySysTGID(ctx context.Context, ids database.TGTuples) ([]database.GetTalkgroupsRow, error) {
-	ret := _mock.Called(ctx, ids)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsWithLearnedBySysTGID")
-	}
-
-	var r0 []database.GetTalkgroupsRow
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.TGTuples) ([]database.GetTalkgroupsRow, error)); ok {
-		return returnFunc(ctx, ids)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.TGTuples) []database.GetTalkgroupsRow); ok {
-		r0 = returnFunc(ctx, ids)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.GetTalkgroupsRow)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, database.TGTuples) error); ok {
-		r1 = returnFunc(ctx, ids)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetTalkgroupsWithLearnedBySysTGID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearnedBySysTGID'
-type Store_GetTalkgroupsWithLearnedBySysTGID_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsWithLearnedBySysTGID is a helper method to define mock.On call
-//   - ctx context.Context
-//   - ids database.TGTuples
-func (_e *Store_Expecter) GetTalkgroupsWithLearnedBySysTGID(ctx interface{}, ids interface{}) *Store_GetTalkgroupsWithLearnedBySysTGID_Call {
-	return &Store_GetTalkgroupsWithLearnedBySysTGID_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedBySysTGID", ctx, ids)}
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySysTGID_Call) Run(run func(ctx context.Context, ids database.TGTuples)) *Store_GetTalkgroupsWithLearnedBySysTGID_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 database.TGTuples
-		if args[1] != nil {
-			arg1 = args[1].(database.TGTuples)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySysTGID_Call) Return(getTalkgroupsRows []database.GetTalkgroupsRow, err error) *Store_GetTalkgroupsWithLearnedBySysTGID_Call {
-	_c.Call.Return(getTalkgroupsRows, err)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySysTGID_Call) RunAndReturn(run func(ctx context.Context, ids database.TGTuples) ([]database.GetTalkgroupsRow, error)) *Store_GetTalkgroupsWithLearnedBySysTGID_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetTalkgroupsWithLearnedBySystem provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsWithLearnedBySystem(ctx context.Context, system int32) ([]database.GetTalkgroupsWithLearnedBySystemRow, error) {
-	ret := _mock.Called(ctx, system)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsWithLearnedBySystem")
-	}
-
-	var r0 []database.GetTalkgroupsWithLearnedBySystemRow
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32) ([]database.GetTalkgroupsWithLearnedBySystemRow, error)); ok {
-		return returnFunc(ctx, system)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32) []database.GetTalkgroupsWithLearnedBySystemRow); ok {
-		r0 = returnFunc(ctx, system)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.GetTalkgroupsWithLearnedBySystemRow)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int32) error); ok {
-		r1 = returnFunc(ctx, system)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetTalkgroupsWithLearnedBySystem_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearnedBySystem'
-type Store_GetTalkgroupsWithLearnedBySystem_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsWithLearnedBySystem is a helper method to define mock.On call
-//   - ctx context.Context
-//   - system int32
-func (_e *Store_Expecter) GetTalkgroupsWithLearnedBySystem(ctx interface{}, system interface{}) *Store_GetTalkgroupsWithLearnedBySystem_Call {
-	return &Store_GetTalkgroupsWithLearnedBySystem_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedBySystem", ctx, system)}
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySystem_Call) Run(run func(ctx context.Context, system int32)) *Store_GetTalkgroupsWithLearnedBySystem_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 int32
-		if args[1] != nil {
-			arg1 = args[1].(int32)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySystem_Call) Return(getTalkgroupsWithLearnedBySystemRows []database.GetTalkgroupsWithLearnedBySystemRow, err error) *Store_GetTalkgroupsWithLearnedBySystem_Call {
-	_c.Call.Return(getTalkgroupsWithLearnedBySystemRows, err)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySystem_Call) RunAndReturn(run func(ctx context.Context, system int32) ([]database.GetTalkgroupsWithLearnedBySystemRow, error)) *Store_GetTalkgroupsWithLearnedBySystem_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetTalkgroupsWithLearnedBySystemCount provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsWithLearnedBySystemCount(ctx context.Context, system int32, filter *string) (int64, error) {
-	ret := _mock.Called(ctx, system, filter)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsWithLearnedBySystemCount")
-	}
-
-	var r0 int64
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, *string) (int64, error)); ok {
-		return returnFunc(ctx, system, filter)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, *string) int64); ok {
-		r0 = returnFunc(ctx, system, filter)
-	} else {
-		r0 = ret.Get(0).(int64)
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int32, *string) error); ok {
-		r1 = returnFunc(ctx, system, filter)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetTalkgroupsWithLearnedBySystemCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearnedBySystemCount'
-type Store_GetTalkgroupsWithLearnedBySystemCount_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsWithLearnedBySystemCount is a helper method to define mock.On call
-//   - ctx context.Context
-//   - system int32
-//   - filter *string
-func (_e *Store_Expecter) GetTalkgroupsWithLearnedBySystemCount(ctx interface{}, system interface{}, filter interface{}) *Store_GetTalkgroupsWithLearnedBySystemCount_Call {
-	return &Store_GetTalkgroupsWithLearnedBySystemCount_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedBySystemCount", ctx, system, filter)}
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySystemCount_Call) Run(run func(ctx context.Context, system int32, filter *string)) *Store_GetTalkgroupsWithLearnedBySystemCount_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 int32
-		if args[1] != nil {
-			arg1 = args[1].(int32)
-		}
-		var arg2 *string
-		if args[2] != nil {
-			arg2 = args[2].(*string)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySystemCount_Call) Return(n int64, err error) *Store_GetTalkgroupsWithLearnedBySystemCount_Call {
-	_c.Call.Return(n, err)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySystemCount_Call) RunAndReturn(run func(ctx context.Context, system int32, filter *string) (int64, error)) *Store_GetTalkgroupsWithLearnedBySystemCount_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetTalkgroupsWithLearnedBySystemP provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsWithLearnedBySystemP(ctx context.Context, arg database.GetTalkgroupsWithLearnedBySystemPParams) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error) {
-	ret := _mock.Called(ctx, arg)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsWithLearnedBySystemP")
-	}
-
-	var r0 []database.GetTalkgroupsWithLearnedBySystemPRow
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsWithLearnedBySystemPParams) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error)); ok {
-		return returnFunc(ctx, arg)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsWithLearnedBySystemPParams) []database.GetTalkgroupsWithLearnedBySystemPRow); ok {
-		r0 = returnFunc(ctx, arg)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.GetTalkgroupsWithLearnedBySystemPRow)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, database.GetTalkgroupsWithLearnedBySystemPParams) error); ok {
-		r1 = returnFunc(ctx, arg)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetTalkgroupsWithLearnedBySystemP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearnedBySystemP'
-type Store_GetTalkgroupsWithLearnedBySystemP_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsWithLearnedBySystemP is a helper method to define mock.On call
-//   - ctx context.Context
-//   - arg database.GetTalkgroupsWithLearnedBySystemPParams
-func (_e *Store_Expecter) GetTalkgroupsWithLearnedBySystemP(ctx interface{}, arg interface{}) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
-	return &Store_GetTalkgroupsWithLearnedBySystemP_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedBySystemP", ctx, arg)}
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) Run(run func(ctx context.Context, arg database.GetTalkgroupsWithLearnedBySystemPParams)) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 database.GetTalkgroupsWithLearnedBySystemPParams
-		if args[1] != nil {
-			arg1 = args[1].(database.GetTalkgroupsWithLearnedBySystemPParams)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) Return(getTalkgroupsWithLearnedBySystemPRows []database.GetTalkgroupsWithLearnedBySystemPRow, err error) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
-	_c.Call.Return(getTalkgroupsWithLearnedBySystemPRows, err)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedBySystemP_Call) RunAndReturn(run func(ctx context.Context, arg database.GetTalkgroupsWithLearnedBySystemPParams) ([]database.GetTalkgroupsWithLearnedBySystemPRow, error)) *Store_GetTalkgroupsWithLearnedBySystemP_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetTalkgroupsWithLearnedCount provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsWithLearnedCount(ctx context.Context, filter *string) (int64, error) {
-	ret := _mock.Called(ctx, filter)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsWithLearnedCount")
-	}
-
-	var r0 int64
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) (int64, error)); ok {
-		return returnFunc(ctx, filter)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) int64); ok {
-		r0 = returnFunc(ctx, filter)
-	} else {
-		r0 = ret.Get(0).(int64)
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, *string) error); ok {
-		r1 = returnFunc(ctx, filter)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetTalkgroupsWithLearnedCount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearnedCount'
-type Store_GetTalkgroupsWithLearnedCount_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsWithLearnedCount is a helper method to define mock.On call
-//   - ctx context.Context
-//   - filter *string
-func (_e *Store_Expecter) GetTalkgroupsWithLearnedCount(ctx interface{}, filter interface{}) *Store_GetTalkgroupsWithLearnedCount_Call {
-	return &Store_GetTalkgroupsWithLearnedCount_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedCount", ctx, filter)}
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedCount_Call) Run(run func(ctx context.Context, filter *string)) *Store_GetTalkgroupsWithLearnedCount_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 *string
-		if args[1] != nil {
-			arg1 = args[1].(*string)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedCount_Call) Return(n int64, err error) *Store_GetTalkgroupsWithLearnedCount_Call {
-	_c.Call.Return(n, err)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedCount_Call) RunAndReturn(run func(ctx context.Context, filter *string) (int64, error)) *Store_GetTalkgroupsWithLearnedCount_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetTalkgroupsWithLearnedP provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsWithLearnedP(ctx context.Context, arg database.GetTalkgroupsWithLearnedPParams) ([]database.GetTalkgroupsWithLearnedPRow, error) {
-	ret := _mock.Called(ctx, arg)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTalkgroupsWithLearnedP")
-	}
-
-	var r0 []database.GetTalkgroupsWithLearnedPRow
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsWithLearnedPParams) ([]database.GetTalkgroupsWithLearnedPRow, error)); ok {
-		return returnFunc(ctx, arg)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetTalkgroupsWithLearnedPParams) []database.GetTalkgroupsWithLearnedPRow); ok {
-		r0 = returnFunc(ctx, arg)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.GetTalkgroupsWithLearnedPRow)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, database.GetTalkgroupsWithLearnedPParams) error); ok {
-		r1 = returnFunc(ctx, arg)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetTalkgroupsWithLearnedP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupsWithLearnedP'
-type Store_GetTalkgroupsWithLearnedP_Call struct {
-	*mock.Call
-}
-
-// GetTalkgroupsWithLearnedP is a helper method to define mock.On call
-//   - ctx context.Context
-//   - arg database.GetTalkgroupsWithLearnedPParams
-func (_e *Store_Expecter) GetTalkgroupsWithLearnedP(ctx interface{}, arg interface{}) *Store_GetTalkgroupsWithLearnedP_Call {
-	return &Store_GetTalkgroupsWithLearnedP_Call{Call: _e.mock.On("GetTalkgroupsWithLearnedP", ctx, arg)}
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedP_Call) Run(run func(ctx context.Context, arg database.GetTalkgroupsWithLearnedPParams)) *Store_GetTalkgroupsWithLearnedP_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 database.GetTalkgroupsWithLearnedPParams
-		if args[1] != nil {
-			arg1 = args[1].(database.GetTalkgroupsWithLearnedPParams)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedP_Call) Return(getTalkgroupsWithLearnedPRows []database.GetTalkgroupsWithLearnedPRow, err error) *Store_GetTalkgroupsWithLearnedP_Call {
-	_c.Call.Return(getTalkgroupsWithLearnedPRows, err)
-	return _c
-}
-
-func (_c *Store_GetTalkgroupsWithLearnedP_Call) RunAndReturn(run func(ctx context.Context, arg database.GetTalkgroupsWithLearnedPParams) ([]database.GetTalkgroupsWithLearnedPRow, error)) *Store_GetTalkgroupsWithLearnedP_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -55,7 +55,7 @@ func (as *alerter) tgStatsHandler(w http.ResponseWriter, r *http.Request) {
 	db := database.FromCtx(ctx)
 
 	tgt := as.scoredTGsTuple()
-	tgs, err := db.GetTalkgroupsWithLearnedBySysTGID(ctx, tgt)
+	tgs, err := db.GetTalkgroupsBySysTGID(ctx, tgt)
 	if err != nil {
 		log.Error().Err(err).Msg("stats TG get failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)

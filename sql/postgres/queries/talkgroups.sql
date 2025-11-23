@@ -21,21 +21,17 @@ WHERE (system_id, tgid) = (@system_id, @tg_id);
 UPDATE talkgroups SET tags = @tags
 WHERE (system_id, tgid) = (@system_id, @tg_id);
 
--- name: GetTalkgroup :one
-SELECT sqlc.embed(talkgroups) FROM talkgroups
-WHERE (system_id, tgid) = (@system_id, @tg_id);
-
 -- name: GetAllTalkgroupTags :many
 SELECT UNNEST(tgs.tags)::TEXT tag FROM talkgroups tgs GROUP BY tag ORDER BY COUNT(*) DESC;
 
--- name: GetTalkgroupWithLearned :one
+-- name: GetTalkgroup :one
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE (tg.system_id, tg.tgid) = (@system_id, @tgid);
 
--- name: GetTalkgroupsWithLearnedBySystemP :many
+-- name: GetTalkgroupsBySystemP :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
@@ -62,7 +58,7 @@ OFFSET sqlc.arg('offset') ROWS
 FETCH NEXT sqlc.arg('per_page') ROWS ONLY
 ;
 
--- name: GetTalkgroupsWithLearnedBySystemCount :one
+-- name: GetTalkgroupsBySystemCount :one
 SELECT COUNT(*) FROM talkgroups tg
 WHERE tg.system_id = @system AND
 (CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
@@ -73,21 +69,29 @@ WHERE tg.system_id = @system AND
 	) ELSE TRUE END)
 ;
 
--- name: GetTalkgroupsWithLearnedBySystem :many
+-- name: GetTalkgroupsBySystem :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 WHERE tg.system_id = @system;
 
--- name: GetTalkgroupsWithLearned :many
+-- name: GetTalkgroups :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
-WHERE ignored IS NOT TRUE;
 
--- name: GetTalkgroupsWithLearnedP :many
+WHERE ignored IS NOT TRUE AND
+(CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
+		tg.tg_group ILIKE '%' || @filter || '%' OR
+		tg.name ILIKE '%' || @filter || '%' OR
+		tg.alpha_tag ILIKE '%' || @filter || '%' OR
+		tg.tags @> ARRAY[LOWER(@filter)]
+	) ELSE TRUE END);
+
+
+-- name: GetTalkgroupsP :many
 SELECT
 sqlc.embed(tg), sqlc.embed(sys)
 FROM talkgroups tg
@@ -114,7 +118,7 @@ OFFSET sqlc.arg('offset') ROWS
 FETCH NEXT sqlc.arg('per_page') ROWS ONLY
 ;
 
--- name: GetTalkgroupsWithLearnedCount :one
+-- name: GetTalkgroupsCount :one
 SELECT COUNT(*) FROM talkgroups tg
 WHERE ignored IS NOT TRUE AND
 (CASE WHEN sqlc.narg('filter')::TEXT IS NOT NULL THEN (
