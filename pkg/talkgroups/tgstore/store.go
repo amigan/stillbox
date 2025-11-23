@@ -431,7 +431,7 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 			}
 
 			if opt.totalDest != nil {
-				count, err := db.GetTalkgroupsCount(ctx, nil, false, opt.filter)
+				count, err := db.GetTalkgroupsCount(ctx, opt.system, false, opt.filter)
 				if err != nil {
 					return err
 				}

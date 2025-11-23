@@ -106,6 +106,8 @@ func TestSystemTGs(t *testing.T) {
 	s := SetupTest()
 	defer s.TearDownTest()
 
+	totalDest := 0
+
 	tests := []struct {
 		desc      string
 		systemID  int
@@ -136,7 +138,7 @@ func TestSystemTGs(t *testing.T) {
 						Pagination: common.Pagination{
 							Page: common.PtrTo(4),
 						},
-					}, 2, nil),
+					}, 2, &totalDest),
 			},
 			assert: tgsAssertion{
 				assertAlpha: []string{"Wide Area 6", "EMA-1"},
@@ -179,6 +181,11 @@ func TestSystemTGs(t *testing.T) {
 
 			tgs, err := st.SystemTGs(ctx, tc.systemID, tc.opts...)
 			tc.assert.assert(t, tgs, err)
+
+			// hacky
+			if tc.desc == "paginated" {
+				assert.Equal(t, 296, totalDest)
+			}
 		})
 	}
 }
@@ -186,6 +193,8 @@ func TestSystemTGs(t *testing.T) {
 func TestTGs(t *testing.T) {
 	s := SetupTest()
 	defer s.TearDownTest()
+
+	totalDest := 0
 
 	tests := []struct {
 		desc   string
@@ -221,7 +230,7 @@ func TestTGs(t *testing.T) {
 						Pagination: common.Pagination{
 							Page: common.PtrTo(4),
 						},
-					}, 2, nil),
+					}, 2, &totalDest),
 			},
 			assert: tgsAssertion{
 				assertAlpha: []string{"Wide Area 6", "EMA-1"},
@@ -259,6 +268,11 @@ func TestTGs(t *testing.T) {
 
 			tgs, err := st.TGs(ctx, tc.ids, tc.opts...)
 			tc.assert.assert(t, tgs, err)
+
+			// hacky
+			if tc.desc == "paginated" {
+				assert.Equal(t, 298, totalDest)
+			}
 		})
 	}
 }
