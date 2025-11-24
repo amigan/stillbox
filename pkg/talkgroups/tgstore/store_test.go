@@ -9,14 +9,15 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/testutil"
 	"dynatron.me/x/stillbox/pkg/authz"
-	authzMocks "dynatron.me/x/stillbox/pkg/authz/mocks"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/authz/policy"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/metrics"
 	tgsp "dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+	"dynatron.me/x/stillbox/pkg/users"
 	promtestutil "github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -25,6 +26,8 @@ type TestSuite struct {
 	suite.Suite
 	db testutil.DB
 }
+
+type testHook func(context.Context, *testing.T, tgstore.Store)
 
 func tids(ids ...string) []tgsp.ID {
 	r := make([]tgsp.ID, 0, len(ids))
@@ -61,10 +64,16 @@ func (suite *TestSuite) TearDownTest() {
 	suite.db.Cleanup()
 }
 
-func (suite *TestSuite) makeStore(t *testing.T) (tgstore.Store, context.Context) {
-	rbacMock := authzMocks.NewRBAC(t)
-	rbacMock.EXPECT().Check(mock.Anything, mock.Anything, mock.Anything).Return(nil, nil)
-	ctx := authz.CtxWithRBAC(t.Context(), rbacMock)
+func (suite *TestSuite) makeStore(t *testing.T, subject entities.Subject) (tgstore.Store, context.Context) {
+	rbac, err := authz.New(policy.Policy)
+	require.NoError(t, err)
+
+	if subject == nil {
+		subject = &users.User{}
+	}
+
+	ctx := authz.CtxWithRBAC(t.Context(), rbac)
+	ctx = entities.CtxWithSubject(ctx, subject)
 	metrics, _ := metrics.NewMetrics(config.Metrics{})
 
 	return tgstore.NewCache(suite.db, metrics), ctx
@@ -115,6 +124,7 @@ func TestSystemTGs(t *testing.T) {
 		opts      []tgstore.Option
 		expectErr error
 		assert    tgsAssertion
+		subject   entities.Subject
 	}{
 		{
 			desc:     "all tgs",
@@ -171,11 +181,19 @@ func TestSystemTGs(t *testing.T) {
 				assertAlpha: []string{"Narrag FDFG2", "Narrag EMS"},
 			},
 		},
+		{
+			desc:     "forbidden",
+			systemID: 407,
+			subject:  &entities.PublicSubject{},
+			assert: tgsAssertion{
+				expectErr: authz.ErrAccessDenied,
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			st, ctx := s.makeStore(t)
+			st, ctx := s.makeStore(t, tc.subject)
 
 			// test case sanity check
 			require.NotZero(t, tc.systemID)
@@ -195,7 +213,6 @@ func TestTGs(t *testing.T) {
 	s := SetupTest()
 	defer s.TearDownTest()
 
-	type testHook func(context.Context, *testing.T, tgstore.Store)
 	totalDest := 0
 
 	tests := []struct {
@@ -205,6 +222,7 @@ func TestTGs(t *testing.T) {
 		assert   tgsAssertion
 		preFunc  testHook
 		postFunc testHook
+		subject  entities.Subject
 	}{
 		{
 			desc: "all tgs",
@@ -279,11 +297,19 @@ func TestTGs(t *testing.T) {
 				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().Misses), 3.0)
 			},
 		},
+		{
+			desc:    "forbidden",
+			ids:     tids("407:10101", "3348:153", "407:1869", "407:11186", "407:11002"),
+			subject: &entities.PublicSubject{},
+			assert: tgsAssertion{
+				expectErr: authz.ErrAccessDenied,
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			st, ctx := s.makeStore(t)
+			st, ctx := s.makeStore(t, tc.subject)
 
 			if tc.preFunc != nil {
 				tc.preFunc(ctx, t, st)
@@ -291,6 +317,60 @@ func TestTGs(t *testing.T) {
 
 			tgs, err := st.TGs(ctx, tc.ids, tc.opts...)
 			tc.assert.assert(t, tgs, err)
+
+			if tc.postFunc != nil {
+				tc.postFunc(ctx, t, st)
+			}
+		})
+	}
+}
+
+func TestTG(t *testing.T) {
+	s := SetupTest()
+	defer s.TearDownTest()
+
+	tests := []struct {
+		desc     string
+		tg       string
+		assert   tgsAssertion
+		preFunc  testHook
+		postFunc testHook
+		subject  entities.Subject
+	}{
+		{
+			desc: "base",
+			tg:   "407:10101",
+			assert: tgsAssertion{
+				assertAlpha: []string{"PFD DISPATCH"},
+			},
+		},
+		{
+			desc: "noexist",
+			tg:   "407:9966",
+			assert: tgsAssertion{
+				expectErr: tgstore.ErrNotFound,
+			},
+		},
+		{
+			desc:    "forbidden",
+			tg:      "407:9966",
+			subject: &entities.PublicSubject{},
+			assert: tgsAssertion{
+				expectErr: authz.ErrAccessDenied,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			st, ctx := s.makeStore(t, tc.subject)
+
+			if tc.preFunc != nil {
+				tc.preFunc(ctx, t, st)
+			}
+
+			tg, err := st.TG(ctx, tids(tc.tg)[0])
+			tc.assert.assert(t, []*tgsp.Talkgroup{tg}, err)
 
 			if tc.postFunc != nil {
 				tc.postFunc(ctx, t, st)
