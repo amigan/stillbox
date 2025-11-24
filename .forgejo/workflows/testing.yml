@@ -32,3 +32,9 @@ jobs:
         run: |
           export STILLBOX_TESTDB_CONNECT='postgres://postgres:postgres@pgsql:5432/stillbox_test?sslmode=disable'
           make citest
+          make coverage-html-file
+      - name: store coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage.html
+          path: coverage.html

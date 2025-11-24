@@ -1,5 +1,3472 @@
+- id: 350
+  system_id: 407
+  tgid: 1
+  name: RISCON Radio Techs
+  alpha_tag: Radio Techs
+  tg_group: Radio Technicians
+  tags: RAW=ARRAY['statewide','comms']
+  alert: true
+  weight: 1
+  learned: false
 - id: 1
   system_id: 407
+  tgid: 2
+  name: Intercity Fire
+  alpha_tag: Intercity FD
+  tg_group: Statewide Mutual Aid/Intersystem
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['interop','fire dispatch','mutual-aid']
+  alert: true
+  alert_rules:
+    - times:
+        - 6:45:0+3h30m0s
+      mult: 0
+  weight: 1
+  learned: false
+- id: 58
+  system_id: 407
+  tgid: 3
+  name: Intercity Police
+  alpha_tag: Intercity PD
+  tg_group: Statewide Mutual Aid/Intersystem
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['interop','law dispatch','mutual-aid']
+  alert: true
+  weight: 1
+  learned: false
+- id: 20
+  system_id: 407
+  tgid: 4
+  name: Wide Area 3
+  alpha_tag: Wide Area 3
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  alert_rules:
+    - times:
+        - 6:45:0+3h30m0s
+      mult: 0
+  weight: 1
+  learned: false
+- id: 51
+  system_id: 407
+  tgid: 5
+  name: Wide Area 4
+  alpha_tag: Wide Area 4
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 0.8
+  learned: false
+- id: 37
+  system_id: 407
+  tgid: 6
+  name: Wide Area 5
+  alpha_tag: Wide Area 5
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 97
+  system_id: 407
+  tgid: 7
+  name: Wide Area 6
+  alpha_tag: Wide Area 6
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 35
+  system_id: 407
+  tgid: 10
+  name: Emergency Management Agency 1
+  alpha_tag: EMA-1
+  tg_group: Emergency Management Agency
+  tags: RAW=ARRAY['emergency ops','statewide']
+  alert: true
+  weight: 1
+  learned: false
+- id: 137
+  system_id: 407
+  tgid: 12
+  name: Metro Wide 2
+  alpha_tag: METROWIDE2
+  tg_group: Statewide Misc.
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 138
+  system_id: 407
+  tgid: 14
+  name: Metro Wide 4
+  alpha_tag: METROWIDE4
+  tg_group: Statewide Misc.
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 78
+  system_id: 407
+  tgid: 16
+  name: State Fire Marshall
+  alpha_tag: State FMO
+  tg_group: Statewide Fire
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk','statewide']
+  alert: true
+  weight: 1
+  learned: false
+- id: 126
+  system_id: 407
+  tgid: 17
+  name: Airport Police Operations
+  alpha_tag: TF Green PD
+  tg_group: Rhode Island Airport Commission
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 27
+  system_id: 407
+  tgid: 19
+  name: Airport Fire Operations
+  alpha_tag: TF Green FD
+  tg_group: Rhode Island Airport Commission
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 49
+  system_id: 407
+  tgid: 20
+  name: Emergency Management Agency
+  alpha_tag: EMA
+  tg_group: Emergency Management Agency
+  tags: RAW=ARRAY['emergency ops']
+  alert: true
+  weight: 1
+  learned: false
+- id: 11
+  system_id: 407
+  tgid: 21
+  name: 'North Dispatch '
+  alpha_tag: RISP N Disp
+  tg_group: State Police - District A (North)
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 73
+  system_id: 407
+  tgid: 22
+  name: North Car-to-Car/Information
+  alpha_tag: RISP N Car
+  tg_group: State Police - District A (North)
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 75
+  system_id: 407
+  tgid: 23
+  name: North Tactical Ops 2
+  alpha_tag: RISP N Tac 2
+  tg_group: State Police - District A (North)
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 74
+  system_id: 407
+  tgid: 24
+  name: North Tactical Ops 1
+  alpha_tag: RISP N Tac 1
+  tg_group: State Police - District A (North)
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 16
+  system_id: 407
+  tgid: 25
+  name: 'South Dispatch '
+  alpha_tag: RISP S Disp
+  tg_group: State Police - District B (South)
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 77
+  system_id: 407
+  tgid: 27
+  name: South Car-to-Car/Information
+  alpha_tag: RISP S Car
+  tg_group: State Police - District B (South)
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 139
+  system_id: 407
+  tgid: 70
+  name: RI Traffic Tribunal Security
+  alpha_tag: TFC TRIBUNAL
+  tg_group: Statewide Misc.
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['security']
+  alert: true
+  weight: 1
+  learned: false
+- id: 56
+  system_id: 407
+  tgid: 120
+  name: Law Enforcement Operations
+  alpha_tag: DEM PD Ops
+  tg_group: Department of Environmental Management
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 91
+  system_id: 407
+  tgid: 122
+  name: Law Enforcement Police
+  alpha_tag: DEM Police
+  tg_group: Department of Environmental Management
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 140
+  system_id: 407
+  tgid: 168
+  name: Rhode Island Red Cross - Primary
+  alpha_tag: Red Cross 1
+  tg_group: Statewide Misc.
+  tags: RAW=ARRAY['other']
+  alert: true
+  weight: 1
+  learned: false
+- id: 141
+  system_id: 407
+  tgid: 169
+  name: Rhode Island Red Cross - Secondary
+  alpha_tag: Red Cross 2
+  tg_group: Statewide Misc.
+  tags: RAW=ARRAY['other']
+  alert: true
+  weight: 1
+  learned: false
+- id: 29
+  system_id: 407
+  tgid: 176
+  name: Department of Transportation - Primary
+  alpha_tag: RIDOT Primary
+  tg_group: Department of Transportation
+  tags: RAW=ARRAY['public works']
+  alert: true
+  weight: 1
+  learned: false
+- id: 120
+  system_id: 407
+  tgid: 186
+  name: Rhode Island Public Transit Auth.
+  alpha_tag: RIPTA
+  tg_group: RIPTA
+  metadata:
+    encrypted: true
+    icon: Transport Bus
+  tags: RAW=ARRAY['transportation']
+  alert: true
+  weight: 1
+  learned: false
+- id: 30
+  system_id: 407
+  tgid: 187
+  name: Rhode Island Public Transit Auth.
+  alpha_tag: RIPTA
+  tg_group: RIPTA
+  metadata:
+    icon: Transport Bus
+  tags: RAW=ARRAY['transportation']
+  alert: true
+  weight: 1
+  learned: false
+- id: 28
+  system_id: 407
+  tgid: 188
+  name: Rhode Island Public Transit Auth.
+  alpha_tag: RIPTA
+  tg_group: RIPTA
+  metadata:
+    icon: Transport Bus
+  tags: RAW=ARRAY['transportation']
+  alert: true
+  weight: 1
+  learned: false
+- id: 123
+  system_id: 407
+  tgid: 189
+  name: Rhode Island Public Transit Auth.
+  alpha_tag: RIPTA
+  tg_group: RIPTA
+  metadata:
+    icon: Transport Bus
+  tags: RAW=ARRAY['transportation']
+  alert: true
+  weight: 1
+  learned: false
+- id: 67
+  system_id: 407
+  tgid: 190
+  name: Rhode Island Public Transit. Auth.
+  alpha_tag: RIPTA
+  tg_group: RIPTA
+  metadata:
+    icon: Transport Bus
+  tags: RAW=ARRAY['transportation']
+  alert: true
+  weight: 1
+  learned: false
+- id: 82
+  system_id: 407
+  tgid: 194
+  name: Lifepact Ambulance (Statewide)
+  alpha_tag: Lifepact Amb
+  tg_group: Statewide EMS and Hospitals
+  tags: RAW=ARRAY['ems dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 83
+  system_id: 407
+  tgid: 212
+  name: Fatima St Josephs
+  alpha_tag: Fatima-St Joes
+  tg_group: Statewide EMS and Hospitals
+  tags: RAW=ARRAY['business']
+  alert: true
+  weight: 1
+  learned: false
+- id: 84
+  system_id: 407
+  tgid: 220
+  name: Health 1
+  alpha_tag: Health 1
+  tg_group: Statewide EMS and Hospitals
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['ems-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 85
+  system_id: 407
+  tgid: 221
+  name: Health 2
+  alpha_tag: Health 2
+  tg_group: Statewide EMS and Hospitals
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['ems-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 86
+  system_id: 407
+  tgid: 222
+  name: Department of Health - Statewide
+  alpha_tag: Dept of HealthSW
+  tg_group: Statewide EMS and Hospitals
+  tags: RAW=ARRAY['ems-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 142
+  system_id: 407
+  tgid: 223
+  name: Statewide Nursing Homes Net
+  alpha_tag: NURSING HM
+  tg_group: Statewide Misc.
+  tags: RAW=ARRAY['other']
+  alert: true
+  weight: 1
+  learned: false
+- id: 87
+  system_id: 407
+  tgid: 228
+  name: DMAT South
+  alpha_tag: DMAT South
+  tg_group: Statewide EMS and Hospitals
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['emergency ops']
+  alert: true
+  weight: 1
+  learned: false
+- id: 88
+  system_id: 407
+  tgid: 232
+  name: Life Span Net 1
+  alpha_tag: Life Span 1
+  tg_group: Statewide EMS and Hospitals
+  tags: RAW=ARRAY['ems-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 89
+  system_id: 407
+  tgid: 234
+  name: RI Hospital Operations
+  alpha_tag: RI Hosp Ops
+  tg_group: Statewide EMS and Hospitals
+  tags: RAW=ARRAY['business']
+  alert: true
+  weight: 1
+  learned: false
+- id: 143
+  system_id: 407
+  tgid: 243
+  name: Hospital Operations
+  alpha_tag: Slater Hosp Ops
+  tg_group: Statewide Misc.
+  tags: RAW=ARRAY['business']
+  alert: true
+  weight: 1
+  learned: false
+- id: 22
+  system_id: 407
+  tgid: 244
+  name: Slater Hospital Security
+  alpha_tag: Slater Hosp Sec
+  tg_group: Statewide Misc.
+  tags: RAW=ARRAY['security']
+  alert: true
+  weight: 1
+  learned: false
+- id: 119
+  system_id: 407
+  tgid: 274
+  name: Providence VA Police
+  alpha_tag: VA Police
+  tg_group: Federal
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 125
+  system_id: 407
+  tgid: 304
+  name: Fire Operations
+  alpha_tag: Quonset ANGB FD
+  tg_group: Quonset ANGB
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 1850
+  system_id: 407
+  tgid: 353
+  alert: true
+  weight: 1
+  learned: true
+  tags: RAW=ARRAY[]::TEXT[]
+- id: 217
+  system_id: 407
+  tgid: 1001
+  name: Police - Dispatch
+  alpha_tag: Narrag PD 1
+  tg_group: Narragansett
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 218
+  system_id: 407
+  tgid: 1002
+  name: Police - Car/Car
+  alpha_tag: Narrag PD 2
+  tg_group: Narragansett
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 219
+  system_id: 407
+  tgid: 1003
+  name: Police - Special Details 1/Town Beaches
+  alpha_tag: Narrag PD 3
+  tg_group: Narragansett
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 220
+  system_id: 407
+  tgid: 1004
+  name: Police - Special Details 2
+  alpha_tag: Narrag PD 4
+  tg_group: Narragansett
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 221
+  system_id: 407
+  tgid: 1005
+  name: Police - Harbormaster
+  alpha_tag: Narrag PD 5
+  tg_group: Narragansett
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 224
+  system_id: 407
+  tgid: 1006
+  name: Fire - Dispatch
+  alpha_tag: Narrag FD
+  tg_group: Narragansett
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 222
+  system_id: 407
+  tgid: 1007
+  name: Police - Detectives
+  alpha_tag: Narrag PD 7
+  tg_group: Narragansett
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 223
+  system_id: 407
+  tgid: 1008
+  name: Police - Detectives
+  alpha_tag: Narrag PD 8
+  tg_group: Narragansett
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 230
+  system_id: 407
+  tgid: 1010
+  name: Town Administration
+  alpha_tag: Narrag TownA
+  tg_group: Narragansett
+  tags: RAW=ARRAY['other']
+  alert: true
+  weight: 1
+  learned: false
+- id: 231
+  system_id: 407
+  tgid: 1011
+  name: Townwide Interop
+  alpha_tag: Narrag IOP
+  tg_group: Narragansett
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 225
+  system_id: 407
+  tgid: 1012
+  name: Fire - Fireground 1
+  alpha_tag: Narrag FDFG1
+  tg_group: Narragansett
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 226
+  system_id: 407
+  tgid: 1013
+  name: Fire - Fireground 2
+  alpha_tag: Narrag FDFG2
+  tg_group: Narragansett
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 228
+  system_id: 407
+  tgid: 1014
+  name: Fire - EMS Ops
+  alpha_tag: Narrag EMS
+  tg_group: Narragansett
+  metadata:
+    icon: Ambulance
+  tags: RAW=ARRAY['ems dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 326
+  system_id: 407
+  tgid: 1015
+  name: EMS
+  alpha_tag: SKing EMS
+  tg_group: South Kingstown
+  metadata:
+    encrypted: true
+    icon: Ambulance
+  tags: RAW=ARRAY['ems dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 227
+  system_id: 407
+  tgid: 1016
+  name: Fire - Administration
+  alpha_tag: Narrag FD AD
+  tg_group: Narragansett
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 229
+  system_id: 407
+  tgid: 1017
+  name: Public Works
+  alpha_tag: Narrag DPW
+  tg_group: Narragansett
+  tags: RAW=ARRAY['public works']
+  weight: 1
+  learned: false
+- id: 98
+  system_id: 407
+  tgid: 1018
+  name: Southwide CH-1
+  alpha_tag: SOUTHWIDE 1
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 99
+  system_id: 407
+  tgid: 1019
+  name: Southwide CH-2
+  alpha_tag: SOUTHWIDE 2
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 23
+  system_id: 407
+  tgid: 1022
+  name: Wide Area 7
+  alpha_tag: WIDE AREA 7
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 101
+  system_id: 407
+  tgid: 1023
+  name: Wide Area 8
+  alpha_tag: WIDE AREA 8
+  tg_group: Statewide Area/Events
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 102
+  system_id: 407
+  tgid: 1025
+  name: Inland Marine Interop
+  alpha_tag: Inland Marine IO
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 325
+  system_id: 407
+  tgid: 1026
+  name: Union Fire District - Special Events
+  alpha_tag: UnionFD Evnt
+  tg_group: South Kingstown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 114
+  system_id: 407
+  tgid: 1033
+  name: 'Tanker Taskforce '
+  alpha_tag: TANK TF
+  tg_group: Statewide Emergency Response
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 21
+  system_id: 407
+  tgid: 1034
+  name: Hazmat 1
+  alpha_tag: HZT DC1
+  tg_group: Statewide Emergency Response
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 116
+  system_id: 407
+  tgid: 1035
+  name: Hazmat 2
+  alpha_tag: HZT DC2
+  tg_group: Statewide Emergency Response
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 103
+  system_id: 407
+  tgid: 1037
+  name: Southside CH 5
+  alpha_tag: SOUTHSIDE 5
+  tg_group: Statewide Area/Events
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 79
+  system_id: 407
+  tgid: 1038
+  name: Northern Rhode Island Fire Chiefs
+  alpha_tag: NRI Fire Chi
+  tg_group: Statewide Fire
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 80
+  system_id: 407
+  tgid: 1041
+  name: Southern Rhode Island Fire Chiefs
+  alpha_tag: SRI Fire Chi
+  tg_group: Statewide Fire
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 145
+  system_id: 407
+  tgid: 1042
+  name: County Fireground
+  alpha_tag: WashCo FireG
+  tg_group: Washington County
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 334
+  system_id: 407
+  tgid: 1050
+  name: Police 1 - Dispatch
+  alpha_tag: Westerly PD1
+  tg_group: Westerly
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 335
+  system_id: 407
+  tgid: 1051
+  name: Police 2
+  alpha_tag: Westerly PD2
+  tg_group: Westerly
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 336
+  system_id: 407
+  tgid: 1052
+  name: Police 3
+  alpha_tag: Westerly PD3
+  tg_group: Westerly
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 337
+  system_id: 407
+  tgid: 1053
+  name: Police 4
+  alpha_tag: Westerly PD4
+  tg_group: Westerly
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 338
+  system_id: 407
+  tgid: 1054
+  name: Police 5 - Reserve Officers
+  alpha_tag: Westerly PD5
+  tg_group: Westerly
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 340
+  system_id: 407
+  tgid: 1063
+  name: Fire Operations
+  alpha_tag: Westerly FD
+  tg_group: Westerly
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 339
+  system_id: 407
+  tgid: 1064
+  name: Police 6 - Traffic Division
+  alpha_tag: Westerly PD6
+  tg_group: Westerly
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 341
+  system_id: 407
+  tgid: 1072
+  name: Police/Fire/EMS Ops
+  alpha_tag: Westerly PFE
+  tg_group: Westerly
+  tags: RAW=ARRAY['multi-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 342
+  system_id: 407
+  tgid: 1082
+  name: EMS Operations
+  alpha_tag: 'Westerly EMS '
+  tg_group: Westerly
+  metadata:
+    icon: Ambulance
+  tags: RAW=ARRAY['ems dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 193
+  system_id: 407
+  tgid: 1100
+  name: Police 1 - Dispatch
+  alpha_tag: Jamestown PD 1
+  tg_group: Jamestown
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 194
+  system_id: 407
+  tgid: 1101
+  name: Police 2
+  alpha_tag: Jamestown PD 2
+  tg_group: Jamestown
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 199
+  system_id: 407
+  tgid: 1107
+  name: Town Schools
+  alpha_tag: Jamestown School
+  tg_group: Jamestown
+  tags: RAW=ARRAY['schools']
+  alert: true
+  weight: 1
+  learned: false
+- id: 195
+  system_id: 407
+  tgid: 1108
+  name: Fire
+  alpha_tag: Jamestown FD
+  tg_group: Jamestown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 198
+  system_id: 407
+  tgid: 1114
+  name: Public Works
+  alpha_tag: Jamestown DPW
+  tg_group: Jamestown
+  tags: RAW=ARRAY['public works']
+  alert: true
+  weight: 1
+  learned: false
+- id: 196
+  system_id: 407
+  tgid: 1120
+  name: Fireground 1
+  alpha_tag: Jamestown FG 1
+  tg_group: Jamestown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 197
+  system_id: 407
+  tgid: 1121
+  name: Fireground 2
+  alpha_tag: Jamestown FG 2
+  tg_group: Jamestown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 128
+  system_id: 407
+  tgid: 1126
+  name: University of Rhode Island Police - Dispatch
+  alpha_tag: URI PD
+  tg_group: College/Education Security
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 129
+  system_id: 407
+  tgid: 1131
+  name: University of Rhode Island - EMS
+  alpha_tag: URI EMS
+  tg_group: College/Education Security
+  metadata:
+    encrypted: true
+    icon: Ambulance
+  tags: RAW=ARRAY['ems dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 17
+  system_id: 407
+  tgid: 1162
+  name: Fire
+  alpha_tag: Warwick FD
+  tg_group: Warwick
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 330
+  system_id: 407
+  tgid: 1170
+  name: Fireground
+  alpha_tag: Warwick FG
+  tg_group: Warwick
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 15
+  system_id: 407
+  tgid: 1173
+  name: North Wide 1
+  alpha_tag: NORTHWIDE1
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 19
+  system_id: 407
+  tgid: 1174
+  name: North Wide 2
+  alpha_tag: NORTHWIDE2
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 106
+  system_id: 407
+  tgid: 1177
+  name: North Wide 5
+  alpha_tag: NORTHWIDE5
+  tg_group: Statewide Area/Events
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 3
+  system_id: 407
+  tgid: 1185
+  name: Metro Wide 1
+  alpha_tag: METROWIDE1
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 62
+  system_id: 407
+  tgid: 1186
+  name: Metro Wide 2
+  alpha_tag: METROWIDE2
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 109
+  system_id: 407
+  tgid: 1187
+  name: Metro Wide 3
+  alpha_tag: METROWIDE3
+  tg_group: Statewide Area/Events
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 333
+  system_id: 407
+  tgid: 1208
+  name: Fire Operations
+  alpha_tag: W Warwick FD
+  tg_group: West Warwick
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 317
+  system_id: 407
+  tgid: 1225
+  name: Police 1 - Dispatch
+  alpha_tag: SKing PD 1
+  tg_group: South Kingstown
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 318
+  system_id: 407
+  tgid: 1226
+  name: Police 2 - Car/Car
+  alpha_tag: SKing PD 2
+  tg_group: South Kingstown
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 323
+  system_id: 407
+  tgid: 1227
+  name: Union Fire District - Fireground 1
+  alpha_tag: UnionFD FG 1
+  tg_group: South Kingstown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 321
+  system_id: 407
+  tgid: 1232
+  name: Fire - UHF Simulcast
+  alpha_tag: SKing FD Lnk
+  tg_group: South Kingstown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 319
+  system_id: 407
+  tgid: 1235
+  name: Police 3 - Tactical
+  alpha_tag: SKing PD 3
+  tg_group: South Kingstown
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 320
+  system_id: 407
+  tgid: 1236
+  name: Police 5 - Tactical
+  alpha_tag: SKing PD 5
+  tg_group: South Kingstown
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 324
+  system_id: 407
+  tgid: 1237
+  name: Union Fire District - Fireground 2
+  alpha_tag: UnionFD FG 2
+  tg_group: South Kingstown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 322
+  system_id: 407
+  tgid: 1240
+  name: Fire - Detail
+  alpha_tag: SKing Fire D
+  tg_group: South Kingstown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 270
+  system_id: 407
+  tgid: 1248
+  name: Police
+  alpha_tag: PortsmouthPD
+  tg_group: Portsmouth
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 271
+  system_id: 407
+  tgid: 1253
+  name: Fire Dispatch (Patch to VHF Primary)
+  alpha_tag: Portsmouth FD
+  tg_group: Portsmouth
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 272
+  system_id: 407
+  tgid: 1255
+  name: Fireground
+  alpha_tag: Portsmouth FG
+  tg_group: Portsmouth
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 273
+  system_id: 407
+  tgid: 1262
+  name: Island Fire Dispatch
+  alpha_tag: Prudence Isl FD
+  tg_group: Portsmouth
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 212
+  system_id: 407
+  tgid: 1264
+  name: Police
+  alpha_tag: LittleCompPD
+  tg_group: Little Compton
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 213
+  system_id: 407
+  tgid: 1266
+  name: Fire
+  alpha_tag: LittleCompFD
+  tg_group: Little Compton
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 249
+  system_id: 407
+  tgid: 1280
+  name: Fire - Dispatch
+  alpha_tag: NKing Fire D
+  tg_group: North Kingstown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 250
+  system_id: 407
+  tgid: 1281
+  name: Fire - Fireground
+  alpha_tag: NKing Fire G
+  tg_group: North Kingstown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 246
+  system_id: 407
+  tgid: 1285
+  name: Police 1 - Dispatch
+  alpha_tag: NKing PD 1
+  tg_group: North Kingstown
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 247
+  system_id: 407
+  tgid: 1286
+  name: Police 2 - Admin
+  alpha_tag: NKing PD 2
+  tg_group: North Kingstown
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 248
+  system_id: 407
+  tgid: 1287
+  name: Police 3 - Car/Car
+  alpha_tag: NKing PD 3
+  tg_group: North Kingstown
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 242
+  system_id: 407
+  tgid: 1291
+  name: Water Department
+  alpha_tag: Newport Water
+  tg_group: Newport
+  tags: RAW=ARRAY['public works']
+  alert: true
+  weight: 1
+  learned: false
+- id: 243
+  system_id: 407
+  tgid: 1293
+  name: Public Works
+  alpha_tag: Newport DPW
+  tg_group: Newport
+  tags: RAW=ARRAY['public works']
+  alert: true
+  weight: 1
+  learned: false
+- id: 244
+  system_id: 407
+  tgid: 1297
+  name: Citywide Events
+  alpha_tag: Newport Evnt
+  tg_group: Newport
+  tags: RAW=ARRAY['public works']
+  alert: true
+  weight: 1
+  learned: false
+- id: 233
+  system_id: 407
+  tgid: 1300
+  name: Police 1 - Dispatch
+  alpha_tag: Newport PD 1
+  tg_group: Newport
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 241
+  system_id: 407
+  tgid: 1301
+  name: Fire - Training
+  alpha_tag: Newport FDT
+  tg_group: Newport
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 234
+  system_id: 407
+  tgid: 1302
+  name: Police 2 - Records
+  alpha_tag: Newport PD 2
+  tg_group: Newport
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 238
+  system_id: 407
+  tgid: 1303
+  name: Fire Dispatch/Operations
+  alpha_tag: Newport FD1
+  tg_group: Newport
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 235
+  system_id: 407
+  tgid: 1304
+  name: Police 4 - Tactical 1
+  alpha_tag: Newport PD 4
+  tg_group: Newport
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 239
+  system_id: 407
+  tgid: 1305
+  name: Fireground Ops 1
+  alpha_tag: Newport FG1
+  tg_group: Newport
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 240
+  system_id: 407
+  tgid: 1306
+  name: Fireground Ops 2
+  alpha_tag: Newport FG2
+  tg_group: Newport
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 236
+  system_id: 407
+  tgid: 1307
+  name: Police 7 - Tactical 4
+  alpha_tag: Newport PD 7
+  tg_group: Newport
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 237
+  system_id: 407
+  tgid: 1308
+  name: Police 8 - Tactical 5
+  alpha_tag: Newport PD 8
+  tg_group: Newport
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 245
+  system_id: 407
+  tgid: 1312
+  name: Newport Citywide
+  alpha_tag: Newport CW
+  tg_group: Newport
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 81
+  system_id: 407
+  tgid: 1314
+  name: Tanker Taskforce 1
+  alpha_tag: Tanker TF 1
+  tg_group: Statewide Fire
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 328
+  system_id: 407
+  tgid: 1315
+  name: Fire (Simulcast 471.7875)
+  alpha_tag: Tiverton FD
+  tg_group: Tiverton
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 327
+  system_id: 407
+  tgid: 1316
+  name: Police (Simulcast 482.9625)
+  alpha_tag: Tiverton PD
+  tg_group: Tiverton
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 110
+  system_id: 407
+  tgid: 1335
+  name: East Wide 1
+  alpha_tag: EASTWIDE 1
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 111
+  system_id: 407
+  tgid: 1336
+  name: East Wide 2
+  alpha_tag: EASTWIDE 2
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 112
+  system_id: 407
+  tgid: 1337
+  name: East Wide 3
+  alpha_tag: EASTWIDE 3
+  tg_group: Statewide Area/Events
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 214
+  system_id: 407
+  tgid: 1338
+  name: Police Operations
+  alpha_tag: MiddletownPD
+  tg_group: Middletown
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 215
+  system_id: 407
+  tgid: 1343
+  name: Fire Operations
+  alpha_tag: Middletown FD
+  tg_group: Middletown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 216
+  system_id: 407
+  tgid: 1345
+  name: Townwide
+  alpha_tag: MiddletownTW
+  tg_group: Middletown
+  tags: RAW=ARRAY['multi-dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 130
+  system_id: 407
+  tgid: 1348
+  name: St. George's School (Middletown) - Security
+  alpha_tag: St George Sec
+  tg_group: College/Education Security
+  tags: RAW=ARRAY['security']
+  alert: true
+  weight: 1
+  learned: false
+- id: 61
+  system_id: 407
+  tgid: 1354
+  name: Fire - Fireground 3
+  alpha_tag: Woonskt FD 3
+  tg_group: Woonsocket
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 12
+  system_id: 407
+  tgid: 1360
+  name: Fire Dispatch - Operations
+  alpha_tag: Woonsocket FD D
+  tg_group: Woonsocket
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 10
+  system_id: 407
+  tgid: 1361
+  name: Fire Secondary
+  alpha_tag: Woonsocket FD 2
+  tg_group: Woonsocket
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 18
+  system_id: 407
+  tgid: 1363
+  name: Police 1 - Dispatch
+  alpha_tag: Woonskt PD 1
+  tg_group: Woonsocket
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 344
+  system_id: 407
+  tgid: 1364
+  name: Police 2
+  alpha_tag: Woonskt PD 2
+  tg_group: Woonsocket
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 348
+  system_id: 407
+  tgid: 1367
+  name: Citywide
+  alpha_tag: Woonskt City
+  tg_group: Woonsocket
+  tags: RAW=ARRAY['multi-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 349
+  system_id: 407
+  tgid: 1368
+  name: Public Works - Streets
+  alpha_tag: Woonsocket PW
+  tg_group: Woonsocket
+  tags: RAW=ARRAY['public works']
+  weight: 1
+  learned: false
+- id: 232
+  system_id: 407
+  tgid: 1376
+  name: Police
+  alpha_tag: New Shore PD
+  tg_group: New Shoreham
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 192
+  system_id: 407
+  tgid: 1410
+  name: Police
+  alpha_tag: Hopkinton PD
+  tg_group: Hopkinton
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 167
+  system_id: 407
+  tgid: 1425
+  name: Police Operations - Simulcast of UHF
+  alpha_tag: CharlestownPD
+  tg_group: Charlestown
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 168
+  system_id: 407
+  tgid: 1429
+  name: EMS - Linked to 151.3325
+  alpha_tag: Chastown EMS
+  tg_group: Charlestown
+  metadata:
+    icon: Ambulance
+  tags: RAW=ARRAY['ems dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 13
+  system_id: 407
+  tgid: 1440
+  name: Fire - Operations
+  alpha_tag: Pawtucket FD 1
+  tg_group: Pawtucket
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 25
+  system_id: 407
+  tgid: 1441
+  name: Fireground
+  alpha_tag: Pawtucket FG
+  tg_group: Pawtucket
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 269
+  system_id: 407
+  tgid: 1442
+  name: EMS Tac
+  alpha_tag: Pawtucket EMSTac
+  tg_group: Pawtucket
+  metadata:
+    icon: Ambulance
+  tags: RAW=ARRAY['ems-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 306
+  system_id: 407
+  tgid: 1460
+  name: Police
+  alpha_tag: Scituate PD
+  tg_group: Scituate
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 307
+  system_id: 407
+  tgid: 1463
+  name: Fire Operations
+  alpha_tag: Scituate FD
+  tg_group: Scituate
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 146
+  system_id: 407
+  tgid: 1479
+  name: County Fire Station/Station
+  alpha_tag: WashCo FireS
+  tg_group: Washington County
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 171
+  system_id: 407
+  tgid: 1480
+  name: Fire
+  alpha_tag: Coventry FD
+  tg_group: Coventry
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 169
+  system_id: 407
+  tgid: 1483
+  name: Police 1 - Dispatch
+  alpha_tag: Coventry PD
+  tg_group: Coventry
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 170
+  system_id: 407
+  tgid: 1484
+  name: Police 2
+  alpha_tag: Coventry PD2
+  tg_group: Coventry
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 14
+  system_id: 407
+  tgid: 1500
+  name: Fire - Dispatch/Operations
+  alpha_tag: Cranston FD Disp
+  tg_group: Cranston
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 47
+  system_id: 407
+  tgid: 1501
+  name: Fire - Fireground 2
+  alpha_tag: Cranston FD FG2
+  tg_group: Cranston
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 65
+  system_id: 407
+  tgid: 1502
+  name: Fire - Fireground 3
+  alpha_tag: Cranston FD FG3
+  tg_group: Cranston
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 48
+  system_id: 407
+  tgid: 1503
+  name: Fire - Fireground 4
+  alpha_tag: Cranston FD FG4
+  tg_group: Cranston
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 176
+  system_id: 407
+  tgid: 1504
+  name: Fire - Admin/Alt Fireground 5
+  alpha_tag: Cranston FD Admi
+  tg_group: Cranston
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 63
+  system_id: 407
+  tgid: 1507
+  name: Fire 5
+  alpha_tag: Cranston FD-5
+  tg_group: Cranston
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 177
+  system_id: 407
+  tgid: 1520
+  name: Fire
+  alpha_tag: Cumberland FD
+  tg_group: Cumberland
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  weight: 1
+  learned: false
+- id: 178
+  system_id: 407
+  tgid: 1523
+  name: Police Secondary
+  alpha_tag: Cumberland PD
+  tg_group: Cumberland
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  weight: 1
+  learned: false
+- id: 251
+  system_id: 407
+  tgid: 1536
+  name: Police 1 - Dispatch
+  alpha_tag: NorthPrv PD1
+  tg_group: North Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 252
+  system_id: 407
+  tgid: 1537
+  name: Police 2 - Car/Car
+  alpha_tag: NorthPrv PD2
+  tg_group: North Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 253
+  system_id: 407
+  tgid: 1538
+  name: Police 3 - Tactical
+  alpha_tag: NorthPrv PD3
+  tg_group: North Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 260
+  system_id: 407
+  tgid: 1544
+  name: Townwide 1
+  alpha_tag: NorthPrv TownW 1
+  tg_group: North Providence
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 261
+  system_id: 407
+  tgid: 1545
+  name: Townwide 2
+  alpha_tag: NorthPrv TownW 2
+  tg_group: North Providence
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 5
+  system_id: 407
+  tgid: 1547
+  name: 'Fire Dispatch '
+  alpha_tag: NorthPrv FDD
+  tg_group: North Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 68
+  system_id: 407
+  tgid: 1548
+  name: Fire 2
+  alpha_tag: NorthPrv Fire 2
+  tg_group: North Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 256
+  system_id: 407
+  tgid: 1549
+  name: Fire 3
+  alpha_tag: NorthPrv Fire 3
+  tg_group: North Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 70
+  system_id: 407
+  tgid: 1550
+  name: Fire 4
+  alpha_tag: NorthPrv Fire 4
+  tg_group: North Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 258
+  system_id: 407
+  tgid: 1551
+  name: Fire 5
+  alpha_tag: NorthPrv Fire 5
+  tg_group: North Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 259
+  system_id: 407
+  tgid: 1552
+  name: Fire 6
+  alpha_tag: NorthPrv Fire 6
+  tg_group: North Providence
+  metadata:
+    encrypted: true
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 32
+  system_id: 407
+  tgid: 1554
+  name: Public Works
+  alpha_tag: NorthPrv DPW
+  tg_group: North Providence
+  tags: RAW=ARRAY['public works']
+  weight: 1
+  learned: false
+- id: 8
+  system_id: 407
+  tgid: 1616
+  name: Fire Operations
+  alpha_tag: Johnston FD
+  tg_group: Johnston
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 41
+  system_id: 407
+  tgid: 1617
+  name: Fireground
+  alpha_tag: Johnston FG
+  tg_group: Johnston
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 200
+  system_id: 407
+  tgid: 1619
+  name: Police Operations
+  alpha_tag: Johnston PD
+  tg_group: Johnston
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 313
+  system_id: 407
+  tgid: 1648
+  name: Fire - Fireground
+  alpha_tag: SmithfieldFD
+  tg_group: Smithfield
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 308
+  system_id: 407
+  tgid: 1651
+  name: Police Operations
+  alpha_tag: SmithfieldPD
+  tg_group: Smithfield
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 309
+  system_id: 407
+  tgid: 1652
+  name: Police Secondary
+  alpha_tag: Smfld PD 2
+  tg_group: Smithfield
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 310
+  system_id: 407
+  tgid: 1653
+  name: Police Detectives
+  alpha_tag: Smfld PD Det
+  tg_group: Smithfield
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 311
+  system_id: 407
+  tgid: 1654
+  name: Police Admin
+  alpha_tag: Smfld PD Adm
+  tg_group: Smithfield
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 314
+  system_id: 407
+  tgid: 1655
+  name: Town-Wide
+  alpha_tag: Smfld Town
+  tg_group: Smithfield
+  tags: RAW=ARRAY['multi-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 315
+  system_id: 407
+  tgid: 1657
+  name: Emergency Management
+  alpha_tag: Smfld EMA
+  tg_group: Smithfield
+  tags: RAW=ARRAY['emergency ops']
+  alert: true
+  weight: 1
+  learned: false
+- id: 316
+  system_id: 407
+  tgid: 1660
+  name: Public Works
+  alpha_tag: Smfld DPW
+  tg_group: Smithfield
+  tags: RAW=ARRAY['public works']
+  weight: 1
+  learned: false
+- id: 312
+  system_id: 407
+  tgid: 1661
+  name: Police Details
+  alpha_tag: Smfld PD Dtl
+  tg_group: Smithfield
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 205
+  system_id: 407
+  tgid: 1680
+  name: Fire Dispatch
+  alpha_tag: Lincoln Fire 1
+  tg_group: Lincoln
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 206
+  system_id: 407
+  tgid: 1681
+  name: Fireground 2
+  alpha_tag: Lincoln Fire 2
+  tg_group: Lincoln
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 208
+  system_id: 407
+  tgid: 1682
+  name: EMS
+  alpha_tag: Lincoln EMS
+  tg_group: Lincoln
+  metadata:
+    icon: Ambulance
+  tags: RAW=ARRAY['ems dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 26
+  system_id: 407
+  tgid: 1683
+  name: Police F1
+  alpha_tag: Lincoln Police
+  tg_group: Lincoln
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 204
+  system_id: 407
+  tgid: 1684
+  name: Police F2
+  alpha_tag: Lincoln Police 2
+  tg_group: Lincoln
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 210
+  system_id: 407
+  tgid: 1687
+  name: Townwide
+  alpha_tag: Lincoln Townwide
+  tg_group: Lincoln
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 209
+  system_id: 407
+  tgid: 1688
+  name: Emergency Management
+  alpha_tag: Lincoln EMA
+  tg_group: Lincoln
+  tags: RAW=ARRAY['emergency ops']
+  alert: true
+  weight: 1
+  learned: false
+- id: 207
+  system_id: 407
+  tgid: 1691
+  name: Fireground 3
+  alpha_tag: Lincoln Fire 3
+  tg_group: Lincoln
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 211
+  system_id: 407
+  tgid: 1692
+  name: Public Works
+  alpha_tag: Lincoln DPW
+  tg_group: Lincoln
+  tags: RAW=ARRAY['public works']
+  weight: 1
+  learned: false
+- id: 147
+  system_id: 407
+  tgid: 1712
+  name: Fire 1 Dispatch
+  alpha_tag: BarringtnFD1
+  tg_group: Barrington
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 148
+  system_id: 407
+  tgid: 1713
+  name: Fire 2
+  alpha_tag: BarringtnFD2
+  tg_group: Barrington
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 149
+  system_id: 407
+  tgid: 1715
+  name: Police Operations
+  alpha_tag: BarringtonPD 1
+  tg_group: Barrington
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 150
+  system_id: 407
+  tgid: 1716
+  name: Police Secondary
+  alpha_tag: BarringtonPD 2
+  tg_group: Barrington
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 151
+  system_id: 407
+  tgid: 1744
+  name: Fire Operations (Patch from VHF)
+  alpha_tag: Bristol FD
+  tg_group: Bristol
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 152
+  system_id: 407
+  tgid: 1755
+  name: Harbormaster
+  alpha_tag: Bristol Harbor
+  tg_group: Bristol
+  tags: RAW=ARRAY['public works']
+  alert: true
+  weight: 1
+  learned: false
+- id: 179
+  system_id: 407
+  tgid: 1776
+  name: Fire Talk Around
+  alpha_tag: E Greenwich F-TA
+  tg_group: East Greenwich
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 180
+  system_id: 407
+  tgid: 1779
+  name: Police Operations
+  alpha_tag: E Greenwich PD
+  tg_group: East Greenwich
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 331
+  system_id: 407
+  tgid: 1805
+  name: Police
+  alpha_tag: W Greenwh PD
+  tg_group: West Greenwich
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 332
+  system_id: 407
+  tgid: 1806
+  name: Police Secondary
+  alpha_tag: W GreenwichPD2
+  tg_group: West Greenwich
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 31
+  system_id: 407
+  tgid: 1835
+  name: Fire Dispatch (Simulcast of UHF)
+  alpha_tag: CentFalls FD 1
+  tg_group: Central Falls
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 166
+  system_id: 407
+  tgid: 1836
+  name: Fireground
+  alpha_tag: CentFalls FD 2
+  tg_group: Central Falls
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 9
+  system_id: 407
+  tgid: 1838
+  name: Police 1 Dispatch
+  alpha_tag: CentFallsPD1
+  tg_group: Central Falls
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 164
+  system_id: 407
+  tgid: 1839
+  name: Police 2
+  alpha_tag: CentFallsPD2
+  tg_group: Central Falls
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 6
+  system_id: 407
+  tgid: 1866
+  name: Fire - Dispatch/Operations
+  alpha_tag: E Prov FD 1
+  tg_group: East Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 24
+  system_id: 407
+  tgid: 1867
+  name: Fire "Channel 2"
+  alpha_tag: E Prov FD 2
+  tg_group: East Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 52
+  system_id: 407
+  tgid: 1869
+  name: Police 1 - Dispatch
+  alpha_tag: E Prov PD 1
+  tg_group: East Providence
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 183
+  system_id: 407
+  tgid: 1870
+  name: Police 3
+  alpha_tag: E Prov PD 3
+  tg_group: East Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 182
+  system_id: 407
+  tgid: 1872
+  name: Police 2
+  alpha_tag: E Prov PD 2
+  tg_group: East Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 50
+  system_id: 407
+  tgid: 1878
+  name: Fire "Channel 3"
+  alpha_tag: E Prov FD 3
+  tg_group: East Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 184
+  system_id: 407
+  tgid: 1883
+  name: Detectives
+  alpha_tag: E Prov PD12
+  tg_group: East Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 36
+  system_id: 407
+  tgid: 1904
+  name: Fire
+  alpha_tag: Foster Fire
+  tg_group: Foster
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 190
+  system_id: 407
+  tgid: 1939
+  name: Police
+  alpha_tag: Glocester PD
+  tg_group: Glocester
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 191
+  system_id: 407
+  tgid: 1940
+  name: Police Secondary
+  alpha_tag: Glocester PD 2
+  tg_group: Glocester
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 264
+  system_id: 407
+  tgid: 1968
+  name: Fire Dispatch/Operations
+  alpha_tag: N Smithfield FD
+  tg_group: North Smithfield
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 265
+  system_id: 407
+  tgid: 1969
+  name: Fire Secondary
+  alpha_tag: N Smithfield FD2
+  tg_group: North Smithfield
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 263
+  system_id: 407
+  tgid: 1971
+  name: Police
+  alpha_tag: N Smithfd PD
+  tg_group: North Smithfield
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 266
+  system_id: 407
+  tgid: 1981
+  name: Fireground
+  alpha_tag: N Smithfield FD3
+  tg_group: North Smithfield
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 157
+  system_id: 407
+  tgid: 2000
+  name: Fire Misc (Ops are VHF)
+  alpha_tag: Burrvl FD
+  tg_group: Burrillville
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 158
+  system_id: 407
+  tgid: 2001
+  name: Fire TAC-1
+  alpha_tag: Burvl FDTAC1
+  tg_group: Burrillville
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 160
+  system_id: 407
+  tgid: 2002
+  name: EMS Misc (Ops are VHF)
+  alpha_tag: Burrvl EMS
+  tg_group: Burrillville
+  metadata:
+    icon: Ambulance
+  tags: RAW=ARRAY['ems-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 153
+  system_id: 407
+  tgid: 2003
+  name: Police
+  alpha_tag: Burrville PD
+  tg_group: Burrillville
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 154
+  system_id: 407
+  tgid: 2004
+  name: Police 2
+  alpha_tag: Burrvl PD2
+  tg_group: Burrillville
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 155
+  system_id: 407
+  tgid: 2005
+  name: Police 3 Detectives
+  alpha_tag: Burrvl PD3
+  tg_group: Burrillville
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 156
+  system_id: 407
+  tgid: 2006
+  name: Police 4
+  alpha_tag: Burrvl PD4
+  tg_group: Burrillville
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 161
+  system_id: 407
+  tgid: 2007
+  name: Town-Wide
+  alpha_tag: Burrvl Town
+  tg_group: Burrillville
+  tags: RAW=ARRAY['multi-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 162
+  system_id: 407
+  tgid: 2008
+  name: Emergency Management
+  alpha_tag: Burrvl EMA
+  tg_group: Burrillville
+  tags: RAW=ARRAY['emergency ops']
+  alert: true
+  weight: 1
+  learned: false
+- id: 159
+  system_id: 407
+  tgid: 2009
+  name: Fire TAC-2
+  alpha_tag: Burvl FDTAC2
+  tg_group: Burrillville
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 304
+  system_id: 407
+  tgid: 2035
+  name: Police
+  alpha_tag: Richmond PD
+  tg_group: Richmond
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 305
+  system_id: 407
+  tgid: 2042
+  name: Chariho Regional High School
+  alpha_tag: Chariho Reg HS
+  tg_group: Richmond
+  tags: RAW=ARRAY['schools']
+  alert: true
+  weight: 1
+  learned: false
+- id: 188
+  system_id: 407
+  tgid: 2064
+  name: Fire - Fireground
+  alpha_tag: Exeter FD-G
+  tg_group: Exeter
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 118
+  system_id: 407
+  tgid: 4421
+  name: Newport Pell Bridge Operations
+  alpha_tag: RITBA - Pell Bdg
+  tg_group: Tunnel and Bridge Authority
+  tags: RAW=ARRAY['public works']
+  alert: true
+  weight: 1
+  learned: false
+- id: 1840
+  system_id: 407
+  tgid: 4929
+  alert: true
+  weight: 1
+  learned: true
+  tags: RAW=ARRAY[]::TEXT[]
+- id: 1838
+  system_id: 407
+  tgid: 8322
+  alert: true
+  weight: 1
+  learned: true
+  tags: RAW=ARRAY[]::TEXT[]
+- id: 1839
+  system_id: 407
+  tgid: 8357
+  alert: true
+  weight: 1
+  learned: true
+  tags: RAW=ARRAY[]::TEXT[]
+- id: 274
+  system_id: 407
+  tgid: 10000
+  name: Police - All Call - Emergency Broadcasts
+  alpha_tag: PPD ATG
+  tg_group: Providence
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['emergency ops']
+  alert: true
+  weight: 1
+  learned: false
+- id: 53
+  system_id: 407
+  tgid: 10001
+  name: Police 1 - Dispatch
+  alpha_tag: PPD CH 1
+  tg_group: Providence
+  metadata:
+    icon: Police
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 276
+  system_id: 407
+  tgid: 10002
+  name: Police 2
+  alpha_tag: PPD CH 2
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 277
+  system_id: 407
+  tgid: 10003
+  name: Police 3
+  alpha_tag: PPD CH 3
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 69
+  system_id: 407
+  tgid: 10004
+  name: Police 4
+  alpha_tag: PPD CH-4
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 279
+  system_id: 407
+  tgid: 10005
+  name: Police 5 -Detectives 1
+  alpha_tag: PPD DETEC 1
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 59
+  system_id: 407
+  tgid: 10006
+  name: Police 6 - Car-to-Car
+  alpha_tag: PPD T/A
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 281
+  system_id: 407
+  tgid: 10007
+  name: Police 7 - Narcotics 1
+  alpha_tag: PPD NARC 1
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 282
+  system_id: 407
+  tgid: 10008
+  name: Police 8 - Narcotics 2
+  alpha_tag: PPD NARC 2
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 283
+  system_id: 407
+  tgid: 10009
+  name: Police 9 - Detectives 2
+  alpha_tag: PPD DETEC 2
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 284
+  system_id: 407
+  tgid: 10010
+  name: Police 10 - Special Details 1
+  alpha_tag: PPD DETAIL 1
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 285
+  system_id: 407
+  tgid: 10011
+  name: Police 11 - Special Details 2
+  alpha_tag: PPD DETAIL 2
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 286
+  system_id: 407
+  tgid: 10012
+  name: Police 12 - Corrections Security
+  alpha_tag: PPD CORR SEC
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 287
+  system_id: 407
+  tgid: 10013
+  name: Police 13 - Special Response Unit
+  alpha_tag: PPD SRU
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 288
+  system_id: 407
+  tgid: 10014
+  name: Police 14 - Administration
+  alpha_tag: PPD ADMIN
+  tg_group: Providence
+  metadata:
+    encrypted: true
+    icon: Police
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 289
+  system_id: 407
+  tgid: 10100
+  name: Fire All Call - Emergency Broadcasts
+  alpha_tag: PROV FD ATG
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['emergency ops']
+  alert: true
+  weight: 1
+  learned: false
+- id: 2
+  system_id: 407
   tgid: 10101
-  name: Providence PD Dispatch
-  alpha_tag: PPD CH1
+  name: Fire Dispatch
+  alpha_tag: PFD DISPATCH
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 38
+  system_id: 407
+  tgid: 10102
+  name: Fire 5
+  alpha_tag: PFD CH-5
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 44
+  system_id: 407
+  tgid: 10103
+  name: Fire 6
+  alpha_tag: PFD CH-6
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 4
+  system_id: 407
+  tgid: 10104
+  name: Fire 7
+  alpha_tag: PFD CH-7
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 301
+  system_id: 407
+  tgid: 10105
+  name: Fire - Administration
+  alpha_tag: PFD ADMIN
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 34
+  system_id: 407
+  tgid: 10106
+  name: Fire - Communications
+  alpha_tag: PFD COMM
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 39
+  system_id: 407
+  tgid: 10107
+  name: Fireground 2
+  alpha_tag: PFD CH-2 FG
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 42
+  system_id: 407
+  tgid: 10108
+  name: Fireground 3
+  alpha_tag: PFD CH-3 FG
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 43
+  system_id: 407
+  tgid: 10109
+  name: Fireground 4
+  alpha_tag: PFD CH-4 FG
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 40
+  system_id: 407
+  tgid: 10110
+  name: Fire - Mutual Aid 1
+  alpha_tag: PFD M/A 1
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac','mutual-aid']
+  alert: true
+  weight: 1
+  learned: false
+- id: 66
+  system_id: 407
+  tgid: 10111
+  name: Fire - Mutual Aid 2
+  alpha_tag: PFD M/A 2
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac','mutual-aid']
+  alert: true
+  weight: 1
+  learned: false
+- id: 60
+  system_id: 407
+  tgid: 10112
+  name: Fire - Mutual Aid 3
+  alpha_tag: PFD M/A 3
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-tac','mutual-aid']
+  alert: true
+  weight: 1
+  learned: false
+- id: 64
+  system_id: 407
+  tgid: 10113
+  name: Fireground 8
+  alpha_tag: PFD Fireground 8
+  tg_group: Providence
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 351
+  system_id: 407
+  tgid: 10125
+  name: RISCON Radio Technicians
+  alpha_tag: Radio Techs
+  tg_group: Radio Technicians
+  tags: RAW=ARRAY['public works']
+  alert: true
+  weight: 1
+  learned: false
+- id: 45
+  system_id: 407
+  tgid: 10201
+  name: Providence Citywide ATG
+  alpha_tag: PVDCtyWd ATG
+  tg_group: Providence
+  alert: true
+  weight: 1
+  learned: false
+  tags: RAW=ARRAY[]::TEXT[]
+- id: 54
+  system_id: 407
+  tgid: 10207
+  name: Public Works
+  alpha_tag: PROV DPW
+  tg_group: Providence
+  tags: RAW=ARRAY['public works']
+  weight: 1
+  learned: false
+- id: 131
+  system_id: 407
+  tgid: 10228
+  name: Rhode Island School of Design - Security
+  alpha_tag: RISD Secuty
+  tg_group: College/Education Security
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['security']
+  alert: true
+  weight: 1
+  learned: false
+- id: 132
+  system_id: 407
+  tgid: 10229
+  name: Providence College Security - Dispatch
+  alpha_tag: PROV COLL
+  tg_group: College/Education Security
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['security']
+  alert: true
+  weight: 1
+  learned: false
+- id: 33
+  system_id: 407
+  tgid: 10230
+  name: Rhode Island College Security
+  alpha_tag: RI COL SEC
+  tg_group: College/Education Security
+  tags: RAW=ARRAY['security']
+  alert: true
+  weight: 1
+  learned: false
+- id: 57
+  system_id: 407
+  tgid: 10236
+  name: Providence Parks Dept
+  alpha_tag: PVDParksDpt
+  tg_group: Providence
+  metadata:
+    icon: Dump Truck
+  tags: RAW=ARRAY['parks']
+  weight: 1
+  learned: false
+- id: 46
+  system_id: 407
+  tgid: 10256
+  name: Providence DPW
+  alpha_tag: ProvDPW
+  tg_group: Providence
+  metadata:
+    icon: Dump Truck
+  weight: 1
+  learned: false
+  tags: RAW=ARRAY[]::TEXT[]
+- id: 55
+  system_id: 407
+  tgid: 10257
+  name: Providence DPW
+  alpha_tag: ProvDPW
+  tg_group: Providence
+  weight: 0.2
+  learned: false
+  tags: RAW=ARRAY[]::TEXT[]
+- id: 7
+  system_id: 407
+  tgid: 10266
+  name: Providence Housing
+  alpha_tag: ProvHousing
+  tg_group: Providence
+  metadata:
+    icon: Van
+  weight: 1
+  learned: false
+  tags: RAW=ARRAY[]::TEXT[]
+- id: 134
+  system_id: 407
+  tgid: 11001
+  name: Brown University Police - Dispatch
+  alpha_tag: BROWN UNIV
+  tg_group: College/Education Security
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['law dispatch']
+  alert: true
+  weight: 1
+  learned: false
+- id: 135
+  system_id: 407
+  tgid: 11002
+  name: Brown University Police - Car-to-Car
+  alpha_tag: BROWN CAR
+  tg_group: College/Education Security
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['law talk']
+  alert: true
+  weight: 1
+  learned: false
+- id: 136
+  system_id: 407
+  tgid: 11003
+  name: Brown University Police - Tactical
+  alpha_tag: BROWN TAC
+  tg_group: College/Education Security
+  metadata:
+    encrypted: true
+  tags: RAW=ARRAY['law tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 113
+  system_id: 407
+  tgid: 11186
+  name: Metro Wide 2
+  alpha_tag: METROWIDE2
+  tg_group: Statewide Area/Events
+  tags: RAW=ARRAY['interop']
+  alert: true
+  weight: 1
+  learned: false
+- id: 1841
+  system_id: 407
+  tgid: 15191
+  name: Townwide Fire Dispatch/Secondary (Simplex)
+  alpha_tag: SK Fire Disp
+  tg_group: South Kingstown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire dispatch','nbfm']
+  alert: true
+  weight: 1
+  learned: false
+- id: 1844
+  system_id: 407
+  tgid: 15192
+  name: Union Fire District Fireground F5/F6 (Simplex)
+  alpha_tag: SK UFD FG5
+  tg_group: South Kingstown
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['nbfm','fire-tac']
+  alert: true
+  weight: 1
+  learned: false
+- id: 1857
+  system_id: 407
+  tgid: 15193
+  name: South Kingstown FG7/8
+  tg_group: South Kingstown
+  alert: true
+  weight: 1
+  learned: true
+  tags: RAW=ARRAY[]::TEXT[]
+- id: 1853
+  system_id: 407
+  tgid: 16193
+  name: Southern League Fire Ops UHF
+  alpha_tag: WstlySL FireOps
+  tg_group: Westerly
+  metadata:
+    icon: Fire Truck
+  tags: RAW=ARRAY['fire-talk','fire-tac','nbfm']
+  alert: true
+  weight: 1
+  learned: false
+- id: 1957
+  system_id: 3348
+  tgid: 3329
+  name: MBTA Police Channel 1
+  alpha_tag: MBTA PD CH1
+  tg_group: MBTA
+  alert: true
+  weight: 1
+  learned: true
+  tags: RAW=ARRAY['transit']::TEXT[]
+- id: 1959
+  system_id: 3348
+  tgid: 153
+  name: Massport Police 1
+  alpha_tag: MASSPORT PD CH1
+  tg_group: Massport
+  tags: RAW=ARRAY['law-talk']
+  alert: true
+  weight: 1
+  learned: false

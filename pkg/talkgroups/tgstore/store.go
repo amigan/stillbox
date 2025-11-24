@@ -33,6 +33,8 @@ var (
 	ErrReference      = errors.New("item is still referenced, cannot delete")
 	ErrBadOrder       = errors.New("invalid order")
 	ErrBadDirection   = errors.New("invalid direction")
+
+	ErrSystemAndTGsSpecified = errors.New("system filter and individual talkgroups specified")
 )
 
 type Store interface {
@@ -89,10 +91,13 @@ type Store interface {
 
 	FilterCache
 
+	Metrics() *TGStoreMetrics
+
 	// Hupper
 	HUP(*config.Config)
 }
 
+// FilterCache allows tgstore to track tag changes to keep filters updated.
 type FilterCache interface {
 	// RegisterFilter registers a filter with the cache so it may be updated if referenced tags change.
 	RegisterFilter(Filter)
@@ -107,9 +112,11 @@ type options struct {
 	perPageDefault int
 
 	filter *string
+	system *int32
 }
 
-func sOpt(opts []Option) (o options) {
+// setOpts is a convenience function to set options.
+func setOpts(opts []Option) (o options) {
 	for _, opt := range opts {
 		opt(&o)
 	}
@@ -126,6 +133,7 @@ func WithPagination(p *Pagination, defPerPage int, totalDest *int) Option {
 	}
 }
 
+// SortDir computes the sortField_order string used by the GetTalkgroupsP SQL query.
 func (p *Pagination) SortDir() (string, error) {
 	order := TGOrderTGID
 	dir := common.DirAsc
@@ -154,6 +162,12 @@ func (p *Pagination) SortDir() (string, error) {
 func WithFilter(f *string) Option {
 	return func(o *options) {
 		o.filter = f
+	}
+}
+
+func withSystem(sys int32) Option {
+	return func(o *options) {
+		o.system = &sys
 	}
 }
 
@@ -214,11 +228,13 @@ func (t *cache) Invalidate() {
 	t.invalidate()
 }
 
+// invalidate invalidates the cache without acquiring a lock.
 func (t *cache) invalidate() {
 	clear(t.tgs)
 	clear(t.systems)
 }
 
+// Filter is satisfied by filters.
 type Filter interface {
 	Recompile(ctx context.Context) error
 	TagRefs() []string
@@ -231,14 +247,14 @@ type cache struct {
 	tgs     tgMap
 	systems map[int]string
 	db      database.Store
-	metrics tgStoreMetrics
+	metrics TGStoreMetrics
 
 	// filters is a map of tags->maps of filters
 	filtMtx sync.RWMutex
 	filters filterMap
 }
 
-type tgStoreMetrics struct {
+type TGStoreMetrics struct {
 	Hits   prometheus.Counter `help:"Talkgroup cache hits"`
 	Misses prometheus.Counter `help:"Talkgroup cache misses"`
 }
@@ -257,6 +273,11 @@ func NewCache(db database.Store, met metrics.Metrics) *cache {
 	return tgc
 }
 
+func (t *cache) Metrics() *TGStoreMetrics {
+	return &t.metrics
+}
+
+// Hint selectively primes the cache with the provided TGs.
 func (t *cache) Hint(ctx context.Context, tgs []tgsp.ID) error {
 	// since this doesn't actually return data, we can skip rbac checks.
 	// This is only called by system services anyway.
@@ -282,6 +303,7 @@ func (t *cache) Hint(ctx context.Context, tgs []tgsp.ID) error {
 	return nil
 }
 
+// get gets from the cache. Acquires a lock.
 func (t *cache) get(id tgsp.ID) (*tgsp.Talkgroup, bool) {
 	t.RLock()
 	defer t.RUnlock()
@@ -291,6 +313,7 @@ func (t *cache) get(id tgsp.ID) (*tgsp.Talkgroup, bool) {
 	return tg, has
 }
 
+// add adds to the cache. Acquires a lock.
 func (t *cache) add(rec *tgsp.Talkgroup) {
 	t.Lock()
 	defer t.Unlock()
@@ -298,29 +321,32 @@ func (t *cache) add(rec *tgsp.Talkgroup) {
 	t.addNoLock(rec)
 }
 
+// addNoLock adds to the cache without acquiring a lock.
 func (t *cache) addNoLock(rec *tgsp.Talkgroup) {
 	tg := tgsp.TG(rec.System.ID, rec.Talkgroup.TGID)
 	t.tgs[tg] = rec
 	t.systems[rec.System.ID] = rec.System.Name
 }
 
+// addSysNoLock adds a system to the cache without acquiring a lock.
 func (t *cache) addSysNoLock(id int, name string) {
 	t.systems[id] = name
 }
 
+// rowType includes all talkgroup query response row types.
 type rowType interface {
-	database.GetTalkgroupsRow | database.GetTalkgroupsWithLearnedRow |
-		database.GetTalkgroupsWithLearnedBySystemRow | database.GetTalkgroupWithLearnedRow |
-		database.GetTalkgroupsWithLearnedBySystemPRow | database.GetTalkgroupsWithLearnedPRow
+	database.GetTalkgroupsRow | database.GetTalkgroupRow | database.GetTalkgroupsPRow
 	row
 }
 
+// row is the set of methods that identify a talkgroup via a row.
 type row interface {
 	GetTalkgroup() database.Talkgroup
 	GetSystem() database.System
 	GetLearned() bool
 }
 
+// rowToTalkgroup generically makes a very minimal Talkgroup from the passed row.
 func rowToTalkgroup[T rowType](r T) *tgsp.Talkgroup {
 	return &tgsp.Talkgroup{
 		Talkgroup: r.GetTalkgroup(),
@@ -329,33 +355,23 @@ func rowToTalkgroup[T rowType](r T) *tgsp.Talkgroup {
 	}
 }
 
-func addToRowListS[T rowType](t *cache, r []*tgsp.Talkgroup, tgRecords []T) []*tgsp.Talkgroup {
+// addToCacheAndRowList adds tgRecords to both the cache and the slice r, if specified. It returns the list.
+func addToCacheAndRowList[T rowType](t *cache, rowList []*tgsp.Talkgroup, tgRecords []T) []*tgsp.Talkgroup {
 	t.Lock()
 	defer t.Unlock()
+
+	if rowList == nil {
+		rowList = make([]*tgsp.Talkgroup, 0, len(tgRecords))
+	}
 
 	for _, rec := range tgRecords {
 		tg := rowToTalkgroup(rec)
 		t.addNoLock(tg)
 
-		r = append(r, tg)
+		rowList = append(rowList, tg)
 	}
 
-	return r
-}
-
-func addToRowList[T rowType](t *cache, tgRecords []T) []*tgsp.Talkgroup {
-	t.Lock()
-	defer t.Unlock()
-	r := make([]*tgsp.Talkgroup, 0, len(tgRecords))
-
-	for _, rec := range tgRecords {
-		tg := rowToTalkgroup(rec)
-		t.addNoLock(tg)
-
-		r = append(r, tg)
-	}
-
-	return r
+	return rowList
 }
 
 func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.Talkgroup, error) {
@@ -366,26 +382,35 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 
 	db := t.db
 
-	r := make([]*tgsp.Talkgroup, 0, len(tgs))
-	opt := sOpt(opts)
+	resultList := make([]*tgsp.Talkgroup, 0, len(tgs))
+	opt := setOpts(opts)
+
+	// talkgroups were specified
 	if tgs != nil {
+		// check if system and singletons
+		if opt.system != nil {
+			return nil, ErrSystemAndTGsSpecified
+		}
+
 		toGet := make(tgsp.IDs, 0, len(tgs))
 		for _, id := range tgs {
 			rec, has := t.get(id)
 			if has {
 				t.metrics.Hits.Inc()
-				r = append(r, rec)
+				resultList = append(resultList, rec)
 			} else {
 				t.metrics.Misses.Inc()
 				toGet = append(toGet, id)
 			}
 		}
 
-		tgRecords, err := db.GetTalkgroupsWithLearnedBySysTGID(ctx, toGet.Tuples())
+		tgRecords, err := db.GetTalkgroupsBySysTGID(ctx, toGet.Tuples())
 		if err != nil {
 			return nil, err
 		}
-		return addToRowListS(t, r, tgRecords), nil
+
+		// combine tgRecords from DB with cache hits, add to cache, and return
+		return addToCacheAndRowList(t, resultList, tgRecords), nil
 	}
 
 	// get all talkgroups
@@ -397,21 +422,22 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 		}
 
 		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
-		var tgRecords []database.GetTalkgroupsWithLearnedPRow
+		var tgRecords []database.GetTalkgroupsPRow
 		err = db.InTx(ctx, func(db database.Store) error {
 			var err error
-			tgRecords, err = db.GetTalkgroupsWithLearnedP(ctx, database.GetTalkgroupsWithLearnedPParams{
+			tgRecords, err = db.GetTalkgroupsP(ctx, database.GetTalkgroupsPParams{
 				Filter:  opt.filter,
 				OrderBy: sortDir,
 				Offset:  offset,
 				PerPage: perPage,
+				System:  opt.system,
 			})
 			if err != nil {
 				return err
 			}
 
 			if opt.totalDest != nil {
-				count, err := db.GetTalkgroupsWithLearnedCount(ctx, opt.filter)
+				count, err := db.GetTalkgroupsCount(ctx, opt.system, false, opt.filter)
 				if err != nil {
 					return err
 				}
@@ -426,19 +452,21 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 			return nil, err
 		}
 
-		return addToRowListS(t, r, tgRecords), nil
+		// add records to cache and return
+		return addToCacheAndRowList(t, resultList, tgRecords), nil
 	}
 
-	tgRecords, err := db.GetTalkgroupsWithLearned(ctx)
+	// unpaginated
+	tgRecords, err := db.GetTalkgroups(ctx, opt.system, false, opt.filter)
 	if err != nil {
 		return nil, err
 	}
-	return addToRowListS(t, r, tgRecords), nil
+	return addToCacheAndRowList(t, resultList, tgRecords), nil
 }
 
 func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
 	// No need for RBAC checks since this merely primes the cache and returns nothing.
-	tgRecords, err := t.db.GetTalkgroupsWithLearnedBySysTGID(ctx, tgs)
+	tgRecords, err := t.db.GetTalkgroupsBySysTGID(ctx, tgs)
 	if err != nil {
 		return err
 	}
@@ -464,59 +492,7 @@ func (t *cache) Weight(ctx context.Context, id tgsp.ID, tm time.Time) float64 {
 }
 
 func (t *cache) SystemTGs(ctx context.Context, systemID int, opts ...Option) ([]*tgsp.Talkgroup, error) {
-	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionRead))
-	if err != nil {
-		return nil, err
-	}
-
-	db := t.db
-	opt := sOpt(opts)
-	if opt.pagination != nil {
-		sortDir, err := opt.pagination.SortDir()
-		if err != nil {
-			return nil, err
-		}
-
-		offset, perPage := opt.pagination.OffsetPerPage(opt.perPageDefault)
-		var recs []database.GetTalkgroupsWithLearnedBySystemPRow
-		err = db.InTx(ctx, func(db database.Store) error {
-			var err error
-			recs, err = db.GetTalkgroupsWithLearnedBySystemP(ctx, database.GetTalkgroupsWithLearnedBySystemPParams{
-				System:  int32(systemID),
-				Filter:  opt.filter,
-				OrderBy: sortDir,
-				Offset:  offset,
-				PerPage: perPage,
-			})
-			if err != nil {
-				return err
-			}
-
-			if opt.totalDest != nil {
-				count, err := db.GetTalkgroupsWithLearnedBySystemCount(ctx, int32(systemID), opt.filter)
-				if err != nil {
-					return err
-				}
-
-				*opt.totalDest = int(count)
-			}
-
-			return nil
-		}, pgx.TxOptions{})
-
-		if err != nil {
-			return nil, err
-		}
-
-		return addToRowList(t, recs), nil
-	}
-
-	recs, err := db.GetTalkgroupsWithLearnedBySystem(ctx, int32(systemID))
-	if err != nil {
-		return nil, err
-	}
-
-	return addToRowList(t, recs), nil
+	return t.TGs(ctx, nil, append(opts, withSystem(int32(systemID)))...)
 }
 
 func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
@@ -533,7 +509,7 @@ func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
 	}
 
 	t.metrics.Misses.Inc()
-	record, err := t.db.GetTalkgroupWithLearned(ctx, int32(tg.System), int32(tg.Talkgroup))
+	record, err := t.db.GetTalkgroup(ctx, int32(tg.System), int32(tg.Talkgroup))
 	switch err {
 	case nil:
 	case pgx.ErrNoRows:

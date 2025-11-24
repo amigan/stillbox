@@ -538,6 +538,52 @@ func (_c *Store_Load_Call) RunAndReturn(run func(ctx context.Context, tgs databa
 	return _c
 }
 
+// Metrics provides a mock function for the type Store
+func (_mock *Store) Metrics() *tgstore.TGStoreMetrics {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Metrics")
+	}
+
+	var r0 *tgstore.TGStoreMetrics
+	if returnFunc, ok := ret.Get(0).(func() *tgstore.TGStoreMetrics); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*tgstore.TGStoreMetrics)
+		}
+	}
+	return r0
+}
+
+// Store_Metrics_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Metrics'
+type Store_Metrics_Call struct {
+	*mock.Call
+}
+
+// Metrics is a helper method to define mock.On call
+func (_e *Store_Expecter) Metrics() *Store_Metrics_Call {
+	return &Store_Metrics_Call{Call: _e.mock.On("Metrics")}
+}
+
+func (_c *Store_Metrics_Call) Run(run func()) *Store_Metrics_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Store_Metrics_Call) Return(tGStoreMetrics *tgstore.TGStoreMetrics) *Store_Metrics_Call {
+	_c.Call.Return(tGStoreMetrics)
+	return _c
+}
+
+func (_c *Store_Metrics_Call) RunAndReturn(run func() *tgstore.TGStoreMetrics) *Store_Metrics_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RegisterFilter provides a mock function for the type Store
 func (_mock *Store) RegisterFilter(filter tgstore.Filter) {
 	_mock.Called(filter)
