@@ -14,6 +14,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/metrics"
 	tgsp "dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+	promtestutil "github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -194,13 +195,16 @@ func TestTGs(t *testing.T) {
 	s := SetupTest()
 	defer s.TearDownTest()
 
+	type testHook func(context.Context, *testing.T, tgstore.Store)
 	totalDest := 0
 
 	tests := []struct {
-		desc   string
-		ids    tgsp.IDs
-		opts   []tgstore.Option
-		assert tgsAssertion
+		desc     string
+		ids      tgsp.IDs
+		opts     []tgstore.Option
+		assert   tgsAssertion
+		preFunc  testHook
+		postFunc testHook
 	}{
 		{
 			desc: "all tgs",
@@ -235,6 +239,9 @@ func TestTGs(t *testing.T) {
 			assert: tgsAssertion{
 				assertAlpha: []string{"Wide Area 6", "EMA-1"},
 			},
+			postFunc: func(_ context.Context, t *testing.T, _ tgstore.Store) {
+				assert.Equal(t, 298, totalDest)
+			},
 		},
 		{
 			desc: "filtered",
@@ -260,18 +267,33 @@ func TestTGs(t *testing.T) {
 				assertAlpha: []string{"Narrag FDFG2", "Narrag EMS"},
 			},
 		},
+		{
+			desc: "mixed cached",
+			preFunc: func(ctx context.Context, t *testing.T, st tgstore.Store) {
+				err := st.Hint(ctx, tids("407:10101", "3348:153"))
+				require.NoError(t, err)
+			},
+			ids: tids("407:10101", "3348:153", "407:1869", "407:11186", "407:11002"),
+			postFunc: func(_ context.Context, t *testing.T, tgs tgstore.Store) {
+				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().Hits), 2.0)
+				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().Misses), 3.0)
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
 			st, ctx := s.makeStore(t)
 
+			if tc.preFunc != nil {
+				tc.preFunc(ctx, t, st)
+			}
+
 			tgs, err := st.TGs(ctx, tc.ids, tc.opts...)
 			tc.assert.assert(t, tgs, err)
 
-			// hacky
-			if tc.desc == "paginated" {
-				assert.Equal(t, 298, totalDest)
+			if tc.postFunc != nil {
+				tc.postFunc(ctx, t, st)
 			}
 		})
 	}

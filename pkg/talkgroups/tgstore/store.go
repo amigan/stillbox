@@ -91,6 +91,8 @@ type Store interface {
 
 	FilterCache
 
+	Metrics() *TGStoreMetrics
+
 	// Hupper
 	HUP(*config.Config)
 }
@@ -245,14 +247,14 @@ type cache struct {
 	tgs     tgMap
 	systems map[int]string
 	db      database.Store
-	metrics tgStoreMetrics
+	metrics TGStoreMetrics
 
 	// filters is a map of tags->maps of filters
 	filtMtx sync.RWMutex
 	filters filterMap
 }
 
-type tgStoreMetrics struct {
+type TGStoreMetrics struct {
 	Hits   prometheus.Counter `help:"Talkgroup cache hits"`
 	Misses prometheus.Counter `help:"Talkgroup cache misses"`
 }
@@ -269,6 +271,10 @@ func NewCache(db database.Store, met metrics.Metrics) *cache {
 	met.Register("tgstore", &tgc.metrics)
 
 	return tgc
+}
+
+func (t *cache) Metrics() *TGStoreMetrics {
+	return &t.metrics
 }
 
 // Hint selectively primes the cache with the provided TGs.

@@ -13,6 +13,7 @@ Session.vim
 *.log
 *.dlv
 cover.out
+coverage.html
 backups/
 models/
 ktrace.out
