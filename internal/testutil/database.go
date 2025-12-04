@@ -16,6 +16,7 @@ import (
 	"text/template"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/partman"
@@ -248,17 +249,13 @@ func (db *DB) doInsert(ctx context.Context, table string, src any) error {
 		return err
 	}
 
-	if table == "talkgroups" {
-		_, err := db.Exec(ctx, "SELECT setval(pg_get_serial_sequence('talkgroups', 'id'), (SELECT MAX(id)+1 FROM talkgroups), false);")
-		return err
-	}
-
 	return nil
 }
 
 type typePair struct {
 	name string
 	obj  any
+	identityColumn *string
 }
 
 func (db *DB) loadTable(ctx context.Context, tmpl *template.Template, tp typePair) error {
@@ -282,6 +279,12 @@ func (db *DB) loadTable(ctx context.Context, tmpl *template.Template, tp typePai
 		}
 	}
 
+	if tp.identityColumn != nil {
+		_, err := db.Exec(ctx, fmt.Sprintf("SELECT setval(pg_get_serial_sequence('%s', '%s'), (SELECT MAX(%s)+1 FROM %s), false);", tp.name, *tp.identityColumn, *tp.identityColumn, tp.name))
+		return err
+	}
+
+
 	return nil
 }
 
@@ -294,12 +297,12 @@ func (db *DB) loadFixtures(ctx context.Context) error {
 	tmpl = tmpl.Funcs(templateFuncs)
 
 	tps := []typePair{
-		{"users", database.User{}},
-		{"systems", database.System{}},
-		{"talkgroups", database.Talkgroup{}},
-		{"calls", database.Call{}},
-		{"incidents", database.Incident{}},
-		{"incidents_calls", database.IncidentsCall{}},
+		{"users", database.User{}, common.PtrTo("id")},
+		{"systems", database.System{}, nil},
+		{"talkgroups", database.Talkgroup{}, common.PtrTo("id")},
+		{"calls", database.Call{}, nil},
+		{"incidents", database.Incident{}, nil},
+		{"incidents_calls", database.IncidentsCall{}, nil},
 	}
 
 	for _, table := range tps {
