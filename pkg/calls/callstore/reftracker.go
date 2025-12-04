@@ -91,7 +91,7 @@ func (rt *refTracker) QueueDeleteAll(ar AudioRefList, callDate time.Time) error 
 			return fmt.Errorf("queue delete all: no such backend '%s'", ben)
 		}
 
-		rt.QueueDelete(be, AbsoluteRef(loc.Ref(rt.st.partMan(), callDate)))
+		rt.QueueDelete(be, AbsoluteRef(loc.Ref(rt.st.PartMan(), callDate)))
 	}
 
 	return nil

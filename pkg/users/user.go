@@ -106,15 +106,6 @@ func (u *User) Mask() *User {
 }
 
 func FromDBUser(dbu database.User) *User {
-	var lastLoginAt, disabledAt *jsontypes.Time
-	if dbu.LastLoginAt.Valid {
-		lastLoginAt = (*jsontypes.Time)(&dbu.LastLoginAt.Time)
-	}
-
-	if dbu.DisabledAt.Valid {
-		disabledAt = (*jsontypes.Time)(&dbu.DisabledAt.Time)
-	}
-
 	return &User{
 		ID:            UserID(dbu.ID),
 		Username:      dbu.Username,
@@ -123,9 +114,9 @@ func FromDBUser(dbu database.User) *User {
 		RealName:      dbu.RealName,
 		Roles:         dbu.Roles,
 		Prefs:         dbu.Prefs,
-		DisabledAt:    disabledAt,
-		LastLoginAt:   lastLoginAt,
+		DisabledAt:    (*jsontypes.Time)(dbu.DisabledAt),
+		LastLoginAt:   (*jsontypes.Time)(dbu.LastLoginAt),
 		LastLoginFrom: dbu.LastLoginFrom,
-		PasswordSetAt: dbu.PasswordSetAt.Time,
+		PasswordSetAt: dbu.PasswordSetAt,
 	}
 }

@@ -7,10 +7,10 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addToIncident = `-- name: AddToIncident :exec
@@ -81,14 +81,14 @@ RETURNING id, name, owner_id, description, created_at, start_time, end_time, loc
 `
 
 type CreateIncidentParams struct {
-	ID          uuid.UUID          `json:"id"`
-	Name        string             `json:"name"`
-	OwnerID     int                `json:"ownerId"`
-	Description *string            `json:"description"`
-	StartTime   pgtype.Timestamptz `json:"startTime"`
-	EndTime     pgtype.Timestamptz `json:"endTime"`
-	Location    []byte             `json:"location"`
-	Metadata    jsontypes.Metadata `json:"metadata"`
+	ID          uuid.UUID          `db:"id" json:"id"`
+	Name        string             `db:"name" json:"name"`
+	OwnerID     int                `db:"owner_id" json:"ownerId"`
+	Description *string            `db:"description" json:"description"`
+	StartTime   *time.Time         `db:"start_time" json:"startTime"`
+	EndTime     *time.Time         `db:"end_time" json:"endTime"`
+	Location    []byte             `db:"location" json:"location"`
+	Metadata    jsontypes.Metadata `db:"metadata" json:"metadata"`
 }
 
 func (q *Queries) CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error) {
@@ -136,8 +136,8 @@ WHERE incidents.id = $1
 `
 
 type GetIncidentRow struct {
-	Incident Incident `json:"incident"`
-	Owner    string   `json:"owner"`
+	Incident Incident `db:"incident" json:"incident"`
+	Owner    string   `db:"owner" json:"owner"`
 }
 
 func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow, error) {
@@ -214,22 +214,22 @@ ORDER BY ic.call_date ASC
 `
 
 type GetIncidentCallsRow struct {
-	CallID      uuid.UUID          `json:"callId"`
-	CallDate    pgtype.Timestamptz `json:"callDate"`
-	Duration    *int32             `json:"duration"`
-	SystemID    int                `json:"systemId"`
-	TGID        int                `json:"tgid"`
-	Notes       []byte             `json:"notes"`
-	Submitter   *int32             `json:"submitter"`
-	AudioName   *string            `json:"audioName"`
-	AudioType   NullAudioMIME      `json:"audioType"`
-	AudioRef    []byte             `json:"audioRef"`
-	Frequency   int                `json:"frequency"`
-	Frequencies []int              `json:"frequencies"`
-	TalkerAlias *string            `json:"talkerAlias"`
-	Patches     []int              `json:"patches"`
-	Source      int                `json:"source"`
-	Transcript  *string            `json:"transcript"`
+	CallID      uuid.UUID     `db:"call_id" json:"callId"`
+	CallDate    *time.Time    `db:"call_date" json:"callDate"`
+	Duration    *int32        `db:"duration" json:"duration"`
+	SystemID    int           `db:"system_id" json:"systemId"`
+	TGID        int           `db:"tgid" json:"tgid"`
+	Notes       []byte        `db:"notes" json:"notes"`
+	Submitter   *int32        `db:"submitter" json:"submitter"`
+	AudioName   *string       `db:"audio_name" json:"audioName"`
+	AudioType   NullAudioMIME `db:"audio_type" json:"audioType"`
+	AudioRef    []byte        `db:"audio_ref" json:"audioRef"`
+	Frequency   int           `db:"frequency" json:"frequency"`
+	Frequencies []int         `db:"frequencies" json:"frequencies"`
+	TalkerAlias *string       `db:"talker_alias" json:"talkerAlias"`
+	Patches     []int         `db:"patches" json:"patches"`
+	Source      int           `db:"source" json:"source"`
+	Transcript  *string       `db:"transcript" json:"transcript"`
 }
 
 func (q *Queries) GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetIncidentCallsRow, error) {
@@ -294,7 +294,7 @@ CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
 	) ELSE TRUE END)
 `
 
-func (q *Queries) ListIncidentsCount(ctx context.Context, start pgtype.Timestamptz, end pgtype.Timestamptz, filter *string) (int64, error) {
+func (q *Queries) ListIncidentsCount(ctx context.Context, start *time.Time, end *time.Time, filter *string) (int64, error) {
 	row := q.db.QueryRow(ctx, listIncidentsCount, start, end, filter)
 	var count int64
 	err := row.Scan(&count)
@@ -335,26 +335,26 @@ FETCH NEXT $6 ROWS ONLY
 `
 
 type ListIncidentsPParams struct {
-	Start     pgtype.Timestamptz `json:"start"`
-	End       pgtype.Timestamptz `json:"end"`
-	Filter    *string            `json:"filter"`
-	Direction string             `json:"direction"`
-	Offset    int32              `json:"offset"`
-	PerPage   int32              `json:"perPage"`
+	Start     *time.Time `db:"start" json:"start"`
+	End       *time.Time `db:"end" json:"end"`
+	Filter    *string    `db:"filter" json:"filter"`
+	Direction string     `db:"direction" json:"direction"`
+	Offset    int32      `db:"offset" json:"offset"`
+	PerPage   int32      `db:"per_page" json:"perPage"`
 }
 
 type ListIncidentsPRow struct {
-	ID          uuid.UUID          `json:"id"`
-	Name        string             `json:"name"`
-	OwnerID     int                `json:"ownerId"`
-	Description *string            `json:"description"`
-	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
-	StartTime   pgtype.Timestamptz `json:"startTime"`
-	EndTime     pgtype.Timestamptz `json:"endTime"`
-	Location    []byte             `json:"location"`
-	Metadata    jsontypes.Metadata `json:"metadata"`
-	Owner       string             `json:"owner"`
-	CallsCount  int64              `json:"callsCount"`
+	ID          uuid.UUID          `db:"id" json:"id"`
+	Name        string             `db:"name" json:"name"`
+	OwnerID     int                `db:"owner_id" json:"ownerId"`
+	Description *string            `db:"description" json:"description"`
+	CreatedAt   *time.Time         `db:"created_at" json:"createdAt"`
+	StartTime   *time.Time         `db:"start_time" json:"startTime"`
+	EndTime     *time.Time         `db:"end_time" json:"endTime"`
+	Location    []byte             `db:"location" json:"location"`
+	Metadata    jsontypes.Metadata `db:"metadata" json:"metadata"`
+	Owner       string             `db:"owner" json:"owner"`
+	CallsCount  int64              `db:"calls_count" json:"callsCount"`
 }
 
 func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) ([]ListIncidentsPRow, error) {
@@ -432,13 +432,13 @@ RETURNING id, name, owner_id, description, created_at, start_time, end_time, loc
 `
 
 type UpdateIncidentParams struct {
-	Name        *string            `json:"name"`
-	Description *string            `json:"description"`
-	StartTime   pgtype.Timestamptz `json:"startTime"`
-	EndTime     pgtype.Timestamptz `json:"endTime"`
-	Location    []byte             `json:"location"`
-	Metadata    jsontypes.Metadata `json:"metadata"`
-	ID          uuid.UUID          `json:"id"`
+	Name        *string            `db:"name" json:"name"`
+	Description *string            `db:"description" json:"description"`
+	StartTime   *time.Time         `db:"start_time" json:"startTime"`
+	EndTime     *time.Time         `db:"end_time" json:"endTime"`
+	Location    []byte             `db:"location" json:"location"`
+	Metadata    jsontypes.Metadata `db:"metadata" json:"metadata"`
+	ID          uuid.UUID          `db:"id" json:"id"`
 }
 
 func (q *Queries) UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error) {

@@ -4,7 +4,7 @@
   name: RISCON Radio Techs
   alpha_tag: Radio Techs
   tg_group: Radio Technicians
-  tags: RAW=ARRAY['statewide','comms']
+  tags: ['statewide','comms']
   alert: true
   weight: 1
   learned: false
@@ -16,7 +16,7 @@
   tg_group: Statewide Mutual Aid/Intersystem
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['interop','fire dispatch','mutual-aid']
+  tags: ['interop','fire dispatch','mutual-aid']
   alert: true
   alert_rules:
     - times:
@@ -32,7 +32,7 @@
   tg_group: Statewide Mutual Aid/Intersystem
   metadata:
     icon: Police
-  tags: RAW=ARRAY['interop','law dispatch','mutual-aid']
+  tags: ['interop','law dispatch','mutual-aid']
   alert: true
   weight: 1
   learned: false
@@ -42,7 +42,7 @@
   name: Wide Area 3
   alpha_tag: Wide Area 3
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   alert_rules:
     - times:
@@ -56,7 +56,7 @@
   name: Wide Area 4
   alpha_tag: Wide Area 4
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 0.8
   learned: false
@@ -66,7 +66,7 @@
   name: Wide Area 5
   alpha_tag: Wide Area 5
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -76,7 +76,7 @@
   name: Wide Area 6
   alpha_tag: Wide Area 6
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -86,7 +86,7 @@
   name: Emergency Management Agency 1
   alpha_tag: EMA-1
   tg_group: Emergency Management Agency
-  tags: RAW=ARRAY['emergency ops','statewide']
+  tags: ['emergency ops','statewide']
   alert: true
   weight: 1
   learned: false
@@ -98,7 +98,7 @@
   tg_group: Statewide Misc.
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -110,7 +110,7 @@
   tg_group: Statewide Misc.
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -122,7 +122,7 @@
   tg_group: Statewide Fire
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk','statewide']
+  tags: ['fire-talk','statewide']
   alert: true
   weight: 1
   learned: false
@@ -135,7 +135,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -147,7 +147,7 @@
   tg_group: Rhode Island Airport Commission
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -157,7 +157,7 @@
   name: Emergency Management Agency
   alpha_tag: EMA
   tg_group: Emergency Management Agency
-  tags: RAW=ARRAY['emergency ops']
+  tags: ['emergency ops']
   alert: true
   weight: 1
   learned: false
@@ -169,7 +169,7 @@
   tg_group: State Police - District A (North)
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -182,7 +182,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -195,7 +195,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -208,7 +208,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -220,7 +220,7 @@
   tg_group: State Police - District B (South)
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -233,7 +233,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -245,7 +245,7 @@
   tg_group: Statewide Misc.
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['security']
+  tags: ['security']
   alert: true
   weight: 1
   learned: false
@@ -257,7 +257,7 @@
   tg_group: Department of Environmental Management
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -269,7 +269,7 @@
   tg_group: Department of Environmental Management
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -279,7 +279,7 @@
   name: Rhode Island Red Cross - Primary
   alpha_tag: Red Cross 1
   tg_group: Statewide Misc.
-  tags: RAW=ARRAY['other']
+  tags: ['other']
   alert: true
   weight: 1
   learned: false
@@ -289,7 +289,7 @@
   name: Rhode Island Red Cross - Secondary
   alpha_tag: Red Cross 2
   tg_group: Statewide Misc.
-  tags: RAW=ARRAY['other']
+  tags: ['other']
   alert: true
   weight: 1
   learned: false
@@ -299,7 +299,7 @@
   name: Department of Transportation - Primary
   alpha_tag: RIDOT Primary
   tg_group: Department of Transportation
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   alert: true
   weight: 1
   learned: false
@@ -312,7 +312,7 @@
   metadata:
     encrypted: true
     icon: Transport Bus
-  tags: RAW=ARRAY['transportation']
+  tags: ['transportation']
   alert: true
   weight: 1
   learned: false
@@ -324,7 +324,7 @@
   tg_group: RIPTA
   metadata:
     icon: Transport Bus
-  tags: RAW=ARRAY['transportation']
+  tags: ['transportation']
   alert: true
   weight: 1
   learned: false
@@ -336,7 +336,7 @@
   tg_group: RIPTA
   metadata:
     icon: Transport Bus
-  tags: RAW=ARRAY['transportation']
+  tags: ['transportation']
   alert: true
   weight: 1
   learned: false
@@ -348,7 +348,7 @@
   tg_group: RIPTA
   metadata:
     icon: Transport Bus
-  tags: RAW=ARRAY['transportation']
+  tags: ['transportation']
   alert: true
   weight: 1
   learned: false
@@ -360,7 +360,7 @@
   tg_group: RIPTA
   metadata:
     icon: Transport Bus
-  tags: RAW=ARRAY['transportation']
+  tags: ['transportation']
   alert: true
   weight: 1
   learned: false
@@ -370,7 +370,7 @@
   name: Lifepact Ambulance (Statewide)
   alpha_tag: Lifepact Amb
   tg_group: Statewide EMS and Hospitals
-  tags: RAW=ARRAY['ems dispatch']
+  tags: ['ems dispatch']
   alert: true
   weight: 1
   learned: false
@@ -380,7 +380,7 @@
   name: Fatima St Josephs
   alpha_tag: Fatima-St Joes
   tg_group: Statewide EMS and Hospitals
-  tags: RAW=ARRAY['business']
+  tags: ['business']
   alert: true
   weight: 1
   learned: false
@@ -392,7 +392,7 @@
   tg_group: Statewide EMS and Hospitals
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['ems-talk']
+  tags: ['ems-talk']
   alert: true
   weight: 1
   learned: false
@@ -404,7 +404,7 @@
   tg_group: Statewide EMS and Hospitals
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['ems-talk']
+  tags: ['ems-talk']
   alert: true
   weight: 1
   learned: false
@@ -414,7 +414,7 @@
   name: Department of Health - Statewide
   alpha_tag: Dept of HealthSW
   tg_group: Statewide EMS and Hospitals
-  tags: RAW=ARRAY['ems-talk']
+  tags: ['ems-talk']
   alert: true
   weight: 1
   learned: false
@@ -424,7 +424,7 @@
   name: Statewide Nursing Homes Net
   alpha_tag: NURSING HM
   tg_group: Statewide Misc.
-  tags: RAW=ARRAY['other']
+  tags: ['other']
   alert: true
   weight: 1
   learned: false
@@ -436,7 +436,7 @@
   tg_group: Statewide EMS and Hospitals
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['emergency ops']
+  tags: ['emergency ops']
   alert: true
   weight: 1
   learned: false
@@ -446,7 +446,7 @@
   name: Life Span Net 1
   alpha_tag: Life Span 1
   tg_group: Statewide EMS and Hospitals
-  tags: RAW=ARRAY['ems-tac']
+  tags: ['ems-tac']
   alert: true
   weight: 1
   learned: false
@@ -456,7 +456,7 @@
   name: RI Hospital Operations
   alpha_tag: RI Hosp Ops
   tg_group: Statewide EMS and Hospitals
-  tags: RAW=ARRAY['business']
+  tags: ['business']
   alert: true
   weight: 1
   learned: false
@@ -466,7 +466,7 @@
   name: Hospital Operations
   alpha_tag: Slater Hosp Ops
   tg_group: Statewide Misc.
-  tags: RAW=ARRAY['business']
+  tags: ['business']
   alert: true
   weight: 1
   learned: false
@@ -476,7 +476,7 @@
   name: Slater Hospital Security
   alpha_tag: Slater Hosp Sec
   tg_group: Statewide Misc.
-  tags: RAW=ARRAY['security']
+  tags: ['security']
   alert: true
   weight: 1
   learned: false
@@ -488,7 +488,7 @@
   tg_group: Federal
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -500,7 +500,7 @@
   tg_group: Quonset ANGB
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -510,7 +510,7 @@
   alert: true
   weight: 1
   learned: true
-  tags: RAW=ARRAY[]::TEXT[]
+  tags: []
 - id: 217
   system_id: 407
   tgid: 1001
@@ -520,7 +520,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -533,7 +533,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -546,7 +546,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -559,7 +559,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -572,7 +572,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -584,7 +584,7 @@
   tg_group: Narragansett
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -597,7 +597,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -610,7 +610,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -620,7 +620,7 @@
   name: Town Administration
   alpha_tag: Narrag TownA
   tg_group: Narragansett
-  tags: RAW=ARRAY['other']
+  tags: ['other']
   alert: true
   weight: 1
   learned: false
@@ -630,7 +630,7 @@
   name: Townwide Interop
   alpha_tag: Narrag IOP
   tg_group: Narragansett
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -642,7 +642,7 @@
   tg_group: Narragansett
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -654,7 +654,7 @@
   tg_group: Narragansett
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -666,7 +666,7 @@
   tg_group: Narragansett
   metadata:
     icon: Ambulance
-  tags: RAW=ARRAY['ems dispatch']
+  tags: ['ems dispatch']
   alert: true
   weight: 1
   learned: false
@@ -679,7 +679,7 @@
   metadata:
     encrypted: true
     icon: Ambulance
-  tags: RAW=ARRAY['ems dispatch']
+  tags: ['ems dispatch']
   alert: true
   weight: 1
   learned: false
@@ -691,7 +691,7 @@
   tg_group: Narragansett
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -701,7 +701,7 @@
   name: Public Works
   alpha_tag: Narrag DPW
   tg_group: Narragansett
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   weight: 1
   learned: false
 - id: 98
@@ -710,7 +710,7 @@
   name: Southwide CH-1
   alpha_tag: SOUTHWIDE 1
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -720,7 +720,7 @@
   name: Southwide CH-2
   alpha_tag: SOUTHWIDE 2
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -730,7 +730,7 @@
   name: Wide Area 7
   alpha_tag: WIDE AREA 7
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -742,7 +742,7 @@
   tg_group: Statewide Area/Events
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -752,7 +752,7 @@
   name: Inland Marine Interop
   alpha_tag: Inland Marine IO
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -764,7 +764,7 @@
   tg_group: South Kingstown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -774,7 +774,7 @@
   name: 'Tanker Taskforce '
   alpha_tag: TANK TF
   tg_group: Statewide Emergency Response
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -784,7 +784,7 @@
   name: Hazmat 1
   alpha_tag: HZT DC1
   tg_group: Statewide Emergency Response
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -794,7 +794,7 @@
   name: Hazmat 2
   alpha_tag: HZT DC2
   tg_group: Statewide Emergency Response
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -806,7 +806,7 @@
   tg_group: Statewide Area/Events
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -818,7 +818,7 @@
   tg_group: Statewide Fire
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -830,7 +830,7 @@
   tg_group: Statewide Fire
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -842,7 +842,7 @@
   tg_group: Washington County
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -855,7 +855,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -868,7 +868,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -881,7 +881,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -894,7 +894,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -906,7 +906,7 @@
   tg_group: Westerly
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -918,7 +918,7 @@
   tg_group: Westerly
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -930,7 +930,7 @@
   tg_group: Westerly
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -940,7 +940,7 @@
   name: Police/Fire/EMS Ops
   alpha_tag: Westerly PFE
   tg_group: Westerly
-  tags: RAW=ARRAY['multi-talk']
+  tags: ['multi-talk']
   alert: true
   weight: 1
   learned: false
@@ -952,7 +952,7 @@
   tg_group: Westerly
   metadata:
     icon: Ambulance
-  tags: RAW=ARRAY['ems dispatch']
+  tags: ['ems dispatch']
   alert: true
   weight: 1
   learned: false
@@ -965,7 +965,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -978,7 +978,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -988,7 +988,7 @@
   name: Town Schools
   alpha_tag: Jamestown School
   tg_group: Jamestown
-  tags: RAW=ARRAY['schools']
+  tags: ['schools']
   alert: true
   weight: 1
   learned: false
@@ -1000,7 +1000,7 @@
   tg_group: Jamestown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1010,7 +1010,7 @@
   name: Public Works
   alpha_tag: Jamestown DPW
   tg_group: Jamestown
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   alert: true
   weight: 1
   learned: false
@@ -1022,7 +1022,7 @@
   tg_group: Jamestown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1034,7 +1034,7 @@
   tg_group: Jamestown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1047,7 +1047,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1060,7 +1060,7 @@
   metadata:
     encrypted: true
     icon: Ambulance
-  tags: RAW=ARRAY['ems dispatch']
+  tags: ['ems dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1072,7 +1072,7 @@
   tg_group: Warwick
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1084,7 +1084,7 @@
   tg_group: Warwick
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1094,7 +1094,7 @@
   name: North Wide 1
   alpha_tag: NORTHWIDE1
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -1104,7 +1104,7 @@
   name: North Wide 2
   alpha_tag: NORTHWIDE2
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -1116,7 +1116,7 @@
   tg_group: Statewide Area/Events
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -1126,7 +1126,7 @@
   name: Metro Wide 1
   alpha_tag: METROWIDE1
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -1136,7 +1136,7 @@
   name: Metro Wide 2
   alpha_tag: METROWIDE2
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -1148,7 +1148,7 @@
   tg_group: Statewide Area/Events
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -1160,7 +1160,7 @@
   tg_group: West Warwick
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1173,7 +1173,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1186,7 +1186,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -1198,7 +1198,7 @@
   tg_group: South Kingstown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1210,7 +1210,7 @@
   tg_group: South Kingstown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1223,7 +1223,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -1236,7 +1236,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -1248,7 +1248,7 @@
   tg_group: South Kingstown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1260,7 +1260,7 @@
   tg_group: South Kingstown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -1273,7 +1273,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1285,7 +1285,7 @@
   tg_group: Portsmouth
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1297,7 +1297,7 @@
   tg_group: Portsmouth
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1309,7 +1309,7 @@
   tg_group: Portsmouth
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1321,7 +1321,7 @@
   tg_group: Little Compton
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1333,7 +1333,7 @@
   tg_group: Little Compton
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1345,7 +1345,7 @@
   tg_group: North Kingstown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1357,7 +1357,7 @@
   tg_group: North Kingstown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1369,7 +1369,7 @@
   tg_group: North Kingstown
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1382,7 +1382,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -1394,7 +1394,7 @@
   tg_group: North Kingstown
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -1404,7 +1404,7 @@
   name: Water Department
   alpha_tag: Newport Water
   tg_group: Newport
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   alert: true
   weight: 1
   learned: false
@@ -1414,7 +1414,7 @@
   name: Public Works
   alpha_tag: Newport DPW
   tg_group: Newport
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   alert: true
   weight: 1
   learned: false
@@ -1424,7 +1424,7 @@
   name: Citywide Events
   alpha_tag: Newport Evnt
   tg_group: Newport
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   alert: true
   weight: 1
   learned: false
@@ -1437,7 +1437,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1449,7 +1449,7 @@
   tg_group: Newport
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -1462,7 +1462,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -1474,7 +1474,7 @@
   tg_group: Newport
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1487,7 +1487,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -1499,7 +1499,7 @@
   tg_group: Newport
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1511,7 +1511,7 @@
   tg_group: Newport
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1524,7 +1524,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -1537,7 +1537,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -1547,7 +1547,7 @@
   name: Newport Citywide
   alpha_tag: Newport CW
   tg_group: Newport
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -1557,7 +1557,7 @@
   name: Tanker Taskforce 1
   alpha_tag: Tanker TF 1
   tg_group: Statewide Fire
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -1569,7 +1569,7 @@
   tg_group: Tiverton
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1581,7 +1581,7 @@
   tg_group: Tiverton
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1591,7 +1591,7 @@
   name: East Wide 1
   alpha_tag: EASTWIDE 1
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -1601,7 +1601,7 @@
   name: East Wide 2
   alpha_tag: EASTWIDE 2
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -1613,7 +1613,7 @@
   tg_group: Statewide Area/Events
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -1625,7 +1625,7 @@
   tg_group: Middletown
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1637,7 +1637,7 @@
   tg_group: Middletown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1647,7 +1647,7 @@
   name: Townwide
   alpha_tag: MiddletownTW
   tg_group: Middletown
-  tags: RAW=ARRAY['multi-dispatch']
+  tags: ['multi-dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1657,7 +1657,7 @@
   name: St. George's School (Middletown) - Security
   alpha_tag: St George Sec
   tg_group: College/Education Security
-  tags: RAW=ARRAY['security']
+  tags: ['security']
   alert: true
   weight: 1
   learned: false
@@ -1669,7 +1669,7 @@
   tg_group: Woonsocket
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1681,7 +1681,7 @@
   tg_group: Woonsocket
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -1693,7 +1693,7 @@
   tg_group: Woonsocket
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1705,7 +1705,7 @@
   tg_group: Woonsocket
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1718,7 +1718,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -1728,7 +1728,7 @@
   name: Citywide
   alpha_tag: Woonskt City
   tg_group: Woonsocket
-  tags: RAW=ARRAY['multi-talk']
+  tags: ['multi-talk']
   alert: true
   weight: 1
   learned: false
@@ -1738,7 +1738,7 @@
   name: Public Works - Streets
   alpha_tag: Woonsocket PW
   tg_group: Woonsocket
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   weight: 1
   learned: false
 - id: 232
@@ -1749,7 +1749,7 @@
   tg_group: New Shoreham
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1762,7 +1762,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1774,7 +1774,7 @@
   tg_group: Charlestown
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1786,7 +1786,7 @@
   tg_group: Charlestown
   metadata:
     icon: Ambulance
-  tags: RAW=ARRAY['ems dispatch']
+  tags: ['ems dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1798,7 +1798,7 @@
   tg_group: Pawtucket
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1810,7 +1810,7 @@
   tg_group: Pawtucket
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1822,7 +1822,7 @@
   tg_group: Pawtucket
   metadata:
     icon: Ambulance
-  tags: RAW=ARRAY['ems-tac']
+  tags: ['ems-tac']
   alert: true
   weight: 1
   learned: false
@@ -1834,7 +1834,7 @@
   tg_group: Scituate
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1846,7 +1846,7 @@
   tg_group: Scituate
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1858,7 +1858,7 @@
   tg_group: Washington County
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -1870,7 +1870,7 @@
   tg_group: Coventry
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1882,7 +1882,7 @@
   tg_group: Coventry
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1894,7 +1894,7 @@
   tg_group: Coventry
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -1906,7 +1906,7 @@
   tg_group: Cranston
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -1918,7 +1918,7 @@
   tg_group: Cranston
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1930,7 +1930,7 @@
   tg_group: Cranston
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1942,7 +1942,7 @@
   tg_group: Cranston
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -1954,7 +1954,7 @@
   tg_group: Cranston
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -1966,7 +1966,7 @@
   tg_group: Cranston
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -1978,7 +1978,7 @@
   tg_group: Cumberland
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   weight: 1
   learned: false
 - id: 178
@@ -1989,7 +1989,7 @@
   tg_group: Cumberland
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   weight: 1
   learned: false
 - id: 251
@@ -2001,7 +2001,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2014,7 +2014,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2027,7 +2027,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -2037,7 +2037,7 @@
   name: Townwide 1
   alpha_tag: NorthPrv TownW 1
   tg_group: North Providence
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -2047,7 +2047,7 @@
   name: Townwide 2
   alpha_tag: NorthPrv TownW 2
   tg_group: North Providence
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -2059,7 +2059,7 @@
   tg_group: North Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2071,7 +2071,7 @@
   tg_group: North Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2083,7 +2083,7 @@
   tg_group: North Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2095,7 +2095,7 @@
   tg_group: North Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2107,7 +2107,7 @@
   tg_group: North Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2120,7 +2120,7 @@
   metadata:
     encrypted: true
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2130,7 +2130,7 @@
   name: Public Works
   alpha_tag: NorthPrv DPW
   tg_group: North Providence
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   weight: 1
   learned: false
 - id: 8
@@ -2141,7 +2141,7 @@
   tg_group: Johnston
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2153,7 +2153,7 @@
   tg_group: Johnston
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2166,7 +2166,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2178,7 +2178,7 @@
   tg_group: Smithfield
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2190,7 +2190,7 @@
   tg_group: Smithfield
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2202,7 +2202,7 @@
   tg_group: Smithfield
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -2215,7 +2215,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -2228,7 +2228,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2238,7 +2238,7 @@
   name: Town-Wide
   alpha_tag: Smfld Town
   tg_group: Smithfield
-  tags: RAW=ARRAY['multi-tac']
+  tags: ['multi-tac']
   alert: true
   weight: 1
   learned: false
@@ -2248,7 +2248,7 @@
   name: Emergency Management
   alpha_tag: Smfld EMA
   tg_group: Smithfield
-  tags: RAW=ARRAY['emergency ops']
+  tags: ['emergency ops']
   alert: true
   weight: 1
   learned: false
@@ -2258,7 +2258,7 @@
   name: Public Works
   alpha_tag: Smfld DPW
   tg_group: Smithfield
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   weight: 1
   learned: false
 - id: 312
@@ -2269,7 +2269,7 @@
   tg_group: Smithfield
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2281,7 +2281,7 @@
   tg_group: Lincoln
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2293,7 +2293,7 @@
   tg_group: Lincoln
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2305,7 +2305,7 @@
   tg_group: Lincoln
   metadata:
     icon: Ambulance
-  tags: RAW=ARRAY['ems dispatch']
+  tags: ['ems dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2317,7 +2317,7 @@
   tg_group: Lincoln
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2329,7 +2329,7 @@
   tg_group: Lincoln
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -2339,7 +2339,7 @@
   name: Townwide
   alpha_tag: Lincoln Townwide
   tg_group: Lincoln
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -2349,7 +2349,7 @@
   name: Emergency Management
   alpha_tag: Lincoln EMA
   tg_group: Lincoln
-  tags: RAW=ARRAY['emergency ops']
+  tags: ['emergency ops']
   alert: true
   weight: 1
   learned: false
@@ -2361,7 +2361,7 @@
   tg_group: Lincoln
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2371,7 +2371,7 @@
   name: Public Works
   alpha_tag: Lincoln DPW
   tg_group: Lincoln
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   weight: 1
   learned: false
 - id: 147
@@ -2382,7 +2382,7 @@
   tg_group: Barrington
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2394,7 +2394,7 @@
   tg_group: Barrington
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2407,7 +2407,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2419,7 +2419,7 @@
   tg_group: Barrington
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -2431,7 +2431,7 @@
   tg_group: Bristol
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2441,7 +2441,7 @@
   name: Harbormaster
   alpha_tag: Bristol Harbor
   tg_group: Bristol
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   alert: true
   weight: 1
   learned: false
@@ -2451,7 +2451,7 @@
   name: Fire Talk Around
   alpha_tag: E Greenwich F-TA
   tg_group: East Greenwich
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -2463,7 +2463,7 @@
   tg_group: East Greenwich
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2475,7 +2475,7 @@
   tg_group: West Greenwich
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2487,7 +2487,7 @@
   tg_group: West Greenwich
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -2499,7 +2499,7 @@
   tg_group: Central Falls
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2511,7 +2511,7 @@
   tg_group: Central Falls
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2523,7 +2523,7 @@
   tg_group: Central Falls
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2535,7 +2535,7 @@
   tg_group: Central Falls
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2547,7 +2547,7 @@
   tg_group: East Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2559,7 +2559,7 @@
   tg_group: East Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2571,7 +2571,7 @@
   tg_group: East Providence
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2584,7 +2584,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2597,7 +2597,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2609,7 +2609,7 @@
   tg_group: East Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2622,7 +2622,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2634,7 +2634,7 @@
   tg_group: Foster
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2646,7 +2646,7 @@
   tg_group: Glocester
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2658,7 +2658,7 @@
   tg_group: Glocester
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -2670,7 +2670,7 @@
   tg_group: North Smithfield
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2682,7 +2682,7 @@
   tg_group: North Smithfield
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2695,7 +2695,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2707,7 +2707,7 @@
   tg_group: North Smithfield
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2719,7 +2719,7 @@
   tg_group: Burrillville
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2731,7 +2731,7 @@
   tg_group: Burrillville
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2743,7 +2743,7 @@
   tg_group: Burrillville
   metadata:
     icon: Ambulance
-  tags: RAW=ARRAY['ems-tac']
+  tags: ['ems-tac']
   alert: true
   weight: 1
   learned: false
@@ -2755,7 +2755,7 @@
   tg_group: Burrillville
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2767,7 +2767,7 @@
   tg_group: Burrillville
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2780,7 +2780,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -2792,7 +2792,7 @@
   tg_group: Burrillville
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -2802,7 +2802,7 @@
   name: Town-Wide
   alpha_tag: Burrvl Town
   tg_group: Burrillville
-  tags: RAW=ARRAY['multi-tac']
+  tags: ['multi-tac']
   alert: true
   weight: 1
   learned: false
@@ -2812,7 +2812,7 @@
   name: Emergency Management
   alpha_tag: Burrvl EMA
   tg_group: Burrillville
-  tags: RAW=ARRAY['emergency ops']
+  tags: ['emergency ops']
   alert: true
   weight: 1
   learned: false
@@ -2824,7 +2824,7 @@
   tg_group: Burrillville
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2836,7 +2836,7 @@
   tg_group: Richmond
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2846,7 +2846,7 @@
   name: Chariho Regional High School
   alpha_tag: Chariho Reg HS
   tg_group: Richmond
-  tags: RAW=ARRAY['schools']
+  tags: ['schools']
   alert: true
   weight: 1
   learned: false
@@ -2858,7 +2858,7 @@
   tg_group: Exeter
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -2868,7 +2868,7 @@
   name: Newport Pell Bridge Operations
   alpha_tag: RITBA - Pell Bdg
   tg_group: Tunnel and Bridge Authority
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   alert: true
   weight: 1
   learned: false
@@ -2878,21 +2878,21 @@
   alert: true
   weight: 1
   learned: true
-  tags: RAW=ARRAY[]::TEXT[]
+  tags: []
 - id: 1838
   system_id: 407
   tgid: 8322
   alert: true
   weight: 1
   learned: true
-  tags: RAW=ARRAY[]::TEXT[]
+  tags: []
 - id: 1839
   system_id: 407
   tgid: 8357
   alert: true
   weight: 1
   learned: true
-  tags: RAW=ARRAY[]::TEXT[]
+  tags: []
 - id: 274
   system_id: 407
   tgid: 10000
@@ -2901,7 +2901,7 @@
   tg_group: Providence
   metadata:
     icon: Police
-  tags: RAW=ARRAY['emergency ops']
+  tags: ['emergency ops']
   alert: true
   weight: 1
   learned: false
@@ -2913,7 +2913,7 @@
   tg_group: Providence
   metadata:
     icon: Police
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -2926,7 +2926,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2939,7 +2939,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2952,7 +2952,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2965,7 +2965,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2978,7 +2978,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -2991,7 +2991,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -3004,7 +3004,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -3017,7 +3017,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -3030,7 +3030,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -3043,7 +3043,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -3056,7 +3056,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -3069,7 +3069,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -3082,7 +3082,7 @@
   metadata:
     encrypted: true
     icon: Police
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -3094,7 +3094,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['emergency ops']
+  tags: ['emergency ops']
   alert: true
   weight: 1
   learned: false
@@ -3106,7 +3106,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch']
+  tags: ['fire dispatch']
   alert: true
   weight: 1
   learned: false
@@ -3118,7 +3118,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -3130,7 +3130,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -3142,7 +3142,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -3154,7 +3154,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -3166,7 +3166,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -3178,7 +3178,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -3190,7 +3190,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -3202,7 +3202,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac']
+  tags: ['fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -3214,7 +3214,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac','mutual-aid']
+  tags: ['fire-tac','mutual-aid']
   alert: true
   weight: 1
   learned: false
@@ -3226,7 +3226,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac','mutual-aid']
+  tags: ['fire-tac','mutual-aid']
   alert: true
   weight: 1
   learned: false
@@ -3238,7 +3238,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-tac','mutual-aid']
+  tags: ['fire-tac','mutual-aid']
   alert: true
   weight: 1
   learned: false
@@ -3250,7 +3250,7 @@
   tg_group: Providence
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk']
+  tags: ['fire-talk']
   alert: true
   weight: 1
   learned: false
@@ -3260,7 +3260,7 @@
   name: RISCON Radio Technicians
   alpha_tag: Radio Techs
   tg_group: Radio Technicians
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   alert: true
   weight: 1
   learned: false
@@ -3273,14 +3273,14 @@
   alert: true
   weight: 1
   learned: false
-  tags: RAW=ARRAY[]::TEXT[]
+  tags: []
 - id: 54
   system_id: 407
   tgid: 10207
   name: Public Works
   alpha_tag: PROV DPW
   tg_group: Providence
-  tags: RAW=ARRAY['public works']
+  tags: ['public works']
   weight: 1
   learned: false
 - id: 131
@@ -3291,7 +3291,7 @@
   tg_group: College/Education Security
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['security']
+  tags: ['security']
   alert: true
   weight: 1
   learned: false
@@ -3303,7 +3303,7 @@
   tg_group: College/Education Security
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['security']
+  tags: ['security']
   alert: true
   weight: 1
   learned: false
@@ -3313,7 +3313,7 @@
   name: Rhode Island College Security
   alpha_tag: RI COL SEC
   tg_group: College/Education Security
-  tags: RAW=ARRAY['security']
+  tags: ['security']
   alert: true
   weight: 1
   learned: false
@@ -3325,7 +3325,7 @@
   tg_group: Providence
   metadata:
     icon: Dump Truck
-  tags: RAW=ARRAY['parks']
+  tags: ['parks']
   weight: 1
   learned: false
 - id: 46
@@ -3338,7 +3338,7 @@
     icon: Dump Truck
   weight: 1
   learned: false
-  tags: RAW=ARRAY[]::TEXT[]
+  tags: []
 - id: 55
   system_id: 407
   tgid: 10257
@@ -3347,7 +3347,7 @@
   tg_group: Providence
   weight: 0.2
   learned: false
-  tags: RAW=ARRAY[]::TEXT[]
+  tags: []
 - id: 7
   system_id: 407
   tgid: 10266
@@ -3358,7 +3358,7 @@
     icon: Van
   weight: 1
   learned: false
-  tags: RAW=ARRAY[]::TEXT[]
+  tags: []
 - id: 134
   system_id: 407
   tgid: 11001
@@ -3367,7 +3367,7 @@
   tg_group: College/Education Security
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['law dispatch']
+  tags: ['law dispatch']
   alert: true
   weight: 1
   learned: false
@@ -3379,7 +3379,7 @@
   tg_group: College/Education Security
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['law talk']
+  tags: ['law talk']
   alert: true
   weight: 1
   learned: false
@@ -3391,7 +3391,7 @@
   tg_group: College/Education Security
   metadata:
     encrypted: true
-  tags: RAW=ARRAY['law tac']
+  tags: ['law tac']
   alert: true
   weight: 1
   learned: false
@@ -3401,7 +3401,7 @@
   name: Metro Wide 2
   alpha_tag: METROWIDE2
   tg_group: Statewide Area/Events
-  tags: RAW=ARRAY['interop']
+  tags: ['interop']
   alert: true
   weight: 1
   learned: false
@@ -3413,7 +3413,7 @@
   tg_group: South Kingstown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire dispatch','nbfm']
+  tags: ['fire dispatch','nbfm']
   alert: true
   weight: 1
   learned: false
@@ -3425,7 +3425,7 @@
   tg_group: South Kingstown
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['nbfm','fire-tac']
+  tags: ['nbfm','fire-tac']
   alert: true
   weight: 1
   learned: false
@@ -3437,7 +3437,7 @@
   alert: true
   weight: 1
   learned: true
-  tags: RAW=ARRAY[]::TEXT[]
+  tags: []
 - id: 1853
   system_id: 407
   tgid: 16193
@@ -3446,7 +3446,7 @@
   tg_group: Westerly
   metadata:
     icon: Fire Truck
-  tags: RAW=ARRAY['fire-talk','fire-tac','nbfm']
+  tags: ['fire-talk','fire-tac','nbfm']
   alert: true
   weight: 1
   learned: false
@@ -3459,14 +3459,14 @@
   alert: true
   weight: 1
   learned: true
-  tags: RAW=ARRAY['transit']::TEXT[]
+  tags: ['transit']
 - id: 1959
   system_id: 3348
   tgid: 153
   name: Massport Police 1
   alpha_tag: MASSPORT PD CH1
   tg_group: Massport
-  tags: RAW=ARRAY['law-talk']
+  tags: ['law-talk']
   alert: true
   weight: 1
   learned: false

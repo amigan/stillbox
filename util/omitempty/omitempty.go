@@ -10,6 +10,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"dynatron.me/x/stillbox/internal/common"
 )
 
 type FileMap map[string]FieldDecider
@@ -20,10 +22,11 @@ const (
 	NotSet    FieldTag = 0
 	OmitEmpty FieldTag = 1 << iota
 	OmitZero
+	GenerateYaml
 )
 
 var filePaths = FileMap{
-	"./pkg/database/models.go": AllFields(OmitEmpty),
+	"./pkg/database/models.go": AllFields(OmitEmpty | GenerateYaml),
 	"./pkg/database/calls.sql.go": FieldMap{
 		"TalkerAlias":              OmitEmpty,
 		"Incidents":                OmitEmpty | OmitZero,
@@ -91,7 +94,7 @@ func process(filePath string, fd FieldDecider) {
 					continue
 				}
 
-				field.Tag.Value = modifyJSONTag(res, field.Tag.Value)
+				field.Tag.Value = modifyTag(res, field.Tag.Value)
 			}
 		}
 		return true
@@ -114,7 +117,7 @@ func process(filePath string, fd FieldDecider) {
 	}
 }
 
-func modifyJSONTag(res FieldTag, tagValue string) string {
+func modifyTag(res FieldTag, tagValue string) string {
 	tagValue = strings.Trim(tagValue, "`")
 
 	tags := strings.Split(tagValue, " ")
@@ -151,11 +154,18 @@ func modifyJSONTag(res FieldTag, tagValue string) string {
 			if res&OmitZero > 0 && curTags&OmitZero == 0 {
 				jsonOptions = append(jsonOptions, "omitzero")
 			}
+
 		}
 
 		// Reconstruct the JSON tag
 		newJSONTag := "json:\"" + strings.Join(jsonOptions, ",") + "\""
 		modifiedTags = append(modifiedTags, newJSONTag)
+
+		if res&GenerateYaml > 0 {
+			jsonOptions[0] = common.ToSnake(jsonOptions[0])
+			yamlTag := `yaml:"` + strings.Join(jsonOptions, ",") + `"`
+			modifiedTags = append(modifiedTags, yamlTag)
+		}
 	}
 
 	// Reconstruct the full tag

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
@@ -66,7 +67,7 @@ const (
 func GetCallAudioRowToSkinnyCallAudio(row *database.GetCallAudioRow) *calls.CallAudio {
 	return &calls.CallAudio{
 		ID:        row.ID,
-		CallDate:  jsontypes.Time(row.CallDate.Time),
+		CallDate:  jsontypes.Time(row.CallDate),
 		AudioName: row.AudioName,
 		AudioType: (*string)(&row.AudioType.AudioMIME),
 	}
@@ -125,7 +126,7 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 		}
 
 		// storage succeeded, log the creation
-		m.refs.Created(m.dst, AbsoluteRef(crRef.Ref(m.refs.st.partMan(), row.CallDate.Time)))
+		m.refs.Created(m.dst, AbsoluteRef(crRef.Ref(m.refs.st.PartMan(), row.CallDate)))
 
 		if cao.audioRefOut == nil {
 			cao.audioRefOut = make(AudioRefList)
@@ -213,7 +214,7 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 		}
 
 		// XXX this might be racy since the lower bound of the interval is inclusive
-		dbPar.Start = rows[len(rows)-1].CallDate
+		dbPar.Start = common.NilIfZero(rows[len(rows)-1].CallDate)
 
 		count -= int64(len(rows))
 
@@ -294,8 +295,8 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	dbPar := database.GetCallAudioParams{
 		Count:         batchSize,
 		Swept:         par.SweptCalls,
-		Start:         par.Start.PGTypeTSTZ(),
-		End:           par.End.PGTypeTSTZ(),
+		Start:         (*time.Time)(par.Start),
+		End:           (*time.Time)(par.End),
 		TagsAny:       par.TagsAny,
 		TagsNot:       par.TagsNot,
 		LongerThan:    toPGNumericMilliseconds(par.AtLeastSeconds),

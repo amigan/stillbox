@@ -252,7 +252,7 @@ func (sb *s3Backend) generateSignedURL(ctx context.Context, audioName *string, o
 }
 
 func (sb *s3Backend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRef, opts *CallAudioOptions) (blob []byte, audioURL *url.URL, err error) {
-	objKey := ref.Ref(sb.st.partMan(), call.CallDate.Time())
+	objKey := ref.Ref(sb.st.PartMan(), call.CallDate.Time())
 
 	if opts != nil && opts.resolveBlob {
 		blob, err = sb.getBlob(ctx, objKey)
@@ -351,7 +351,7 @@ func (sb *s3Backend) delete(ctx context.Context, objKey string) error {
 }
 
 func (sb *s3Backend) Delete(ctx context.Context, call *calls.CallAudio, objKey AudioRef) error {
-	return sb.delete(ctx, objKey.Ref(sb.st.partMan(), call.CallDate.Time()))
+	return sb.delete(ctx, objKey.Ref(sb.st.PartMan(), call.CallDate.Time()))
 }
 
 func (sb *s3Backend) DeleteBulk(ctx context.Context, refs []AbsoluteRef) error {

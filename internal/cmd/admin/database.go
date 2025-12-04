@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/database/partman"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/urfave/cli/v3"
@@ -51,13 +51,13 @@ func partitioningCommand(cfg *config.Config) *cli.Command {
 }
 
 func Repartition(ctx context.Context, db database.Store, cfg config.Partition) error {
-	pm, err := callstore.NewPartitionManager(db, nil, cfg)
+	pm, err := partman.NewPartitionManager(db, nil, cfg)
 	if err != nil {
 		return err
 	}
 
 	return db.InTx(ctx, func(db database.Store) error {
-		parts, err := db.GetTablePartitions(ctx, cfg.Schema, callstore.CallsTable)
+		parts, err := db.GetTablePartitions(ctx, cfg.Schema, partman.CallsTable)
 		if err != nil {
 			return err
 		}

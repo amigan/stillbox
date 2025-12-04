@@ -12,7 +12,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -437,7 +436,7 @@ func (_c *Store_CallInIncident_Call) RunAndReturn(run func(ctx context.Context, 
 }
 
 // CleanupSweptCalls provides a mock function for the type Store
-func (_mock *Store) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
+func (_mock *Store) CleanupSweptCalls(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error) {
 	ret := _mock.Called(ctx, rangeStart, rangeEnd)
 
 	if len(ret) == 0 {
@@ -446,15 +445,15 @@ func (_mock *Store) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Tim
 
 	var r0 int64
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) (int64, error)); ok {
 		return returnFunc(ctx, rangeStart, rangeEnd)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) int64); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) int64); ok {
 		r0 = returnFunc(ctx, rangeStart, rangeEnd)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
 		r1 = returnFunc(ctx, rangeStart, rangeEnd)
 	} else {
 		r1 = ret.Error(1)
@@ -469,25 +468,25 @@ type Store_CleanupSweptCalls_Call struct {
 
 // CleanupSweptCalls is a helper method to define mock.On call
 //   - ctx context.Context
-//   - rangeStart pgtype.Timestamptz
-//   - rangeEnd pgtype.Timestamptz
+//   - rangeStart time.Time
+//   - rangeEnd time.Time
 func (_e *Store_Expecter) CleanupSweptCalls(ctx interface{}, rangeStart interface{}, rangeEnd interface{}) *Store_CleanupSweptCalls_Call {
 	return &Store_CleanupSweptCalls_Call{Call: _e.mock.On("CleanupSweptCalls", ctx, rangeStart, rangeEnd)}
 }
 
-func (_c *Store_CleanupSweptCalls_Call) Run(run func(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz)) *Store_CleanupSweptCalls_Call {
+func (_c *Store_CleanupSweptCalls_Call) Run(run func(ctx context.Context, rangeStart time.Time, rangeEnd time.Time)) *Store_CleanupSweptCalls_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 pgtype.Timestamptz
+		var arg1 time.Time
 		if args[1] != nil {
-			arg1 = args[1].(pgtype.Timestamptz)
+			arg1 = args[1].(time.Time)
 		}
-		var arg2 pgtype.Timestamptz
+		var arg2 time.Time
 		if args[2] != nil {
-			arg2 = args[2].(pgtype.Timestamptz)
+			arg2 = args[2].(time.Time)
 		}
 		run(
 			arg0,
@@ -503,13 +502,13 @@ func (_c *Store_CleanupSweptCalls_Call) Return(n int64, err error) *Store_Cleanu
 	return _c
 }
 
-func (_c *Store_CleanupSweptCalls_Call) RunAndReturn(run func(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)) *Store_CleanupSweptCalls_Call {
+func (_c *Store_CleanupSweptCalls_Call) RunAndReturn(run func(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error)) *Store_CleanupSweptCalls_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // CountRefJournal provides a mock function for the type Store
-func (_mock *Store) CountRefJournal(ctx context.Context, missing *bool, since pgtype.Timestamptz, until pgtype.Timestamptz) (int64, error) {
+func (_mock *Store) CountRefJournal(ctx context.Context, missing *bool, since *time.Time, until *time.Time) (int64, error) {
 	ret := _mock.Called(ctx, missing, since, until)
 
 	if len(ret) == 0 {
@@ -518,15 +517,15 @@ func (_mock *Store) CountRefJournal(ctx context.Context, missing *bool, since pg
 
 	var r0 int64
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *bool, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *bool, *time.Time, *time.Time) (int64, error)); ok {
 		return returnFunc(ctx, missing, since, until)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *bool, pgtype.Timestamptz, pgtype.Timestamptz) int64); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *bool, *time.Time, *time.Time) int64); ok {
 		r0 = returnFunc(ctx, missing, since, until)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, *bool, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *bool, *time.Time, *time.Time) error); ok {
 		r1 = returnFunc(ctx, missing, since, until)
 	} else {
 		r1 = ret.Error(1)
@@ -542,13 +541,13 @@ type Store_CountRefJournal_Call struct {
 // CountRefJournal is a helper method to define mock.On call
 //   - ctx context.Context
 //   - missing *bool
-//   - since pgtype.Timestamptz
-//   - until pgtype.Timestamptz
+//   - since *time.Time
+//   - until *time.Time
 func (_e *Store_Expecter) CountRefJournal(ctx interface{}, missing interface{}, since interface{}, until interface{}) *Store_CountRefJournal_Call {
 	return &Store_CountRefJournal_Call{Call: _e.mock.On("CountRefJournal", ctx, missing, since, until)}
 }
 
-func (_c *Store_CountRefJournal_Call) Run(run func(ctx context.Context, missing *bool, since pgtype.Timestamptz, until pgtype.Timestamptz)) *Store_CountRefJournal_Call {
+func (_c *Store_CountRefJournal_Call) Run(run func(ctx context.Context, missing *bool, since *time.Time, until *time.Time)) *Store_CountRefJournal_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -558,13 +557,13 @@ func (_c *Store_CountRefJournal_Call) Run(run func(ctx context.Context, missing 
 		if args[1] != nil {
 			arg1 = args[1].(*bool)
 		}
-		var arg2 pgtype.Timestamptz
+		var arg2 *time.Time
 		if args[2] != nil {
-			arg2 = args[2].(pgtype.Timestamptz)
+			arg2 = args[2].(*time.Time)
 		}
-		var arg3 pgtype.Timestamptz
+		var arg3 *time.Time
 		if args[3] != nil {
-			arg3 = args[3].(pgtype.Timestamptz)
+			arg3 = args[3].(*time.Time)
 		}
 		run(
 			arg0,
@@ -581,7 +580,7 @@ func (_c *Store_CountRefJournal_Call) Return(n int64, err error) *Store_CountRef
 	return _c
 }
 
-func (_c *Store_CountRefJournal_Call) RunAndReturn(run func(ctx context.Context, missing *bool, since pgtype.Timestamptz, until pgtype.Timestamptz) (int64, error)) *Store_CountRefJournal_Call {
+func (_c *Store_CountRefJournal_Call) RunAndReturn(run func(ctx context.Context, missing *bool, since *time.Time, until *time.Time) (int64, error)) *Store_CountRefJournal_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2358,7 +2357,7 @@ func (_c *Store_GetCallAudioCount_Call) RunAndReturn(run func(ctx context.Contex
 }
 
 // GetCallStatsByInterval provides a mock function for the type Store
-func (_mock *Store) GetCallStatsByInterval(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]database.GetCallStatsByIntervalRow, error) {
+func (_mock *Store) GetCallStatsByInterval(ctx context.Context, truncField string, start *time.Time, end *time.Time) ([]database.GetCallStatsByIntervalRow, error) {
 	ret := _mock.Called(ctx, truncField, start, end)
 
 	if len(ret) == 0 {
@@ -2367,17 +2366,17 @@ func (_mock *Store) GetCallStatsByInterval(ctx context.Context, truncField strin
 
 	var r0 []database.GetCallStatsByIntervalRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) ([]database.GetCallStatsByIntervalRow, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *time.Time, *time.Time) ([]database.GetCallStatsByIntervalRow, error)); ok {
 		return returnFunc(ctx, truncField, start, end)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) []database.GetCallStatsByIntervalRow); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *time.Time, *time.Time) []database.GetCallStatsByIntervalRow); ok {
 		r0 = returnFunc(ctx, truncField, start, end)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]database.GetCallStatsByIntervalRow)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, *time.Time, *time.Time) error); ok {
 		r1 = returnFunc(ctx, truncField, start, end)
 	} else {
 		r1 = ret.Error(1)
@@ -2393,13 +2392,13 @@ type Store_GetCallStatsByInterval_Call struct {
 // GetCallStatsByInterval is a helper method to define mock.On call
 //   - ctx context.Context
 //   - truncField string
-//   - start pgtype.Timestamptz
-//   - end pgtype.Timestamptz
+//   - start *time.Time
+//   - end *time.Time
 func (_e *Store_Expecter) GetCallStatsByInterval(ctx interface{}, truncField interface{}, start interface{}, end interface{}) *Store_GetCallStatsByInterval_Call {
 	return &Store_GetCallStatsByInterval_Call{Call: _e.mock.On("GetCallStatsByInterval", ctx, truncField, start, end)}
 }
 
-func (_c *Store_GetCallStatsByInterval_Call) Run(run func(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz)) *Store_GetCallStatsByInterval_Call {
+func (_c *Store_GetCallStatsByInterval_Call) Run(run func(ctx context.Context, truncField string, start *time.Time, end *time.Time)) *Store_GetCallStatsByInterval_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -2409,13 +2408,13 @@ func (_c *Store_GetCallStatsByInterval_Call) Run(run func(ctx context.Context, t
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 pgtype.Timestamptz
+		var arg2 *time.Time
 		if args[2] != nil {
-			arg2 = args[2].(pgtype.Timestamptz)
+			arg2 = args[2].(*time.Time)
 		}
-		var arg3 pgtype.Timestamptz
+		var arg3 *time.Time
 		if args[3] != nil {
-			arg3 = args[3].(pgtype.Timestamptz)
+			arg3 = args[3].(*time.Time)
 		}
 		run(
 			arg0,
@@ -2432,13 +2431,13 @@ func (_c *Store_GetCallStatsByInterval_Call) Return(getCallStatsByIntervalRows [
 	return _c
 }
 
-func (_c *Store_GetCallStatsByInterval_Call) RunAndReturn(run func(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]database.GetCallStatsByIntervalRow, error)) *Store_GetCallStatsByInterval_Call {
+func (_c *Store_GetCallStatsByInterval_Call) RunAndReturn(run func(ctx context.Context, truncField string, start *time.Time, end *time.Time) ([]database.GetCallStatsByIntervalRow, error)) *Store_GetCallStatsByInterval_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetCallStatsByTalkgroup provides a mock function for the type Store
-func (_mock *Store) GetCallStatsByTalkgroup(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]database.GetCallStatsByTalkgroupRow, error) {
+func (_mock *Store) GetCallStatsByTalkgroup(ctx context.Context, truncField string, start *time.Time, end *time.Time) ([]database.GetCallStatsByTalkgroupRow, error) {
 	ret := _mock.Called(ctx, truncField, start, end)
 
 	if len(ret) == 0 {
@@ -2447,17 +2446,17 @@ func (_mock *Store) GetCallStatsByTalkgroup(ctx context.Context, truncField stri
 
 	var r0 []database.GetCallStatsByTalkgroupRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) ([]database.GetCallStatsByTalkgroupRow, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *time.Time, *time.Time) ([]database.GetCallStatsByTalkgroupRow, error)); ok {
 		return returnFunc(ctx, truncField, start, end)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) []database.GetCallStatsByTalkgroupRow); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *time.Time, *time.Time) []database.GetCallStatsByTalkgroupRow); ok {
 		r0 = returnFunc(ctx, truncField, start, end)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]database.GetCallStatsByTalkgroupRow)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, *time.Time, *time.Time) error); ok {
 		r1 = returnFunc(ctx, truncField, start, end)
 	} else {
 		r1 = ret.Error(1)
@@ -2473,13 +2472,13 @@ type Store_GetCallStatsByTalkgroup_Call struct {
 // GetCallStatsByTalkgroup is a helper method to define mock.On call
 //   - ctx context.Context
 //   - truncField string
-//   - start pgtype.Timestamptz
-//   - end pgtype.Timestamptz
+//   - start *time.Time
+//   - end *time.Time
 func (_e *Store_Expecter) GetCallStatsByTalkgroup(ctx interface{}, truncField interface{}, start interface{}, end interface{}) *Store_GetCallStatsByTalkgroup_Call {
 	return &Store_GetCallStatsByTalkgroup_Call{Call: _e.mock.On("GetCallStatsByTalkgroup", ctx, truncField, start, end)}
 }
 
-func (_c *Store_GetCallStatsByTalkgroup_Call) Run(run func(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz)) *Store_GetCallStatsByTalkgroup_Call {
+func (_c *Store_GetCallStatsByTalkgroup_Call) Run(run func(ctx context.Context, truncField string, start *time.Time, end *time.Time)) *Store_GetCallStatsByTalkgroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -2489,13 +2488,13 @@ func (_c *Store_GetCallStatsByTalkgroup_Call) Run(run func(ctx context.Context, 
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 pgtype.Timestamptz
+		var arg2 *time.Time
 		if args[2] != nil {
-			arg2 = args[2].(pgtype.Timestamptz)
+			arg2 = args[2].(*time.Time)
 		}
-		var arg3 pgtype.Timestamptz
+		var arg3 *time.Time
 		if args[3] != nil {
-			arg3 = args[3].(pgtype.Timestamptz)
+			arg3 = args[3].(*time.Time)
 		}
 		run(
 			arg0,
@@ -2512,7 +2511,7 @@ func (_c *Store_GetCallStatsByTalkgroup_Call) Return(getCallStatsByTalkgroupRows
 	return _c
 }
 
-func (_c *Store_GetCallStatsByTalkgroup_Call) RunAndReturn(run func(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]database.GetCallStatsByTalkgroupRow, error)) *Store_GetCallStatsByTalkgroup_Call {
+func (_c *Store_GetCallStatsByTalkgroup_Call) RunAndReturn(run func(ctx context.Context, truncField string, start *time.Time, end *time.Time) ([]database.GetCallStatsByTalkgroupRow, error)) *Store_GetCallStatsByTalkgroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2982,7 +2981,7 @@ func (_c *Store_GetIncidentTalkgroups_Call) RunAndReturn(run func(ctx context.Co
 }
 
 // GetPrunableAudioRefs provides a mock function for the type Store
-func (_mock *Store) GetPrunableAudioRefs(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]database.GetPrunableAudioRefsRow, error) {
+func (_mock *Store) GetPrunableAudioRefs(ctx context.Context, partitionStart time.Time, partitionEnd time.Time) ([]database.GetPrunableAudioRefsRow, error) {
 	ret := _mock.Called(ctx, partitionStart, partitionEnd)
 
 	if len(ret) == 0 {
@@ -2991,17 +2990,17 @@ func (_mock *Store) GetPrunableAudioRefs(ctx context.Context, partitionStart pgt
 
 	var r0 []database.GetPrunableAudioRefsRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) ([]database.GetPrunableAudioRefsRow, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) ([]database.GetPrunableAudioRefsRow, error)); ok {
 		return returnFunc(ctx, partitionStart, partitionEnd)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) []database.GetPrunableAudioRefsRow); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) []database.GetPrunableAudioRefsRow); ok {
 		r0 = returnFunc(ctx, partitionStart, partitionEnd)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]database.GetPrunableAudioRefsRow)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
 		r1 = returnFunc(ctx, partitionStart, partitionEnd)
 	} else {
 		r1 = ret.Error(1)
@@ -3016,25 +3015,25 @@ type Store_GetPrunableAudioRefs_Call struct {
 
 // GetPrunableAudioRefs is a helper method to define mock.On call
 //   - ctx context.Context
-//   - partitionStart pgtype.Timestamptz
-//   - partitionEnd pgtype.Timestamptz
+//   - partitionStart time.Time
+//   - partitionEnd time.Time
 func (_e *Store_Expecter) GetPrunableAudioRefs(ctx interface{}, partitionStart interface{}, partitionEnd interface{}) *Store_GetPrunableAudioRefs_Call {
 	return &Store_GetPrunableAudioRefs_Call{Call: _e.mock.On("GetPrunableAudioRefs", ctx, partitionStart, partitionEnd)}
 }
 
-func (_c *Store_GetPrunableAudioRefs_Call) Run(run func(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz)) *Store_GetPrunableAudioRefs_Call {
+func (_c *Store_GetPrunableAudioRefs_Call) Run(run func(ctx context.Context, partitionStart time.Time, partitionEnd time.Time)) *Store_GetPrunableAudioRefs_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 pgtype.Timestamptz
+		var arg1 time.Time
 		if args[1] != nil {
-			arg1 = args[1].(pgtype.Timestamptz)
+			arg1 = args[1].(time.Time)
 		}
-		var arg2 pgtype.Timestamptz
+		var arg2 time.Time
 		if args[2] != nil {
-			arg2 = args[2].(pgtype.Timestamptz)
+			arg2 = args[2].(time.Time)
 		}
 		run(
 			arg0,
@@ -3050,7 +3049,7 @@ func (_c *Store_GetPrunableAudioRefs_Call) Return(getPrunableAudioRefsRows []dat
 	return _c
 }
 
-func (_c *Store_GetPrunableAudioRefs_Call) RunAndReturn(run func(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]database.GetPrunableAudioRefsRow, error)) *Store_GetPrunableAudioRefs_Call {
+func (_c *Store_GetPrunableAudioRefs_Call) RunAndReturn(run func(ctx context.Context, partitionStart time.Time, partitionEnd time.Time) ([]database.GetPrunableAudioRefsRow, error)) *Store_GetPrunableAudioRefs_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -4766,7 +4765,7 @@ func (_c *Store_ListCallsP_Call) RunAndReturn(run func(ctx context.Context, arg 
 }
 
 // ListIncidentsCount provides a mock function for the type Store
-func (_mock *Store) ListIncidentsCount(ctx context.Context, start pgtype.Timestamptz, end pgtype.Timestamptz, filter *string) (int64, error) {
+func (_mock *Store) ListIncidentsCount(ctx context.Context, start *time.Time, end *time.Time, filter *string) (int64, error) {
 	ret := _mock.Called(ctx, start, end, filter)
 
 	if len(ret) == 0 {
@@ -4775,15 +4774,15 @@ func (_mock *Store) ListIncidentsCount(ctx context.Context, start pgtype.Timesta
 
 	var r0 int64
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz, *string) (int64, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *time.Time, *time.Time, *string) (int64, error)); ok {
 		return returnFunc(ctx, start, end, filter)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz, *string) int64); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *time.Time, *time.Time, *string) int64); ok {
 		r0 = returnFunc(ctx, start, end, filter)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz, *string) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *time.Time, *time.Time, *string) error); ok {
 		r1 = returnFunc(ctx, start, end, filter)
 	} else {
 		r1 = ret.Error(1)
@@ -4798,26 +4797,26 @@ type Store_ListIncidentsCount_Call struct {
 
 // ListIncidentsCount is a helper method to define mock.On call
 //   - ctx context.Context
-//   - start pgtype.Timestamptz
-//   - end pgtype.Timestamptz
+//   - start *time.Time
+//   - end *time.Time
 //   - filter *string
 func (_e *Store_Expecter) ListIncidentsCount(ctx interface{}, start interface{}, end interface{}, filter interface{}) *Store_ListIncidentsCount_Call {
 	return &Store_ListIncidentsCount_Call{Call: _e.mock.On("ListIncidentsCount", ctx, start, end, filter)}
 }
 
-func (_c *Store_ListIncidentsCount_Call) Run(run func(ctx context.Context, start pgtype.Timestamptz, end pgtype.Timestamptz, filter *string)) *Store_ListIncidentsCount_Call {
+func (_c *Store_ListIncidentsCount_Call) Run(run func(ctx context.Context, start *time.Time, end *time.Time, filter *string)) *Store_ListIncidentsCount_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 pgtype.Timestamptz
+		var arg1 *time.Time
 		if args[1] != nil {
-			arg1 = args[1].(pgtype.Timestamptz)
+			arg1 = args[1].(*time.Time)
 		}
-		var arg2 pgtype.Timestamptz
+		var arg2 *time.Time
 		if args[2] != nil {
-			arg2 = args[2].(pgtype.Timestamptz)
+			arg2 = args[2].(*time.Time)
 		}
 		var arg3 *string
 		if args[3] != nil {
@@ -4838,7 +4837,7 @@ func (_c *Store_ListIncidentsCount_Call) Return(n int64, err error) *Store_ListI
 	return _c
 }
 
-func (_c *Store_ListIncidentsCount_Call) RunAndReturn(run func(ctx context.Context, start pgtype.Timestamptz, end pgtype.Timestamptz, filter *string) (int64, error)) *Store_ListIncidentsCount_Call {
+func (_c *Store_ListIncidentsCount_Call) RunAndReturn(run func(ctx context.Context, start *time.Time, end *time.Time, filter *string) (int64, error)) *Store_ListIncidentsCount_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -5039,7 +5038,7 @@ func (_c *Store_PruneShares_Call) RunAndReturn(run func(ctx context.Context) err
 }
 
 // RecordUserLogin provides a mock function for the type Store
-func (_mock *Store) RecordUserLogin(ctx context.Context, username string, lastLoginAt pgtype.Timestamptz, lastLoginFrom *netip.Addr) error {
+func (_mock *Store) RecordUserLogin(ctx context.Context, username string, lastLoginAt *time.Time, lastLoginFrom *netip.Addr) error {
 	ret := _mock.Called(ctx, username, lastLoginAt, lastLoginFrom)
 
 	if len(ret) == 0 {
@@ -5047,7 +5046,7 @@ func (_mock *Store) RecordUserLogin(ctx context.Context, username string, lastLo
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, pgtype.Timestamptz, *netip.Addr) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *time.Time, *netip.Addr) error); ok {
 		r0 = returnFunc(ctx, username, lastLoginAt, lastLoginFrom)
 	} else {
 		r0 = ret.Error(0)
@@ -5063,13 +5062,13 @@ type Store_RecordUserLogin_Call struct {
 // RecordUserLogin is a helper method to define mock.On call
 //   - ctx context.Context
 //   - username string
-//   - lastLoginAt pgtype.Timestamptz
+//   - lastLoginAt *time.Time
 //   - lastLoginFrom *netip.Addr
 func (_e *Store_Expecter) RecordUserLogin(ctx interface{}, username interface{}, lastLoginAt interface{}, lastLoginFrom interface{}) *Store_RecordUserLogin_Call {
 	return &Store_RecordUserLogin_Call{Call: _e.mock.On("RecordUserLogin", ctx, username, lastLoginAt, lastLoginFrom)}
 }
 
-func (_c *Store_RecordUserLogin_Call) Run(run func(ctx context.Context, username string, lastLoginAt pgtype.Timestamptz, lastLoginFrom *netip.Addr)) *Store_RecordUserLogin_Call {
+func (_c *Store_RecordUserLogin_Call) Run(run func(ctx context.Context, username string, lastLoginAt *time.Time, lastLoginFrom *netip.Addr)) *Store_RecordUserLogin_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -5079,9 +5078,9 @@ func (_c *Store_RecordUserLogin_Call) Run(run func(ctx context.Context, username
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 pgtype.Timestamptz
+		var arg2 *time.Time
 		if args[2] != nil {
-			arg2 = args[2].(pgtype.Timestamptz)
+			arg2 = args[2].(*time.Time)
 		}
 		var arg3 *netip.Addr
 		if args[3] != nil {
@@ -5102,7 +5101,7 @@ func (_c *Store_RecordUserLogin_Call) Return(err error) *Store_RecordUserLogin_C
 	return _c
 }
 
-func (_c *Store_RecordUserLogin_Call) RunAndReturn(run func(ctx context.Context, username string, lastLoginAt pgtype.Timestamptz, lastLoginFrom *netip.Addr) error) *Store_RecordUserLogin_Call {
+func (_c *Store_RecordUserLogin_Call) RunAndReturn(run func(ctx context.Context, username string, lastLoginAt *time.Time, lastLoginFrom *netip.Addr) error) *Store_RecordUserLogin_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -5447,7 +5446,7 @@ func (_c *Store_SetCallTranscript_Call) RunAndReturn(run func(ctx context.Contex
 }
 
 // SetRefJournalPrune provides a mock function for the type Store
-func (_mock *Store) SetRefJournalPrune(ctx context.Context, iD int64, pruneAfter pgtype.Timestamptz) error {
+func (_mock *Store) SetRefJournalPrune(ctx context.Context, iD int64, pruneAfter *time.Time) error {
 	ret := _mock.Called(ctx, iD, pruneAfter)
 
 	if len(ret) == 0 {
@@ -5455,7 +5454,7 @@ func (_mock *Store) SetRefJournalPrune(ctx context.Context, iD int64, pruneAfter
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, pgtype.Timestamptz) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, *time.Time) error); ok {
 		r0 = returnFunc(ctx, iD, pruneAfter)
 	} else {
 		r0 = ret.Error(0)
@@ -5471,12 +5470,12 @@ type Store_SetRefJournalPrune_Call struct {
 // SetRefJournalPrune is a helper method to define mock.On call
 //   - ctx context.Context
 //   - iD int64
-//   - pruneAfter pgtype.Timestamptz
+//   - pruneAfter *time.Time
 func (_e *Store_Expecter) SetRefJournalPrune(ctx interface{}, iD interface{}, pruneAfter interface{}) *Store_SetRefJournalPrune_Call {
 	return &Store_SetRefJournalPrune_Call{Call: _e.mock.On("SetRefJournalPrune", ctx, iD, pruneAfter)}
 }
 
-func (_c *Store_SetRefJournalPrune_Call) Run(run func(ctx context.Context, iD int64, pruneAfter pgtype.Timestamptz)) *Store_SetRefJournalPrune_Call {
+func (_c *Store_SetRefJournalPrune_Call) Run(run func(ctx context.Context, iD int64, pruneAfter *time.Time)) *Store_SetRefJournalPrune_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -5486,9 +5485,9 @@ func (_c *Store_SetRefJournalPrune_Call) Run(run func(ctx context.Context, iD in
 		if args[1] != nil {
 			arg1 = args[1].(int64)
 		}
-		var arg2 pgtype.Timestamptz
+		var arg2 *time.Time
 		if args[2] != nil {
-			arg2 = args[2].(pgtype.Timestamptz)
+			arg2 = args[2].(*time.Time)
 		}
 		run(
 			arg0,
@@ -5504,7 +5503,7 @@ func (_c *Store_SetRefJournalPrune_Call) Return(err error) *Store_SetRefJournalP
 	return _c
 }
 
-func (_c *Store_SetRefJournalPrune_Call) RunAndReturn(run func(ctx context.Context, iD int64, pruneAfter pgtype.Timestamptz) error) *Store_SetRefJournalPrune_Call {
+func (_c *Store_SetRefJournalPrune_Call) RunAndReturn(run func(ctx context.Context, iD int64, pruneAfter *time.Time) error) *Store_SetRefJournalPrune_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -5908,7 +5907,7 @@ func (_c *Store_StoreTGVersion_Call) RunAndReturn(run func(ctx context.Context, 
 }
 
 // SweepCalls provides a mock function for the type Store
-func (_mock *Store) SweepCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
+func (_mock *Store) SweepCalls(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error) {
 	ret := _mock.Called(ctx, rangeStart, rangeEnd)
 
 	if len(ret) == 0 {
@@ -5917,15 +5916,15 @@ func (_mock *Store) SweepCalls(ctx context.Context, rangeStart pgtype.Timestampt
 
 	var r0 int64
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) (int64, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) (int64, error)); ok {
 		return returnFunc(ctx, rangeStart, rangeEnd)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) int64); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) int64); ok {
 		r0 = returnFunc(ctx, rangeStart, rangeEnd)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, pgtype.Timestamptz, pgtype.Timestamptz) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
 		r1 = returnFunc(ctx, rangeStart, rangeEnd)
 	} else {
 		r1 = ret.Error(1)
@@ -5940,25 +5939,25 @@ type Store_SweepCalls_Call struct {
 
 // SweepCalls is a helper method to define mock.On call
 //   - ctx context.Context
-//   - rangeStart pgtype.Timestamptz
-//   - rangeEnd pgtype.Timestamptz
+//   - rangeStart time.Time
+//   - rangeEnd time.Time
 func (_e *Store_Expecter) SweepCalls(ctx interface{}, rangeStart interface{}, rangeEnd interface{}) *Store_SweepCalls_Call {
 	return &Store_SweepCalls_Call{Call: _e.mock.On("SweepCalls", ctx, rangeStart, rangeEnd)}
 }
 
-func (_c *Store_SweepCalls_Call) Run(run func(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz)) *Store_SweepCalls_Call {
+func (_c *Store_SweepCalls_Call) Run(run func(ctx context.Context, rangeStart time.Time, rangeEnd time.Time)) *Store_SweepCalls_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 pgtype.Timestamptz
+		var arg1 time.Time
 		if args[1] != nil {
-			arg1 = args[1].(pgtype.Timestamptz)
+			arg1 = args[1].(time.Time)
 		}
-		var arg2 pgtype.Timestamptz
+		var arg2 time.Time
 		if args[2] != nil {
-			arg2 = args[2].(pgtype.Timestamptz)
+			arg2 = args[2].(time.Time)
 		}
 		run(
 			arg0,
@@ -5974,7 +5973,7 @@ func (_c *Store_SweepCalls_Call) Return(n int64, err error) *Store_SweepCalls_Ca
 	return _c
 }
 
-func (_c *Store_SweepCalls_Call) RunAndReturn(run func(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)) *Store_SweepCalls_Call {
+func (_c *Store_SweepCalls_Call) RunAndReturn(run func(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error)) *Store_SweepCalls_Call {
 	_c.Call.Return(run)
 	return _c
 }

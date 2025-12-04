@@ -47,7 +47,7 @@ func (a *authn) apiKeySubject(ctx context.Context, key string) (entities.Subject
 		return nil, err
 	}
 
-	if apik.Disabled || (apik.Expires.Valid && time.Now().After(apik.Expires.Time)) {
+	if apik.Disabled || (apik.Expires != nil && time.Now().After(*apik.Expires)) {
 		return nil, ErrUnauthorized
 	}
 

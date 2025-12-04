@@ -18,6 +18,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/database/partman"
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/services"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
@@ -73,19 +74,19 @@ type Store interface {
 	// GoGC starts the audio garbage collector thread.
 	GoGC(ctx context.Context)
 
-	PartmanCallAudioManager
-	partMan() PartitionManager
+	partman.PartmanCallAudioManager
+	PartMan() partman.PartitionManager
 }
 
 type store struct {
 	db            database.Store
 	audioBackends *audioBackends
-	partman       PartitionManager
+	partman       partman.PartitionManager
 
 	moveInProgress sync.Mutex
 }
 
-func (s *store) partMan() PartitionManager {
+func (s *store) PartMan() partman.PartitionManager {
 	return s.partman
 }
 
@@ -124,7 +125,7 @@ func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, m
 	}
 
 	if partConfig.Enabled {
-		st.partman, err = NewPartitionManager(db, st, partConfig)
+		st.partman, err = partman.NewPartitionManager(db, st, partConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -172,7 +173,7 @@ func toAddCallParams(call *calls.Call, audioRef AudioRefJSON, audioBlob []byte) 
 		Submitter:   call.Submitter.Int32Ptr(),
 		System:      call.System,
 		Talkgroup:   call.Talkgroup,
-		CallDate:    pgtype.Timestamptz{Time: call.DateTime, Valid: true},
+		CallDate:    call.DateTime,
 		AudioName:   common.NilIfZero(call.AudioName),
 		AudioBlob:   audioBlob,
 		AudioType:   audioMimeFromString(call.AudioType),
@@ -345,7 +346,7 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID, opts ...CallAudioOp
 
 	call := &calls.CallAudio{
 		ID:        id,
-		CallDate:  jsontypes.Time(dbCall.CallDate.Time),
+		CallDate:  jsontypes.Time(dbCall.CallDate),
 		AudioName: dbCall.AudioName,
 		AudioType: audioMime(dbCall.AudioType),
 		AudioBlob: dbCall.AudioBlob,
@@ -387,7 +388,7 @@ func (s *store) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*call
 		// set this up in case we need to resolve from backend
 		callAud := calls.CallAudio{
 			ID:        c.ID,
-			CallDate:  jsontypes.Time(c.CallDate.Time),
+			CallDate:  jsontypes.Time(c.CallDate),
 			AudioBlob: c.AudioBlob,
 		}
 
@@ -404,7 +405,7 @@ func (s *store) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*call
 			Submitter:      sub,
 			System:         c.System,
 			Talkgroup:      c.Talkgroup,
-			DateTime:       c.CallDate.Time,
+			DateTime:       c.CallDate,
 			Audio:          callAud.AudioBlob,
 			AudioName:      common.ZeroIfNil(c.AudioName),
 			AudioType:      string(c.AudioType.AudioMIME),
@@ -446,7 +447,7 @@ func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 		Submitter:      sub,
 		System:         c.System,
 		Talkgroup:      c.Talkgroup,
-		DateTime:       c.CallDate.Time,
+		DateTime:       c.CallDate,
 		AudioName:      common.ZeroIfNil(c.AudioName),
 		AudioType:      string(c.AudioType.AudioMIME),
 		Duration:       calls.CallDuration(time.Duration(common.ZeroIfNil(c.Duration)) * time.Millisecond),
@@ -502,8 +503,8 @@ func (s *store) Calls(ctx context.Context, p ListCallsParams) (rows []database.L
 
 	offset, perPage := p.Pagination.OffsetPerPage(100)
 	par := database.ListCallsPParams{
-		Start:            p.Start.PGTypeTSTZ(),
-		End:              p.End.PGTypeTSTZ(),
+		Start:            (*time.Time)(p.Start),
+		End:              (*time.Time)(p.End),
 		TagsAny:          p.TagsAny,
 		TagsNot:          p.TagsNot,
 		Offset:           offset,
@@ -590,7 +591,7 @@ func (s *store) CallStats(ctx context.Context, interval calls.StatsInterval, sta
 
 	db := database.FromCtx(ctx)
 
-	dbs, err := db.GetCallStatsByInterval(ctx, string(interval), start.PGTypeTSTZ(), end.PGTypeTSTZ())
+	dbs, err := db.GetCallStatsByInterval(ctx, string(interval), (*time.Time)(&start), (*time.Time)(&end))
 	if err != nil {
 		return nil, err
 	}
@@ -599,7 +600,7 @@ func (s *store) CallStats(ctx context.Context, interval calls.StatsInterval, sta
 	for _, st := range dbs {
 		cs.Stats = append(cs.Stats, calls.Stat{
 			Count: st.Count,
-			Time:  jsontypes.Time(st.Date.Time),
+			Time:  jsontypes.Time(st.Date),
 		})
 	}
 

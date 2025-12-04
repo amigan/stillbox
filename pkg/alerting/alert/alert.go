@@ -42,7 +42,7 @@ func (a *Alert) FillTranscriptContext(ctx context.Context, count uint, threshold
 		}
 
 		a.Context = append(a.Context, TxCtx{
-			Date:       c.CallDate.Time,
+			Date:       c.CallDate,
 			Transcript: *c.Transcript,
 		})
 	}

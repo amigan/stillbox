@@ -52,7 +52,6 @@ type Server struct {
 	signals    chan os.Signal
 	tgs        tgstore.Store
 	rest       rest.APIRoot
-	partman    callstore.PartitionManager
 	users      users.Store
 	calls      callstore.Store
 	incidents  incstore.Store
@@ -133,7 +132,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		users:     ust,
 		metrics:   met,
 		calls:     callStore,
-		incidents: incstore.NewStore(),
+		incidents: incstore.NewStore(db),
 		rbac:      rbacSvc,
 		stats:     statsSvc,
 		settings:  settings.New(settings.ConfigDefaults),
@@ -298,7 +297,7 @@ func (s *Server) Go(ctx context.Context, shutReq chan<- error) error {
 	go s.share.Go(ctx)
 	go s.calls.GoGC(ctx)
 
-	if pm := s.partman; pm != nil {
+	if pm := s.calls.PartMan(); pm != nil {
 		go pm.Go(ctx)
 	}
 

@@ -56,7 +56,7 @@ func (fsb *fsBackend) serveFile(w ZeroCopyResponseWriter, file *os.File, call *c
 }
 
 func (fsb *fsBackend) Get(ctx context.Context, call *calls.CallAudio, refPath AudioRef, opts *CallAudioOptions) ([]byte, *url.URL, error) {
-	cPath := fsb.callPath(refPath.Ref(fsb.st.partMan(), call.CallDate.Time()))
+	cPath := fsb.callPath(refPath.Ref(fsb.st.PartMan(), call.CallDate.Time()))
 
 	file, err := os.Open(cPath)
 	if err != nil {
@@ -143,7 +143,7 @@ func (fsb *fsBackend) checkPath(refPath string) (composedPath string, isDir bool
 }
 
 func (fsb *fsBackend) Delete(_ context.Context, call *calls.CallAudio, audioRef AudioRef) error {
-	return fsb.delete(audioRef.Ref(fsb.st.partMan(), call.CallDate.Time()))
+	return fsb.delete(audioRef.Ref(fsb.st.PartMan(), call.CallDate.Time()))
 }
 
 func (fsb *fsBackend) delete(path string) error {

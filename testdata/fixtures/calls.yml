@@ -1,0 +1,18 @@
+- id: {{ uuid "call1" }}
+  submitter: 1
+  system: 407
+  talkgroup: 10101
+  call_date: {{ time "call1" }}
+  audio_name: "aud.mp3"
+  audio_blob: {{ .smallMP3 }}
+  audio_type: "audio/mpeg"
+  duration: 500
+- id: {{ uuid "call2" }}
+  submitter: 1
+  system: 407
+  talkgroup: 2
+  call_date: {{ time "call2" }}
+  audio_name: "aud.mp3"
+  audio_blob: {{ .smallMP3 }}
+  audio_type: "audio/mpeg"
+  duration: 500

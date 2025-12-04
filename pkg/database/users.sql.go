@@ -9,8 +9,6 @@ import (
 	"context"
 	"net/netip"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createAPIKey = `-- name: CreateAPIKey :exec
@@ -25,12 +23,12 @@ INSERT INTO api_keys(
 `
 
 type CreateAPIKeyParams struct {
-	OwnerID   int              `json:"ownerId"`
-	Name      *string          `json:"name"`
-	CreatedAt time.Time        `json:"createdAt"`
-	Expires   pgtype.Timestamp `json:"expires"`
-	Disabled  bool             `json:"disabled"`
-	HashedKey string           `json:"hashedKey"`
+	OwnerID   int        `db:"owner_id" json:"ownerId"`
+	Name      *string    `db:"name" json:"name"`
+	CreatedAt time.Time  `db:"created_at" json:"createdAt"`
+	Expires   *time.Time `db:"expires" json:"expires"`
+	Disabled  bool       `db:"disabled" json:"disabled"`
+	HashedKey string     `db:"hashed_key" json:"hashedKey"`
 }
 
 func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error {
@@ -58,11 +56,11 @@ RETURNING id, username, password, real_name, email, roles, disabled_at, last_log
 `
 
 type CreateUserParams struct {
-	Username string   `json:"username"`
-	Password string   `json:"password"`
-	Email    string   `json:"email"`
-	RealName *string  `json:"realName"`
-	Roles    []string `json:"roles"`
+	Username string   `db:"username" json:"username"`
+	Password string   `db:"password" json:"password"`
+	Email    string   `db:"email" json:"email"`
+	RealName *string  `db:"real_name" json:"realName"`
+	Roles    []string `db:"roles" json:"roles"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -133,14 +131,14 @@ WHERE api_key = $1
 `
 
 type GetAPIKeyRow struct {
-	ID        int              `json:"id"`
-	OwnerID   int              `json:"ownerId"`
-	Name      *string          `json:"name"`
-	CreatedAt time.Time        `json:"createdAt"`
-	Expires   pgtype.Timestamp `json:"expires"`
-	Disabled  bool             `json:"disabled"`
-	ApiKey    string           `json:"apiKey"`
-	Username  string           `json:"username"`
+	ID        int        `db:"id" json:"id"`
+	OwnerID   int        `db:"owner_id" json:"ownerId"`
+	Name      *string    `db:"name" json:"name"`
+	CreatedAt time.Time  `db:"created_at" json:"createdAt"`
+	Expires   *time.Time `db:"expires" json:"expires"`
+	Disabled  bool       `db:"disabled" json:"disabled"`
+	ApiKey    string     `db:"api_key" json:"apiKey"`
+	Username  string     `db:"username" json:"username"`
 }
 
 func (q *Queries) GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, error) {
@@ -261,7 +259,7 @@ UPDATE users SET
 WHERE username = $1
 `
 
-func (q *Queries) RecordUserLogin(ctx context.Context, username string, lastLoginAt pgtype.Timestamptz, lastLoginFrom *netip.Addr) error {
+func (q *Queries) RecordUserLogin(ctx context.Context, username string, lastLoginAt *time.Time, lastLoginFrom *netip.Addr) error {
 	_, err := q.db.Exec(ctx, recordUserLogin, username, lastLoginAt, lastLoginFrom)
 	return err
 }
@@ -295,10 +293,10 @@ RETURNING id, username, password, real_name, email, roles, disabled_at, last_log
 `
 
 type UpdateUserParams struct {
-	Username string   `json:"username"`
-	Email    *string  `json:"email"`
-	RealName *string  `json:"realName"`
-	Roles    []string `json:"roles"`
+	Username string   `db:"username" json:"username"`
+	Email    *string  `db:"email" json:"email"`
+	RealName *string  `db:"real_name" json:"realName"`
+	Roles    []string `db:"roles" json:"roles"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {

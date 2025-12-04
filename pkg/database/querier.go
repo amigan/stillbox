@@ -7,9 +7,9 @@ package database
 import (
 	"context"
 	"net/netip"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -18,8 +18,8 @@ type Querier interface {
 	AddRefJournal(ctx context.Context, arg AddRefJournalParams) (int64, error)
 	AddToIncident(ctx context.Context, incidentID uuid.UUID, callIds []uuid.UUID, notes [][]byte) error
 	CallInIncident(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID) (bool, error)
-	CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)
-	CountRefJournal(ctx context.Context, missing *bool, since pgtype.Timestamptz, until pgtype.Timestamptz) (int64, error)
+	CleanupSweptCalls(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error)
+	CountRefJournal(ctx context.Context, missing *bool, since *time.Time, until *time.Time) (int64, error)
 	CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error)
 	CreateShare(ctx context.Context, arg CreateShareParams) error
@@ -43,8 +43,8 @@ type Querier interface {
 	// For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount
 	GetCallAudio(ctx context.Context, arg GetCallAudioParams) ([]GetCallAudioRow, error)
 	GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error)
-	GetCallStatsByInterval(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]GetCallStatsByIntervalRow, error)
-	GetCallStatsByTalkgroup(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]GetCallStatsByTalkgroupRow, error)
+	GetCallStatsByInterval(ctx context.Context, truncField string, start *time.Time, end *time.Time) ([]GetCallStatsByIntervalRow, error)
+	GetCallStatsByTalkgroup(ctx context.Context, truncField string, start *time.Time, end *time.Time) ([]GetCallStatsByTalkgroupRow, error)
 	GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, error)
 	GetCalls(ctx context.Context, ids []uuid.UUID) ([]GetCallsRow, error)
 	GetDatabaseSize(ctx context.Context) (string, error)
@@ -52,7 +52,7 @@ type Querier interface {
 	GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetIncidentCallsRow, error)
 	GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error)
 	GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error)
-	GetPrunableAudioRefs(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]GetPrunableAudioRefsRow, error)
+	GetPrunableAudioRefs(ctx context.Context, partitionStart time.Time, partitionEnd time.Time) ([]GetPrunableAudioRefsRow, error)
 	GetRefJournal(ctx context.Context, arg GetRefJournalParams) ([]AudioRefJournal, error)
 	GetSetting(ctx context.Context, name string) ([]byte, error)
 	GetShare(ctx context.Context, id string) (Share, error)
@@ -75,16 +75,16 @@ type Querier interface {
 	IncrementRefJournal(ctx context.Context, id int64) error
 	ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error)
 	ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error)
-	ListIncidentsCount(ctx context.Context, start pgtype.Timestamptz, end pgtype.Timestamptz, filter *string) (int64, error)
+	ListIncidentsCount(ctx context.Context, start *time.Time, end *time.Time, filter *string) (int64, error)
 	ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) ([]ListIncidentsPRow, error)
 	PruneShares(ctx context.Context) error
-	RecordUserLogin(ctx context.Context, username string, lastLoginAt pgtype.Timestamptz, lastLoginFrom *netip.Addr) error
+	RecordUserLogin(ctx context.Context, username string, lastLoginAt *time.Time, lastLoginFrom *netip.Addr) error
 	RemoveFromIncident(ctx context.Context, iD uuid.UUID, callIds []uuid.UUID) error
 	RestoreTalkgroupVersion(ctx context.Context, versionIds int) (Talkgroup, error)
 	SetAppPrefs(ctx context.Context, appName string, prefs []byte, uid int) error
 	SetCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error
 	SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) (SetCallTranscriptRow, error)
-	SetRefJournalPrune(ctx context.Context, iD int64, pruneAfter pgtype.Timestamptz) error
+	SetRefJournalPrune(ctx context.Context, iD int64, pruneAfter *time.Time) error
 	SetSetting(ctx context.Context, name string, updatedBy *int32, value []byte) error
 	SetSweptAudioAndClearRef(ctx context.Context, audioBlob []byte, iD uuid.UUID) error
 	SetSweptCallAudio(ctx context.Context, iD uuid.UUID, audioRef []byte, audioBlob []byte) error
@@ -92,7 +92,7 @@ type Querier interface {
 	StoreDeletedTGVersion(ctx context.Context, systemID *int32, tGID *int32, submitter *int32) error
 	StoreTGVersion(ctx context.Context, arg []StoreTGVersionParams) *StoreTGVersionBatchResults
 	// This is used to sweep calls that are part of an incident prior to pruning a partition.
-	SweepCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error)
+	SweepCalls(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error)
 	UpdateCallIncidentNotes(ctx context.Context, notes []byte, incidentID uuid.UUID, callID uuid.UUID) error
 	UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error)
 	UpdatePassword(ctx context.Context, username string, password string) error

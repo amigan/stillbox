@@ -698,14 +698,14 @@ func (t *cache) DeleteTG(ctx context.Context, id tgsp.ID) error {
 }
 
 func (t *cache) LearnSystem(ctx context.Context, call *calls.Call) error {
-	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceSystem), authz.WithActions(entities.ActionCreate, entities.ActionUpdate))
+	// rbac is done by CreateSystem
+	err := t.CreateSystem(ctx, call.System, fmt.Sprintf("System %x", call.System), true)
 	if err != nil {
-		return err
+		return fmt.Errorf("learn system: %w", err)
 	}
 
-	log.Info().Int("system", call.System).Msg("learning system")
-
-	return t.db.CreateSystem(ctx, call.System, fmt.Sprintf("System %d", call.System), true)
+	log.Info().Int("system", call.System).Msg("learned system")
+	return nil
 }
 
 func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, error) {

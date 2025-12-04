@@ -1,0 +1,4 @@
+- incident_id: {{ uuid "inc1" }}
+  call_id: {{ uuid "call1" }}
+  calls_tbl_id: {{ uuid "call1" }}
+  call_date: {{ time "call1" }}

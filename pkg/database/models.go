@@ -36,8 +36,8 @@ func (e *AudioMIME) Scan(src interface{}) error {
 }
 
 type NullAudioMIME struct {
-	AudioMIME AudioMIME `json:"audioMime,omitempty"`
-	Valid     bool      `json:"valid,omitempty"` // Valid is true if AudioMIME is not NULL
+	AudioMIME AudioMIME `json:"audioMime,omitempty" yaml:"audio_mime,omitempty"`
+	Valid     bool      `json:"valid,omitempty" yaml:"valid,omitempty"` // Valid is true if AudioMIME is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -59,158 +59,158 @@ func (ns NullAudioMIME) Value() (driver.Value, error) {
 }
 
 type ApiKey struct {
-	ID        int              `json:"id,omitempty"`
-	OwnerID   int              `json:"ownerId,omitempty"`
-	Name      *string          `json:"name,omitempty"`
-	CreatedAt time.Time        `json:"createdAt,omitempty"`
-	Expires   pgtype.Timestamp `json:"expires,omitempty"`
-	Disabled  bool             `json:"disabled,omitempty"`
-	ApiKey    string           `json:"apiKey,omitempty"`
+	ID        int        `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	OwnerID   int        `db:"owner_id" json:"ownerId,omitempty" yaml:"owner_id,omitempty"`
+	Name      *string    `db:"name" json:"name,omitempty" yaml:"name,omitempty"`
+	CreatedAt time.Time  `db:"created_at" json:"createdAt,omitempty" yaml:"created_at,omitempty"`
+	Expires   *time.Time `db:"expires" json:"expires,omitempty" yaml:"expires,omitempty"`
+	Disabled  bool       `db:"disabled" json:"disabled,omitempty" yaml:"disabled,omitempty"`
+	ApiKey    string     `db:"api_key" json:"apiKey,omitempty" yaml:"api_key,omitempty"`
 }
 
 type AudioRefJournal struct {
-	ID         int64              `json:"id,omitempty"`
-	CallID     pgtype.UUID        `json:"callId,omitempty"`
-	Backend    string             `json:"backend,omitempty"`
-	Ref        []byte             `json:"ref,omitempty"`
-	PruneAfter pgtype.Timestamptz `json:"pruneAfter,omitempty"`
-	LastTry    pgtype.Timestamptz `json:"lastTry,omitempty"`
-	Tries      int                `json:"tries,omitempty"`
+	ID         int64       `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	CallID     pgtype.UUID `db:"call_id" json:"callId,omitempty" yaml:"call_id,omitempty"`
+	Backend    string      `db:"backend" json:"backend,omitempty" yaml:"backend,omitempty"`
+	Ref        []byte      `db:"ref" json:"ref,omitempty" yaml:"ref,omitempty"`
+	PruneAfter *time.Time  `db:"prune_after" json:"pruneAfter,omitempty" yaml:"prune_after,omitempty"`
+	LastTry    time.Time   `db:"last_try" json:"lastTry,omitempty" yaml:"last_try,omitempty"`
+	Tries      int         `db:"tries" json:"tries,omitempty" yaml:"tries,omitempty"`
 }
 
 type Call struct {
-	ID          uuid.UUID          `json:"id,omitempty"`
-	Submitter   *int32             `json:"submitter,omitempty"`
-	System      int                `json:"system,omitempty"`
-	Talkgroup   int                `json:"talkgroup,omitempty"`
-	CallDate    pgtype.Timestamptz `json:"callDate,omitempty"`
-	AudioName   *string            `json:"audioName,omitempty"`
-	AudioBlob   []byte             `json:"audioBlob,omitempty"`
-	Duration    *int32             `json:"duration,omitempty"`
-	AudioType   NullAudioMIME      `json:"audioType,omitempty"`
-	AudioRef    []byte             `json:"audioRef,omitempty"`
-	Frequency   int                `json:"frequency,omitempty"`
-	Frequencies []int              `json:"frequencies,omitempty"`
-	Patches     []int              `json:"patches,omitempty"`
-	TalkerAlias *string            `json:"talkerAlias,omitempty"`
-	TGLabel     *string            `json:"tgLabel,omitempty"`
-	TGAlphaTag  *string            `json:"tgAlphaTag,omitempty"`
-	TGGroup     *string            `json:"tgGroup,omitempty"`
-	Source      int                `json:"source,omitempty"`
-	Transcript  *string            `json:"transcript,omitempty"`
+	ID          uuid.UUID     `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	Submitter   *int32        `db:"submitter" json:"submitter,omitempty" yaml:"submitter,omitempty"`
+	System      int           `db:"system" json:"system,omitempty" yaml:"system,omitempty"`
+	Talkgroup   int           `db:"talkgroup" json:"talkgroup,omitempty" yaml:"talkgroup,omitempty"`
+	CallDate    time.Time     `db:"call_date" json:"callDate,omitempty" yaml:"call_date,omitempty"`
+	AudioName   *string       `db:"audio_name" json:"audioName,omitempty" yaml:"audio_name,omitempty"`
+	AudioBlob   []byte        `db:"audio_blob" json:"audioBlob,omitempty" yaml:"audio_blob,omitempty"`
+	Duration    *int32        `db:"duration" json:"duration,omitempty" yaml:"duration,omitempty"`
+	AudioType   NullAudioMIME `db:"audio_type" json:"audioType,omitempty" yaml:"audio_type,omitempty"`
+	AudioRef    []byte        `db:"audio_ref" json:"audioRef,omitempty" yaml:"audio_ref,omitempty"`
+	Frequency   int           `db:"frequency" json:"frequency,omitempty" yaml:"frequency,omitempty"`
+	Frequencies []int         `db:"frequencies" json:"frequencies,omitempty" yaml:"frequencies,omitempty"`
+	Patches     []int         `db:"patches" json:"patches,omitempty" yaml:"patches,omitempty"`
+	TalkerAlias *string       `db:"talker_alias" json:"talkerAlias,omitempty" yaml:"talker_alias,omitempty"`
+	TGLabel     *string       `db:"tg_label" json:"tgLabel,omitempty" yaml:"tg_label,omitempty"`
+	TGAlphaTag  *string       `db:"tg_alpha_tag" json:"tgAlphaTag,omitempty" yaml:"tg_alpha_tag,omitempty"`
+	TGGroup     *string       `db:"tg_group" json:"tgGroup,omitempty" yaml:"tg_group,omitempty"`
+	Source      int           `db:"source" json:"source,omitempty" yaml:"source,omitempty"`
+	Transcript  *string       `db:"transcript" json:"transcript,omitempty" yaml:"transcript,omitempty"`
 }
 
 type Incident struct {
-	ID          uuid.UUID          `json:"id,omitempty"`
-	Name        string             `json:"name,omitempty"`
-	OwnerID     int                `json:"ownerId,omitempty"`
-	Description *string            `json:"description,omitempty"`
-	CreatedAt   pgtype.Timestamptz `json:"createdAt,omitempty"`
-	StartTime   pgtype.Timestamptz `json:"startTime,omitempty"`
-	EndTime     pgtype.Timestamptz `json:"endTime,omitempty"`
-	Location    []byte             `json:"location,omitempty"`
-	Metadata    jsontypes.Metadata `json:"metadata,omitempty"`
+	ID          uuid.UUID          `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	Name        string             `db:"name" json:"name,omitempty" yaml:"name,omitempty"`
+	OwnerID     int                `db:"owner_id" json:"ownerId,omitempty" yaml:"owner_id,omitempty"`
+	Description *string            `db:"description" json:"description,omitempty" yaml:"description,omitempty"`
+	CreatedAt   *time.Time         `db:"created_at" json:"createdAt,omitempty" yaml:"created_at,omitempty"`
+	StartTime   *time.Time         `db:"start_time" json:"startTime,omitempty" yaml:"start_time,omitempty"`
+	EndTime     *time.Time         `db:"end_time" json:"endTime,omitempty" yaml:"end_time,omitempty"`
+	Location    []byte             `db:"location" json:"location,omitempty" yaml:"location,omitempty"`
+	Metadata    jsontypes.Metadata `db:"metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 type IncidentsCall struct {
-	IncidentID  uuid.UUID          `json:"incidentId,omitempty"`
-	CallID      uuid.UUID          `json:"callId,omitempty"`
-	CallsTblID  pgtype.UUID        `json:"callsTblId,omitempty"`
-	SweptCallID pgtype.UUID        `json:"sweptCallId,omitempty"`
-	CallDate    pgtype.Timestamptz `json:"callDate,omitempty"`
-	Notes       []byte             `json:"notes,omitempty"`
+	IncidentID  uuid.UUID   `db:"incident_id" json:"incidentId,omitempty" yaml:"incident_id,omitempty"`
+	CallID      uuid.UUID   `db:"call_id" json:"callId,omitempty" yaml:"call_id,omitempty"`
+	CallsTblID  pgtype.UUID `db:"calls_tbl_id" json:"callsTblId,omitempty" yaml:"calls_tbl_id,omitempty"`
+	SweptCallID pgtype.UUID `db:"swept_call_id" json:"sweptCallId,omitempty" yaml:"swept_call_id,omitempty"`
+	CallDate    *time.Time  `db:"call_date" json:"callDate,omitempty" yaml:"call_date,omitempty"`
+	Notes       []byte      `db:"notes" json:"notes,omitempty" yaml:"notes,omitempty"`
 }
 
 type Setting struct {
-	Name      string `json:"name,omitempty"`
-	UpdatedBy *int32 `json:"updatedBy,omitempty"`
-	Value     []byte `json:"value,omitempty"`
+	Name      string `db:"name" json:"name,omitempty" yaml:"name,omitempty"`
+	UpdatedBy *int32 `db:"updated_by" json:"updatedBy,omitempty" yaml:"updated_by,omitempty"`
+	Value     []byte `db:"value" json:"value,omitempty" yaml:"value,omitempty"`
 }
 
 type Share struct {
-	ID         string             `json:"id,omitempty"`
-	EntityType string             `json:"entityType,omitempty"`
-	EntityID   uuid.UUID          `json:"entityId,omitempty"`
-	EntityDate pgtype.Timestamptz `json:"entityDate,omitempty"`
-	OwnerID    int                `json:"ownerId,omitempty"`
-	Expiration pgtype.Timestamptz `json:"expiration,omitempty"`
+	ID         string     `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	EntityType string     `db:"entity_type" json:"entityType,omitempty" yaml:"entity_type,omitempty"`
+	EntityID   uuid.UUID  `db:"entity_id" json:"entityId,omitempty" yaml:"entity_id,omitempty"`
+	EntityDate *time.Time `db:"entity_date" json:"entityDate,omitempty" yaml:"entity_date,omitempty"`
+	OwnerID    int        `db:"owner_id" json:"ownerId,omitempty" yaml:"owner_id,omitempty"`
+	Expiration *time.Time `db:"expiration" json:"expiration,omitempty" yaml:"expiration,omitempty"`
 }
 
 type SweptCall struct {
-	ID          uuid.UUID          `json:"id,omitempty"`
-	Submitter   *int32             `json:"submitter,omitempty"`
-	System      int                `json:"system,omitempty"`
-	Talkgroup   int                `json:"talkgroup,omitempty"`
-	CallDate    pgtype.Timestamptz `json:"callDate,omitempty"`
-	AudioName   *string            `json:"audioName,omitempty"`
-	AudioBlob   []byte             `json:"audioBlob,omitempty"`
-	Duration    *int32             `json:"duration,omitempty"`
-	AudioType   NullAudioMIME      `json:"audioType,omitempty"`
-	AudioRef    []byte             `json:"audioRef,omitempty"`
-	Frequency   int                `json:"frequency,omitempty"`
-	Frequencies []int              `json:"frequencies,omitempty"`
-	Patches     []int              `json:"patches,omitempty"`
-	TalkerAlias *string            `json:"talkerAlias,omitempty"`
-	TGLabel     *string            `json:"tgLabel,omitempty"`
-	TGAlphaTag  *string            `json:"tgAlphaTag,omitempty"`
-	TGGroup     *string            `json:"tgGroup,omitempty"`
-	Source      int                `json:"source,omitempty"`
-	Transcript  *string            `json:"transcript,omitempty"`
+	ID          uuid.UUID     `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	Submitter   *int32        `db:"submitter" json:"submitter,omitempty" yaml:"submitter,omitempty"`
+	System      int           `db:"system" json:"system,omitempty" yaml:"system,omitempty"`
+	Talkgroup   int           `db:"talkgroup" json:"talkgroup,omitempty" yaml:"talkgroup,omitempty"`
+	CallDate    time.Time     `db:"call_date" json:"callDate,omitempty" yaml:"call_date,omitempty"`
+	AudioName   *string       `db:"audio_name" json:"audioName,omitempty" yaml:"audio_name,omitempty"`
+	AudioBlob   []byte        `db:"audio_blob" json:"audioBlob,omitempty" yaml:"audio_blob,omitempty"`
+	Duration    *int32        `db:"duration" json:"duration,omitempty" yaml:"duration,omitempty"`
+	AudioType   NullAudioMIME `db:"audio_type" json:"audioType,omitempty" yaml:"audio_type,omitempty"`
+	AudioRef    []byte        `db:"audio_ref" json:"audioRef,omitempty" yaml:"audio_ref,omitempty"`
+	Frequency   int           `db:"frequency" json:"frequency,omitempty" yaml:"frequency,omitempty"`
+	Frequencies []int         `db:"frequencies" json:"frequencies,omitempty" yaml:"frequencies,omitempty"`
+	Patches     []int         `db:"patches" json:"patches,omitempty" yaml:"patches,omitempty"`
+	TalkerAlias *string       `db:"talker_alias" json:"talkerAlias,omitempty" yaml:"talker_alias,omitempty"`
+	TGLabel     *string       `db:"tg_label" json:"tgLabel,omitempty" yaml:"tg_label,omitempty"`
+	TGAlphaTag  *string       `db:"tg_alpha_tag" json:"tgAlphaTag,omitempty" yaml:"tg_alpha_tag,omitempty"`
+	TGGroup     *string       `db:"tg_group" json:"tgGroup,omitempty" yaml:"tg_group,omitempty"`
+	Source      int           `db:"source" json:"source,omitempty" yaml:"source,omitempty"`
+	Transcript  *string       `db:"transcript" json:"transcript,omitempty" yaml:"transcript,omitempty"`
 }
 
 type System struct {
-	ID      int    `json:"id,omitempty"`
-	Name    string `json:"name,omitempty"`
-	Learned bool   `json:"learned,omitempty"`
+	ID      int    `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	Name    string `db:"name" json:"name,omitempty" yaml:"name,omitempty"`
+	Learned bool   `db:"learned" json:"learned,omitempty" yaml:"learned,omitempty"`
 }
 
 type Talkgroup struct {
-	ID         int                `json:"id,omitempty"`
-	SystemID   int32              `json:"systemId,omitempty"`
-	TGID       int32              `json:"tgid,omitempty"`
-	Name       *string            `json:"name,omitempty"`
-	AlphaTag   *string            `json:"alphaTag,omitempty"`
-	TGGroup    *string            `json:"tgGroup,omitempty"`
-	Frequency  *int32             `json:"frequency,omitempty"`
-	Metadata   jsontypes.Metadata `json:"metadata,omitempty"`
-	Tags       []string           `json:"tags,omitempty"`
-	Alert      bool               `json:"alert,omitempty"`
-	AlertRules rules.AlertRules   `json:"alertRules,omitempty"`
-	Weight     float32            `json:"weight,omitempty"`
-	Learned    bool               `json:"learned,omitempty"`
-	Ignored    bool               `json:"ignored,omitempty"`
+	ID         int                `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	SystemID   int32              `db:"system_id" json:"systemId,omitempty" yaml:"system_id,omitempty"`
+	TGID       int32              `db:"tgid" json:"tgid,omitempty" yaml:"tgid,omitempty"`
+	Name       *string            `db:"name" json:"name,omitempty" yaml:"name,omitempty"`
+	AlphaTag   *string            `db:"alpha_tag" json:"alphaTag,omitempty" yaml:"alpha_tag,omitempty"`
+	TGGroup    *string            `db:"tg_group" json:"tgGroup,omitempty" yaml:"tg_group,omitempty"`
+	Frequency  *int32             `db:"frequency" json:"frequency,omitempty" yaml:"frequency,omitempty"`
+	Metadata   jsontypes.Metadata `db:"metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Tags       []string           `db:"tags" json:"tags,omitempty" yaml:"tags,omitempty"`
+	Alert      bool               `db:"alert" json:"alert,omitempty" yaml:"alert,omitempty"`
+	AlertRules rules.AlertRules   `db:"alert_rules" json:"alertRules,omitempty" yaml:"alert_rules,omitempty"`
+	Weight     float32            `db:"weight" json:"weight,omitempty" yaml:"weight,omitempty"`
+	Learned    bool               `db:"learned" json:"learned,omitempty" yaml:"learned,omitempty"`
+	Ignored    bool               `db:"ignored" json:"ignored,omitempty" yaml:"ignored,omitempty"`
 }
 
 type TalkgroupVersion struct {
-	ID         int                `json:"id,omitempty"`
-	Time       pgtype.Timestamptz `json:"time,omitempty"`
-	CreatedBy  *int32             `json:"createdBy,omitempty"`
-	Deleted    *bool              `json:"deleted,omitempty"`
-	SystemID   *int32             `json:"systemId,omitempty"`
-	TGID       *int32             `json:"tgid,omitempty"`
-	Name       *string            `json:"name,omitempty"`
-	AlphaTag   *string            `json:"alphaTag,omitempty"`
-	TGGroup    *string            `json:"tgGroup,omitempty"`
-	Frequency  *int32             `json:"frequency,omitempty"`
-	Metadata   []byte             `json:"metadata,omitempty"`
-	Tags       []string           `json:"tags,omitempty"`
-	Alert      *bool              `json:"alert,omitempty"`
-	AlertRules []byte             `json:"alertRules,omitempty"`
-	Weight     *float32           `json:"weight,omitempty"`
-	Learned    *bool              `json:"learned,omitempty"`
-	Ignored    *bool              `json:"ignored,omitempty"`
+	ID         int       `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	Time       time.Time `db:"time" json:"time,omitempty" yaml:"time,omitempty"`
+	CreatedBy  *int32    `db:"created_by" json:"createdBy,omitempty" yaml:"created_by,omitempty"`
+	Deleted    *bool     `db:"deleted" json:"deleted,omitempty" yaml:"deleted,omitempty"`
+	SystemID   *int32    `db:"system_id" json:"systemId,omitempty" yaml:"system_id,omitempty"`
+	TGID       *int32    `db:"tgid" json:"tgid,omitempty" yaml:"tgid,omitempty"`
+	Name       *string   `db:"name" json:"name,omitempty" yaml:"name,omitempty"`
+	AlphaTag   *string   `db:"alpha_tag" json:"alphaTag,omitempty" yaml:"alpha_tag,omitempty"`
+	TGGroup    *string   `db:"tg_group" json:"tgGroup,omitempty" yaml:"tg_group,omitempty"`
+	Frequency  *int32    `db:"frequency" json:"frequency,omitempty" yaml:"frequency,omitempty"`
+	Metadata   []byte    `db:"metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Tags       []string  `db:"tags" json:"tags,omitempty" yaml:"tags,omitempty"`
+	Alert      *bool     `db:"alert" json:"alert,omitempty" yaml:"alert,omitempty"`
+	AlertRules []byte    `db:"alert_rules" json:"alertRules,omitempty" yaml:"alert_rules,omitempty"`
+	Weight     *float32  `db:"weight" json:"weight,omitempty" yaml:"weight,omitempty"`
+	Learned    *bool     `db:"learned" json:"learned,omitempty" yaml:"learned,omitempty"`
+	Ignored    *bool     `db:"ignored" json:"ignored,omitempty" yaml:"ignored,omitempty"`
 }
 
 type User struct {
-	ID            int                `json:"id,omitempty"`
-	Username      string             `json:"username,omitempty"`
-	Password      string             `json:"password,omitempty"`
-	RealName      *string            `json:"realName,omitempty"`
-	Email         string             `json:"email,omitempty"`
-	Roles         []string           `json:"roles,omitempty"`
-	DisabledAt    pgtype.Timestamptz `json:"disabledAt,omitempty"`
-	LastLoginAt   pgtype.Timestamptz `json:"lastLoginAt,omitempty"`
-	LastLoginFrom *netip.Addr        `json:"lastLoginFrom,omitempty"`
-	PasswordSetAt pgtype.Timestamptz `json:"passwordSetAt,omitempty"`
-	Prefs         []byte             `json:"prefs,omitempty"`
+	ID            int         `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	Username      string      `db:"username" json:"username,omitempty" yaml:"username,omitempty"`
+	Password      string      `db:"password" json:"password,omitempty" yaml:"password,omitempty"`
+	RealName      *string     `db:"real_name" json:"realName,omitempty" yaml:"real_name,omitempty"`
+	Email         string      `db:"email" json:"email,omitempty" yaml:"email,omitempty"`
+	Roles         []string    `db:"roles" json:"roles,omitempty" yaml:"roles,omitempty"`
+	DisabledAt    *time.Time  `db:"disabled_at" json:"disabledAt,omitempty" yaml:"disabled_at,omitempty"`
+	LastLoginAt   *time.Time  `db:"last_login_at" json:"lastLoginAt,omitempty" yaml:"last_login_at,omitempty"`
+	LastLoginFrom *netip.Addr `db:"last_login_from" json:"lastLoginFrom,omitempty" yaml:"last_login_from,omitempty"`
+	PasswordSetAt time.Time   `db:"password_set_at" json:"passwordSetAt,omitempty" yaml:"password_set_at,omitempty"`
+	Prefs         []byte      `db:"prefs" json:"prefs,omitempty" yaml:"prefs,omitempty"`
 }

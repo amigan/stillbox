@@ -61,6 +61,7 @@ type Store interface {
 }
 
 type postgresStore struct {
+	db database.Store
 }
 
 type storeCtxKey string
@@ -74,14 +75,14 @@ func CtxWithStore(ctx context.Context, s Store) context.Context {
 func FromCtx(ctx context.Context) Store {
 	s, ok := services.Value(ctx, StoreCtxKey).(Store)
 	if !ok {
-		return NewStore()
+		panic("no incident store in context")
 	}
 
 	return s
 }
 
-func NewStore() Store {
-	return &postgresStore{}
+func NewStore(db database.Store) Store {
+	return &postgresStore{db: db}
 }
 
 func (s *postgresStore) CreateIncident(ctx context.Context, inc incidents.Incident) (*incidents.Incident, error) {
@@ -90,20 +91,19 @@ func (s *postgresStore) CreateIncident(ctx context.Context, inc incidents.Incide
 		return nil, err
 	}
 
-	db := database.FromCtx(ctx)
 	var dbInc database.Incident
 
 	id := uuid.New()
 
-	txErr := db.InTx(ctx, func(db database.Store) error {
+	txErr := s.db.InTx(ctx, func(db database.Store) error {
 		var err error
 		dbInc, err = db.CreateIncident(ctx, database.CreateIncidentParams{
 			ID:          id,
 			OwnerID:     user.ID.Int(),
 			Name:        inc.Name,
 			Description: inc.Description,
-			StartTime:   inc.StartTime.PGTypeTSTZ(),
-			EndTime:     inc.EndTime.PGTypeTSTZ(),
+			StartTime:   (*time.Time)(inc.StartTime),
+			EndTime:     (*time.Time)(inc.EndTime),
 			Location:    inc.Location.RawMessage,
 			Metadata:    inc.Metadata,
 		})
@@ -154,7 +154,7 @@ func (s *postgresStore) AddRemoveIncidentCalls(ctx context.Context, incidentID u
 		return err
 	}
 
-	return database.FromCtx(ctx).InTx(ctx, func(db database.Store) error {
+	return s.db.InTx(ctx, func(db database.Store) error {
 		if len(addCallIDs) > 0 {
 			var noteAr [][]byte
 			if notes != nil {
@@ -186,12 +186,11 @@ func (s *postgresStore) Incidents(ctx context.Context, p IncidentsParams) (incs 
 	if err != nil {
 		return nil, 0, err
 	}
-	db := database.FromCtx(ctx)
 
 	offset, perPage := p.Pagination.OffsetPerPage(100)
 	dbParam := database.ListIncidentsPParams{
-		Start:     p.Start.PGTypeTSTZ(),
-		End:       p.End.PGTypeTSTZ(),
+		Start:     (*time.Time)(p.Start),
+		End:       (*time.Time)(p.End),
 		Filter:    p.Filter,
 		Direction: p.Direction.DirString(common.DirAsc),
 		Offset:    offset,
@@ -200,7 +199,7 @@ func (s *postgresStore) Incidents(ctx context.Context, p IncidentsParams) (incs 
 
 	var count int64
 	var rows []database.ListIncidentsPRow
-	txErr := db.InTx(ctx, func(db database.Store) error {
+	txErr := s.db.InTx(ctx, func(db database.Store) error {
 		var err error
 		count, err = db.ListIncidentsCount(ctx, dbParam.Start, dbParam.End, dbParam.Filter)
 		if err != nil {
@@ -232,9 +231,9 @@ func fromDBIncident(id uuid.UUID, d database.Incident) incidents.Incident {
 		OwnerID:     users.UserID(d.OwnerID),
 		Name:        d.Name,
 		Description: d.Description,
-		CreatedAt:   jsontypes.Time(d.CreatedAt.Time),
-		StartTime:   jsontypes.TimePtrFromTSTZ(d.StartTime),
-		EndTime:     jsontypes.TimePtrFromTSTZ(d.EndTime),
+		CreatedAt:   (*jsontypes.Time)(d.CreatedAt),
+		StartTime:   (*jsontypes.Time)(d.StartTime),
+		EndTime:     (*jsontypes.Time)(d.EndTime),
 		Metadata:    d.Metadata,
 	}
 }
@@ -253,9 +252,9 @@ func fromDBListInPRow(id uuid.UUID, d database.ListIncidentsPRow) Incident {
 			Owner:       d.Owner,
 			Name:        d.Name,
 			Description: d.Description,
-			CreatedAt:   jsontypes.Time(d.CreatedAt.Time),
-			StartTime:   jsontypes.TimePtrFromTSTZ(d.StartTime),
-			EndTime:     jsontypes.TimePtrFromTSTZ(d.EndTime),
+			CreatedAt:   (*jsontypes.Time)(d.CreatedAt),
+			StartTime:   (*jsontypes.Time)(d.StartTime),
+			EndTime:     (*jsontypes.Time)(d.EndTime),
 			Metadata:    d.Metadata,
 		},
 		CallCount: int(d.CallsCount),
@@ -273,7 +272,7 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 				AudioName:   common.ZeroIfNil(v.AudioName),
 				AudioType:   string(v.AudioType.AudioMIME),
 				Duration:    dur,
-				DateTime:    v.CallDate.Time,
+				DateTime:    common.ZeroIfNil(v.CallDate),
 				Frequencies: v.Frequencies,
 				Frequency:   v.Frequency,
 				Patches:     v.Patches,
@@ -298,7 +297,7 @@ func (s *postgresStore) Incident(ctx context.Context, id uuid.UUID) (*incidents.
 	}
 
 	var r incidents.Incident
-	txErr := database.FromCtx(ctx).InTx(ctx, func(db database.Store) error {
+	txErr := s.db.InTx(ctx, func(db database.Store) error {
 		inc, err := db.GetIncident(ctx, id)
 		if err != nil {
 			return err
@@ -336,8 +335,8 @@ func (uip UpdateIncidentParams) toDBUIP(id uuid.UUID) database.UpdateIncidentPar
 		ID:          id,
 		Name:        uip.Name,
 		Description: uip.Description,
-		StartTime:   uip.StartTime.PGTypeTSTZ(),
-		EndTime:     uip.EndTime.PGTypeTSTZ(),
+		StartTime:   (*time.Time)(uip.StartTime),
+		EndTime:     (*time.Time)(uip.EndTime),
 		Location:    uip.Location,
 		Metadata:    uip.Metadata,
 	}
@@ -354,9 +353,7 @@ func (s *postgresStore) UpdateIncident(ctx context.Context, id uuid.UUID, p Upda
 		return nil, err
 	}
 
-	db := database.FromCtx(ctx)
-
-	dbInc, err := db.UpdateIncident(ctx, p.toDBUIP(id))
+	dbInc, err := s.db.UpdateIncident(ctx, p.toDBUIP(id))
 	if err != nil {
 		return nil, err
 	}
@@ -377,21 +374,20 @@ func (s *postgresStore) DeleteIncident(ctx context.Context, id uuid.UUID) error 
 		return err
 	}
 
-	return database.FromCtx(ctx).DeleteIncident(ctx, id)
+	return s.db.DeleteIncident(ctx, id)
 }
 
 func (s *postgresStore) UpdateNotes(ctx context.Context, incidentID uuid.UUID, callID uuid.UUID, notes []byte) error {
-	return database.FromCtx(ctx).UpdateCallIncidentNotes(ctx, notes, incidentID, callID)
+	return s.db.UpdateCallIncidentNotes(ctx, notes, incidentID, callID)
 }
 
 func (s *postgresStore) Owner(ctx context.Context, id uuid.UUID) (incidents.Incident, error) {
-	owner, err := database.FromCtx(ctx).GetIncidentOwner(ctx, id)
+	owner, err := s.db.GetIncidentOwner(ctx, id)
 	return incidents.Incident{ID: id, OwnerID: users.UserID(owner)}, err
 }
 
 func (s *postgresStore) CallIn(ctx context.Context, inc uuid.UUID, call uuid.UUID) (bool, error) {
-	db := database.FromCtx(ctx)
-	return db.CallInIncident(ctx, inc, call)
+	return s.db.CallInIncident(ctx, inc, call)
 }
 
 func (s *postgresStore) TGsIn(ctx context.Context, id uuid.UUID) (talkgroups.PresenceMap, error) {
@@ -400,8 +396,7 @@ func (s *postgresStore) TGsIn(ctx context.Context, id uuid.UUID) (talkgroups.Pre
 		return nil, err
 	}
 
-	db := database.FromCtx(ctx)
-	tgs, err := db.GetIncidentTalkgroups(ctx, id)
+	tgs, err := s.db.GetIncidentTalkgroups(ctx, id)
 	if err != nil {
 		return nil, err
 	}

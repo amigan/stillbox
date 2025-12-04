@@ -1,4 +1,4 @@
-package callstore_test
+package partman_test
 
 import (
 	"context"
@@ -6,13 +6,12 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
-	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/mocks"
+	"dynatron.me/x/stillbox/pkg/database/partman"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -37,10 +36,19 @@ type partSpec struct {
 	timeRange
 }
 
+type mockCallAudioManager struct {
+}
+
+func (m mockCallAudioManager) DerefSweptCallAudios(ctx context.Context, tx database.Store) error {
+	return nil
+}
+
+func (m mockCallAudioManager) PruneAudioPrefix(ctx context.Context, tx database.Store, partPrefix string, pStart, pEnd time.Time) error {
+	return nil
+}
+
 func TestPartman(t *testing.T) {
 	ctx := context.Background()
-
-	disCfg := config.Partition{}
 
 	timeInUTC := func(s string) time.Time {
 		t, err := time.ParseInLocation("2006-01-02 15:04:05", s, time.UTC)
@@ -383,7 +391,7 @@ func TestPartman(t *testing.T) {
 				partResult("calls_p_2024_08", "2024-08-01", "2024-09-01"),
 				partResult("calls_p_2024_07", "2024-07-01", "2024-08-01"),
 			},
-			expectErr: callstore.ErrDifferentInterval,
+			expectErr: partman.ErrDifferentInterval,
 		},
 		{
 			name:       "monthly wrong schema",
@@ -403,7 +411,7 @@ func TestPartman(t *testing.T) {
 				partResult("calls_p_2024_08", "2024-08-01", "2024-09-01"),
 				partResult("calls_p_2024_07", "2024-07-01", "2024-08-01"),
 			},
-			expectErr: callstore.ErrWrongSchema,
+			expectErr: partman.ErrWrongSchema,
 		},
 	}
 
@@ -432,10 +440,10 @@ func TestPartman(t *testing.T) {
 			if len(tc.expectSweep) > 0 {
 				db.EXPECT().
 					SweepCalls(
-						mctx, mock.AnythingOfType("pgtype.Timestamptz"), mock.AnythingOfType("pgtype.Timestamptz"),
+						mctx, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time"),
 					).
-					Run(func(ctx context.Context, start, end pgtype.Timestamptz) {
-						tr := timeRange{start: start.Time, end: end.Time}
+					Run(func(ctx context.Context, start, end time.Time) {
+						tr := timeRange{start: start, end: end}
 						sweepMap[tr] = struct{}{}
 						sweptRanges = append(sweptRanges, tr)
 					}).Return(30, nil)
@@ -444,14 +452,13 @@ func TestPartman(t *testing.T) {
 			if len(tc.expectCleanup) > 0 {
 				db.EXPECT().
 					CleanupSweptCalls(
-						mctx, mock.AnythingOfType("pgtype.Timestamptz"), mock.AnythingOfType("pgtype.Timestamptz"),
-					).Run(func(ctx context.Context, start, end pgtype.Timestamptz) {
-					tr := timeRange{start: start.Time, end: end.Time}
+						mctx, mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time"),
+					).Run(func(ctx context.Context, start, end time.Time) {
+					tr := timeRange{start: start, end: end}
 					require.Contains(t, sweepMap, tr)
 
 					cleanupRanges = append(cleanupRanges, tr)
 				}).Return(30, nil)
-				db.EXPECT().GetSweptCallsWithRef(mock.Anything).Return(nil, nil)
 			}
 
 			if tc.cfg.Drop && len(tc.expectDrop) > 0 {
@@ -469,15 +476,13 @@ func TestPartman(t *testing.T) {
 					Run(func(ctx context.Context, parentTable, partName string) {
 						detachedPartitions = append(detachedPartitions, partName)
 					}).Return(nil)
-				db.EXPECT().GetPrunableAudioRefs(mock.Anything, mock.AnythingOfType("pgtype.Timestamptz"), mock.AnythingOfType("pgtype.Timestamptz")).Return(nil, nil)
 			}
 
 			inTx(db)
 
 			db.EXPECT().GetTablePartitions(mctx, "public", "calls").Return(tc.extant, nil)
-			refJournalMockExpect(db)
 
-			pm, err := callstore.NewPartitionManager(db, setupStore(t.Context(), t, db, disCfg), tc.cfg)
+			pm, err := partman.NewPartitionManager(db, mockCallAudioManager{}, tc.cfg)
 			require.NoError(t, err)
 
 			partPrefix := pm.PartitionPrefix(tc.now)

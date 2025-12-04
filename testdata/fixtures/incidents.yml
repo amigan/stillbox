@@ -1,0 +1,5 @@
+- id: {{ uuid "inc1" }}
+  name: "Dumpster Fire"
+  owner_id: 1
+  description: "A dumpster caught fire."
+  created_at: {{ now }}

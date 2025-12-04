@@ -7,9 +7,9 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createShare = `-- name: CreateShare :exec
@@ -24,12 +24,12 @@ INSERT INTO shares (
 `
 
 type CreateShareParams struct {
-	ID         string             `json:"id"`
-	EntityType string             `json:"entityType"`
-	EntityID   uuid.UUID          `json:"entityId"`
-	EntityDate pgtype.Timestamptz `json:"entityDate"`
-	OwnerID    int                `json:"ownerId"`
-	Expiration pgtype.Timestamptz `json:"expiration"`
+	ID         string     `db:"id" json:"id"`
+	EntityType string     `db:"entity_type" json:"entityType"`
+	EntityID   uuid.UUID  `db:"entity_id" json:"entityId"`
+	EntityDate *time.Time `db:"entity_date" json:"entityDate"`
+	OwnerID    int        `db:"owner_id" json:"ownerId"`
+	Expiration *time.Time `db:"expiration" json:"expiration"`
 }
 
 func (q *Queries) CreateShare(ctx context.Context, arg CreateShareParams) error {
@@ -96,15 +96,15 @@ FETCH NEXT $4 ROWS ONLY
 `
 
 type GetSharesPParams struct {
-	OwnerID   *int32 `json:"ownerId"`
-	Direction string `json:"direction"`
-	Offset    int32  `json:"offset"`
-	PerPage   int32  `json:"perPage"`
+	OwnerID   *int32 `db:"owner_id" json:"ownerId"`
+	Direction string `db:"direction" json:"direction"`
+	Offset    int32  `db:"offset" json:"offset"`
+	PerPage   int32  `db:"per_page" json:"perPage"`
 }
 
 type GetSharesPRow struct {
-	Share    Share  `json:"share"`
-	Username string `json:"username"`
+	Share    Share  `db:"share" json:"share"`
+	Username string `db:"username" json:"username"`
 }
 
 func (q *Queries) GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSharesPRow, error) {

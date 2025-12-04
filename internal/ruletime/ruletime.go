@@ -84,6 +84,10 @@ func (rt *RuleTime) UnmarshalJSON(b []byte) error {
 	return rt.Parse(s)
 }
 
+func (rt *RuleTime) UnmarshalText(b []byte) error {
+	return rt.Parse(string(b))
+}
+
 func (rt *RuleTime) String() string {
 	return fmt.Sprintf("%d:%d:%d+%s", rt.Hour, rt.Minute, rt.Second, rt.Duration.String())
 }

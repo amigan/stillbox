@@ -32,11 +32,11 @@ INSERT INTO talkgroups(
 `
 
 type AddLearnedTalkgroupParams struct {
-	SystemID int32   `json:"systemId"`
-	TGID     int32   `json:"tgid"`
-	Name     *string `json:"name"`
-	AlphaTag *string `json:"alphaTag"`
-	TGGroup  *string `json:"tgGroup"`
+	SystemID int32   `db:"system_id" json:"systemId"`
+	TGID     int32   `db:"tgid" json:"tgid"`
+	Name     *string `db:"name" json:"name"`
+	AlphaTag *string `db:"alpha_tag" json:"alphaTag"`
+	TGGroup  *string `db:"tg_group" json:"tgGroup"`
 }
 
 func (q *Queries) AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error) {
@@ -128,8 +128,8 @@ WHERE ic.incident_id = $1
 `
 
 type GetIncidentTalkgroupsRow struct {
-	System    int `json:"system"`
-	Talkgroup int `json:"talkgroup"`
+	System    int `db:"system" json:"system"`
+	Talkgroup int `db:"talkgroup" json:"talkgroup"`
 }
 
 func (q *Queries) GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error) {
@@ -172,8 +172,8 @@ WHERE (tg.system_id, tg.tgid) = ($1, $2)
 `
 
 type GetTalkgroupRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
-	System    System    `json:"system"`
+	Talkgroup Talkgroup `db:"talkgroup" json:"talkgroup"`
+	System    System    `db:"system" json:"system"`
 }
 
 func (q *Queries) GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error) {
@@ -210,8 +210,8 @@ AND (NOT (tags && $3::TEXT[]))
 `
 
 type GetTalkgroupIDsByTagsRow struct {
-	SystemID int32 `json:"systemId"`
-	TGID     int32 `json:"tgid"`
+	SystemID int32 `db:"system_id" json:"systemId"`
+	TGID     int32 `db:"tgid" json:"tgid"`
 }
 
 func (q *Queries) GetTalkgroupIDsByTags(ctx context.Context, allTags []string, anyTags []string, notAnyTags []string) ([]GetTalkgroupIDsByTagsRow, error) {
@@ -263,8 +263,8 @@ WHERE
 `
 
 type GetTalkgroupsRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
-	System    System    `json:"system"`
+	Talkgroup Talkgroup `db:"talkgroup" json:"talkgroup"`
+	System    System    `db:"system" json:"system"`
 }
 
 func (q *Queries) GetTalkgroups(ctx context.Context, system *int32, withIgnored bool, filter *string) ([]GetTalkgroupsRow, error) {
@@ -355,17 +355,17 @@ FETCH NEXT $6 ROWS ONLY
 `
 
 type GetTalkgroupsPParams struct {
-	System      *int32  `json:"system"`
-	WithIgnored bool    `json:"withIgnored"`
-	Filter      *string `json:"filter"`
-	OrderBy     string  `json:"orderBy"`
-	Offset      int32   `json:"offset"`
-	PerPage     int32   `json:"perPage"`
+	System      *int32  `db:"system" json:"system"`
+	WithIgnored bool    `db:"with_ignored" json:"withIgnored"`
+	Filter      *string `db:"filter" json:"filter"`
+	OrderBy     string  `db:"order_by" json:"orderBy"`
+	Offset      int32   `db:"offset" json:"offset"`
+	PerPage     int32   `db:"per_page" json:"perPage"`
 }
 
 type GetTalkgroupsPRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
-	System    System    `json:"system"`
+	Talkgroup Talkgroup `db:"talkgroup" json:"talkgroup"`
+	System    System    `db:"system" json:"system"`
 }
 
 func (q *Queries) GetTalkgroupsP(ctx context.Context, arg GetTalkgroupsPParams) ([]GetTalkgroupsPRow, error) {
@@ -419,7 +419,7 @@ WHERE tags @> ARRAY[$1]
 `
 
 type GetTalkgroupsWithAllTagsRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
+	Talkgroup Talkgroup `db:"talkgroup" json:"talkgroup"`
 }
 
 func (q *Queries) GetTalkgroupsWithAllTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAllTagsRow, error) {
@@ -463,7 +463,7 @@ WHERE tags && ARRAY[$1]
 `
 
 type GetTalkgroupsWithAnyTagsRow struct {
-	Talkgroup Talkgroup `json:"talkgroup"`
+	Talkgroup Talkgroup `db:"talkgroup" json:"talkgroup"`
 }
 
 func (q *Queries) GetTalkgroupsWithAnyTags(ctx context.Context, tags []string) ([]GetTalkgroupsWithAnyTagsRow, error) {
@@ -611,19 +611,19 @@ RETURNING id, system_id, tgid, name, alpha_tag, tg_group, frequency, metadata, t
 `
 
 type UpdateTalkgroupParams struct {
-	Name       *string            `json:"name"`
-	AlphaTag   *string            `json:"alphaTag"`
-	TGGroup    *string            `json:"tgGroup"`
-	Frequency  *int32             `json:"frequency"`
-	Metadata   jsontypes.Metadata `json:"metadata"`
-	Tags       []string           `json:"tags"`
-	Alert      *bool              `json:"alert"`
-	AlertRules rules.AlertRules   `json:"alertRules"`
-	Weight     *float32           `json:"weight"`
-	Learned    *bool              `json:"learned"`
-	ID         *int32             `json:"id"`
-	SystemID   *int32             `json:"systemId"`
-	TGID       *int32             `json:"tgid"`
+	Name       *string            `db:"name" json:"name"`
+	AlphaTag   *string            `db:"alpha_tag" json:"alphaTag"`
+	TGGroup    *string            `db:"tg_group" json:"tgGroup"`
+	Frequency  *int32             `db:"frequency" json:"frequency"`
+	Metadata   jsontypes.Metadata `db:"metadata" json:"metadata"`
+	Tags       []string           `db:"tags" json:"tags"`
+	Alert      *bool              `db:"alert" json:"alert"`
+	AlertRules rules.AlertRules   `db:"alert_rules" json:"alertRules"`
+	Weight     *float32           `db:"weight" json:"weight"`
+	Learned    *bool              `db:"learned" json:"learned"`
+	ID         *int32             `db:"id" json:"id"`
+	SystemID   *int32             `db:"system_id" json:"systemId"`
+	TGID       *int32             `db:"tgid" json:"tgid"`
 }
 
 func (q *Queries) UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error) {

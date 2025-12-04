@@ -17,7 +17,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/services"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 var (
@@ -199,13 +198,13 @@ func (s *postgresStore) GetAPIKey(ctx context.Context, b64hash string) (database
 }
 
 func (s *postgresStore) RecordLogin(ctx context.Context, username, source string) error {
-	ts := pgtype.Timestamptz{Time: time.Now(), Valid: true}
+	now := time.Now()
 	ip, err := common.RemoteAddr(source)
 	if err != nil {
 		return err
 	}
 
-	return s.db.RecordUserLogin(ctx, username, ts, &ip)
+	return s.db.RecordUserLogin(ctx, username, &now, &ip)
 }
 
 func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *string, expiresAt *time.Time, disabled bool) (*APIKey, error) {
@@ -234,15 +233,6 @@ func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *s
 		return nil, err
 	}
 
-	var expires pgtype.Timestamp
-
-	if expiresAt != nil {
-		expires = pgtype.Timestamp{
-			Time:  expiresAt.UTC(),
-			Valid: true,
-		}
-	}
-
 	// generate it after auth
 	uu := uuid.New()
 	hash256 := sha256.Sum256([]byte(uu.String()))
@@ -252,7 +242,7 @@ func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *s
 		CreatedAt: ak.CreatedAt.Time(),
 		Name:      ak.Name,
 		OwnerID:   ak.OwnerID.Int(),
-		Expires:   expires,
+		Expires:   expiresAt,
 		Disabled:  disabled,
 		HashedKey: hashedKey,
 	})

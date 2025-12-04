@@ -1,4 +1,4 @@
-package callstore
+package partman
 
 // portions lifted gratefully from github.com/qonto/postgresql-partition-manager, MIT license.
 
@@ -17,7 +17,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog/log"
 )
 
@@ -89,7 +88,7 @@ type PartmanCallAudioManager interface {
 	DerefSweptCallAudios(ctx context.Context, tx database.Store) error
 
 	// PruneAudioPrefix schedules for pruning (backend-specific) all call audios with partPrefix.
-	PruneAudioPrefix(ctx context.Context, tx database.Store, partPrefix string, pStart, pEnd pgtype.Timestamptz) error
+	PruneAudioPrefix(ctx context.Context, tx database.Store, partPrefix string, pStart, pEnd time.Time) error
 }
 
 func (pm *partman) Interval() common.Interval {
@@ -104,7 +103,7 @@ type Partition struct {
 	Time        time.Time
 }
 
-func NewPartitionManager(db database.Store, callStore Store, cfg config.Partition) (*partman, error) {
+func NewPartitionManager(db database.Store, callStore PartmanCallAudioManager, cfg config.Partition) (*partman, error) {
 	intv := common.Interval(cfg.Interval)
 	if !intv.IsValid() {
 		return nil, common.ErrInvalidInterval(intv)
@@ -245,9 +244,7 @@ func (pm *partman) fullTableName(s string) string {
 }
 
 func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Partition) error {
-	s, e := p.Range()
-	start := pgtype.Timestamptz{Time: s, Valid: true}
-	end := pgtype.Timestamptz{Time: e, Valid: true}
+	start, end := p.Range()
 	fullPartName := pm.fullTableName(p.PartitionName())
 
 	// sweep calls that are referenced by an incident into swept_calls
@@ -258,25 +255,27 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Part
 		}
 		log.Warn().Msg("unique constraint violation while sweeping calls")
 	}
-	log.Info().Int64("rows", swept).Time("start", s).Time("end", e).Msg("swept calls")
+	log.Info().Int64("rows", swept).Time("start", start).Time("end", end).Msg("swept calls")
 
 	swept, err = tx.CleanupSweptCalls(ctx, start, end)
 	if err != nil {
 		return err
 	}
-	log.Info().Int64("rows", swept).Time("start", s).Time("end", e).Msg("cleaned up swept calls")
+	log.Info().Int64("rows", swept).Time("start", start).Time("end", end).Msg("cleaned up swept calls")
 
 	// go through swept calls and resolve all audio references.
 	// in the future, we may make this configurable along with the necessary changes to
 	// audioBackends to exclude calls from the pruning that happens below.
-	err = pm.calls.DerefSweptCallAudios(ctx, tx)
-	if err != nil {
-		return err
-	}
+	if pm.calls != nil {
+		err = pm.calls.DerefSweptCallAudios(ctx, tx)
+		if err != nil {
+			return err
+		}
 
-	err = pm.calls.PruneAudioPrefix(ctx, tx, p.Prefix(), start, end)
-	if err != nil {
-		return err
+		err = pm.calls.PruneAudioPrefix(ctx, tx, p.Prefix(), start, end)
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Info().Str("partition", fullPartName).Msg("detaching partition")
@@ -293,6 +292,7 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Part
 	return nil
 }
 
+// Check ensures that partitions exist and cleans up once that should not assuming it is now.
 func (pm *partman) Check(ctx context.Context, now time.Time) error {
 	return pm.db.InTx(ctx, func(db database.Store) error {
 		// by default, we want to make sure a partition exists for this and next interval

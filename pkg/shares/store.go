@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
@@ -52,8 +53,8 @@ func recToShare(share database.Share) *Share {
 		ID:         share.ID,
 		Type:       EntityType(share.EntityType),
 		EntityID:   share.EntityID,
-		Date:       jsontypes.TimePtrFromTSTZ(share.EntityDate),
-		Expiration: jsontypes.TimePtrFromTSTZ(share.Expiration),
+		Date:       (*jsontypes.Time)(share.EntityDate),
+		Expiration: (*jsontypes.Time)(share.Expiration),
 		OwnerID:    users.UserID(share.OwnerID),
 	}
 }
@@ -87,8 +88,8 @@ func (s *postgresStore) Create(ctx context.Context, share *Share) error {
 		ID:         share.ID,
 		EntityType: string(share.Type),
 		EntityID:   share.EntityID,
-		EntityDate: share.Date.PGTypeTSTZ(),
-		Expiration: share.Expiration.PGTypeTSTZ(),
+		EntityDate: (*time.Time)(share.Date),
+		Expiration: (*time.Time)(share.Expiration),
 		OwnerID:    sub.ID.Int(),
 	})
 

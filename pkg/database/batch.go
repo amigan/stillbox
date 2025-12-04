@@ -56,9 +56,9 @@ type StoreTGVersionBatchResults struct {
 }
 
 type StoreTGVersionParams struct {
-	Submitter *int32 `json:"submitter"`
-	SystemID  int32  `json:"systemId"`
-	TGID      int32  `json:"tgid"`
+	Submitter *int32 `db:"submitter" json:"submitter"`
+	SystemID  int32  `db:"system_id" json:"systemId"`
+	TGID      int32  `db:"tgid" json:"tgid"`
 }
 
 func (q *Queries) StoreTGVersion(ctx context.Context, arg []StoreTGVersionParams) *StoreTGVersionBatchResults {
@@ -135,18 +135,18 @@ type UpsertTalkgroupBatchResults struct {
 }
 
 type UpsertTalkgroupParams struct {
-	SystemID   int32              `json:"systemId"`
-	TGID       int32              `json:"tgid"`
-	Name       *string            `json:"name"`
-	AlphaTag   *string            `json:"alphaTag"`
-	TGGroup    *string            `json:"tgGroup"`
-	Frequency  *int32             `json:"frequency"`
-	Metadata   jsontypes.Metadata `json:"metadata"`
-	Tags       []string           `json:"tags"`
-	Alert      interface{}        `json:"alert"`
-	AlertRules rules.AlertRules   `json:"alertRules"`
-	Weight     pgtype.Numeric     `json:"weight"`
-	Learned    *bool              `json:"learned"`
+	SystemID   int32              `db:"system_id" json:"systemId"`
+	TGID       int32              `db:"tgid" json:"tgid"`
+	Name       *string            `db:"name" json:"name"`
+	AlphaTag   *string            `db:"alpha_tag" json:"alphaTag"`
+	TGGroup    *string            `db:"tg_group" json:"tgGroup"`
+	Frequency  *int32             `db:"frequency" json:"frequency"`
+	Metadata   jsontypes.Metadata `db:"metadata" json:"metadata"`
+	Tags       []string           `db:"tags" json:"tags"`
+	Alert      interface{}        `db:"alert" json:"alert"`
+	AlertRules rules.AlertRules   `db:"alert_rules" json:"alertRules"`
+	Weight     pgtype.Numeric     `db:"weight" json:"weight"`
+	Learned    *bool              `db:"learned" json:"learned"`
 }
 
 func (q *Queries) UpsertTalkgroup(ctx context.Context, arg []UpsertTalkgroupParams) *UpsertTalkgroupBatchResults {

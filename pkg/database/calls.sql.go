@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -55,24 +56,24 @@ $18
 `
 
 type AddCallParams struct {
-	ID          uuid.UUID          `json:"id"`
-	Submitter   *int32             `json:"submitter"`
-	System      int                `json:"system"`
-	Talkgroup   int                `json:"talkgroup"`
-	CallDate    pgtype.Timestamptz `json:"callDate"`
-	AudioName   *string            `json:"audioName"`
-	AudioBlob   []byte             `json:"audioBlob"`
-	AudioType   NullAudioMIME      `json:"audioType"`
-	AudioRef    []byte             `json:"audioRef"`
-	Duration    *int32             `json:"duration"`
-	Frequency   int                `json:"frequency"`
-	Frequencies []int              `json:"frequencies"`
-	Patches     []int              `json:"patches"`
-	TalkerAlias *string            `json:"talkerAlias,omitempty"`
-	TGLabel     *string            `json:"tgLabel"`
-	TGAlphaTag  *string            `json:"tgAlphaTag"`
-	TGGroup     *string            `json:"tgGroup"`
-	Source      int                `json:"source"`
+	ID          uuid.UUID     `db:"id" json:"id"`
+	Submitter   *int32        `db:"submitter" json:"submitter"`
+	System      int           `db:"system" json:"system"`
+	Talkgroup   int           `db:"talkgroup" json:"talkgroup"`
+	CallDate    time.Time     `db:"call_date" json:"callDate"`
+	AudioName   *string       `db:"audio_name" json:"audioName"`
+	AudioBlob   []byte        `db:"audio_blob" json:"audioBlob"`
+	AudioType   NullAudioMIME `db:"audio_type" json:"audioType"`
+	AudioRef    []byte        `db:"audio_ref" json:"audioRef"`
+	Duration    *int32        `db:"duration" json:"duration"`
+	Frequency   int           `db:"frequency" json:"frequency"`
+	Frequencies []int         `db:"frequencies" json:"frequencies"`
+	Patches     []int         `db:"patches" json:"patches"`
+	TalkerAlias *string       `db:"talker_alias" json:"talkerAlias,omitempty"`
+	TGLabel     *string       `db:"tg_label" json:"tgLabel"`
+	TGAlphaTag  *string       `db:"tg_alpha_tag" json:"tgAlphaTag"`
+	TGGroup     *string       `db:"tg_group" json:"tgGroup"`
+	Source      int           `db:"source" json:"source"`
 }
 
 func (q *Queries) AddCall(ctx context.Context, arg AddCallParams) error {
@@ -118,11 +119,11 @@ INSERT INTO audio_ref_journal (
 `
 
 type AddRefJournalParams struct {
-	CallID     pgtype.UUID        `json:"callId"`
-	Backend    string             `json:"backend"`
-	Ref        []byte             `json:"ref"`
-	PruneAfter pgtype.Timestamptz `json:"pruneAfter"`
-	Tries      int                `json:"tries"`
+	CallID     pgtype.UUID `db:"call_id" json:"callId"`
+	Backend    string      `db:"backend" json:"backend"`
+	Ref        []byte      `db:"ref" json:"ref"`
+	PruneAfter *time.Time  `db:"prune_after" json:"pruneAfter"`
+	Tries      int         `db:"tries" json:"tries"`
 }
 
 func (q *Queries) AddRefJournal(ctx context.Context, arg AddRefJournalParams) (int64, error) {
@@ -150,7 +151,7 @@ WITH to_sweep AS (
 	WHERE call_id IN (SELECT id FROM to_sweep)
 `
 
-func (q *Queries) CleanupSweptCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
+func (q *Queries) CleanupSweptCalls(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error) {
 	result, err := q.db.Exec(ctx, cleanupSweptCalls, rangeStart, rangeEnd)
 	if err != nil {
 		return 0, err
@@ -173,7 +174,7 @@ WHERE
 	CASE WHEN $3::TIMESTAMPTZ IS NOT NULL THEN last_try <= $3 ELSE TRUE END
 `
 
-func (q *Queries) CountRefJournal(ctx context.Context, missing *bool, since pgtype.Timestamptz, until pgtype.Timestamptz) (int64, error) {
+func (q *Queries) CountRefJournal(ctx context.Context, missing *bool, since *time.Time, until *time.Time) (int64, error) {
 	row := q.db.QueryRow(ctx, countRefJournal, missing, since, until)
 	var count int64
 	err := row.Scan(&count)
@@ -197,9 +198,9 @@ GROUP BY backend, has_ref
 `
 
 type DetailedCountRefJournalRow struct {
-	Count   int64  `json:"count"`
-	Backend string `json:"backend"`
-	HasRef  bool   `json:"hasRef"`
+	Count   int64  `db:"count" json:"count"`
+	Backend string `db:"backend" json:"backend"`
+	HasRef  bool   `db:"has_ref" json:"hasRef"`
 }
 
 func (q *Queries) DetailedCountRefJournal(ctx context.Context) ([]DetailedCountRefJournalRow, error) {
@@ -257,24 +258,24 @@ WHERE id = $1
 `
 
 type GetCallRow struct {
-	ID          uuid.UUID          `json:"id"`
-	Submitter   *int32             `json:"submitter"`
-	System      int                `json:"system"`
-	Talkgroup   int                `json:"talkgroup"`
-	CallDate    pgtype.Timestamptz `json:"callDate"`
-	AudioName   *string            `json:"audioName"`
-	AudioType   NullAudioMIME      `json:"audioType"`
-	AudioRef    []byte             `json:"audioRef"`
-	Duration    *int32             `json:"duration"`
-	Frequency   int                `json:"frequency"`
-	Frequencies []int              `json:"frequencies"`
-	Patches     []int              `json:"patches"`
-	TalkerAlias *string            `json:"talkerAlias,omitempty"`
-	TGLabel     *string            `json:"tgLabel"`
-	TGAlphaTag  *string            `json:"tgAlphaTag"`
-	TGGroup     *string            `json:"tgGroup"`
-	Source      int                `json:"source"`
-	Transcript  *string            `json:"transcript"`
+	ID          uuid.UUID     `db:"id" json:"id"`
+	Submitter   *int32        `db:"submitter" json:"submitter"`
+	System      int           `db:"system" json:"system"`
+	Talkgroup   int           `db:"talkgroup" json:"talkgroup"`
+	CallDate    time.Time     `db:"call_date" json:"callDate"`
+	AudioName   *string       `db:"audio_name" json:"audioName"`
+	AudioType   NullAudioMIME `db:"audio_type" json:"audioType"`
+	AudioRef    []byte        `db:"audio_ref" json:"audioRef"`
+	Duration    *int32        `db:"duration" json:"duration"`
+	Frequency   int           `db:"frequency" json:"frequency"`
+	Frequencies []int         `db:"frequencies" json:"frequencies"`
+	Patches     []int         `db:"patches" json:"patches"`
+	TalkerAlias *string       `db:"talker_alias" json:"talkerAlias,omitempty"`
+	TGLabel     *string       `db:"tg_label" json:"tgLabel"`
+	TGAlphaTag  *string       `db:"tg_alpha_tag" json:"tgAlphaTag"`
+	TGGroup     *string       `db:"tg_group" json:"tgGroup"`
+	Source      int           `db:"source" json:"source"`
+	Transcript  *string       `db:"transcript" json:"transcript"`
 }
 
 func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error) {
@@ -378,26 +379,26 @@ FETCH NEXT $1 ROWS ONLY
 `
 
 type GetCallAudioParams struct {
-	Count         int32              `json:"count"`
-	Swept         *bool              `json:"swept"`
-	Start         pgtype.Timestamptz `json:"start"`
-	End           pgtype.Timestamptz `json:"end"`
-	TagsAny       []string           `json:"tagsAny"`
-	TagsNot       []string           `json:"tagsNot"`
-	LongerThan    pgtype.Numeric     `json:"longerThan"`
-	HasBackend    *string            `json:"hasBackend"`
-	NotHasBackend *string            `json:"notHasBackend"`
-	HasBlob       *bool              `json:"hasBlob"`
+	Count         int32          `db:"count" json:"count"`
+	Swept         *bool          `db:"swept" json:"swept"`
+	Start         *time.Time     `db:"start" json:"start"`
+	End           *time.Time     `db:"end" json:"end"`
+	TagsAny       []string       `db:"tags_any" json:"tagsAny"`
+	TagsNot       []string       `db:"tags_not" json:"tagsNot"`
+	LongerThan    pgtype.Numeric `db:"longer_than" json:"longerThan"`
+	HasBackend    *string        `db:"has_backend" json:"hasBackend"`
+	NotHasBackend *string        `db:"not_has_backend" json:"notHasBackend"`
+	HasBlob       *bool          `db:"has_blob" json:"hasBlob"`
 }
 
 type GetCallAudioRow struct {
-	ID        uuid.UUID          `json:"id"`
-	CallDate  pgtype.Timestamptz `json:"callDate"`
-	AudioName *string            `json:"audioName"`
-	AudioType NullAudioMIME      `json:"audioType"`
-	AudioRef  []byte             `json:"audioRef"`
-	AudioBlob []byte             `json:"audioBlob"`
-	Swept     bool               `json:"swept"`
+	ID        uuid.UUID     `db:"id" json:"id"`
+	CallDate  time.Time     `db:"call_date" json:"callDate"`
+	AudioName *string       `db:"audio_name" json:"audioName"`
+	AudioType NullAudioMIME `db:"audio_type" json:"audioType"`
+	AudioRef  []byte        `db:"audio_ref" json:"audioRef"`
+	AudioBlob []byte        `db:"audio_blob" json:"audioBlob"`
+	Swept     bool          `db:"swept" json:"swept"`
 }
 
 // For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount
@@ -461,11 +462,11 @@ WHERE sc.id = $1
 `
 
 type GetCallAudioByIDRow struct {
-	CallDate  pgtype.Timestamptz `json:"callDate"`
-	AudioName *string            `json:"audioName"`
-	AudioType NullAudioMIME      `json:"audioType"`
-	AudioRef  []byte             `json:"audioRef"`
-	AudioBlob []byte             `json:"audioBlob"`
+	CallDate  time.Time     `db:"call_date" json:"callDate"`
+	AudioName *string       `db:"audio_name" json:"audioName"`
+	AudioType NullAudioMIME `db:"audio_type" json:"audioType"`
+	AudioRef  []byte        `db:"audio_ref" json:"audioRef"`
+	AudioBlob []byte        `db:"audio_blob" json:"audioBlob"`
 }
 
 func (q *Queries) GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error) {
@@ -497,7 +498,7 @@ SELECT calls.id, calls.submitter, calls.system, calls.talkgroup, calls.call_date
 `
 
 type GetCallsRow struct {
-	Call Call `json:"call"`
+	Call Call `db:"call" json:"call"`
 }
 
 func (q *Queries) GetCalls(ctx context.Context, ids []uuid.UUID) ([]GetCallsRow, error) {
@@ -566,11 +567,11 @@ GROUP BY
 `
 
 type GetPrunableAudioRefsRow struct {
-	Backend   string `json:"backend"`
-	PathFirst string `json:"pathFirst"`
+	Backend   string `db:"backend" json:"backend"`
+	PathFirst string `db:"path_first" json:"pathFirst"`
 }
 
-func (q *Queries) GetPrunableAudioRefs(ctx context.Context, partitionStart pgtype.Timestamptz, partitionEnd pgtype.Timestamptz) ([]GetPrunableAudioRefsRow, error) {
+func (q *Queries) GetPrunableAudioRefs(ctx context.Context, partitionStart time.Time, partitionEnd time.Time) ([]GetPrunableAudioRefsRow, error) {
 	rows, err := q.db.Query(ctx, getPrunableAudioRefs, partitionStart, partitionEnd)
 	if err != nil {
 		return nil, err
@@ -608,10 +609,10 @@ LIMIT (CASE WHEN $4::INTEGER IS NOT NULL THEN $4 ELSE 10000000000 END)
 `
 
 type GetRefJournalParams struct {
-	Missing *bool              `json:"missing"`
-	Since   pgtype.Timestamptz `json:"since"`
-	Until   pgtype.Timestamptz `json:"until"`
-	Num     *int32             `json:"num"`
+	Missing *bool      `db:"missing" json:"missing"`
+	Since   *time.Time `db:"since" json:"since"`
+	Until   *time.Time `db:"until" json:"until"`
+	Num     *int32     `db:"num" json:"num"`
 }
 
 func (q *Queries) GetRefJournal(ctx context.Context, arg GetRefJournalParams) ([]AudioRefJournal, error) {
@@ -652,10 +653,10 @@ SELECT id, call_date, audio_ref, audio_blob FROM swept_calls WHERE audio_ref IS 
 `
 
 type GetSweptCallsWithRefRow struct {
-	ID        uuid.UUID          `json:"id"`
-	CallDate  pgtype.Timestamptz `json:"callDate"`
-	AudioRef  []byte             `json:"audioRef"`
-	AudioBlob []byte             `json:"audioBlob"`
+	ID        uuid.UUID `db:"id" json:"id"`
+	CallDate  time.Time `db:"call_date" json:"callDate"`
+	AudioRef  []byte    `db:"audio_ref" json:"audioRef"`
+	AudioBlob []byte    `db:"audio_blob" json:"audioBlob"`
 }
 
 func (q *Queries) GetSweptCallsWithRef(ctx context.Context) ([]GetSweptCallsWithRefRow, error) {
@@ -695,16 +696,16 @@ LIMIT $5
 `
 
 type GetTranscriptsContextParams struct {
-	System         int             `json:"system"`
-	Talkgroup      int             `json:"talkgroup"`
-	Lookback       pgtype.Interval `json:"lookback"`
-	DurationMS     *int32          `json:"durationMs"`
-	NumTranscripts int32           `json:"numTranscripts"`
+	System         int             `db:"system" json:"system"`
+	Talkgroup      int             `db:"talkgroup" json:"talkgroup"`
+	Lookback       pgtype.Interval `db:"lookback" json:"lookback"`
+	DurationMS     *int32          `db:"duration_ms" json:"durationMs"`
+	NumTranscripts int32           `db:"num_transcripts" json:"numTranscripts"`
 }
 
 type GetTranscriptsContextRow struct {
-	CallDate   pgtype.Timestamptz `json:"callDate"`
-	Transcript *string            `json:"transcript"`
+	CallDate   time.Time `db:"call_date" json:"callDate"`
+	Transcript *string   `db:"transcript" json:"transcript"`
 }
 
 func (q *Queries) GetTranscriptsContext(ctx context.Context, arg GetTranscriptsContextParams) ([]GetTranscriptsContextRow, error) {
@@ -779,15 +780,15 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 `
 
 type ListCallsCountParams struct {
-	Start            pgtype.Timestamptz `json:"start"`
-	End              pgtype.Timestamptz `json:"end"`
-	TagsAny          []string           `json:"tagsAny"`
-	TagsNot          []string           `json:"tagsNot"`
-	TGFilter         *string            `json:"tgFilter"`
-	SourceFilter     *string            `json:"sourceFilter"`
-	LongerThan       pgtype.Numeric     `json:"longerThan"`
-	UnknownTG        bool               `json:"unknownTg"`
-	TranscriptSearch *string            `json:"transcriptSearch"`
+	Start            *time.Time     `db:"start" json:"start"`
+	End              *time.Time     `db:"end" json:"end"`
+	TagsAny          []string       `db:"tags_any" json:"tagsAny"`
+	TagsNot          []string       `db:"tags_not" json:"tagsNot"`
+	TGFilter         *string        `db:"tg_filter" json:"tgFilter"`
+	SourceFilter     *string        `db:"source_filter" json:"sourceFilter"`
+	LongerThan       pgtype.Numeric `db:"longer_than" json:"longerThan"`
+	UnknownTG        bool           `db:"unknown_tg" json:"unknownTg"`
+	TranscriptSearch *string        `db:"transcript_search" json:"transcriptSearch"`
 }
 
 func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error) {
@@ -863,31 +864,31 @@ FETCH NEXT $12 ROWS ONLY
 `
 
 type ListCallsPParams struct {
-	TranscriptSearch *string            `json:"transcriptSearch"`
-	Start            pgtype.Timestamptz `json:"start"`
-	End              pgtype.Timestamptz `json:"end"`
-	TagsAny          []string           `json:"tagsAny"`
-	TagsNot          []string           `json:"tagsNot"`
-	TGFilter         *string            `json:"tgFilter"`
-	SourceFilter     *string            `json:"sourceFilter"`
-	LongerThan       pgtype.Numeric     `json:"longerThan"`
-	UnknownTG        bool               `json:"unknownTg"`
-	Direction        string             `json:"direction"`
-	Offset           int32              `json:"offset"`
-	PerPage          int32              `json:"perPage"`
+	TranscriptSearch *string        `db:"transcript_search" json:"transcriptSearch"`
+	Start            *time.Time     `db:"start" json:"start"`
+	End              *time.Time     `db:"end" json:"end"`
+	TagsAny          []string       `db:"tags_any" json:"tagsAny"`
+	TagsNot          []string       `db:"tags_not" json:"tagsNot"`
+	TGFilter         *string        `db:"tg_filter" json:"tgFilter"`
+	SourceFilter     *string        `db:"source_filter" json:"sourceFilter"`
+	LongerThan       pgtype.Numeric `db:"longer_than" json:"longerThan"`
+	UnknownTG        bool           `db:"unknown_tg" json:"unknownTg"`
+	Direction        string         `db:"direction" json:"direction"`
+	Offset           int32          `db:"offset" json:"offset"`
+	PerPage          int32          `db:"per_page" json:"perPage"`
 }
 
 type ListCallsPRow struct {
-	ID            uuid.UUID          `json:"id"`
-	CallDate      pgtype.Timestamptz `json:"callDate"`
-	Duration      *int32             `json:"duration"`
-	SystemID      int                `json:"systemId"`
-	TGID          int                `json:"tgid"`
-	TalkerAlias   *string            `json:"talkerAlias,omitempty"`
-	Source        int                `json:"source,omitzero"`
-	Transcript    interface{}        `json:"transcript,omitempty"`
-	Incidents     int64              `json:"incidents,omitempty,omitzero"`
-	HasTranscript bool               `json:"hasTranscript,omitzero"`
+	ID            uuid.UUID   `db:"id" json:"id"`
+	CallDate      time.Time   `db:"call_date" json:"callDate"`
+	Duration      *int32      `db:"duration" json:"duration"`
+	SystemID      int         `db:"system_id" json:"systemId"`
+	TGID          int         `db:"tgid" json:"tgid"`
+	TalkerAlias   *string     `db:"talker_alias" json:"talkerAlias,omitempty"`
+	Source        int         `db:"source" json:"source,omitzero"`
+	Transcript    interface{} `db:"transcript" json:"transcript,omitempty"`
+	Incidents     int64       `db:"incidents" json:"incidents,omitempty,omitzero"`
+	HasTranscript bool        `db:"has_transcript" json:"hasTranscript,omitzero"`
 }
 
 func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error) {
@@ -950,10 +951,10 @@ RETURNING call_date, system, talkgroup, patches
 `
 
 type SetCallTranscriptRow struct {
-	CallDate  pgtype.Timestamptz `json:"callDate"`
-	System    int                `json:"system"`
-	Talkgroup int                `json:"talkgroup"`
-	Patches   []int              `json:"patches"`
+	CallDate  time.Time `db:"call_date" json:"callDate"`
+	System    int       `db:"system" json:"system"`
+	Talkgroup int       `db:"talkgroup" json:"talkgroup"`
+	Patches   []int     `db:"patches" json:"patches"`
 }
 
 func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcript *string) (SetCallTranscriptRow, error) {
@@ -975,7 +976,7 @@ WHERE
 	id = $1
 `
 
-func (q *Queries) SetRefJournalPrune(ctx context.Context, iD int64, pruneAfter pgtype.Timestamptz) error {
+func (q *Queries) SetRefJournalPrune(ctx context.Context, iD int64, pruneAfter *time.Time) error {
 	_, err := q.db.Exec(ctx, setRefJournalPrune, iD, pruneAfter)
 	return err
 }
@@ -1067,7 +1068,7 @@ FROM to_sweep ON CONFLICT DO NOTHING
 `
 
 // This is used to sweep calls that are part of an incident prior to pruning a partition.
-func (q *Queries) SweepCalls(ctx context.Context, rangeStart pgtype.Timestamptz, rangeEnd pgtype.Timestamptz) (int64, error) {
+func (q *Queries) SweepCalls(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error) {
 	result, err := q.db.Exec(ctx, sweepCalls, rangeStart, rangeEnd)
 	if err != nil {
 		return 0, err

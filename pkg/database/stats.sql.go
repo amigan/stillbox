@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -26,11 +27,11 @@ ORDER BY date DESC
 `
 
 type GetCallStatsByIntervalRow struct {
-	Count int64              `json:"count"`
-	Date  pgtype.Timestamptz `json:"date"`
+	Count int64     `db:"count" json:"count"`
+	Date  time.Time `db:"date" json:"date"`
 }
 
-func (q *Queries) GetCallStatsByInterval(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]GetCallStatsByIntervalRow, error) {
+func (q *Queries) GetCallStatsByInterval(ctx context.Context, truncField string, start *time.Time, end *time.Time) ([]GetCallStatsByIntervalRow, error) {
 	rows, err := q.db.Query(ctx, getCallStatsByInterval, truncField, start, end)
 	if err != nil {
 		return nil, err
@@ -67,13 +68,13 @@ ORDER BY 4 DESC
 `
 
 type GetCallStatsByTalkgroupRow struct {
-	Count     int64           `json:"count"`
-	System    int             `json:"system"`
-	Talkgroup int             `json:"talkgroup"`
-	DateTrunc pgtype.Interval `json:"dateTrunc"`
+	Count     int64           `db:"count" json:"count"`
+	System    int             `db:"system" json:"system"`
+	Talkgroup int             `db:"talkgroup" json:"talkgroup"`
+	DateTrunc pgtype.Interval `db:"date_trunc" json:"dateTrunc"`
 }
 
-func (q *Queries) GetCallStatsByTalkgroup(ctx context.Context, truncField string, start pgtype.Timestamptz, end pgtype.Timestamptz) ([]GetCallStatsByTalkgroupRow, error) {
+func (q *Queries) GetCallStatsByTalkgroup(ctx context.Context, truncField string, start *time.Time, end *time.Time) ([]GetCallStatsByTalkgroupRow, error) {
 	rows, err := q.db.Query(ctx, getCallStatsByTalkgroup, truncField, start, end)
 	if err != nil {
 		return nil, err

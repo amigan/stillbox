@@ -10,7 +10,6 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/database"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog/log"
 )
 
@@ -63,11 +62,6 @@ func (rs *refJournal) AddDelete(ctx context.Context, backend string, ref string,
 }
 
 func (rs *refJournal) add(ctx context.Context, callID *uuid.UUID, backend string, ref string, pruneAfter *time.Time, tries int) (JournalID, error) {
-	var pA pgtype.Timestamptz
-	if pruneAfter != nil {
-		pA = pgtype.Timestamptz{Time: *pruneAfter, Valid: true}
-	}
-
 	var refJSON []byte
 	var err error
 	if ref != "" {
@@ -81,7 +75,7 @@ func (rs *refJournal) add(ctx context.Context, callID *uuid.UUID, backend string
 		CallID:     common.PGUUID(callID),
 		Backend:    backend,
 		Ref:        refJSON,
-		PruneAfter: pA,
+		PruneAfter: pruneAfter,
 		Tries:      tries,
 	})
 
@@ -93,11 +87,7 @@ func (rs *refJournal) Increment(ctx context.Context, id JournalID) error {
 }
 
 func (rs *refJournal) UpdatePruneAfter(ctx context.Context, id JournalID, pruneAfter *time.Time) error {
-	var pa pgtype.Timestamptz
-	if pruneAfter != nil {
-		pa = pgtype.Timestamptz{Valid: true, Time: *pruneAfter}
-	}
-	return rs.store.db.SetRefJournalPrune(ctx, int64(id), pa)
+	return rs.store.db.SetRefJournalPrune(ctx, int64(id), pruneAfter)
 }
 
 func (rs *refJournal) Drop(ctx context.Context, id JournalID) error {
@@ -194,11 +184,6 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 			rs.ab.JournalGCErrorMetric(back.Name, create).Inc()
 		}
 
-		var pruneAfter *time.Time
-		if fr.PruneAfter.Valid {
-			pruneAfter = &fr.PruneAfter.Time
-		}
-
 		var newPruneAfter *time.Time
 		switch create {
 		case true: // create
@@ -213,7 +198,7 @@ func (rs *refJournal) GC(ctx context.Context, arg database.GetRefJournalParams, 
 			if pj != nil {
 				mctx = CtxWithPruneJob(ctx, pj)
 			}
-			newPruneAfter, rerr = back.Prune(mctx, ref, pruneAfter)
+			newPruneAfter, rerr = back.Prune(mctx, ref, fr.PruneAfter)
 			if rerr != nil {
 				rerr = fmt.Errorf("%v: %w", ref, rerr)
 			}

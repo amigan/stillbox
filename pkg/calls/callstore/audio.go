@@ -15,6 +15,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/database/partman"
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
 
@@ -22,7 +23,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
@@ -40,13 +40,13 @@ const (
 )
 
 type AudioRef interface {
-	Ref(PartitionManager, time.Time) string
+	Ref(partman.PartitionManager, time.Time) string
 	String() string
 }
 
 type AbsoluteRef string
 
-func (ar AbsoluteRef) Ref(_ PartitionManager, _ time.Time) string {
+func (ar AbsoluteRef) Ref(_ partman.PartitionManager, _ time.Time) string {
 	return string(ar)
 }
 
@@ -56,7 +56,7 @@ func (ar AbsoluteRef) String() string {
 
 type PartitionRelativeRef string
 
-func (prr PartitionRelativeRef) Ref(pm PartitionManager, callTime time.Time) string {
+func (prr PartitionRelativeRef) Ref(pm partman.PartitionManager, callTime time.Time) string {
 	if pm == nil {
 		return string(prr)
 	}
@@ -502,7 +502,7 @@ func (s *store) GoGC(ctx context.Context) {
 		}
 	}
 
-	tick := time.NewTicker(CheckInterval)
+	tick := time.NewTicker(partman.CheckInterval)
 
 	for {
 		select {
@@ -594,7 +594,7 @@ func (s *store) MakeBackends(ctx context.Context, fc tgstore.FilterCache, met me
 	return ab, nil
 }
 
-func (s *store) PruneAudioPrefix(ctx context.Context, tx database.Store, partPrefix string, pStart, pEnd pgtype.Timestamptz) error {
+func (s *store) PruneAudioPrefix(ctx context.Context, tx database.Store, partPrefix string, pStart, pEnd time.Time) error {
 	if s.audioBackends.disablePrune || s.audioBackends.Count() < 1 {
 		return nil
 	}
@@ -634,7 +634,7 @@ func (s *store) DerefSweptCallAudios(ctx context.Context, tx database.Store) err
 	for _, ca := range cas {
 		out := calls.CallAudio{
 			ID:       ca.ID,
-			CallDate: jsontypes.Time(ca.CallDate.Time),
+			CallDate: jsontypes.Time(ca.CallDate),
 		}
 		err := s.audioBackends.CallAudio(ctx, &out, ca.AudioRef, &CallAudioOptions{resolveBlob: true})
 		if err != nil {
@@ -681,7 +681,7 @@ func (s *store) BlobPath(call *calls.CallAudio) (audioPath, audioRef string) {
 func CallAudioFromCAIDRow(id uuid.UUID, row database.GetCallAudioByIDRow) *calls.CallAudio {
 	return &calls.CallAudio{
 		ID:        id,
-		CallDate:  jsontypes.Time(row.CallDate.Time),
+		CallDate:  jsontypes.Time(row.CallDate),
 		AudioName: row.AudioName,
 		AudioType: (*string)(&row.AudioType.AudioMIME),
 		AudioBlob: row.AudioBlob,
