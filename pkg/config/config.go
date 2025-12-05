@@ -56,6 +56,8 @@ type Auth struct {
 	AllowInsecure            map[string]bool `yaml:"allowInsecureFor"`
 	SameSiteNoneWhenInsecure bool            `yaml:"sameSiteNoneForInsecure"`
 	APIKeyACL                *acl.IPConfig   `yaml:"apiKeyACL"`
+	AccessExpiry             *time.Duration  `yaml:"accessExpiry"`
+	RefreshExpiry            *time.Duration  `yaml:"refreshExpiry"`
 }
 
 type CORS struct {

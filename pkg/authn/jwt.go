@@ -30,6 +30,8 @@ var (
 type jwtAuthenticator struct {
 	sync.Mutex // protects jwt
 	jwt        *jwtauth.JWTAuth
+
+	refreshExpiry, accessExpiry time.Duration
 }
 
 type claims map[string]any
@@ -157,6 +159,20 @@ func (a *jwtAuthenticator) Init(cfg config.Auth) {
 	}
 	a.Lock()
 	defer a.Unlock()
+	a.refreshExpiry = 24 * 30 * time.Hour
+	a.accessExpiry = time.Hour
+
+	if cfg.RefreshExpiry != nil {
+		a.refreshExpiry = *cfg.RefreshExpiry
+	}
+	if cfg.AccessExpiry != nil {
+		a.accessExpiry = *cfg.AccessExpiry
+	}
+
+	if a.accessExpiry > a.refreshExpiry {
+		log.Fatal().Dur("accessExpiry", a.accessExpiry).Dur("refreshExpiry", a.refreshExpiry).Msg("access token expiry is longer than refresh token expiry")
+	}
+
 	a.jwt = jwtauth.New("HS256", []byte(cfg.JWTSecret), nil)
 }
 
@@ -166,7 +182,7 @@ func (a *jwtAuthenticator) NewAccessToken(username string) string {
 		"realm": AccessRealm,
 	}
 	jwtauth.SetIssuedNow(claims)
-	jwtauth.SetExpiryIn(claims, time.Hour)
+	jwtauth.SetExpiryIn(claims, a.accessExpiry)
 
 	a.Lock()
 	defer a.Unlock()
@@ -184,7 +200,7 @@ func (a *jwtAuthenticator) NewRefreshToken(username string) (string, error) {
 	}
 
 	jwtauth.SetIssuedNow(claims)
-	jwtauth.SetExpiryIn(claims, time.Hour*24*7) // seven days
+	jwtauth.SetExpiryIn(claims, a.refreshExpiry)
 
 	a.Lock()
 	defer a.Unlock()
