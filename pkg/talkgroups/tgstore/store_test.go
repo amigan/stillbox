@@ -52,16 +52,9 @@ func tids(ids ...string) []tgsp.ID {
 }
 
 func SetupTest() *TestSuite {
-	suite := new(TestSuite)
-	if suite.db.Postgres != nil {
-		suite.db.Close()
+	suite := &TestSuite{
+		db: testutil.NewDB(),
 	}
-
-	suite.db = testutil.NewDB(config.Partition{
-		Enabled:  true,
-		Schema:   suite.db.SchemaName,
-		Interval: "daily",
-	})
 
 	return suite
 }

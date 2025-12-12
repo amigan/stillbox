@@ -366,7 +366,7 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, pr
 	for _, prefix := range prefixes {
 		jeid, err := ab.journal.AddDelete(ctx, beName, prefix, nil)
 		if err != nil {
-			if database.IsConstraintViolation(err, "audio_ref_journal_call_id_backend_ref_key") {
+			if database.IsConstraintViolation(err, database.AudioRefJournalCallIDBackendRefKey) {
 				log.Warn().Str("backend", beName).Str("prefix", prefix).Msg("duplicate delete entry in ref journal")
 			} else {
 				return err

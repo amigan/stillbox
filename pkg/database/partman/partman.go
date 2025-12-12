@@ -250,7 +250,7 @@ func (pm *partman) prunePartition(ctx context.Context, tx database.Store, p Part
 	// sweep calls that are referenced by an incident into swept_calls
 	swept, err := tx.SweepCalls(ctx, start, end)
 	if err != nil {
-		if !database.IsConstraintViolation(err, "swept_calls_pkey") {
+		if !database.IsConstraintViolation(err, database.SweptCallsPK) {
 			return err
 		}
 		log.Warn().Msg("unique constraint violation while sweeping calls")
