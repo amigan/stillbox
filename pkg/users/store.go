@@ -248,7 +248,7 @@ func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *s
 	})
 	if err != nil {
 		switch {
-		case database.IsConstraintViolation(err, "api_keys_owner_name_key"):
+		case database.IsConstraintViolation(err, database.APIKeysOwnerIDNameKey):
 			return nil, ErrDuplicateName
 		default:
 			return nil, err

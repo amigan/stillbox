@@ -11,7 +11,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/authz/policy"
 	"dynatron.me/x/stillbox/pkg/calls"
-	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/incidents"
 	"dynatron.me/x/stillbox/pkg/incidents/incstore"
 	"dynatron.me/x/stillbox/pkg/users"
@@ -29,16 +28,9 @@ type TestSuite struct {
 type testHook func(context.Context, *testing.T, incstore.Store)
 
 func SetupTest() *TestSuite {
-	suite := new(TestSuite)
-	if suite.db.Postgres != nil {
-		suite.db.Close()
+	suite := &TestSuite{
+		db: testutil.NewDB(),
 	}
-
-	suite.db = testutil.NewDB(config.Partition{
-		Enabled:  true,
-		Schema:   suite.db.SchemaName,
-		Interval: "daily",
-	})
 
 	return suite
 }

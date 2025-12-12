@@ -21,7 +21,7 @@ type DB struct {
 	SchemaName string
 }
 
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+var letters = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
 
 func randSeq(n int) string {
 	b := make([]rune, n)
@@ -40,7 +40,7 @@ func (db DB) Cleanup() {
 	db.Close()
 }
 
-func NewDB(part config.Partition) DB {
+func NewDB() DB {
 	primeBlobs()
 
 	_ = godotenv.Load(path.Join(testdata.Path, "../.env.test"))
@@ -68,7 +68,12 @@ func NewDB(part config.Partition) DB {
 		panic(err)
 	}
 
-	part.Schema = schemaName
+	part := config.Partition{
+		Enabled:  true,
+		Schema:   schemaName,
+		Interval: "daily",
+	}
+
 	db, err := database.NewClient(ctx, config.DB{
 		Connect:    dbConnect + "&search_path=" + schemaName,
 		LogQueries: logQueries == "true",

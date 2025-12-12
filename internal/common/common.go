@@ -104,6 +104,17 @@ func DefaultIfNilOrZero[T comparable](v *T, def T) T {
 	return *v
 }
 
+// Keys returns an unsorted slice of the keys in m
+func Keys[K comparable, V any](m map[K]V) []K {
+	res := make([]K, 0, len(m))
+
+	for k := range m {
+		res = append(res, k)
+	}
+
+	return res
+}
+
 // AtoiU32 is atoi() that supports hex (0x) or dec.
 func AtoiU32(s string) (uint32, error) {
 	if len(s) > 2 && s[0] == '0' && s[1] == 'x' {

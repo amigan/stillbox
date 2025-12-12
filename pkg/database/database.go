@@ -194,13 +194,41 @@ func IsNoRows(err error) bool {
 	return errors.Is(err, pgx.ErrNoRows)
 }
 
+type constraint struct {
+	desc string
+}
+
+const (
+	APIKeysOwnerIDNameKey              = "api_keys_owner_id_name_key"
+	AudioRefJournalCallIDBackendRefKey = "audio_ref_journal_call_id_backend_ref_key"
+	SweptCallsPK                       = "swept_calls_pkey"
+	TGConstraintName                   = "calls_system_talkgroup_fkey"
+	SysConstraintName                  = "talkgroups_system_id_fkey"
+)
+
+var Constraints = map[string]constraint{
+	APIKeysOwnerIDNameKey:              {"API key with this name already exists"},
+	AudioRefJournalCallIDBackendRefKey: {"delete entry for call already exists"},
+	SweptCallsPK:                       {"call already swept"},
+	TGConstraintName:                   {"talkgroup already exists in system"},
+	SysConstraintName:                  {"system already exists"},
+}
+
 // IsConstraintViolation is a convenience function to test whether an error is a PgError
 // indicating constraint violation.
-func IsConstraintViolation(e error, constraintName string) bool {
+func ConstraintViolation(e error, constraint string) error {
 	var err *pgconn.PgError
-	if errors.As(e, &err) && (err.Code == "23503" || err.Code == "23505") && err.ConstraintName == constraintName {
-		return true
+	if errors.As(e, &err) && (err.Code == "23503" || err.Code == "23505") {
+		if c, has := Constraints[err.ConstraintName]; has {
+			return errors.New(c.desc)
+		} else {
+			return fmt.Errorf("constraint %s violated", constraint)
+		}
 	}
 
-	return false
+	return nil
+}
+
+func IsConstraintViolation(err error, constraint string) bool {
+	return ConstraintViolation(err, constraint) != nil
 }
