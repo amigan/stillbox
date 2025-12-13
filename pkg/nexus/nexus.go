@@ -42,9 +42,9 @@ type Nexus interface {
 var _ Nexus = (*nexus)(nil)
 
 type Registry interface {
-	NewClient(Connection, entities.Subject) Client
-	Register(Client)
-	Unregister(Client)
+	NewClient(Connection, entities.Subject) *client
+	Register(*client)
+	Unregister(*client)
 }
 
 func New(tgst tgstore.Store, met metrics.Metrics) *nexus {
@@ -103,7 +103,7 @@ func (n *nexus) broadcastToClients(ctx context.Context, msg Message) {
 		switch err := cl.Send(message); err {
 		case ErrSentToClosed:
 			// we already hold the lock, and the channel is closed anyway
-			delete(n.clients, cl)
+			n.unregister(cl)
 		case nil:
 		default:
 			log.Error().Err(err).Msg("broadcast send failed")
@@ -112,19 +112,22 @@ func (n *nexus) broadcastToClients(ctx context.Context, msg Message) {
 	}
 }
 
-func (n *nexus) Register(c Client) {
+func (n *nexus) Register(c *client) {
 	n.Lock()
 	defer n.Unlock()
 
-	n.clients[c.(*client)] = struct{}{}
+	n.clients[c] = struct{}{}
 	n.metrics.ActiveWSConns.Inc()
 }
 
-func (n *nexus) Unregister(c Client) {
+func (n *nexus) Unregister(c *client) {
 	n.Lock()
 	defer n.Unlock()
 
-	cl := c.(*client)
+	n.unregister(c)
+}
+
+func (n *nexus) unregister(cl *client) {
 	if cl.filter != nil {
 		n.tgst.UnregisterFilter(cl.filter)
 	}
