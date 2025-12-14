@@ -19,16 +19,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type Client interface {
-	sync.Locker
-
-	Connection
-
-	Hello(context.Context)
-	HandleCommand(context.Context, *pb.Command)
-	HandleMessage(context.Context, []byte)
-}
-
 type client struct {
 	sync.RWMutex
 

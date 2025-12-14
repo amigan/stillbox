@@ -33,6 +33,7 @@ SELECT
 	inp.notes
 FROM inp
 JOIN calls c ON c.id = inp.id
+ON CONFLICT DO NOTHING
 `
 
 func (q *Queries) AddToIncident(ctx context.Context, incidentID uuid.UUID, callIds []uuid.UUID, notes [][]byte) error {

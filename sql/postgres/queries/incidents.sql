@@ -18,6 +18,7 @@ SELECT
 	inp.notes
 FROM inp
 JOIN calls c ON c.id = inp.id
+ON CONFLICT DO NOTHING
 ;
 
 -- name: RemoveFromIncident :exec
