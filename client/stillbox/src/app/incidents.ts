@@ -16,3 +16,8 @@ export interface IncidentRecord {
   owner: string | null;
   callCount: number | null;
 }
+
+export interface IncidentCalls {
+  calls: IncidentCall[];
+  count: number;
+}

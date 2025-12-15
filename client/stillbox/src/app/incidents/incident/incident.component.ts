@@ -1,5 +1,5 @@
 import { Component, inject, Input, ViewChild } from '@angular/core';
-import { tap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { CommonModule, Location } from '@angular/common';
 import { BehaviorSubject, merge, Subject, Subscription } from 'rxjs';
 import { Observable } from 'rxjs';
@@ -14,7 +14,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
-import { CallIncidentParams, IncidentsService } from '../incidents.service';
+import {
+  CallIncidentParams,
+  IncidentCallsParams,
+  IncidentsService,
+} from '../incidents.service';
 import { IncidentCall, IncidentRecord } from '../../incidents';
 import { MatCardModule } from '@angular/material/card';
 import {
@@ -43,11 +47,15 @@ import { PlayerService } from '../../calls/player/player.service';
 import { ErrorsService } from '../../errors/errors.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { CallsService } from '../../calls/calls.service';
+import { PrefsService } from '../../prefs/prefs.service';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 export interface EditDialogData {
   incID: string;
   new: boolean;
 }
+
+const reqPageSize = 200;
 
 @Component({
   selector: 'app-incident-editor',
@@ -146,6 +154,8 @@ export class IncidentEditDialogComponent {
     MatMenuModule,
     CallsTableComponent,
     MarkdownModule,
+    MatProgressSpinnerModule,
+    MatProgressBarModule,
   ],
   templateUrl: './incident.component.html',
   styleUrl: './incident.component.scss',
@@ -170,13 +180,21 @@ export class IncidentComponent {
     'talker',
     'duration',
   ];
-  callsResult = new MatTableDataSource<IncidentCall>();
+  callsResult = new Subject<Array<IncidentCall>>();
+  queryInProgress = false;
   selection = new SelectionModel<IncidentCall>(true, []);
   curPage = <PageEvent>{ pageIndex: 0, pageSize: PER_PAGE_DEFAULT };
+  perPage = PER_PAGE_DEFAULT;
+  currentServerPage = 0; // page is never 0, forces load
+
+  pageWindow = 0;
+  fetchCalls = new Subject<IncidentCallsParams>();
+  currentSet!: IncidentCall[];
 
   constructor(
     private route: ActivatedRoute,
     private incSvc: IncidentsService,
+    private prefsSvc: PrefsService,
     private location: Location,
     private tgSvc: TalkgroupService,
     private playerSvc: PlayerService,
@@ -202,15 +220,60 @@ export class IncidentComponent {
       this.incID = (this.share.sharedItem as IncidentRecord).id;
       incOb = new BehaviorSubject(this.share.sharedItem as IncidentRecord);
     }
-    this.inc$ = merge(incOb, this.incPrime).pipe(
-      tap((inc) => {
-        if (inc && inc.calls) {
-          this.callsResult.data = inc.calls;
-          this.callsSvc.curLen = inc.calls.length;
-          this.playerSvc.setQueue(inc.calls);
+    this.inc$ = merge(incOb, this.incPrime);
+    this.fetchCalls
+      .pipe(
+        switchMap((params) => {
+          return this.incSvc.getIncidentCalls(this.incID, params);
+        }),
+      )
+      .subscribe((calls) => {
+        this.stopSpinBar();
+        this.callsTable.count = calls.count;
+        this.currentSet = calls.calls;
+        if (this.callsTable) {
+          this.callsTable.callsTable.nativeElement.scrollIntoView(true);
         }
-      }),
+        this.callsResult.next(
+          this.currentSet
+            ? this.currentSet.slice(
+                this.pageWindow,
+                this.pageWindow + this.perPage,
+              )
+            : [],
+        );
+      });
+    this.prefsSvc.get('callsPerPage').subscribe((cpp) => {
+      if (this.perPage == 0) {
+        this.perPage = PER_PAGE_DEFAULT;
+      }
+      if (cpp && cpp != this.perPage) {
+        this.perPage = cpp;
+
+        this.setPage(<PageEvent>{
+          pageIndex: 0,
+          pageSize: cpp,
+        });
+      }
+    });
+    this.callsResult.subscribe((cr) => {
+      if (this.callsTable != undefined) {
+        this.callsSvc.curLen = cr.length;
+      }
+      this.playerSvc.setQueue(cr);
+    });
+    this.fetchCalls.next(
+      this.buildParams(this.curPage, this.curPage.pageIndex),
     );
+  }
+
+  buildParams(p: PageEvent, serverPage: number): IncidentCallsParams {
+    const par: IncidentCallsParams = {
+      page: serverPage,
+      perPage: reqPageSize,
+    };
+
+    return par;
   }
 
   editIncident(incID: string) {
@@ -244,15 +307,72 @@ export class IncidentComponent {
       })
       .subscribe({
         next: () => {
-          this.callsResult.data = this.callsResult.data.filter(
-            (ca) => !this.callsTable.selection.selected.includes(ca),
-          );
-          this.callsTable.selection.clear();
+          this.refresh();
         },
         error: (err) => {
           this.errorsSvc.show(err);
         },
       });
+  }
+
+  setPage(p: PageEvent, force?: boolean, dontClear?: boolean) {
+    if (p.pageSize == 0) {
+      p.pageSize = this.curPage.pageSize;
+    }
+    if (!dontClear) {
+      this.callsTable.selection?.clear();
+    }
+    this.curPage = p;
+    if (p !== null && p!.pageSize != this.perPage) {
+      this.perPage = p!.pageSize;
+      this.prefsSvc.set('callsPerPage', p!.pageSize);
+    }
+    this.getCalls(p, force);
+  }
+
+  prevPage() {
+    let p = this.curPage;
+    if (p.pageIndex > 0) {
+      p.pageIndex--;
+    }
+    this.setPage(p, false, true);
+  }
+
+  refresh() {
+    this.callsTable.selection.clear();
+    this.getCalls(this.curPage, true);
+  }
+
+  getCalls(p: PageEvent, force?: boolean) {
+    const pageStart = p.pageIndex * p.pageSize;
+    const serverPage = Math.floor(pageStart / reqPageSize) + 1;
+    this.pageWindow = pageStart % reqPageSize;
+    if (serverPage == this.currentServerPage && !force && this.currentSet) {
+      this.callsResult.next(
+        this.callsResult
+          ? this.currentSet.slice(this.pageWindow, this.pageWindow + p.pageSize)
+          : [],
+      );
+    } else {
+      this.spinBar();
+      this.currentServerPage = serverPage;
+      this.fetchCalls.next(this.buildParams(p, serverPage));
+    }
+  }
+
+  spinBar() {
+    this.queryInProgress = true;
+  }
+
+  stopSpinBar() {
+    this.queryInProgress = false;
+  }
+
+  zeroPage(): PageEvent {
+    return <PageEvent>{
+      pageIndex: 0,
+      pageSize: this.curPage.pageSize,
+    };
   }
 
   ngOnDestroy() {

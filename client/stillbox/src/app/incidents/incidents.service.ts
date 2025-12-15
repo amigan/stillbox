@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { IncidentRecord } from '../incidents';
+import { IncidentCalls, IncidentRecord } from '../incidents';
 import { Observable } from 'rxjs';
 
 export interface IncidentsListParams {
@@ -8,6 +8,11 @@ export interface IncidentsListParams {
   end: Date | null;
   filter: string | null;
   dir: string;
+  page: number;
+  perPage: number;
+}
+
+export interface IncidentCallsParams {
   page: number;
   perPage: number;
 }
@@ -32,12 +37,19 @@ export class IncidentsService {
     return this.http.post<IncidentsPaginated>('/api/incident/', p);
   }
 
+  getIncidentCalls(
+    id: string,
+    p: IncidentCallsParams,
+  ): Observable<IncidentCalls> {
+    return this.http.post<IncidentCalls>('/api/incident/' + id + '/calls', p);
+  }
+
   createIncident(inp: IncidentRecord): Observable<IncidentRecord> {
     return this.http.post<IncidentRecord>('/api/incident/new', inp);
   }
 
   addRemoveCalls(id: string, inp: CallIncidentParams): Observable<void> {
-    return this.http.post<void>('/api/incident/' + id + '/calls', inp);
+    return this.http.patch<void>('/api/incident/' + id + '/calls', inp);
   }
 
   deleteIncident(id: string): Observable<void> {
