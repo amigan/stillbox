@@ -20,6 +20,7 @@ type options struct {
 	parseTimeIn        *time.Location
 	parseLocal         bool
 	acceptBlank        bool
+	acceptEmptyBody    bool
 	maxMultipartMemory int64
 	defaultOmitEmpty   bool
 }
@@ -41,6 +42,12 @@ func WithParseLocalTime() Option {
 func WithAcceptBlank() Option {
 	return func(o *options) {
 		o.acceptBlank = true
+	}
+}
+
+func WithAcceptEmptyBody() Option {
+	return func(o *options) {
+		o.acceptEmptyBody = true
 	}
 }
 

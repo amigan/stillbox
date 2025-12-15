@@ -1,0 +1,9 @@
+POST /api/call-upload HTTP/1.1
+Connection: Upgrade, HTTP2-Settings
+Content-Length: 0
+Host: xenon:3050
+HTTP2-Settings: AAEAAEAAAAIAAAAAAAMAAAAAAAQBAAAAAAUAAEAAAAYABgAA
+Upgrade: h2c
+User-Agent: sdrtrunk
+
+
