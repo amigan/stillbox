@@ -125,7 +125,7 @@ func (ia *incidentsAPI) getCalls(id ID, w http.ResponseWriter, r *http.Request) 
 	incs := incstore.FromCtx(ctx)
 
 	var cf incstore.CallsFilter
-	err := forms.Unmarshal(r, &cf, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	err := forms.Unmarshal(r, &cf, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty(), forms.WithAcceptEmptyBody())
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return

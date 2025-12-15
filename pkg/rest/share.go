@@ -28,7 +28,7 @@ const (
 	ShareRequestCallDL        ShareRequestType = "callDL"
 	ShareRequestIncident      ShareRequestType = "incident"
 	ShareRequestIncidentM3U   ShareRequestType = "m3u"
-	ShareRequestIncidentCalls ShareRequestType = "incCalls"
+	ShareRequestIncidentCalls ShareRequestType = "calls"
 	ShareRequestTalkgroups    ShareRequestType = "talkgroups"
 )
 
@@ -252,10 +252,7 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 		}
 
 		sa.shnd[rType](subIDU, w, r)
-	case ShareRequestIncident, ShareRequestIncidentM3U:
-		if params.SubID != nil && *params.SubID == "calls" {
-			rType = ShareRequestIncidentCalls
-		}
+	case ShareRequestIncident, ShareRequestIncidentM3U, ShareRequestIncidentCalls:
 		sa.shnd[rType](sh.EntityID, w, r)
 	}
 }
