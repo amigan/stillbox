@@ -109,6 +109,10 @@ CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 	) ELSE TRUE END)
 ;
 
+-- name: GetIncidentCallCount :one
+SELECT COUNT(*) FROM incidents_calls
+WHERE incident_id = @incident_id;
+
 -- name: GetIncidentCalls :many
 SELECT
 	ic.call_id,
@@ -161,7 +165,10 @@ FROM incidents_calls ic, LATERAL (
 	FROM swept_calls sc WHERE sc.id = ic.swept_call_id
 ) c
 WHERE ic.incident_id = @id
-ORDER BY ic.call_date ASC;
+ORDER BY ic.call_date ASC
+OFFSET sqlc.arg('offset') ROWS
+FETCH NEXT sqlc.narg('per_page') ROWS ONLY
+;
 
 -- name: GetIncident :one
 SELECT

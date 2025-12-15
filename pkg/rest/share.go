@@ -23,30 +23,32 @@ var (
 type ShareRequestType string
 
 const (
-	ShareRequestCall        ShareRequestType = "call"
-	ShareRequestCallInfo    ShareRequestType = "callinfo"
-	ShareRequestCallDL      ShareRequestType = "callDL"
-	ShareRequestIncident    ShareRequestType = "incident"
-	ShareRequestIncidentM3U ShareRequestType = "m3u"
-	ShareRequestTalkgroups  ShareRequestType = "talkgroups"
+	ShareRequestCall          ShareRequestType = "call"
+	ShareRequestCallInfo      ShareRequestType = "callinfo"
+	ShareRequestCallDL        ShareRequestType = "callDL"
+	ShareRequestIncident      ShareRequestType = "incident"
+	ShareRequestIncidentM3U   ShareRequestType = "m3u"
+	ShareRequestIncidentCalls ShareRequestType = "incCalls"
+	ShareRequestTalkgroups    ShareRequestType = "talkgroups"
 )
 
 // shareHandlers returns a ShareHandlers map from the api.
 func (s *api) shareHandlers() ShareHandlers {
 	return ShareHandlers{
-		ShareRequestCall:        s.calls.shareCallRoute,
-		ShareRequestCallInfo:    s.respondShareHandler(s.calls.getCallInfo),
-		ShareRequestCallDL:      s.calls.shareCallDLRoute,
-		ShareRequestIncident:    s.respondShareHandler(s.incidents.getIncident),
-		ShareRequestIncidentM3U: s.incidents.getCallsM3U,
-		ShareRequestTalkgroups:  s.tgs.getTGsShareRoute,
+		ShareRequestCall:          s.calls.shareCallRoute,
+		ShareRequestCallInfo:      s.respondShareHandler(s.calls.getCallInfo),
+		ShareRequestCallDL:        s.calls.shareCallDLRoute,
+		ShareRequestIncident:      s.respondShareHandler(s.incidents.getIncident),
+		ShareRequestIncidentM3U:   s.incidents.getCallsM3U,
+		ShareRequestTalkgroups:    s.tgs.getTGsShareRoute,
+		ShareRequestIncidentCalls: s.incidents.getCalls,
 	}
 }
 
 func (rt ShareRequestType) IsValid() bool {
 	switch rt {
 	case ShareRequestCall, ShareRequestCallInfo, ShareRequestCallDL, ShareRequestIncident,
-		ShareRequestIncidentM3U, ShareRequestTalkgroups:
+		ShareRequestIncidentM3U, ShareRequestTalkgroups, ShareRequestIncidentCalls:
 		return true
 	}
 
@@ -90,7 +92,7 @@ func (s *api) respondShareHandler(ie EntityFunc) ShareHandlerFunc {
 			return
 		}
 
-		res, err := ie(r.Context(), id)
+		res, err := ie(ctx, id)
 		if err != nil {
 			wErr(w, r, autoError(err))
 			return
@@ -251,6 +253,9 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 
 		sa.shnd[rType](subIDU, w, r)
 	case ShareRequestIncident, ShareRequestIncidentM3U:
+		if params.SubID != nil && *params.SubID == "calls" {
+			rType = ShareRequestIncidentCalls
+		}
 		sa.shnd[rType](sh.EntityID, w, r)
 	}
 }

@@ -31,10 +31,11 @@ func (ia *incidentsAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
 	r.Get(`/{id:[a-f0-9-]+}`, ia.getIncidentRoute)
+	r.Post(`/{id:[a-f0-9-]+}/calls`, ia.getCallsRoute)
 	r.Get(`/{id:[a-f0-9-]+}.m3u`, ia.getCallsM3URoute)
 	r.Post(`/new`, ia.createIncident)
 	r.Post(`/`, ia.listIncidents)
-	r.Post(`/{id:[a-f0-9-]+}/calls`, ia.postCalls)
+	r.Patch(`/{id:[a-f0-9-]+}/calls`, ia.patchCalls)
 
 	r.Patch(`/{id:[a-f0-9-]+}`, ia.updateIncident)
 
@@ -109,6 +110,36 @@ func (ia *incidentsAPI) getIncident(ctx context.Context, id ID) (SharedItem, err
 	return incs.Incident(ctx, id.(uuid.UUID))
 }
 
+func (ia *incidentsAPI) getCallsRoute(w http.ResponseWriter, r *http.Request) {
+	id, err := idOnlyParam(w, r)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	ia.getCalls(id, w, r)
+}
+
+func (ia *incidentsAPI) getCalls(id ID, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	incs := incstore.FromCtx(ctx)
+
+	var cf incstore.CallsFilter
+	err := forms.Unmarshal(r, &cf, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	ic, err := incs.IncidentCalls(ctx, id.(uuid.UUID), &cf)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, ic)
+}
+
 func (ia *incidentsAPI) updateIncident(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	incs := incstore.FromCtx(ctx)
@@ -164,7 +195,7 @@ type CallIncidentParams struct {
 	Remove jsontypes.UUIDs `json:"remove"`
 }
 
-func (ia *incidentsAPI) postCalls(w http.ResponseWriter, r *http.Request) {
+func (ia *incidentsAPI) patchCalls(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	incs := incstore.FromCtx(ctx)
 

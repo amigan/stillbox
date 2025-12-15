@@ -42,7 +42,10 @@ type Store interface {
 	Incidents(ctx context.Context, p IncidentsParams) (incs []Incident, totalCount int, err error)
 
 	// Incident gets a single incident.
-	Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error)
+	Incident(ctx context.Context, id uuid.UUID, opts ...IncidentOption) (*incidents.Incident, error)
+
+	// IncidentCalls gets the calls in an incident.
+	IncidentCalls(ctx context.Context, id uuid.UUID, pag *CallsFilter) (*incidents.IncidentCalls, error)
 
 	// UpdateIncident updates an incident.
 	UpdateIncident(ctx context.Context, id uuid.UUID, p UpdateIncidentParams) (*incidents.Incident, error)
@@ -244,6 +247,51 @@ type Incident struct {
 	CallCount int `json:"callCount"`
 }
 
+type CallsFilter struct {
+	common.Pagination
+}
+
+func (s *postgresStore) IncidentCalls(ctx context.Context, id uuid.UUID, pag *CallsFilter) (*incidents.IncidentCalls, error) {
+	_, err := authz.Check(ctx, &incidents.Incident{ID: id}, authz.WithActions(entities.ActionRead))
+	if err != nil {
+		return nil, err
+	}
+
+	var ic incidents.IncidentCalls
+	txErr := s.db.InTx(ctx, func(db database.Store) error {
+		count, err := db.GetIncidentCallCount(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		var offset int32
+		var perPage *int32
+
+		if pag != nil {
+			os, pp := pag.OffsetPerPage(25)
+			offset = os
+			perPage = &pp
+		}
+
+		calls, err := db.GetIncidentCalls(ctx, id, offset, perPage)
+		if err != nil {
+			return err
+		}
+
+		ic = incidents.IncidentCalls{
+			Calls: fromDBCalls(calls),
+			Count: int(count),
+		}
+
+		return nil
+	}, pgx.TxOptions{})
+	if txErr != nil {
+		return nil, txErr
+	}
+
+	return &ic, nil
+}
+
 func fromDBListInPRow(id uuid.UUID, d database.ListIncidentsPRow) Incident {
 	return Incident{
 		Incident: incidents.Incident{
@@ -290,10 +338,27 @@ func fromDBCalls(d []database.GetIncidentCallsRow) []incidents.IncidentCall {
 	return r
 }
 
-func (s *postgresStore) Incident(ctx context.Context, id uuid.UUID) (*incidents.Incident, error) {
+type incidentOptions struct {
+	withoutCalls bool
+}
+
+type IncidentOption func(*incidentOptions)
+
+func WithoutCalls() IncidentOption {
+	return func(o *incidentOptions) {
+		o.withoutCalls = true
+	}
+}
+
+func (s *postgresStore) Incident(ctx context.Context, id uuid.UUID, opts ...IncidentOption) (*incidents.Incident, error) {
 	_, err := authz.Check(ctx, &incidents.Incident{ID: id}, authz.WithActions(entities.ActionRead))
 	if err != nil {
 		return nil, err
+	}
+
+	var options incidentOptions
+	for _, opt := range opts {
+		opt(&options)
 	}
 
 	var r incidents.Incident
@@ -303,14 +368,16 @@ func (s *postgresStore) Incident(ctx context.Context, id uuid.UUID) (*incidents.
 			return err
 		}
 
-		calls, err := db.GetIncidentCalls(ctx, id)
-		if err != nil {
-			return err
-		}
-
 		r = fromDBIncident(id, inc.Incident)
 		r.Owner = inc.Owner
-		r.Calls = fromDBCalls(calls)
+
+		if !options.withoutCalls {
+			calls, err := db.GetIncidentCalls(ctx, id, 0, nil)
+			if err != nil {
+				return err
+			}
+			r.Calls = fromDBCalls(calls)
+		}
 
 		return nil
 	}, pgx.TxOptions{})
