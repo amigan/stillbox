@@ -107,7 +107,7 @@ func (ia *incidentsAPI) getIncidentRoute(w http.ResponseWriter, r *http.Request)
 
 func (ia *incidentsAPI) getIncident(ctx context.Context, id ID) (SharedItem, error) {
 	incs := incstore.FromCtx(ctx)
-	return incs.Incident(ctx, id.(uuid.UUID))
+	return incs.Incident(ctx, id.(uuid.UUID), incstore.WithoutCalls())
 }
 
 func (ia *incidentsAPI) getCallsRoute(w http.ResponseWriter, r *http.Request) {
@@ -131,7 +131,7 @@ func (ia *incidentsAPI) getCalls(id ID, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	ic, err := incs.IncidentCalls(ctx, id.(uuid.UUID), &cf)
+	ic, err := incs.IncidentCalls(ctx, id.(uuid.UUID), common.NilIfZero(cf))
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
