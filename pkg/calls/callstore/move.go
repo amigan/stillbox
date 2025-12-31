@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -53,6 +54,9 @@ type MoveCallParams struct {
 
 	// NumWorkers specifies the number of workers to use for the move. It is bounded internally by numStoreWorkersLimit.
 	NumWorkers *uint `json:"numWorkers,omitempty" desc:"number of workers" flag:"workers w"`
+
+	// Tries is the number of times to retry moving a file *iff* the worker comes back with context.DeadlineExceeded as an error.
+	Tries int `json:"tries,omitzero" desc:"number of times to retry on deadline exceeded" flag:"tries t"`
 
 	// ProgressChan, if not nil, is a channel where the number of rows is written as the call progresses.
 	// It is closed by MoveCalls on finish (or error)
@@ -152,6 +156,7 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 type mover struct {
 	ab         AudioBackends
 	numWorkers int
+	tries      int
 	dbTx       database.Store
 	dbMtx      sync.Mutex
 	refs       *refTracker
@@ -182,6 +187,11 @@ func (m *mover) moveWorker(ctx context.Context, row *database.GetCallAudioRow) e
 	return nil
 }
 
+func backoff() {
+	r := rand.Intn(20)
+	time.Sleep(time.Duration(r*100) * time.Millisecond)
+}
+
 func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error {
 	m.dbMtx.Lock()
 	count, err := m.dbTx.GetCallAudioCount(ctx, dbPar)
@@ -204,7 +214,6 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 		rows, err := m.dbTx.GetCallAudio(wctx, dbPar)
 		m.dbMtx.Unlock()
 		if err != nil {
-			log.Debug().Err(err).Msg("GetCallAudio returned error")
 			return err
 		}
 
@@ -227,9 +236,21 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 					}
 				}()
 
-				err = m.moveWorker(wctx, &row)
-				if err != nil && !errors.Is(err, context.Canceled) {
-					log.Error().Err(err).Msg("moveWorker")
+				for i := range m.tries + 1 {
+					err = m.moveWorker(wctx, &row)
+					switch {
+					case err == nil:
+						return nil
+					case errors.Is(err, context.DeadlineExceeded):
+						log.Error().Int("tries", i).Err(err).Msg("moveWorker")
+						backoff()
+						continue
+					case errors.Is(err, context.Canceled):
+						return err
+					default: // err != nil
+						log.Error().Err(err).Msg("moveWorker")
+						return err
+					}
 				}
 
 				return err
@@ -255,6 +276,7 @@ func (s *store) newMover(dst *audioStorageBackend, tx database.Store, rt *refTra
 		ab:         s.audioBackends,
 		dbTx:       tx,
 		numWorkers: numWorkers,
+		tries:      par.Tries,
 		dst:        dst,
 		par:        par,
 		refs:       rt,

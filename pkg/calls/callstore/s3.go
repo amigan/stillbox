@@ -40,14 +40,15 @@ type s3Backend struct {
 	// <Filter><Prefix/></Filter> is used. Some "S3 compatible" APIs require this.
 	LegacyPrefix bool `yaml:"legacyPrefix"`
 
+	// B2LifecyclePairs creates an ExpireObjectDeleteMarker rule pair as required by B2.
+	B2LifecyclePairs bool `yaml:"b2LifecyclePairs"`
+
 	cli *minio.Client
 	st  Store
 	rj  *ruleJob
 }
 
 func (*s3Backend) Type() string { return "s3" }
-
-const S3LifecycleTTL = 10 * time.Minute
 
 type ruleJob struct {
 	cfg     *lifecycle.Configuration
@@ -57,9 +58,31 @@ type ruleJob struct {
 	dels    map[string]struct{} // keys to delete
 }
 
+func delMarkerName(id string) string {
+	return id + "-dm"
+}
+
+func delMarkerRule(r lifecycle.Rule) lifecycle.Rule {
+	dmr := r
+	r.ID = delMarkerName(r.ID)
+	dmr.Expiration = lifecycle.Expiration{
+		DeleteMarker: true,
+	}
+
+	return dmr
+}
+
 func (rj *ruleJob) delete(id string) {
 	rj.dels[id] = struct{}{}
 	delete(rj.ruleMap, id)
+
+	if rj.be.B2LifecyclePairs {
+		dmn := delMarkerName(id)
+		if _, has := rj.ruleMap[dmn]; has {
+			rj.dels[delMarkerName(id)] = struct{}{}
+			delete(rj.ruleMap, delMarkerName(id))
+		}
+	}
 }
 
 func (rj *ruleJob) add(r lifecycle.Rule) error {
@@ -71,10 +94,18 @@ func (rj *ruleJob) add(r lifecycle.Rule) error {
 
 	rj.adds = append(rj.adds, r)
 
+	if rj.be.B2LifecyclePairs {
+		dmr := delMarkerRule(r)
+		rj.ruleMap[dmr.ID] = dmr
+		rj.adds = append(rj.adds, dmr)
+	}
+
 	return nil
 }
 
+// lifecyceConfig assembles the actual lifecycle configuration from the ruleJob.
 func (rj *ruleJob) lifecycleConfig() *lifecycle.Configuration {
+	// remove deleted rules from the existing config
 	i := 0
 	for _, r := range rj.cfg.Rules {
 		if _, hasDel := rj.dels[r.ID]; !hasDel {
@@ -89,6 +120,7 @@ func (rj *ruleJob) lifecycleConfig() *lifecycle.Configuration {
 	}
 	rj.cfg.Rules = rj.cfg.Rules[:i]
 
+	// append added rules
 	rj.cfg.Rules = append(rj.cfg.Rules, rj.adds...)
 
 	return rj.cfg
@@ -147,6 +179,7 @@ func (sb *s3Backend) newRuleJob(ctx context.Context) (*ruleJob, error) {
 
 	rj.cfg = lc
 
+	// build rule map
 	for _, r := range rj.cfg.Rules {
 		rj.ruleMap[r.ID] = r
 	}
