@@ -90,8 +90,8 @@ func moveCommand(cfg *config.Config) *cli.Command {
 		Name:        "move",
 		Aliases:     []string{"mv"},
 		Usage:       "moves calls between storage backends",
-		Description: "checks partition interval matches whatever is specified in the config",
-		UsageText:   "stillbox admin database partitioning",
+		Description: "moves calls between backends, including DB blob",
+		UsageText:   "stillbox admin calls move",
 		Flags:       []cli.Flag{},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			if cfg.Server.AdminSocket == nil {
