@@ -20,8 +20,26 @@ func (aa *adminAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
 	r.Post("/move-calls", aa.moveCalls)
+	r.Post("/callsgc", aa.runJournalGC)
 
 	return r
+}
+
+func (*adminAPI) runJournalGC(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	cst := callstore.FromCtx(ctx)
+	errCh := make(chan error)
+	errd := false
+	go func() {
+		for err := range errCh {
+			if !errd {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+			fmt.Fprintln(w, err)
+		}
+	}()
+	cst.DoGC(ctx, errCh)
+	close(errCh)
 }
 
 // moveCalls handles the admin call move endpoint.

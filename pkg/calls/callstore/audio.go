@@ -137,6 +137,9 @@ type AudioBackends interface {
 
 	// JournalGCErrorMetric returns the prometheus GC error metric for the given backendName and missing state.
 	JournalGCErrorMetric(backendName string, missing bool) prometheus.Counter
+
+	// DoGC performs a journal garbage collection cycle.
+	DoGC(context.Context, chan error)
 }
 
 type audioBackends struct {
@@ -478,6 +481,20 @@ func (ab *audioBackends) Count() int {
 	return len(ab.backends)
 }
 
+func (s *audioBackends) DoGC(ctx context.Context, errCh chan error) {
+	gcCount, gcAttempted, err := s.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
+	if err != nil {
+		s.JournalGCErrorMetric("", false).Inc()
+		errCh <- err
+	} else if gcAttempted > 0 {
+		log.Info().Int64("count", gcCount).Int64("attempted", gcAttempted).Msg("call audio garbage collected")
+	}
+}
+
+func (s *store) DoGC(ctx context.Context, errCh chan error) {
+	s.audioBackends.DoGC(ctx, errCh)
+}
+
 func (s *store) GoGC(ctx context.Context) {
 	if s.audioBackends.journal == nil {
 		// this is probably only in tests that this may happen, but we check anyway.
@@ -495,22 +512,13 @@ func (s *store) GoGC(ctx context.Context) {
 			}
 		}
 	}()
-	doGC := func() {
-		gcCount, gcAttempted, err := s.audioBackends.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
-		if err != nil {
-			s.audioBackends.JournalGCErrorMetric("", false).Inc()
-			errCh <- err
-		} else if gcAttempted > 0 {
-			log.Info().Int64("count", gcCount).Int64("attempted", gcAttempted).Msg("call audio garbage collected")
-		}
-	}
 
 	tick := time.NewTicker(partman.CheckInterval)
 
 	for {
 		select {
 		case <-tick.C:
-			doGC()
+			s.audioBackends.DoGC(ctx, errCh)
 		case <-ctx.Done():
 			close(errCh)
 			return

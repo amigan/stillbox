@@ -23,6 +23,7 @@ func CallsCommand(cfg *config.Configuration) *cli.Command {
 		Usage: "administers calls",
 		Commands: []*cli.Command{
 			moveCommand(c),
+			gcCommand(c),
 		},
 	}
 
@@ -132,6 +133,30 @@ func moveCommand(cfg *config.Config) *cli.Command {
 	}
 
 	c.Flags = flags
+
+	return c
+}
+
+func gcCommand(cfg *config.Config) *cli.Command {
+	c := &cli.Command{
+		Name:        "gc",
+		Usage:       "garbage collects calls in journal",
+		Description: "garbage collects calls in journal",
+		UsageText:   "stillbox admin calls gc",
+		Flags:       []cli.Flag{},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			if cfg.Server.AdminSocket == nil {
+				return fmt.Errorf("no admin socket configured")
+			}
+
+			c, err := client.New(client.UnixSocket(*cfg.Server.AdminSocket))
+			if err != nil {
+				return err
+			}
+
+			return c.CallsGC(ctx)
+		},
+	}
 
 	return c
 }

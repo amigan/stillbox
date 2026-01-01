@@ -74,6 +74,9 @@ type Store interface {
 	// GoGC starts the audio garbage collector thread.
 	GoGC(ctx context.Context)
 
+	// DoGC runs an audio garbage collection cycle.
+	DoGC(context.Context, chan error)
+
 	partman.PartmanCallAudioManager
 	PartMan() partman.PartitionManager
 }

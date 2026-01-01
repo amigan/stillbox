@@ -59,7 +59,7 @@ type ruleJob struct {
 }
 
 func delMarkerName(id string) string {
-	return id + "-dm"
+	return id + "_marker"
 }
 
 func delMarkerRule(r lifecycle.Rule) lifecycle.Rule {
@@ -343,7 +343,7 @@ func (sb *s3Backend) Prune(ctx context.Context, refPath string, pruneAfter *time
 	// prune after 3 days
 	newPruneAfter := time.Now().Add(72 * time.Hour)
 
-	if pruneAfter != nil { // this has already been pruned, now check if the rule needs to be removed yet
+	if _, hasRule := rj.ruleMap[s3ruleID(refPath)]; hasRule && pruneAfter != nil { // this has already been pruned, now check if the rule needs to be removed yet
 		if !time.Now().After(*pruneAfter) {
 			// this probably won't ever happen
 			return nil, ErrNotYetPruneTime
