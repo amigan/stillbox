@@ -130,7 +130,7 @@ func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, m
 			return nil, err
 		}
 
-		err = st.partman.Check(ctx, time.Now())
+		err = st.partman.Check(ctx, time.Now().UTC())
 		if err != nil {
 			return nil, err
 		}
