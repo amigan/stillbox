@@ -203,7 +203,7 @@ func TestGetIncidentCalls(t *testing.T) {
 			st, ctx := s.makeStore(t, tc.subject)
 
 			incID := uuid.MustParse(tc.incID)
-			inc, err := st.IncidentCalls(ctx, incID, incstore.CallsFilter{})
+			inc, err := st.IncidentCalls(ctx, incID, &incstore.CallsFilter{})
 			if tc.expectErr != nil {
 				assert.ErrorContains(t, err, tc.expectErr.Error())
 			} else {
