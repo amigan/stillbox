@@ -107,13 +107,13 @@ notify:
     config:
       webhookURL: "http://somewhere"
 
-# ingest filters
+# ingest filters, first matching filter is decisive
 ingest:
   # require calls to be at least this long when from the specified filter is matched
-  match:
-    talkgroupTagsAny:
-      - nbfm
-  minDuration: 900ms
+  - match:
+      talkgroupTagsAny:
+        - nbfm
+    minDuration: 900ms
 
 # configure upstream relays here
 relay:

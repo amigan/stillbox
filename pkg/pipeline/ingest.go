@@ -129,6 +129,8 @@ func buildIngestFilters(ctx context.Context, flt []config.IngestFilter) ([]inges
 		})
 	}
 
+	log.Debug().Int("count", len(flts)).Msg("compiled ingest filters")
+
 	return flts, nil
 }
 
