@@ -25,16 +25,16 @@ import (
 )
 
 type s3Backend struct {
-	Bucket         string        `yaml:"bucket"`
-	Secure         bool          `yaml:"secure"`
-	Endpoint       string        `yaml:"endpoint"`
-	ExternalHost   *string       `yaml:"externalHost"`
-	ExternalSecure bool          `yaml:"externalSecure"`
-	Region         string        `yaml:"region"`
-	KeyID          string        `yaml:"keyID"`
-	SecretKey      string        `yaml:"secretKey"`
-	Timeout        time.Duration `yaml:"timeout"`
-	Trace          bool          `yaml:"trace"`
+	Bucket         string        `yaml:"bucket"`         // Bucket is the bucket name.
+	Secure         bool          `yaml:"secure"`         // Secure indicates scheme "https" when true.
+	Endpoint       string        `yaml:"endpoint"`       // Endpoint is the host[:port] of the S3 server.
+	ExternalHost   *string       `yaml:"externalHost"`   // ExternalHost is the host to use when signing presigned URLs for issuance to the client.
+	ExternalSecure bool          `yaml:"externalSecure"` // ExternalSecure is whether to use https scheme for presigned URLs.
+	Region         string        `yaml:"region"`         // Region is the S3 region.
+	KeyID          string        `yaml:"keyID"`          // KeyID is the access key ID.
+	SecretKey      string        `yaml:"secretKey"`      // SecretKey is the secret key.
+	Timeout        time.Duration `yaml:"timeout"`        // Timeout specifies a context timeout for object get and put operations.
+	Trace          bool          `yaml:"trace"`          // Trace enables minio client trace messages.
 
 	// LegacyPrefix puts <Prefix/> right under the <Rule>. If it is false, modern S3-style
 	// <Filter><Prefix/></Filter> is used. Some "S3 compatible" APIs require this.
@@ -50,6 +50,7 @@ type s3Backend struct {
 
 func (*s3Backend) Type() string { return "s3" }
 
+// A ruleJob satisfies interface PruneJob. It is a batch of S3 lifecycle rule mutations.
 type ruleJob struct {
 	cfg     *lifecycle.Configuration
 	be      *s3Backend
@@ -58,10 +59,12 @@ type ruleJob struct {
 	dels    map[string]struct{} // keys to delete
 }
 
+// delMarkerName generates the name of a delete marker for use with B2.
 func delMarkerName(id string) string {
 	return id + "_marker"
 }
 
+// delMarkerRule generates the marker rule for r, for use with B2.
 func delMarkerRule(r lifecycle.Rule) lifecycle.Rule {
 	dmr := r
 	r.ID = delMarkerName(r.ID)
@@ -72,6 +75,7 @@ func delMarkerRule(r lifecycle.Rule) lifecycle.Rule {
 	return dmr
 }
 
+// delete queues a delete operation of rule ID.
 func (rj *ruleJob) delete(id string) {
 	rj.dels[id] = struct{}{}
 	delete(rj.ruleMap, id)
@@ -85,6 +89,7 @@ func (rj *ruleJob) delete(id string) {
 	}
 }
 
+// add queues an add operation of rule r.
 func (rj *ruleJob) add(r lifecycle.Rule) error {
 	if _, has := rj.ruleMap[r.ID]; has {
 		return errors.New("rule already exists")
@@ -126,10 +131,11 @@ func (rj *ruleJob) lifecycleConfig() *lifecycle.Configuration {
 	return rj.cfg
 }
 
-func (rj *ruleJob) addRmRule(refPath string) error {
-	ruleID := s3ruleID(refPath)
+// addRmRule adds a removal rule for the given prefix.
+func (rj *ruleJob) addRmRule(prefix string) error {
+	ruleID := s3ruleID(prefix)
 
-	log.Debug().Str("prefix", refPath).Msg("add rm rule")
+	log.Debug().Str("prefix", prefix).Msg("add rm rule")
 	lr := lifecycle.Rule{
 		ID:     ruleID,
 		Status: "Enabled",
@@ -139,16 +145,17 @@ func (rj *ruleJob) addRmRule(refPath string) error {
 	}
 
 	if rj.be.LegacyPrefix {
-		lr.Prefix = refPath
+		lr.Prefix = prefix
 	} else {
 		lr.RuleFilter = lifecycle.Filter{
-			Prefix: refPath,
+			Prefix: prefix,
 		}
 	}
 
 	return rj.add(lr)
 }
 
+// pruneRmRule removes a removal rule after it has been satisified.
 func (rj *ruleJob) pruneRmRule(refPath string) error {
 	rj.delete(s3ruleID(refPath))
 
@@ -161,6 +168,7 @@ func (sb *s3Backend) NewPruneJob(ctx context.Context) (PruneJob, error) {
 
 func (*ruleJob) IsPruneJob() {}
 
+// newRuleJob creates a new ruleJob.
 func (sb *s3Backend) newRuleJob(ctx context.Context) (*ruleJob, error) {
 	rj := &ruleJob{
 		ruleMap: make(map[string]lifecycle.Rule),
