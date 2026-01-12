@@ -127,6 +127,17 @@ const (
 	Yearly    Interval = "yearly"
 )
 
+func (p Interval) Duration() time.Duration {
+	const day = 24 * time.Hour
+	return map[Interval]time.Duration{
+		Daily:     day,
+		Weekly:    7 * day,
+		Monthly:   30 * day,
+		Quarterly: (365 / 4) * day,
+		Yearly:    365 * day,
+	}[p]
+}
+
 func (p Interval) IsValid() bool {
 	switch p {
 	case Daily, Weekly, Monthly, Quarterly, Yearly:

@@ -70,12 +70,18 @@ func (u *idList) getTime(label string) string {
 
 var templateFuncs template.FuncMap
 
+func SmallMP3() []byte {
+	smallMP3, err := os.ReadFile(path.Join(testdata.Path, "small.mp3"))
+	if err != nil {
+		panic(err)
+	}
+
+	return smallMP3
+}
+
 func primeBlobs() {
 	dmOnce.Do(func() {
-		smallMP3, err := os.ReadFile(path.Join(testdata.Path, "small.mp3"))
-		if err != nil {
-			panic(err)
-		}
+		smallMP3 := SmallMP3()
 
 		templateData = map[string]any{
 			"smallMP3": "!!binary \"" + base64.StdEncoding.EncodeToString(smallMP3) + "\"",

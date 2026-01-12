@@ -85,6 +85,7 @@ type store struct {
 	db            database.Store
 	audioBackends *audioBackends
 	partman       partman.PartitionManager
+	now           NowFunc
 
 	moveInProgress sync.Mutex
 }
@@ -93,9 +94,23 @@ func (s *store) PartMan() partman.PartitionManager {
 	return s.partman
 }
 
-func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, callStorage config.CallStorage, partConfig config.Partition) (*store, error) {
+type StoreOption func(*store)
+type NowFunc func() time.Time
+
+func WithNow(nf NowFunc) StoreOption {
+	return func(s *store) {
+		s.now = nf
+	}
+}
+
+func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, callStorage config.CallStorage, partConfig config.Partition, opts ...StoreOption) (*store, error) {
 	st := &store{
-		db: db,
+		db:  db,
+		now: time.Now,
+	}
+
+	for _, opt := range opts {
+		opt(st)
 	}
 
 	be, err := st.MakeBackends(ctx, tgc, met, callStorage)
@@ -133,7 +148,7 @@ func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, m
 			return nil, err
 		}
 
-		err = st.partman.Check(ctx, time.Now().UTC())
+		err = st.partman.Check(ctx, st.now().UTC())
 		if err != nil {
 			return nil, err
 		}
