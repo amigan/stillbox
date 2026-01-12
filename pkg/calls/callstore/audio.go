@@ -74,6 +74,10 @@ func (prr PartitionRelativeRef) String() string {
 	return "_/" + string(prr)
 }
 
+func (prr PartitionRelativeRef) MarshalText() ([]byte, error) {
+	return []byte(prr.String()), nil
+}
+
 func makeAudioRef(s string) AudioRef {
 	if strings.HasPrefix(s, "_/") {
 		return PartitionRelativeRef(s[2:])
@@ -436,8 +440,9 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (rfq *Audi
 				return nil, nil
 			case config.OnErrorNext:
 				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, trying next backend")
-				continue
 			}
+
+			continue
 		} else if ref != nil {
 			ab.metrics.TotalStores.WithLabelValues(beName, be.Type()).Inc()
 		}
