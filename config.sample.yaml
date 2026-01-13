@@ -185,8 +185,8 @@ callStorage:
         legacyPrefix: true
         # timeout is the amount of time for S3 request deadline before next action (store in DB or fail)
         timeout: 10s
-        # b2LifecyclePairs causes ExpiredObjectDeleteMarker rules to be created as well, as required by Backblaze B2.
-        b2LifecyclePairs: true
+        # IsB2 creates an ExpireObjectDeleteMarker rule pair and sets NoncurrentVersionExpiration as required by B2.
+        isB2: false
         keyID: 'GK7894947fffaacacd83664923'
         secretKey: 'bacba7892843792347987293874923847293487239487234987234bababababa'
     - name: fs

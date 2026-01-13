@@ -127,6 +127,9 @@ func (ti *s3TestInstance) lifecycleWrapper(hnd http.Handler) http.Handler {
 			}
 
 			return
+		case r.Method == http.MethodDelete && r.URL.Path == tbn && qh("lifecycle"):
+			ti.lc.Rules = nil
+			return
 		}
 
 		hnd.ServeHTTP(w, r)
@@ -138,19 +141,30 @@ func strip(s string) string {
 	return s[strings.IndexRune(s, '/')+1:]
 }
 
-func (db *DBTestSuite) minCallDate(ctx context.Context, t *testing.T) time.Time {
+func (db *DBTestSuite) minCallDate(ctx context.Context) (time.Time, error) {
 	minMaxRow := db.db.QueryRow(ctx, "SELECT MIN(call_date) FROM calls;")
 	var minCallDate pgtype.Timestamptz
 	err := minMaxRow.Scan(&minCallDate)
-	require.NoError(t, err)
-	require.True(t, minCallDate.Valid)
+	if err != nil {
+		return time.Time{}, err
+	}
 
-	return minCallDate.Time
+	if !minCallDate.Valid {
+		panic("invalid date")
+	}
+
+	return minCallDate.Time, nil
+}
+
+func (db *DBTestSuite) setPruneAfters(ctx context.Context) error {
+	_, err := db.db.Exec(ctx, "UPDATE audio_ref_journal SET prune_after = NOW() - INTERVAL '10' HOUR WHERE prune_after IS NOT NULL;")
+	return err
 }
 
 func checkReferences(ctx context.Context, t *testing.T, s3 *s3TestInstance, dbt *DBTestSuite, noCallsBefore time.Time, oldMCD time.Time) {
 	objs := s3.objMap(ctx)
-	mcd := dbt.minCallDate(ctx, t)
+	mcd, err := dbt.minCallDate(ctx)
+	require.NoError(t, err)
 	assert.True(t, mcd.After(noCallsBefore), "minCallDate is before no calls before")
 	assert.NotEqual(t, oldMCD, mcd)
 
@@ -161,7 +175,7 @@ func checkReferences(ctx context.Context, t *testing.T, s3 *s3TestInstance, dbt 
 
 	var count int
 	qry := dbt.db.QueryRow(ctx, "SELECT COUNT(*) FROM calls WHERE substring(audio_ref->>'s3' FROM 3) = ANY($1);", objList)
-	err := qry.Scan(&count)
+	err = qry.Scan(&count)
 	require.NoError(t, err)
 	assert.Equal(t, len(objList), count, "calls in store that arent in DB")
 
@@ -179,12 +193,13 @@ func checkReferences(ctx context.Context, t *testing.T, s3 *s3TestInstance, dbt 
 	}
 }
 
-func newFakeS3(ctx context.Context, bucketName string) *s3TestInstance {
+func newFakeS3(ctx context.Context, bucketName string, legacyPrefix bool) *s3TestInstance {
 	s3backend := s3mem.New()
 	faker := gofakes3.New(s3backend)
 
 	ti := &s3TestInstance{
-		bucket: bucketName,
+		bucket:        bucketName,
+		oldPrefixMode: legacyPrefix,
 	}
 
 	ti.svr = httptest.NewServer(ti.lifecycleWrapper(faker.Server()))
@@ -207,14 +222,16 @@ func newFakeS3(ctx context.Context, bucketName string) *s3TestInstance {
 	return ti
 }
 
-func (s *s3TestInstance) BackendConfig() config.StorageBackendConfig {
+func (s *s3TestInstance) BackendConfig(b2mode bool, legacyPrefix bool) config.StorageBackendConfig {
 	return config.StorageBackendConfig{
 		Name:    "s3",
 		Backend: "s3",
 		OnError: config.OnErrorFail,
 		Config: config.ConfigMap{
-			"bucket":   TestBucketName,
-			"endpoint": s.url.Host,
+			"bucket":       TestBucketName,
+			"endpoint":     s.url.Host,
+			"isB2":         b2mode,
+			"legacyPrefix": legacyPrefix,
 		},
 		Ingest: true,
 	}
@@ -233,6 +250,8 @@ func TestS3Prune(t *testing.T) {
 		preProvision  int
 		retain        int
 		jitter        float32
+		b2Mode        bool
+		legacyPrefix  bool
 	}{
 		{
 			desc:          "base",
@@ -261,14 +280,34 @@ func TestS3Prune(t *testing.T) {
 			retain:        1,
 			jitter:        0.1,
 		},
+		{
+			desc:          "monthly b2",
+			numCalls:      40,
+			interval:      common.Monthly,
+			numPartitions: 3,
+			preProvision:  5,
+			retain:        1,
+			jitter:        0.1,
+			b2Mode:        true,
+		},
+		{
+			desc:          "monthly legacy prefix",
+			numCalls:      40,
+			interval:      common.Monthly,
+			numPartitions: 3,
+			preProvision:  5,
+			retain:        1,
+			jitter:        0.1,
+			legacyPrefix:  true,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			fs3 := newFakeS3(ctx, TestBucketName)
+			fs3 := newFakeS3(ctx, TestBucketName, tc.legacyPrefix)
 			storeCfg := config.CallStorage{
 				Backends: []config.StorageBackendConfig{
-					fs3.BackendConfig(),
+					fs3.BackendConfig(tc.b2Mode, tc.legacyPrefix),
 				},
 			}
 
@@ -301,13 +340,43 @@ func TestS3Prune(t *testing.T) {
 				})
 				require.NoError(t, err, "call index %d date %s", i, callDate.String())
 			}
-			mcd := st.minCallDate(ctx, t)
+			mcd, err := st.minCallDate(ctx)
+			require.NoError(t, err)
 
 			curNow = time.Now()
-			err := st.store.PartMan().Check(ctx, curNow)
+			err = st.store.PartMan().Check(ctx, curNow)
 			require.NoError(t, err)
+
+			if tc.b2Mode {
+				rm := buildRuleMap(fs3.lc.Rules)
+				for k, r := range rm {
+					if strings.HasPrefix(k, "sb_") && !strings.HasSuffix(k, "_marker") {
+						_, has := rm[k+"_marker"]
+						assert.True(t, has, "no b2 marker rule")
+						assert.NotZero(t, r.NoncurrentVersionExpiration)
+					}
+				}
+			}
+
+			if tc.legacyPrefix {
+			}
+
 			fs3.doLifecycle(ctx, t)
 			checkReferences(ctx, t, fs3, st, baseTime, mcd)
+
+			require.NoError(t, st.setPruneAfters(ctx))
+
+			errs := make([]error, 0)
+			ec := make(chan error)
+			go func() {
+				for err := range ec {
+					errs = append(errs, err)
+				}
+			}()
+			st.store.DoGC(ctx, ec)
+			assert.Len(t, errs, 0)
+
+			assert.Len(t, fs3.lc.Rules, 0)
 		})
 	}
 }

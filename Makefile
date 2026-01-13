@@ -33,7 +33,7 @@ generate:
 	go run ./util/omitempty/omitempty.go
 
 lint:
-	golangci-lint run
+	golangci-lint run --build-tags integration
 
 coverage-html:
 	go tool cover -html=cover.out

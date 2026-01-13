@@ -487,6 +487,8 @@ func (ab *audioBackends) Count() int {
 }
 
 func (s *audioBackends) DoGC(ctx context.Context, errCh chan error) {
+	defer close(errCh)
+
 	gcCount, gcAttempted, err := s.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
 	if err != nil {
 		s.JournalGCErrorMetric("", false).Inc()

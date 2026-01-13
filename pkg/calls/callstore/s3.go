@@ -40,8 +40,8 @@ type s3Backend struct {
 	// <Filter><Prefix/></Filter> is used. Some "S3 compatible" APIs require this.
 	LegacyPrefix bool `yaml:"legacyPrefix"`
 
-	// B2LifecyclePairs creates an ExpireObjectDeleteMarker rule pair as required by B2.
-	B2LifecyclePairs bool `yaml:"b2LifecyclePairs"`
+	// IsB2 creates an ExpireObjectDeleteMarker rule pair and sets NoncurrentVersionExpiration as required by B2.
+	IsB2 bool `yaml:"isB2"`
 
 	cli *minio.Client
 	st  Store
@@ -59,6 +59,11 @@ type ruleJob struct {
 	dels    map[string]struct{} // keys to delete
 }
 
+func (rj *ruleJob) has(id string) bool {
+	_, hasRule := rj.ruleMap[id]
+	return hasRule
+}
+
 // delMarkerName generates the name of a delete marker for use with B2.
 func delMarkerName(id string) string {
 	return id + "_marker"
@@ -67,7 +72,7 @@ func delMarkerName(id string) string {
 // delMarkerRule generates the marker rule for r, for use with B2.
 func delMarkerRule(r lifecycle.Rule) lifecycle.Rule {
 	dmr := r
-	r.ID = delMarkerName(r.ID)
+	dmr.ID = delMarkerName(r.ID)
 	dmr.Expiration = lifecycle.Expiration{
 		DeleteMarker: true,
 	}
@@ -80,7 +85,7 @@ func (rj *ruleJob) delete(id string) {
 	rj.dels[id] = struct{}{}
 	delete(rj.ruleMap, id)
 
-	if rj.be.B2LifecyclePairs {
+	if rj.be.IsB2 {
 		dmn := delMarkerName(id)
 		if _, has := rj.ruleMap[dmn]; has {
 			rj.dels[delMarkerName(id)] = struct{}{}
@@ -95,15 +100,17 @@ func (rj *ruleJob) add(r lifecycle.Rule) error {
 		return errors.New("rule already exists")
 	}
 
-	rj.ruleMap[r.ID] = r
-
-	rj.adds = append(rj.adds, r)
-
-	if rj.be.B2LifecyclePairs {
+	if rj.be.IsB2 {
+		r.NoncurrentVersionExpiration = lifecycle.NoncurrentVersionExpiration{
+			NoncurrentDays: lifecycle.ExpirationDays(1),
+		}
 		dmr := delMarkerRule(r)
 		rj.ruleMap[dmr.ID] = dmr
 		rj.adds = append(rj.adds, dmr)
 	}
+
+	rj.ruleMap[r.ID] = r
+	rj.adds = append(rj.adds, r)
 
 	return nil
 }
@@ -351,7 +358,7 @@ func (sb *s3Backend) Prune(ctx context.Context, refPath string, pruneAfter *time
 	// prune after 3 days
 	newPruneAfter := time.Now().Add(72 * time.Hour)
 
-	if _, hasRule := rj.ruleMap[s3ruleID(refPath)]; hasRule && pruneAfter != nil { // this has already been pruned, now check if the rule needs to be removed yet
+	if rj.has(s3ruleID(refPath)) && pruneAfter != nil { // this has already been pruned, now check if the rule needs to be removed yet
 		if !time.Now().After(*pruneAfter) {
 			// this probably won't ever happen
 			return nil, ErrNotYetPruneTime

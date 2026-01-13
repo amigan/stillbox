@@ -39,7 +39,6 @@ func (*adminAPI) runJournalGC(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	cst.DoGC(ctx, errCh)
-	close(errCh)
 }
 
 // moveCalls handles the admin call move endpoint.
