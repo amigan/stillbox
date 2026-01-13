@@ -124,7 +124,6 @@ type AudioBackends interface {
 	CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) error
 
 	// PruneBackendRefs delete the provided refs from the provided backend using the journal.
-	// Semantics are similar to AudioBackend#Prune.
 	PruneBackendRefs(ctx context.Context, beName string, prefixes []string) error
 
 	// Backend looks up a backend by name.
@@ -348,6 +347,7 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, pr
 		return nil
 	}
 
+	// setup the prune job is this backend requires us to batch deletes
 	if p, isBatchPruner := be.AudioBackend.(BatchPruner); isBatchPruner {
 		pj, err := p.NewPruneJob(ctx)
 		if err != nil {
@@ -374,6 +374,7 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, pr
 	}
 
 	for _, prefix := range prefixes {
+		// add initial delete to the journal with nil pruneAfter
 		jeid, err := ab.journal.AddDelete(ctx, beName, prefix, nil)
 		if err != nil {
 			if database.IsConstraintViolation(err, database.AudioRefJournalCallIDBackendRefKey) {
@@ -395,20 +396,21 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, pr
 		}
 
 		if pruneAfter != nil {
+			// a second GC round on this entry is required (e.g. for S3 to prune the rule
+			// once lifecycle has run and deleted the objects)
 			err := ab.journal.UpdatePruneAfter(ctx, jeid, pruneAfter)
 			if err != nil {
 				return PruneErr(err, jeid, false)
 			}
+		} else {
+			// the objects have been deleted, drop the journal entry
+			err = ab.journal.Drop(ctx, jeid)
+			if err != nil {
+				return PruneErr(err, jeid, true)
+			}
 
-			return nil
+			ab.RefTracker().ab.JournalSizeMetric(be.Name, false).Dec()
 		}
-
-		err = ab.journal.Drop(ctx, jeid)
-		if err != nil {
-			return PruneErr(err, jeid, true)
-		}
-
-		ab.RefTracker().ab.JournalSizeMetric(be.Name, false).Dec()
 	}
 
 	return nil
@@ -626,6 +628,8 @@ func (s *store) PruneAudioPrefix(ctx context.Context, tx database.Store, partPre
 	for i := range prunableRefs {
 		backend, pathFirst := prunableRefs[i].Backend, prunableRefs[i].PathFirst
 		if pathFirst != "_/" {
+			// NOTE the most correct thing to do here would be to queue this ref for deletion some other way
+			// but this is an unlikely case
 			continue
 		}
 

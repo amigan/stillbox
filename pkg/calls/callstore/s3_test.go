@@ -358,7 +358,12 @@ func TestS3Prune(t *testing.T) {
 				}
 			}
 
-			if tc.legacyPrefix {
+			for _, r := range fs3.lc.Rules {
+				if tc.legacyPrefix {
+					assert.NotZero(t, r.Prefix)
+				} else {
+					assert.Zero(t, r.Prefix)
+				}
 			}
 
 			fs3.doLifecycle(ctx, t)

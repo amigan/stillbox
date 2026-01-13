@@ -343,16 +343,16 @@ func (sb *s3Backend) prefixExists(ctx context.Context, prefix string) (bool, err
 }
 
 func (sb *s3Backend) Prune(ctx context.Context, refPath string, pruneAfter *time.Time) (*time.Time, error) {
-	// get the ruleJob out of the context
-	rj := ruleJobFromCtx(ctx)
-	if rj == nil {
-		return nil, fmt.Errorf("rule job not set in context")
-	}
-
 	isPrefix := strings.HasSuffix(refPath, "/")
 	if !isPrefix {
 		// singleton remove
 		return nil, sb.delete(ctx, refPath)
+	}
+
+	// get the ruleJob out of the context
+	rj := ruleJobFromCtx(ctx)
+	if rj == nil {
+		return nil, fmt.Errorf("rule job not set in context")
 	}
 
 	// prune after 3 days
