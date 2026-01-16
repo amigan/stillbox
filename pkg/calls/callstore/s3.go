@@ -24,6 +24,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	// prune rules 5 days after setting. Some services take what appears to be several
+	// lifecycle runs to actually clear all objects.
+	initialPruneAfterDays = 5
+)
+
 type s3Backend struct {
 	Bucket         string        `yaml:"bucket"`         // Bucket is the bucket name.
 	Secure         bool          `yaml:"secure"`         // Secure indicates scheme "https" when true.
@@ -45,7 +51,6 @@ type s3Backend struct {
 
 	cli *minio.Client
 	st  Store
-	rj  *ruleJob
 }
 
 func (*s3Backend) Type() string { return "s3" }
@@ -101,10 +106,10 @@ func (rj *ruleJob) add(r lifecycle.Rule) error {
 	}
 
 	if rj.be.IsB2 {
+		dmr := delMarkerRule(r)
 		r.NoncurrentVersionExpiration = lifecycle.NoncurrentVersionExpiration{
 			NoncurrentDays: lifecycle.ExpirationDays(1),
 		}
-		dmr := delMarkerRule(r)
 		rj.ruleMap[dmr.ID] = dmr
 		rj.adds = append(rj.adds, dmr)
 	}
@@ -319,18 +324,24 @@ func (sb *s3Backend) prefixExists(ctx context.Context, prefix string) (bool, err
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	counter := 0
+	log.Debug().Msg("bucket list start")
+	defer func() {
+		log.Debug().Int("counter", counter).Msg("bucket list end")
+	}()
 	for ob := range sb.cli.ListObjects(ctx, sb.Bucket, minio.ListObjectsOptions{
 		Prefix:    prefix,
 		Recursive: true,
-		MaxKeys:   1,
 	}) {
 		if ob.Err != nil {
 			if errors.Is(ob.Err, context.Canceled) {
 				return counter > 0, nil
 			}
 
+			log.Debug().Str("key", ob.Key).Msg("item")
 			return counter > 0, ob.Err
 		}
+
+		log.Debug().Str("key", ob.Key).Msg("obj")
 
 		if counter > 0 {
 			cancel()
@@ -355,8 +366,7 @@ func (sb *s3Backend) Prune(ctx context.Context, refPath string, pruneAfter *time
 		return nil, fmt.Errorf("rule job not set in context")
 	}
 
-	// prune after 3 days
-	newPruneAfter := time.Now().Add(72 * time.Hour)
+	newPruneAfter := time.Now().Add(initialPruneAfterDays * 24 * time.Hour)
 
 	if rj.has(s3ruleID(refPath)) && pruneAfter != nil { // this has already been pruned, now check if the rule needs to be removed yet
 		if !time.Now().After(*pruneAfter) {
@@ -391,7 +401,7 @@ func (sb *s3Backend) isNoSuchLifecycleConfig(err error) bool {
 }
 
 func s3ruleID(prefix string) string {
-	return "sb_" + prefix
+	return "sb_" + strings.TrimRight(prefix, "/")
 }
 
 func (sb *s3Backend) delete(ctx context.Context, objKey string) error {

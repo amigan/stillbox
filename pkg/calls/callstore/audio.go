@@ -489,8 +489,6 @@ func (ab *audioBackends) Count() int {
 }
 
 func (s *audioBackends) DoGC(ctx context.Context, errCh chan error) {
-	defer close(errCh)
-
 	gcCount, gcAttempted, err := s.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
 	if err != nil {
 		s.JournalGCErrorMetric("", false).Inc()
@@ -511,14 +509,11 @@ func (s *store) GoGC(ctx context.Context) {
 		return
 	}
 	errCh := make(chan error)
+	defer close(errCh)
+
 	go func() {
-		for {
-			select {
-			case err := <-errCh:
-				log.Error().Err(err).Msg("call audio cleanup error")
-			case <-ctx.Done():
-				return
-			}
+		for err := range errCh {
+			log.Error().Err(err).Msg("call audio cleanup error")
 		}
 	}()
 
@@ -529,7 +524,6 @@ func (s *store) GoGC(ctx context.Context) {
 		case <-tick.C:
 			s.audioBackends.DoGC(ctx, errCh)
 		case <-ctx.Done():
-			close(errCh)
 			return
 		}
 	}
