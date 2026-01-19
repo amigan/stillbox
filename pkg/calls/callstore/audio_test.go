@@ -27,6 +27,13 @@ func fillCtxRbac(t *testing.T, ctx context.Context) context.Context {
 	return authz.CtxWithRBAC(ctx, rm)
 }
 
+func fillCtxRbacBench(ctx context.Context) context.Context {
+	rm := &rbacmock.RBAC{}
+
+	rm.EXPECT().Check(mock.Anything, mock.Anything, mock.Anything).Return(new(testutil.AdminSubject), nil)
+	return authz.CtxWithRBAC(ctx, rm)
+}
+
 type mockAudioBackend struct {
 	calls map[string]*calls.CallAudio
 	st    callstore.Store

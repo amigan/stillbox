@@ -29,16 +29,20 @@ func refJournalMockExpect(db *dbmock.Store) {
 }
 
 func setupMockDBStore(ctx context.Context, t *testing.T, db database.Store, storeCfg config.CallStorage, partCfg config.Partition) callstore.Store {
+	st, err := setupMockDBStoreB(ctx, db, storeCfg, partCfg)
+	require.NoError(t, err)
+
+	return st
+}
+
+func setupMockDBStoreB(ctx context.Context, db database.Store, storeCfg config.CallStorage, partCfg config.Partition) (callstore.Store, error) {
 	mockRegisterBackend.Do(func() {
 		callstore.RegisterAudioBackend("test", newMockAudioBackend)
 	})
 
 	met := metrics.NewNoOp()
 	tgc := tgstore.NewCache(db, met)
-	st, err := callstore.NewStore(ctx, db, tgc, met, storeCfg, partCfg)
-	require.NoError(t, err)
-
-	return st
+	return callstore.NewStore(ctx, db, tgc, met, storeCfg, partCfg)
 }
 
 type DBTestSuite struct {

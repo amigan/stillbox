@@ -13,6 +13,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -100,5 +102,52 @@ func TestMove(t *testing.T) {
 				assert.Equal(t, tc.expectTotalRows, nr)
 			}
 		})
+	}
+}
+
+func BenchmarkMove(b *testing.B) {
+	expectNumRows := int64(1000)
+	expectTotalRows := int64(2000)
+	storeCfg := config.CallStorage{
+		Backends: []config.StorageBackendConfig{
+			{
+				Name:    "test",
+				Backend: "test",
+			},
+		},
+	}
+
+	ctx := fillCtxRbacBench(b.Context())
+	log.Logger = log.Level(zerolog.Disabled)
+
+	for b.Loop() {
+		ctx, _ = context.WithCancel(ctx)
+		db := new(dbmock.Store)
+		db.EXPECT().InTx(mock.Anything, mock.Anything, pgx.TxOptions{}).RunAndReturn(func(ctx context.Context, f func(database.Store) error, _ pgx.TxOptions) error {
+			return f(db)
+		})
+		db.EXPECT().GetCallAudioCount(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams")).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams) (int64, error) {
+			time.Sleep(time.Duration(rand.Intn(10)) * time.Millisecond)
+			return expectTotalRows, nil
+		})
+		refJournalMockExpect(db)
+		gcaIter := int64(-1)
+		db.EXPECT().GetCallAudio(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams")).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams) ([]database.GetCallAudioRow, error) {
+			time.Sleep(time.Duration(rand.Intn(4)) * time.Millisecond)
+			gcaIter++
+			return dbCalls[gcaIter : gcaIter+expectNumRows], nil
+		})
+		db.EXPECT().SetCallAudio(mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.Anything, mock.Anything).RunAndReturn(func(_ context.Context, _ uuid.UUID, ref, blob []byte) error {
+			time.Sleep(time.Duration(rand.Intn(2)) * time.Millisecond)
+			return nil
+		})
+		st, err := setupMockDBStoreB(ctx, db, storeCfg, config.Partition{})
+		if err != nil {
+			panic(err)
+		}
+		_, err = st.MoveCallAudio(ctx, callstore.MoveCallParams{})
+		if err != nil {
+			panic(err)
+		}
 	}
 }

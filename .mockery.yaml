@@ -2,6 +2,7 @@ dir: '{{.InterfaceDir}}/mocks'
 structname: '{{.InterfaceName}}'
 pkgname: "mocks"
 filename: '{{.InterfaceName}}.go'
+include-auto-generated: true
 template: testify
 template-data:
   unroll-variadic: true
