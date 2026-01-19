@@ -70,12 +70,18 @@ func (u *idList) getTime(label string) string {
 
 var templateFuncs template.FuncMap
 
+func SmallMP3() []byte {
+	smallMP3, err := os.ReadFile(path.Join(testdata.Path, "small.mp3"))
+	if err != nil {
+		panic(err)
+	}
+
+	return smallMP3
+}
+
 func primeBlobs() {
 	dmOnce.Do(func() {
-		smallMP3, err := os.ReadFile(path.Join(testdata.Path, "small.mp3"))
-		if err != nil {
-			panic(err)
-		}
+		smallMP3 := SmallMP3()
 
 		templateData = map[string]any{
 			"smallMP3": "!!binary \"" + base64.StdEncoding.EncodeToString(smallMP3) + "\"",
@@ -141,14 +147,14 @@ func (db *DB) doInsert(ctx context.Context, table string, src any) error {
 		args = append(args, rv.Field(i).Interface())
 	}
 
-	qry.WriteString(" ) OVERRIDING SYSTEM VALUE VALUES (")
+	qry.WriteString(") OVERRIDING SYSTEM VALUE VALUES (")
 	for i := 1; i < len(args)+1; i++ {
 		qry.WriteString("$" + strconv.Itoa(i))
 		if i < len(args) {
 			qry.WriteRune(',')
 		}
 	}
-	qry.WriteString(" );")
+	qry.WriteString(");")
 
 	_, err := db.Exec(ctx, qry.String(), args...)
 	if err != nil {

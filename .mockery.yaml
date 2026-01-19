@@ -3,6 +3,7 @@ structname: '{{.InterfaceName}}'
 pkgname: "mocks"
 filename: '{{.InterfaceName}}.go'
 template: testify
+include-auto-generated: true
 template-data:
   unroll-variadic: true
 packages:

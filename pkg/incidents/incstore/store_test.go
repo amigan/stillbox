@@ -4,6 +4,7 @@ package incstore_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"dynatron.me/x/stillbox/internal/testutil"
@@ -22,14 +23,14 @@ import (
 
 type TestSuite struct {
 	suite.Suite
-	db testutil.DB
+	db *testutil.DB
 }
 
 type testHook func(context.Context, *testing.T, incstore.Store)
 
 func SetupTest() *TestSuite {
 	suite := &TestSuite{
-		db: testutil.NewDB(),
+		db: testutil.NewDB(testutil.DailyPartConfig()),
 	}
 
 	return suite
@@ -108,4 +109,109 @@ func TestCreateIncident(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetIncident(t *testing.T) {
+	s := SetupTest()
+	defer s.TearDownTest()
+
+	tests := []struct {
+		desc          string
+		incID         string
+		subject       entities.Subject
+		opts          []incstore.IncidentOption
+		expectIncName string
+		expectErr     error
+		expectCalls   []string
+	}{
+		{
+			desc:          "base",
+			incID:         testutil.UUID("inc1"),
+			subject:       &users.User{ID: 1, Roles: []string{entities.RoleAdmin}},
+			expectIncName: "Dumpster Fire",
+			expectCalls:   []string{testutil.UUID("call1")},
+		},
+		{
+			desc:          "without calls",
+			incID:         testutil.UUID("inc1"),
+			subject:       &users.User{ID: 1, Roles: []string{entities.RoleAdmin}},
+			opts:          []incstore.IncidentOption{incstore.WithoutCalls()},
+			expectIncName: "Dumpster Fire",
+		},
+		{
+			desc:          "denied",
+			incID:         testutil.UUID("inc1"),
+			subject:       &entities.PublicSubject{},
+			expectIncName: "Dumpster Fire",
+			expectErr:     errors.New(`access denied for Action: "read" on Resource: "Incident"`),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			st, ctx := s.makeStore(t, tc.subject)
+
+			incID := uuid.MustParse(tc.incID)
+			inc, err := st.Incident(ctx, incID, tc.opts...)
+			if tc.expectErr != nil {
+				assert.ErrorContains(t, err, tc.expectErr.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectIncName, inc.Name)
+				if tc.expectCalls != nil {
+					callIDs := make([]string, 0, len(inc.Calls))
+					for _, c := range inc.Calls {
+						callIDs = append(callIDs, c.ID.String())
+					}
+					assert.ElementsMatch(t, tc.expectCalls, callIDs)
+				} else {
+					assert.Nil(t, inc.Calls)
+				}
+			}
+		})
+	}
+
+}
+
+func TestGetIncidentCalls(t *testing.T) {
+	s := SetupTest()
+	defer s.TearDownTest()
+
+	tests := []struct {
+		desc             string
+		incID            string
+		subject          entities.Subject
+		expectErr        error
+		expectCallsCount int
+	}{
+		{
+			desc:             "base",
+			incID:            testutil.UUID("inc1"),
+			subject:          &users.User{ID: 1, Roles: []string{entities.RoleAdmin}},
+			expectCallsCount: 1,
+		},
+		{
+			desc:      "denied",
+			incID:     testutil.UUID("inc1"),
+			subject:   &entities.PublicSubject{},
+			expectErr: errors.New(`access denied for Action: "read" on Resource: "Incident"`),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			st, ctx := s.makeStore(t, tc.subject)
+
+			incID := uuid.MustParse(tc.incID)
+			inc, err := st.IncidentCalls(ctx, incID, &incstore.CallsFilter{})
+			if tc.expectErr != nil {
+				assert.ErrorContains(t, err, tc.expectErr.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectCallsCount, inc.Count)
+				assert.Len(t, inc.Calls, tc.expectCallsCount)
+			}
+		})
+	}
+
 }

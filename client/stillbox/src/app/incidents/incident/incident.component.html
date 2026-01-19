@@ -46,11 +46,15 @@
     <div class="field field-data field-end">{{ inc?.endTime | fmtDate }}</div>
   </div>
   <div markdown [data]="inc?.description" class="inc-description"></div>
+  <mat-progress-bar
+    [mode]="queryInProgress ? 'query' : 'determinate'"
+  ></mat-progress-bar>
   <calls-table
     #callsTable
     [searched]="false"
-    [callsResult]="callsResult"
+    [callsResult]="callsResult | async"
     [showTranscripts]="true"
+    (setPage)="setPage($event)"
     [curPage]="curPage"
     [forward]="true"
   ></calls-table>

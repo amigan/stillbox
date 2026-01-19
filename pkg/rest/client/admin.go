@@ -92,3 +92,31 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 		}
 	}
 }
+
+func (c *client) CallsGC(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	req, err := c.POST(ctx, "/admin/callsgc", "")
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		return errors.New(string(body))
+	}
+
+	return nil
+}

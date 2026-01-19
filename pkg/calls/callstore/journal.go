@@ -22,6 +22,8 @@ type RefJournal interface {
 	AddCreate(ctx context.Context, callID uuid.UUID, backend string) (id JournalID, err error)
 
 	// AddDelete adds a delete ref operation to the journal.
+	// If pruneAfter is nil, it means that the backend has not yet been successfully commanded
+	// to perform any kind of delete.
 	AddDelete(ctx context.Context, backend string, ref string, pruneAfter *time.Time) (id JournalID, err error)
 
 	// GC gets all failed refs meeting passed criteria and tries to prune them.
@@ -33,6 +35,10 @@ type RefJournal interface {
 	Increment(ctx context.Context, id JournalID) error
 
 	// UpdatePruneAfter sets the entry's pruneAfter.
+	// pruneAfter not being nil indicates that we are waiting for the backend to complete the
+	// deletion, and the time so indicates is the next time we should check if the deletes have
+	// been performed. Once they have, we can instruct the backend to "prune" the deletion (e.g.
+	// remove the lifecycle rule in the case of S3).
 	UpdatePruneAfter(ctx context.Context, id JournalID, pruneAfter *time.Time) error
 
 	// Drop drops a journal entry.

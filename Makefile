@@ -33,7 +33,7 @@ generate:
 	go run ./util/omitempty/omitempty.go
 
 lint:
-	golangci-lint run
+	golangci-lint run --build-tags integration
 
 coverage-html:
 	go tool cover -html=cover.out
@@ -42,7 +42,7 @@ coverage-html-file:
 	go tool cover -html=cover.out -o coverage.html
 
 coverage:
-	go test -tags integration,noclient,musl -coverprofile cover.out ./...
+	go test -tags integration,noclient -coverprofile cover.out ./...
 
 # backup backs up the database without calls
 backup:
@@ -52,10 +52,10 @@ backupplain:
 	sh util/dumpdb.sh -p
 
 test:
-	go test -race ${GOFLAGS} ${LDFLAGS} -v ./...
+	go test -race ${GOFLAGS} ${LDFLAGS} -race -v ./...
 
 citest:
-	go test -tags integration,noclient,musl -coverprofile cover.out ${GOFLAGS} ${LDFLAGS} ./internal/... ./pkg/... ./util/...
+	go test -tags integration,noclient -coverprofile cover.out ${GOFLAGS} ${LDFLAGS} ./internal/... ./pkg/... ./util/...
 
 run:
 	go run -v ./cmd/stillbox/ serve

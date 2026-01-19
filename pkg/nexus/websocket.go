@@ -36,10 +36,10 @@ func newWsManager(r Registry) *wsManager {
 type wsConn struct {
 	*websocket.Conn
 
-	out chan ToClient
+	out chan ToClientMsg
 }
 
-func (w *wsConn) Send(msg ToClient) error {
+func (w *wsConn) Send(msg ToClientMsg) error {
 	select {
 	case w.out <- msg:
 	default:
@@ -53,7 +53,7 @@ func (w *wsConn) Send(msg ToClient) error {
 func newWsConn(c *websocket.Conn) *wsConn {
 	wc := &wsConn{
 		Conn: c,
-		out:  make(chan ToClient, qSize),
+		out:  make(chan ToClientMsg, qSize),
 	}
 
 	return wc
@@ -91,7 +91,7 @@ func (conn *wsConn) Shutdown() {
 	_ = conn.Conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseGoingAway, ""), time.Now().Add(writeWait))
 }
 
-func (conn *wsConn) readPump(ctx context.Context, reg Registry, c Client) {
+func (conn *wsConn) readPump(ctx context.Context, reg Registry, c *client) {
 	defer func() {
 		reg.Unregister(c)
 		conn.CloseCh()
@@ -164,8 +164,8 @@ func (conn *wsConn) writePump() {
 	}
 }
 
-func (conn *wsConn) writeToClient(w io.WriteCloser, msg ToClient) {
-	packWrite := func(msg ToClient) {
+func (conn *wsConn) writeToClient(w io.WriteCloser, msg ToClientMsg) {
+	packWrite := func(msg ToClientMsg) {
 		packed, err := proto.Marshal(msg)
 		if err != nil {
 			log.Error().Err(err).Msg("pack message")

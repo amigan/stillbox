@@ -108,7 +108,7 @@ var typeOfByteSlice = reflect.TypeOf([]byte(nil))
 func (o *options) unmIterFields(r *http.Request, destStruct reflect.Value) error {
 	textUnmarshaler := reflect.TypeFor[encoding.TextUnmarshaler]()
 	structType := destStruct.Type()
-	for i := 0; i < destStruct.NumField(); i++ {
+	for i := range destStruct.NumField() {
 		destFieldVal := destStruct.Field(i)
 		fieldType := structType.Field(i)
 		if !fieldType.IsExported() && !fieldType.Anonymous {
@@ -326,8 +326,17 @@ func Unmarshal(r *http.Request, dest any, opts ...Option) error {
 			return fmt.Errorf("ParseForm: %w", err)
 		}
 		return o.unmarshalForm(r, dest)
-	case "application/json":
-		return json.NewDecoder(r.Body).Decode(dest)
+	case "application/json", "":
+		err := json.NewDecoder(r.Body).Decode(dest)
+		switch err {
+		case io.EOF:
+			if o.acceptEmptyBody {
+				return nil
+			}
+			fallthrough
+		default:
+			return err
+		}
 	}
 
 	return ErrContentType

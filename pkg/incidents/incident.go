@@ -23,9 +23,14 @@ type Incident struct {
 	CreatedAt   *jsontypes.Time    `json:"createdAt"`
 	StartTime   *jsontypes.Time    `json:"startTime,omitempty"`
 	EndTime     *jsontypes.Time    `json:"endTime,omitempty"`
-	Location    jsontypes.Location `json:"location"`
+	Location    jsontypes.Location `json:"location,omitzero"`
 	Metadata    jsontypes.Metadata `json:"metadata,omitempty"`
-	Calls       []IncidentCall     `json:"calls"`
+	Calls       []IncidentCall     `json:"calls,omitempty"`
+}
+
+type IncidentCalls struct {
+	Calls []IncidentCall `json:"calls"`
+	Count int            `json:"count"`
 }
 
 func (inc *Incident) SetShareURL(bu url.URL, shareID string) {

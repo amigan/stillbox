@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
-import { Message } from '../../gen/stillbox_pb';
+import { Message } from '../proto/stillbox';
 
 function genWSSURL(): string {
   var loc = window.location,

@@ -33,6 +33,7 @@ SELECT
 	inp.notes
 FROM inp
 JOIN calls c ON c.id = inp.id
+ON CONFLICT DO NOTHING
 `
 
 func (q *Queries) AddToIncident(ctx context.Context, incidentID uuid.UUID, callIds []uuid.UUID, notes [][]byte) error {
@@ -158,6 +159,18 @@ func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow
 	return i, err
 }
 
+const getIncidentCallCount = `-- name: GetIncidentCallCount :one
+SELECT COUNT(*) FROM incidents_calls
+WHERE incident_id = $1
+`
+
+func (q *Queries) GetIncidentCallCount(ctx context.Context, incidentID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, getIncidentCallCount, incidentID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getIncidentCalls = `-- name: GetIncidentCalls :many
 SELECT
 	ic.call_id,
@@ -211,6 +224,8 @@ FROM incidents_calls ic, LATERAL (
 ) c
 WHERE ic.incident_id = $1
 ORDER BY ic.call_date ASC
+OFFSET $2 ROWS
+FETCH NEXT $3 ROWS ONLY
 `
 
 type GetIncidentCallsRow struct {
@@ -232,8 +247,8 @@ type GetIncidentCallsRow struct {
 	Transcript  *string       `db:"transcript" json:"transcript"`
 }
 
-func (q *Queries) GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetIncidentCallsRow, error) {
-	rows, err := q.db.Query(ctx, getIncidentCalls, id)
+func (q *Queries) GetIncidentCalls(ctx context.Context, iD uuid.UUID, offset int32, perPage *int32) ([]GetIncidentCallsRow, error) {
+	rows, err := q.db.Query(ctx, getIncidentCalls, iD, offset, perPage)
 	if err != nil {
 		return nil, err
 	}

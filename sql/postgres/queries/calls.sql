@@ -66,7 +66,7 @@ SELECT id, call_date, audio_ref, audio_blob FROM swept_calls WHERE audio_ref IS 
 UPDATE swept_calls SET audio_blob = @audio_blob, audio_ref = NULL WHERE id = @id;
 
 -- name: GetCallAudio :many
--- For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount
+-- For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount and GetCallAudioCb Scan
 SELECT
 	c.id,
 	c.call_date,

@@ -26,7 +26,7 @@ import (
 
 type TestSuite struct {
 	suite.Suite
-	db testutil.DB
+	db *testutil.DB
 }
 
 type testHook func(context.Context, *testing.T, tgstore.Store)
@@ -53,7 +53,7 @@ func tids(ids ...string) []tgsp.ID {
 
 func SetupTest() *TestSuite {
 	suite := &TestSuite{
-		db: testutil.NewDB(),
+		db: testutil.NewDB(testutil.DailyPartConfig()),
 	}
 
 	return suite

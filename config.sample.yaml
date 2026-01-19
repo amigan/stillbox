@@ -107,13 +107,13 @@ notify:
     config:
       webhookURL: "http://somewhere"
 
-# ingest filters
+# ingest filters, first matching filter is decisive
 ingest:
   # require calls to be at least this long when from the specified filter is matched
-  match:
-    talkgroupTagsAny:
-      - nbfm
-  minDuration: 900ms
+  - match:
+      talkgroupTagsAny:
+        - nbfm
+    minDuration: 900ms
 
 # configure upstream relays here
 relay:
@@ -185,6 +185,8 @@ callStorage:
         legacyPrefix: true
         # timeout is the amount of time for S3 request deadline before next action (store in DB or fail)
         timeout: 10s
+        # IsB2 creates an ExpireObjectDeleteMarker rule pair and sets NoncurrentVersionExpiration as required by B2.
+        isB2: false
         keyID: 'GK7894947fffaacacd83664923'
         secretKey: 'bacba7892843792347987293874923847293487239487234987234bababababa'
     - name: fs

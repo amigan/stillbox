@@ -74,6 +74,10 @@ func (prr PartitionRelativeRef) String() string {
 	return "_/" + string(prr)
 }
 
+func (prr PartitionRelativeRef) MarshalText() ([]byte, error) {
+	return []byte(prr.String()), nil
+}
+
 func makeAudioRef(s string) AudioRef {
 	if strings.HasPrefix(s, "_/") {
 		return PartitionRelativeRef(s[2:])
@@ -120,7 +124,6 @@ type AudioBackends interface {
 	CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) error
 
 	// PruneBackendRefs delete the provided refs from the provided backend using the journal.
-	// Semantics are similar to AudioBackend#Prune.
 	PruneBackendRefs(ctx context.Context, beName string, prefixes []string) error
 
 	// Backend looks up a backend by name.
@@ -137,6 +140,9 @@ type AudioBackends interface {
 
 	// JournalGCErrorMetric returns the prometheus GC error metric for the given backendName and missing state.
 	JournalGCErrorMetric(backendName string, missing bool) prometheus.Counter
+
+	// DoGC performs a journal garbage collection cycle.
+	DoGC(context.Context, chan error)
 }
 
 type audioBackends struct {
@@ -259,6 +265,9 @@ func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, a
 		case nil, io.EOF:
 			return
 		default:
+			if errors.Is(err, context.Canceled) {
+				return nil
+			}
 			log.Warn().Err(err).Str("backend", be.Name).Str("id", location.String()).Msg("CallAudio failure")
 			continue // try next backend
 		}
@@ -338,6 +347,7 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, pr
 		return nil
 	}
 
+	// setup the prune job is this backend requires us to batch deletes
 	if p, isBatchPruner := be.AudioBackend.(BatchPruner); isBatchPruner {
 		pj, err := p.NewPruneJob(ctx)
 		if err != nil {
@@ -364,6 +374,7 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, pr
 	}
 
 	for _, prefix := range prefixes {
+		// add initial delete to the journal with nil pruneAfter
 		jeid, err := ab.journal.AddDelete(ctx, beName, prefix, nil)
 		if err != nil {
 			if database.IsConstraintViolation(err, database.AudioRefJournalCallIDBackendRefKey) {
@@ -385,20 +396,21 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, pr
 		}
 
 		if pruneAfter != nil {
+			// a second GC round on this entry is required (e.g. for S3 to prune the rule
+			// once lifecycle has run and deleted the objects)
 			err := ab.journal.UpdatePruneAfter(ctx, jeid, pruneAfter)
 			if err != nil {
 				return PruneErr(err, jeid, false)
 			}
+		} else {
+			// the objects have been deleted, drop the journal entry
+			err = ab.journal.Drop(ctx, jeid)
+			if err != nil {
+				return PruneErr(err, jeid, true)
+			}
 
-			return nil
+			ab.RefTracker().ab.JournalSizeMetric(be.Name, false).Dec()
 		}
-
-		err = ab.journal.Drop(ctx, jeid)
-		if err != nil {
-			return PruneErr(err, jeid, true)
-		}
-
-		ab.RefTracker().ab.JournalSizeMetric(be.Name, false).Dec()
 	}
 
 	return nil
@@ -430,8 +442,9 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (rfq *Audi
 				return nil, nil
 			case config.OnErrorNext:
 				log.Error().Str("callID", call.ID.String()).Err(err).Msg("failed to store audio, trying next backend")
-				continue
 			}
+
+			continue
 		} else if ref != nil {
 			ab.metrics.TotalStores.WithLabelValues(beName, be.Type()).Inc()
 		}
@@ -475,6 +488,20 @@ func (ab *audioBackends) Count() int {
 	return len(ab.backends)
 }
 
+func (s *audioBackends) DoGC(ctx context.Context, errCh chan error) {
+	gcCount, gcAttempted, err := s.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
+	if err != nil {
+		s.JournalGCErrorMetric("", false).Inc()
+		errCh <- err
+	} else if gcAttempted > 0 {
+		log.Info().Int64("count", gcCount).Int64("attempted", gcAttempted).Msg("call audio garbage collected")
+	}
+}
+
+func (s *store) DoGC(ctx context.Context, errCh chan error) {
+	s.audioBackends.DoGC(ctx, errCh)
+}
+
 func (s *store) GoGC(ctx context.Context) {
 	if s.audioBackends.journal == nil {
 		// this is probably only in tests that this may happen, but we check anyway.
@@ -482,34 +509,21 @@ func (s *store) GoGC(ctx context.Context) {
 		return
 	}
 	errCh := make(chan error)
+	defer close(errCh)
+
 	go func() {
-		for {
-			select {
-			case err := <-errCh:
-				log.Error().Err(err).Msg("call audio cleanup error")
-			case <-ctx.Done():
-				return
-			}
+		for err := range errCh {
+			log.Error().Err(err).Msg("call audio cleanup error")
 		}
 	}()
-	doGC := func() {
-		gcCount, gcAttempted, err := s.audioBackends.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
-		if err != nil {
-			s.audioBackends.JournalGCErrorMetric("", false).Inc()
-			errCh <- err
-		} else if gcAttempted > 0 {
-			log.Info().Int64("count", gcCount).Int64("attempted", gcAttempted).Msg("call audio garbage collected")
-		}
-	}
 
 	tick := time.NewTicker(partman.CheckInterval)
 
 	for {
 		select {
 		case <-tick.C:
-			doGC()
+			s.audioBackends.DoGC(ctx, errCh)
 		case <-ctx.Done():
-			close(errCh)
 			return
 		}
 	}
@@ -608,6 +622,8 @@ func (s *store) PruneAudioPrefix(ctx context.Context, tx database.Store, partPre
 	for i := range prunableRefs {
 		backend, pathFirst := prunableRefs[i].Backend, prunableRefs[i].PathFirst
 		if pathFirst != "_/" {
+			// NOTE the most correct thing to do here would be to queue this ref for deletion some other way
+			// but this is an unlikely case
 			continue
 		}
 

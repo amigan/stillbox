@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
+	"math/rand"
 	"sync/atomic"
 	"time"
 
@@ -16,6 +16,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
@@ -53,6 +54,9 @@ type MoveCallParams struct {
 
 	// NumWorkers specifies the number of workers to use for the move. It is bounded internally by numStoreWorkersLimit.
 	NumWorkers *uint `json:"numWorkers,omitempty" desc:"number of workers" flag:"workers w"`
+
+	// Tries is the number of times to retry moving a file *iff* the worker comes back with context.DeadlineExceeded as an error.
+	Tries int `json:"tries,omitzero" desc:"number of times to retry on deadline exceeded" flag:"tries t"`
 
 	// ProgressChan, if not nil, is a channel where the number of rows is written as the call progresses.
 	// It is closed by MoveCalls on finish (or error)
@@ -133,9 +137,9 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 		}
 
 		cao.audioRefOut[m.dst.Name] = crRef
-		if !m.par.Copy && fromBlob {
-			// we are from the DB and copy is disabled and we are a ref, clear blob
-			blob = nil
+		if m.par.Copy && fromBlob {
+			// we are from the DB and copy is enabled and we are a ref, set the blob
+			blob = ca.AudioBlob
 		}
 	}
 
@@ -152,8 +156,8 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 type mover struct {
 	ab         AudioBackends
 	numWorkers int
-	dbTx       database.Store
-	dbMtx      sync.Mutex
+	tries      int
+	db         database.Store
 	refs       *refTracker
 
 	completedRows atomic.Int64
@@ -161,18 +165,18 @@ type mover struct {
 	par           MoveCallParams
 }
 
-func (m *mover) moveWorker(ctx context.Context, row *database.GetCallAudioRow) error {
+type setCallAudioRequest struct {
+	id                  uuid.UUID
+	audioRef, audioBlob []byte
+}
+
+func (m *mover) moveWorker(ctx context.Context, row *database.GetCallAudioRow, scaCh chan<- setCallAudioRequest) error {
 	ref, blob, err := m.moveCallAudio(ctx, row)
 	if err != nil {
 		return fmt.Errorf("call %s: %w", row.ID, err)
 	}
 
-	m.dbMtx.Lock()
-	err = m.dbTx.SetCallAudio(ctx, row.ID, ref, blob)
-	m.dbMtx.Unlock()
-	if err != nil {
-		return err
-	}
+	scaCh <- setCallAudioRequest{id: row.ID, audioRef: ref, audioBlob: blob}
 
 	cr := m.completedRows.Add(1)
 	if cr%progressInterval == 0 && m.par.ProgressChan != nil {
@@ -182,10 +186,13 @@ func (m *mover) moveWorker(ctx context.Context, row *database.GetCallAudioRow) e
 	return nil
 }
 
-func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error {
-	m.dbMtx.Lock()
-	count, err := m.dbTx.GetCallAudioCount(ctx, dbPar)
-	m.dbMtx.Unlock()
+func backoff() {
+	r := rand.Intn(20)
+	time.Sleep(time.Duration(r*100) * time.Millisecond)
+}
+
+func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) (err error) {
+	count, err := m.db.GetCallAudioCount(ctx, dbPar)
 
 	if err != nil {
 		return fmt.Errorf("count: %w", err)
@@ -197,64 +204,130 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 		m.par.ProgressChan <- count // first message is always total
 	}
 
+	// if we are dry run, or there were no rows, we can finish now
+	if count < 1 || m.par.DryRun {
+		return nil
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
 	eg, wctx := errgroup.WithContext(ctx)
-	eg.SetLimit(m.numWorkers)
+
+	setCallAudioChan := make(chan setCallAudioRequest)
+	setCallAudioThrErrCh := make(chan error)
+	go func() {
+		defer close(setCallAudioThrErrCh)
+		err := m.db.InTx(ctx, func(tx database.Store) error {
+			for scar := range setCallAudioChan {
+				err := tx.SetCallAudio(ctx, scar.id, scar.audioRef, scar.audioBlob)
+				if err != nil {
+					cancel()
+					return fmt.Errorf("SetCallAudio: %w", err)
+				}
+			}
+
+			return nil
+		}, pgx.TxOptions{})
+		// drain the channel.
+		// this will only iterate if the exit above was not due to a closed channel
+		for range setCallAudioChan {
+		}
+		setCallAudioThrErrCh <- err
+	}()
+
+	workCh := make(chan *database.GetCallAudioRow)
+
+	for range m.numWorkers {
+		eg.Go(func() (err error) {
+			defer func() { // for errgroup
+				if rec := recover(); rec != nil {
+					err = common.FromPanicValue(rec)
+					log.Error().Err(err).Msg("panic in worker")
+				}
+			}()
+
+			for row := range workCh {
+				for i := range m.tries + 1 {
+					err = m.moveWorker(wctx, row, setCallAudioChan)
+					switch {
+					case err == nil:
+						break
+					case errors.Is(err, context.DeadlineExceeded):
+						log.Error().Int("tries", i).Err(err).Msg("moveWorker")
+						backoff()
+						continue
+					case errors.Is(err, context.Canceled):
+						return err
+					default: // err != nil
+						log.Error().Err(err).Msg("moveWorker")
+						return err
+					}
+				}
+			}
+
+			return err
+		})
+	}
+
+	defer func() {
+		if gerr := eg.Wait(); gerr != nil {
+			// collapse cancelled context errors
+			if err != nil && !errors.Is(err, context.Canceled) {
+				err = multierror.Append(err, gerr)
+			} else {
+				err = gerr
+			}
+		}
+
+		close(setCallAudioChan)
+		scaErr := <-setCallAudioThrErrCh
+		if scaErr != nil {
+			// collapse cancelled context errors
+			if err != nil && !errors.Is(err, context.Canceled) {
+				err = multierror.Append(err, scaErr)
+			} else {
+				err = scaErr
+			}
+		}
+	}()
+
 	for count > 0 {
-		m.dbMtx.Lock()
-		rows, err := m.dbTx.GetCallAudio(wctx, dbPar)
-		m.dbMtx.Unlock()
+		var last time.Time
+		err := m.db.GetCallAudioCb(wctx, dbPar, func(row *database.GetCallAudioRow) error {
+			last = row.CallDate
+			count--
+			select {
+			case workCh <- row:
+			case <-wctx.Done():
+				return wctx.Err()
+			}
+			return nil
+		})
 		if err != nil {
-			log.Debug().Err(err).Msg("GetCallAudio returned error")
+			close(workCh)
+
 			return err
 		}
 
-		// if we are dry run, or there were no rows, we can finish now
-		if len(rows) == 0 || m.par.DryRun {
-			return nil
-		}
-
+		// Set dbPar.Start for the next batch.
 		// XXX this might be racy since the lower bound of the interval is inclusive
-		dbPar.Start = common.NilIfZero(rows[len(rows)-1].CallDate)
-
-		count -= int64(len(rows))
-
-		for _, row := range rows {
-			eg.Go(func() (err error) {
-				defer func() { // for errgroup
-					if rec := recover(); rec != nil {
-						err = common.FromPanicValue(rec)
-						log.Error().Err(err).Msg("panic in worker")
-					}
-				}()
-
-				err = m.moveWorker(wctx, &row)
-				if err != nil && !errors.Is(err, context.Canceled) {
-					log.Error().Err(err).Msg("moveWorker")
-				}
-
-				return err
-			})
-		}
+		dbPar.Start = common.NilIfZero(last)
 	}
 
-	if err := eg.Wait(); err != nil {
-		log.Info().Err(err).Msg("move done")
-
-		return err
-	}
+	close(workCh)
 
 	return nil
 }
 
-func (s *store) newMover(dst *audioStorageBackend, tx database.Store, rt *refTracker, par MoveCallParams) *mover {
+func (s *store) newMover(dst *audioStorageBackend, rt *refTracker, par MoveCallParams) *mover {
 	numWorkers := numStoreWorkers
 	if par.NumWorkers != nil {
 		numWorkers = min(int(*par.NumWorkers), numStoreWorkersLimit)
 	}
 	return &mover{
 		ab:         s.audioBackends,
-		dbTx:       tx,
+		db:         s.db,
 		numWorkers: numWorkers,
+		tries:      par.Tries,
 		dst:        dst,
 		par:        par,
 		refs:       rt,
@@ -307,17 +380,14 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 
 	refT := newRefTracker(s.audioBackends, s, nil)
 
-	err = s.db.InTx(context.WithoutCancel(ctx), func(tx database.Store) error {
-		m := s.newMover(dst, tx, refT, par)
-		err = m.do(ctx, dbPar)
-		numRows = m.completedRows.Load()
+	m := s.newMover(dst, refT, par)
+	err = m.do(ctx, dbPar)
+	log.Info().Err(err).Msg("move done")
+	numRows = m.completedRows.Load()
 
-		if par.ProgressChan != nil {
-			par.ProgressChan <- numRows - 1
-		}
-
-		return err
-	}, pgx.TxOptions{})
+	if par.ProgressChan != nil {
+		par.ProgressChan <- numRows - 1
+	}
 
 	if err != nil {
 		go func() {
@@ -328,7 +398,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 			if rbErr != nil {
 				err = multierror.Append(err, rbErr)
 			} else {
-				log.Debug().Msg("move rollback finished")
+				log.Debug().Err(err).Msg("move rollback finished")
 			}
 		}()
 	} else {
@@ -342,10 +412,6 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 				log.Debug().Msg("move commit finished")
 			}
 		}()
-	}
-
-	if par.ProgressChan != nil {
-		close(par.ProgressChan)
 	}
 
 	return

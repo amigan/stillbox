@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/netip"
 	"strings"
+	"unicode"
 
 	"github.com/moul/http2curl"
 	"github.com/rs/zerolog/log"
@@ -41,7 +42,15 @@ type loggingRoundTripper struct{}
 
 func (ct loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	curlCmd, _ := http2curl.GetCurlCommand(req)
-	log.Debug().Msgf("%s", curlCmd.String())
+	cmd := curlCmd.String()
+	cmd = strings.Map(func(r rune) rune {
+		if unicode.IsGraphic(r) {
+			return r
+		}
+
+		return -1
+	}, cmd)
+	log.Debug().Msgf("%s", cmd)
 	return http.DefaultTransport.RoundTrip(req)
 }
 

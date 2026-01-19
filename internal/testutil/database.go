@@ -19,6 +19,9 @@ import (
 type DB struct {
 	*database.Postgres
 	SchemaName string
+	PartConfig config.Partition
+
+	nowFunc NowFunc
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
@@ -31,7 +34,7 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func (db DB) Cleanup() {
+func (db *DB) Cleanup() {
 	_, err := db.Exec(context.Background(), "DROP SCHEMA "+db.SchemaName+" CASCADE;")
 	if err != nil {
 		panic(err)
@@ -40,7 +43,39 @@ func (db DB) Cleanup() {
 	db.Close()
 }
 
-func NewDB() DB {
+type PartConfig func(schema string) config.Partition
+
+func DailyPartConfig() PartConfig {
+	return func(schemaName string) config.Partition {
+		return config.Partition{
+			Enabled:  true,
+			Schema:   schemaName,
+			Interval: "daily",
+		}
+	}
+}
+
+func CustomPartConfig(cfg config.Partition) PartConfig {
+	return func(schemaName string) config.Partition {
+		cfg.Schema = schemaName
+		return cfg
+	}
+}
+
+type DBOpt func(*DB)
+type NowFunc func() time.Time
+
+func WithNow(nf NowFunc) DBOpt {
+	return func(db *DB) {
+		db.nowFunc = nf
+	}
+}
+
+func (db *DB) NowFunc() NowFunc {
+	return db.nowFunc
+}
+
+func NewDB(partCfg PartConfig, opts ...DBOpt) *DB {
 	primeBlobs()
 
 	_ = godotenv.Load(path.Join(testdata.Path, "../.env.test"))
@@ -68,11 +103,7 @@ func NewDB() DB {
 		panic(err)
 	}
 
-	part := config.Partition{
-		Enabled:  true,
-		Schema:   schemaName,
-		Interval: "daily",
-	}
+	part := partCfg(schemaName)
 
 	db, err := database.NewClient(ctx, config.DB{
 		Connect:    dbConnect + "&search_path=" + schemaName,
@@ -83,19 +114,23 @@ func NewDB() DB {
 		panic(err)
 	}
 
+	tdb := &DB{Postgres: db, SchemaName: schemaName, PartConfig: part, nowFunc: time.Now}
+
+	for _, opt := range opts {
+		opt(tdb)
+	}
+
 	if part.Enabled {
 		pm, err := partman.NewPartitionManager(db, nil, part)
 		if err != nil {
 			panic(err)
 		}
 
-		err = pm.Check(ctx, time.Now().UTC())
+		err = pm.Check(ctx, tdb.nowFunc().UTC())
 		if err != nil {
 			panic(err)
 		}
 	}
-
-	tdb := DB{Postgres: db, SchemaName: schemaName}
 
 	err = tdb.loadFixtures(ctx)
 	if err != nil {

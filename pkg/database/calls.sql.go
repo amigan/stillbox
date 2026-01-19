@@ -401,7 +401,7 @@ type GetCallAudioRow struct {
 	Swept     bool          `db:"swept" json:"swept"`
 }
 
-// For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount
+// For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount and GetCallAudioCb Scan
 func (q *Queries) GetCallAudio(ctx context.Context, arg GetCallAudioParams) ([]GetCallAudioRow, error) {
 	rows, err := q.db.Query(ctx, getCallAudio,
 		arg.Count,

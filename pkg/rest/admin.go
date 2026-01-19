@@ -20,8 +20,25 @@ func (aa *adminAPI) Subrouter() http.Handler {
 	r := chi.NewMux()
 
 	r.Post("/move-calls", aa.moveCalls)
+	r.Post("/callsgc", aa.runJournalGC)
 
 	return r
+}
+
+func (*adminAPI) runJournalGC(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	cst := callstore.FromCtx(ctx)
+	errCh := make(chan error)
+	errd := false
+	go func() {
+		for err := range errCh {
+			if !errd {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+			fmt.Fprintln(w, err)
+		}
+	}()
+	cst.DoGC(ctx, errCh)
 }
 
 // moveCalls handles the admin call move endpoint.
@@ -41,11 +58,13 @@ func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 
 	rc := http.NewResponseController(w)
 	progress := strings.Contains(r.Header.Get("Accept"), "text/event-stream")
+	var progDone chan bool
 	var sentSSE atomic.Bool
 
 	if progress {
 		progCh := make(chan int64, 8)
 		par.ProgressChan = progCh
+		progDone = make(chan bool)
 
 		go func() {
 			totalCount, ok := <-progCh
@@ -63,19 +82,11 @@ func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 
 			rc.Flush()
 
-			for {
-				select {
-				case msg, ok := <-progCh:
-					if !ok {
-						return
-					}
-
-					fmt.Fprintf(w, "data:{\"completed\":%d}\n\n", msg)
-					rc.Flush()
-				case <-ctx.Done():
-					return
-				}
+			for msg := range progCh {
+				fmt.Fprintf(w, "data:{\"completed\":%d}\n\n", msg)
+				rc.Flush()
 			}
+			progDone <- true
 		}()
 	}
 
@@ -89,11 +100,13 @@ func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "data:%s\n", string(b))
 		} else {
 			wErr(w, r, autoError(err))
+			return
 		}
-		return
 	}
 
 	if progress {
+		close(par.ProgressChan)
+		<-progDone
 		fmt.Fprintf(w, "data:{\"final\":%d}\n\n", numRows)
 		rc.Flush()
 	} else {

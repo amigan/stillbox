@@ -40,7 +40,7 @@ type Querier interface {
 	GetAllTalkgroupTags(ctx context.Context) ([]string, error)
 	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
 	GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
-	// For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount
+	// For now, this must be kept in sync with pkg/database/calls.go GetCallAudioCount and GetCallAudioCb Scan
 	GetCallAudio(ctx context.Context, arg GetCallAudioParams) ([]GetCallAudioRow, error)
 	GetCallAudioByID(ctx context.Context, id uuid.UUID) (GetCallAudioByIDRow, error)
 	GetCallStatsByInterval(ctx context.Context, truncField string, start *time.Time, end *time.Time) ([]GetCallStatsByIntervalRow, error)
@@ -49,7 +49,8 @@ type Querier interface {
 	GetCalls(ctx context.Context, ids []uuid.UUID) ([]GetCallsRow, error)
 	GetDatabaseSize(ctx context.Context) (string, error)
 	GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow, error)
-	GetIncidentCalls(ctx context.Context, id uuid.UUID) ([]GetIncidentCallsRow, error)
+	GetIncidentCallCount(ctx context.Context, incidentID uuid.UUID) (int64, error)
+	GetIncidentCalls(ctx context.Context, iD uuid.UUID, offset int32, perPage *int32) ([]GetIncidentCallsRow, error)
 	GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error)
 	GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error)
 	GetPrunableAudioRefs(ctx context.Context, partitionStart time.Time, partitionEnd time.Time) ([]GetPrunableAudioRefsRow, error)

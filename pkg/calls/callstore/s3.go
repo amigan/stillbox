@@ -24,31 +24,38 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	// prune rules 5 days after setting. Some services take what appears to be several
+	// lifecycle runs to actually clear all objects.
+	initialPruneAfterDays = 5
+)
+
 type s3Backend struct {
-	Bucket         string        `yaml:"bucket"`
-	Secure         bool          `yaml:"secure"`
-	Endpoint       string        `yaml:"endpoint"`
-	ExternalHost   *string       `yaml:"externalHost"`
-	ExternalSecure bool          `yaml:"externalSecure"`
-	Region         string        `yaml:"region"`
-	KeyID          string        `yaml:"keyID"`
-	SecretKey      string        `yaml:"secretKey"`
-	Timeout        time.Duration `yaml:"timeout"`
-	Trace          bool          `yaml:"trace"`
+	Bucket         string        `yaml:"bucket"`         // Bucket is the bucket name.
+	Secure         bool          `yaml:"secure"`         // Secure indicates scheme "https" when true.
+	Endpoint       string        `yaml:"endpoint"`       // Endpoint is the host[:port] of the S3 server.
+	ExternalHost   *string       `yaml:"externalHost"`   // ExternalHost is the host to use when signing presigned URLs for issuance to the client.
+	ExternalSecure bool          `yaml:"externalSecure"` // ExternalSecure is whether to use https scheme for presigned URLs.
+	Region         string        `yaml:"region"`         // Region is the S3 region.
+	KeyID          string        `yaml:"keyID"`          // KeyID is the access key ID.
+	SecretKey      string        `yaml:"secretKey"`      // SecretKey is the secret key.
+	Timeout        time.Duration `yaml:"timeout"`        // Timeout specifies a context timeout for object get and put operations.
+	Trace          bool          `yaml:"trace"`          // Trace enables minio client trace messages.
 
 	// LegacyPrefix puts <Prefix/> right under the <Rule>. If it is false, modern S3-style
 	// <Filter><Prefix/></Filter> is used. Some "S3 compatible" APIs require this.
 	LegacyPrefix bool `yaml:"legacyPrefix"`
 
+	// IsB2 creates an ExpireObjectDeleteMarker rule pair and sets NoncurrentVersionExpiration as required by B2.
+	IsB2 bool `yaml:"isB2"`
+
 	cli *minio.Client
 	st  Store
-	rj  *ruleJob
 }
 
 func (*s3Backend) Type() string { return "s3" }
 
-const S3LifecycleTTL = 10 * time.Minute
-
+// A ruleJob satisfies interface PruneJob. It is a batch of S3 lifecycle rule mutations.
 type ruleJob struct {
 	cfg     *lifecycle.Configuration
 	be      *s3Backend
@@ -57,24 +64,65 @@ type ruleJob struct {
 	dels    map[string]struct{} // keys to delete
 }
 
+func (rj *ruleJob) has(id string) bool {
+	_, hasRule := rj.ruleMap[id]
+	return hasRule
+}
+
+// delMarkerName generates the name of a delete marker for use with B2.
+func delMarkerName(id string) string {
+	return id + "_marker"
+}
+
+// delMarkerRule generates the marker rule for r, for use with B2.
+func delMarkerRule(r lifecycle.Rule) lifecycle.Rule {
+	dmr := r
+	dmr.ID = delMarkerName(r.ID)
+	dmr.Expiration = lifecycle.Expiration{
+		DeleteMarker: true,
+	}
+
+	return dmr
+}
+
+// delete queues a delete operation of rule ID.
 func (rj *ruleJob) delete(id string) {
 	rj.dels[id] = struct{}{}
 	delete(rj.ruleMap, id)
+
+	if rj.be.IsB2 {
+		dmn := delMarkerName(id)
+		if _, has := rj.ruleMap[dmn]; has {
+			rj.dels[delMarkerName(id)] = struct{}{}
+			delete(rj.ruleMap, delMarkerName(id))
+		}
+	}
 }
 
+// add queues an add operation of rule r.
 func (rj *ruleJob) add(r lifecycle.Rule) error {
 	if _, has := rj.ruleMap[r.ID]; has {
 		return errors.New("rule already exists")
 	}
 
-	rj.ruleMap[r.ID] = r
+	if rj.be.IsB2 {
+		dmr := delMarkerRule(r)
+		r.NoncurrentVersionExpiration = lifecycle.NoncurrentVersionExpiration{
+			NoncurrentDays: lifecycle.ExpirationDays(1),
+		}
+		rj.ruleMap[dmr.ID] = dmr
+		rj.adds = append(rj.adds, dmr)
+	}
 
+	rj.ruleMap[r.ID] = r
 	rj.adds = append(rj.adds, r)
 
 	return nil
 }
 
+// lifecyceConfig assembles the actual lifecycle configuration from the ruleJob.
 func (rj *ruleJob) lifecycleConfig() *lifecycle.Configuration {
+	// remove deleted rules from the existing config
 	i := 0
 	for _, r := range rj.cfg.Rules {
 		if _, hasDel := rj.dels[r.ID]; !hasDel {
@@ -89,15 +137,17 @@ func (rj *ruleJob) lifecycleConfig() *lifecycle.Configuration {
 	}
 	rj.cfg.Rules = rj.cfg.Rules[:i]
 
+	// append added rules
 	rj.cfg.Rules = append(rj.cfg.Rules, rj.adds...)
 
 	return rj.cfg
 }
 
-func (rj *ruleJob) addRmRule(refPath string) error {
-	ruleID := s3ruleID(refPath)
+// addRmRule adds a removal rule for the given prefix.
+func (rj *ruleJob) addRmRule(prefix string) error {
+	ruleID := s3ruleID(prefix)
 
-	log.Debug().Str("prefix", refPath).Msg("add rm rule")
+	log.Debug().Str("prefix", prefix).Msg("add rm rule")
 	lr := lifecycle.Rule{
 		ID:     ruleID,
 		Status: "Enabled",
@@ -107,16 +157,17 @@ func (rj *ruleJob) addRmRule(refPath string) error {
 	}
 
 	if rj.be.LegacyPrefix {
-		lr.Prefix = refPath
+		lr.Prefix = prefix
 	} else {
 		lr.RuleFilter = lifecycle.Filter{
-			Prefix: refPath,
+			Prefix: prefix,
 		}
 	}
 
 	return rj.add(lr)
 }
 
+// pruneRmRule removes a removal rule after it has been satisified.
 func (rj *ruleJob) pruneRmRule(refPath string) error {
 	rj.delete(s3ruleID(refPath))
 
@@ -129,6 +180,7 @@ func (sb *s3Backend) NewPruneJob(ctx context.Context) (PruneJob, error) {
 
 func (*ruleJob) IsPruneJob() {}
 
+// newRuleJob creates a new ruleJob.
 func (sb *s3Backend) newRuleJob(ctx context.Context) (*ruleJob, error) {
 	rj := &ruleJob{
 		ruleMap: make(map[string]lifecycle.Rule),
@@ -147,6 +199,7 @@ func (sb *s3Backend) newRuleJob(ctx context.Context) (*ruleJob, error) {
 
 	rj.cfg = lc
 
+	// build rule map
 	for _, r := range rj.cfg.Rules {
 		rj.ruleMap[r.ID] = r
 	}
@@ -271,18 +324,24 @@ func (sb *s3Backend) prefixExists(ctx context.Context, prefix string) (bool, err
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	counter := 0
+	log.Debug().Msg("bucket list start")
+	defer func() {
+		log.Debug().Int("counter", counter).Msg("bucket list end")
+	}()
 	for ob := range sb.cli.ListObjects(ctx, sb.Bucket, minio.ListObjectsOptions{
 		Prefix:    prefix,
 		Recursive: true,
-		MaxKeys:   1,
 	}) {
 		if ob.Err != nil {
 			if errors.Is(ob.Err, context.Canceled) {
 				return counter > 0, nil
 			}
 
+			log.Debug().Str("key", ob.Key).Msg("item")
 			return counter > 0, ob.Err
 		}
+
+		log.Debug().Str("key", ob.Key).Msg("obj")
 
 		if counter > 0 {
 			cancel()
@@ -295,22 +354,21 @@ func (sb *s3Backend) prefixExists(ctx context.Context, prefix string) (bool, err
 }
 
 func (sb *s3Backend) Prune(ctx context.Context, refPath string, pruneAfter *time.Time) (*time.Time, error) {
-	// get the ruleJob out of the context
-	rj := ruleJobFromCtx(ctx)
-	if rj == nil {
-		return nil, fmt.Errorf("rule job not set in context")
-	}
-
 	isPrefix := strings.HasSuffix(refPath, "/")
 	if !isPrefix {
 		// singleton remove
 		return nil, sb.delete(ctx, refPath)
 	}
 
-	// prune after 3 days
-	newPruneAfter := time.Now().Add(72 * time.Hour)
+	// get the ruleJob out of the context
+	rj := ruleJobFromCtx(ctx)
+	if rj == nil {
+		return nil, fmt.Errorf("rule job not set in context")
+	}
 
-	if pruneAfter != nil { // this has already been pruned, now check if the rule needs to be removed yet
+	newPruneAfter := time.Now().Add(initialPruneAfterDays * 24 * time.Hour)
+
+	if rj.has(s3ruleID(refPath)) && pruneAfter != nil { // this has already been pruned, now check if the rule needs to be removed yet
 		if !time.Now().After(*pruneAfter) {
 			// this probably won't ever happen
 			return nil, ErrNotYetPruneTime
@@ -343,7 +401,7 @@ func (sb *s3Backend) isNoSuchLifecycleConfig(err error) bool {
 }
 
 func s3ruleID(prefix string) string {
-	return "sb_" + prefix
+	return "sb_" + strings.TrimRight(prefix, "/")
 }
 
 func (sb *s3Backend) delete(ctx context.Context, objKey string) error {

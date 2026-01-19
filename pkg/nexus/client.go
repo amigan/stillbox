@@ -19,16 +19,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type Client interface {
-	sync.Locker
-
-	Connection
-
-	Hello(context.Context)
-	HandleCommand(context.Context, *pb.Command)
-	HandleMessage(context.Context, []byte)
-}
-
 type client struct {
 	sync.RWMutex
 
@@ -44,7 +34,7 @@ type client struct {
 	nexus *nexus
 }
 
-type ToClient interface {
+type ToClientMsg interface {
 	protoreflect.ProtoMessage
 }
 
@@ -58,10 +48,10 @@ type Connection interface {
 
 	Shutdown()
 
-	Send(ToClient) error
+	Send(ToClientMsg) error
 }
 
-func (n *nexus) NewClient(conn Connection, subject entities.Subject) Client {
+func (n *nexus) NewClient(conn Connection, subject entities.Subject) *client {
 	sess := &client{
 		Connection: conn,
 		nexus:      n,

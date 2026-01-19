@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"os"
 	"testing"
@@ -192,6 +193,20 @@ func TestUnmarshal(t *testing.T) {
 			dest:   &callUploadRequest{},
 			expect: &Call1,
 			opts:   []forms.Option{forms.WithAcceptBlank()},
+		},
+		{
+			name:      "empty body",
+			r:         makeRequest("callEmpty.http"),
+			dest:      &callUploadRequest{},
+			expectErr: io.EOF,
+			opts:      []forms.Option{forms.WithAcceptBlank()},
+		},
+		{
+			name:   "empty body accept",
+			r:      makeRequest("callEmpty.http"),
+			dest:   &callUploadRequest{},
+			expect: &callUploadRequest{},
+			opts:   []forms.Option{forms.WithAcceptBlank(), forms.WithAcceptEmptyBody()},
 		},
 		{
 			name:      "base case no accept blank",
