@@ -398,7 +398,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 			if rbErr != nil {
 				err = multierror.Append(err, rbErr)
 			} else {
-				log.Debug().Err(err).Msg("move rollback finished")
+				log.Debug().AnErr("originalError", err).Msg("move rollback finished")
 			}
 		}()
 	} else {
