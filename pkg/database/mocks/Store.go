@@ -2290,6 +2290,69 @@ func (_c *Store_GetCallAudioByID_Call) RunAndReturn(run func(ctx context.Context
 	return _c
 }
 
+// GetCallAudioCb provides a mock function for the type Store
+func (_mock *Store) GetCallAudioCb(ctx context.Context, arg database.GetCallAudioParams, cb func(*database.GetCallAudioRow) error) error {
+	ret := _mock.Called(ctx, arg, cb)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCallAudioCb")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.GetCallAudioParams, func(*database.GetCallAudioRow) error) error); ok {
+		r0 = returnFunc(ctx, arg, cb)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_GetCallAudioCb_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCallAudioCb'
+type Store_GetCallAudioCb_Call struct {
+	*mock.Call
+}
+
+// GetCallAudioCb is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg database.GetCallAudioParams
+//   - cb func(*database.GetCallAudioRow) error
+func (_e *Store_Expecter) GetCallAudioCb(ctx interface{}, arg interface{}, cb interface{}) *Store_GetCallAudioCb_Call {
+	return &Store_GetCallAudioCb_Call{Call: _e.mock.On("GetCallAudioCb", ctx, arg, cb)}
+}
+
+func (_c *Store_GetCallAudioCb_Call) Run(run func(ctx context.Context, arg database.GetCallAudioParams, cb func(*database.GetCallAudioRow) error)) *Store_GetCallAudioCb_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 database.GetCallAudioParams
+		if args[1] != nil {
+			arg1 = args[1].(database.GetCallAudioParams)
+		}
+		var arg2 func(*database.GetCallAudioRow) error
+		if args[2] != nil {
+			arg2 = args[2].(func(*database.GetCallAudioRow) error)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetCallAudioCb_Call) Return(err error) *Store_GetCallAudioCb_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_GetCallAudioCb_Call) RunAndReturn(run func(ctx context.Context, arg database.GetCallAudioParams, cb func(*database.GetCallAudioRow) error) error) *Store_GetCallAudioCb_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetCallAudioCount provides a mock function for the type Store
 func (_mock *Store) GetCallAudioCount(ctx context.Context, arg database.GetCallAudioParams) (int64, error) {
 	ret := _mock.Called(ctx, arg)

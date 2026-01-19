@@ -147,14 +147,14 @@ func (db *DB) doInsert(ctx context.Context, table string, src any) error {
 		args = append(args, rv.Field(i).Interface())
 	}
 
-	qry.WriteString(" ) OVERRIDING SYSTEM VALUE VALUES (")
+	qry.WriteString(") OVERRIDING SYSTEM VALUE VALUES (")
 	for i := 1; i < len(args)+1; i++ {
 		qry.WriteString("$" + strconv.Itoa(i))
 		if i < len(args) {
 			qry.WriteRune(',')
 		}
 	}
-	qry.WriteString(" );")
+	qry.WriteString(");")
 
 	_, err := db.Exec(ctx, qry.String(), args...)
 	if err != nil {

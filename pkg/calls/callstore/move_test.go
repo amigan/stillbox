@@ -66,9 +66,11 @@ func TestMove(t *testing.T) {
 	for _, tc := range tests {
 		ctx, cancel := context.WithCancel(ctx)
 		db := dbmock.NewStore(t)
-		db.EXPECT().InTx(mock.Anything, mock.Anything, pgx.TxOptions{}).RunAndReturn(func(ctx context.Context, f func(database.Store) error, _ pgx.TxOptions) error {
-			return f(db)
-		})
+		if tc.expectNumRows > 0 {
+			db.EXPECT().InTx(mock.Anything, mock.Anything, pgx.TxOptions{}).RunAndReturn(func(ctx context.Context, f func(database.Store) error, _ pgx.TxOptions) error {
+				return f(db)
+			})
+		}
 		db.EXPECT().GetCallAudioCount(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams")).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams) (int64, error) {
 			time.Sleep(time.Duration(rand.Intn(10)) * time.Millisecond)
 			return tc.expectTotalRows, nil
@@ -76,10 +78,13 @@ func TestMove(t *testing.T) {
 		refJournalMockExpect(db)
 		gcaIter := int64(-1)
 		if tc.expectNumRows > 0 {
-			db.EXPECT().GetCallAudio(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams")).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams) ([]database.GetCallAudioRow, error) {
+			db.EXPECT().GetCallAudioCb(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams"), mock.Anything).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams, cb func(*database.GetCallAudioRow) error) error {
 				time.Sleep(time.Duration(rand.Intn(4)) * time.Millisecond)
-				gcaIter++
-				return dbCalls[gcaIter : gcaIter+tc.expectNumRows], nil
+				for range dbCalls[0:tc.expectNumRows] {
+					gcaIter++
+					cb(&dbCalls[gcaIter])
+				}
+				return nil
 			})
 			db.EXPECT().SetCallAudio(mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.Anything, mock.Anything).RunAndReturn(func(_ context.Context, _ uuid.UUID, ref, blob []byte) error {
 				time.Sleep(time.Duration(rand.Intn(2)) * time.Millisecond)
@@ -132,10 +137,13 @@ func BenchmarkMove(b *testing.B) {
 		})
 		refJournalMockExpect(db)
 		gcaIter := int64(-1)
-		db.EXPECT().GetCallAudio(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams")).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams) ([]database.GetCallAudioRow, error) {
+		db.EXPECT().GetCallAudioCb(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams"), mock.Anything).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams, cb func(*database.GetCallAudioRow) error) error {
 			time.Sleep(time.Duration(rand.Intn(4)) * time.Millisecond)
-			gcaIter++
-			return dbCalls[gcaIter : gcaIter+expectNumRows], nil
+			for range dbCalls[0:expectNumRows] {
+				gcaIter++
+				cb(&dbCalls[gcaIter])
+			}
+			return nil
 		})
 		db.EXPECT().SetCallAudio(mock.Anything, mock.AnythingOfType("uuid.UUID"), mock.Anything, mock.Anything).RunAndReturn(func(_ context.Context, _ uuid.UUID, ref, blob []byte) error {
 			time.Sleep(time.Duration(rand.Intn(2)) * time.Millisecond)

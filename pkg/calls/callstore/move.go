@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
@@ -157,8 +157,7 @@ type mover struct {
 	ab         AudioBackends
 	numWorkers int
 	tries      int
-	dbTx       database.Store
-	dbMtx      sync.Mutex
+	db         database.Store
 	refs       *refTracker
 
 	completedRows atomic.Int64
@@ -166,18 +165,18 @@ type mover struct {
 	par           MoveCallParams
 }
 
-func (m *mover) moveWorker(ctx context.Context, row *database.GetCallAudioRow) error {
+type setCallAudioRequest struct {
+	id                  uuid.UUID
+	audioRef, audioBlob []byte
+}
+
+func (m *mover) moveWorker(ctx context.Context, row *database.GetCallAudioRow, scaCh chan<- setCallAudioRequest) error {
 	ref, blob, err := m.moveCallAudio(ctx, row)
 	if err != nil {
 		return fmt.Errorf("call %s: %w", row.ID, err)
 	}
 
-	m.dbMtx.Lock()
-	err = m.dbTx.SetCallAudio(ctx, row.ID, ref, blob)
-	m.dbMtx.Unlock()
-	if err != nil {
-		return err
-	}
+	scaCh <- setCallAudioRequest{id: row.ID, audioRef: ref, audioBlob: blob}
 
 	cr := m.completedRows.Add(1)
 	if cr%progressInterval == 0 && m.par.ProgressChan != nil {
@@ -192,10 +191,8 @@ func backoff() {
 	time.Sleep(time.Duration(r*100) * time.Millisecond)
 }
 
-func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error {
-	m.dbMtx.Lock()
-	count, err := m.dbTx.GetCallAudioCount(ctx, dbPar)
-	m.dbMtx.Unlock()
+func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) (err error) {
+	count, err := m.db.GetCallAudioCount(ctx, dbPar)
 
 	if err != nil {
 		return fmt.Errorf("count: %w", err)
@@ -207,40 +204,48 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 		m.par.ProgressChan <- count // first message is always total
 	}
 
+	// if we are dry run, or there were no rows, we can finish now
+	if count < 1 || m.par.DryRun {
+		return nil
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	eg, wctx := errgroup.WithContext(ctx)
-	eg.SetLimit(m.numWorkers)
-	for count > 0 {
-		m.dbMtx.Lock()
-		rows, err := m.dbTx.GetCallAudio(wctx, dbPar)
-		m.dbMtx.Unlock()
-		if err != nil {
-			return err
-		}
 
-		// if we are dry run, or there were no rows, we can finish now
-		if len(rows) == 0 || m.par.DryRun {
+	setCallAudioChan := make(chan setCallAudioRequest)
+	errCh := make(chan error)
+	go func() {
+		err := m.db.InTx(wctx, func(tx database.Store) error {
+			for scar := range setCallAudioChan {
+				err := m.db.SetCallAudio(wctx, scar.id, scar.audioRef, scar.audioBlob)
+				if err != nil {
+					return err
+				}
+			}
+
 			return nil
-		}
+		}, pgx.TxOptions{})
+		errCh <- err
+	}()
 
-		// XXX this might be racy since the lower bound of the interval is inclusive
-		dbPar.Start = common.NilIfZero(rows[len(rows)-1].CallDate)
+	workCh := make(chan *database.GetCallAudioRow)
 
-		count -= int64(len(rows))
+	for range m.numWorkers {
+		eg.Go(func() (err error) {
+			defer func() { // for errgroup
+				if rec := recover(); rec != nil {
+					err = common.FromPanicValue(rec)
+					log.Error().Err(err).Msg("panic in worker")
+				}
+			}()
 
-		for _, row := range rows {
-			eg.Go(func() (err error) {
-				defer func() { // for errgroup
-					if rec := recover(); rec != nil {
-						err = common.FromPanicValue(rec)
-						log.Error().Err(err).Msg("panic in worker")
-					}
-				}()
-
+			for row := range workCh {
 				for i := range m.tries + 1 {
-					err = m.moveWorker(wctx, &row)
+					err = m.moveWorker(wctx, row, setCallAudioChan)
 					switch {
 					case err == nil:
-						return nil
+						break
 					case errors.Is(err, context.DeadlineExceeded):
 						log.Error().Int("tries", i).Err(err).Msg("moveWorker")
 						backoff()
@@ -252,11 +257,45 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 						return err
 					}
 				}
+			}
 
-				return err
-			})
-		}
+			return err
+		})
 	}
+
+	for count > 0 {
+		var last time.Time
+		err := m.db.GetCallAudioCb(ctx, dbPar, func(row *database.GetCallAudioRow) error {
+			last = row.CallDate
+			count--
+			workCh <- row
+			return nil
+		})
+		if err != nil {
+			close(workCh)
+
+			return err
+		}
+
+		// Set dbPar.Start for the next batch.
+		// XXX this might be racy since the lower bound of the interval is inclusive
+		dbPar.Start = common.NilIfZero(last)
+	}
+
+	defer func() {
+		close(setCallAudioChan)
+		scaErr := <-errCh
+		close(errCh)
+		if scaErr != nil {
+			if err != nil {
+				err = multierror.Append(err, scaErr)
+			} else {
+				err = scaErr
+			}
+		}
+	}()
+
+	close(workCh)
 
 	if err := eg.Wait(); err != nil {
 		log.Info().Err(err).Msg("move done")
@@ -267,14 +306,14 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) error
 	return nil
 }
 
-func (s *store) newMover(dst *audioStorageBackend, tx database.Store, rt *refTracker, par MoveCallParams) *mover {
+func (s *store) newMover(dst *audioStorageBackend, rt *refTracker, par MoveCallParams) *mover {
 	numWorkers := numStoreWorkers
 	if par.NumWorkers != nil {
 		numWorkers = min(int(*par.NumWorkers), numStoreWorkersLimit)
 	}
 	return &mover{
 		ab:         s.audioBackends,
-		dbTx:       tx,
+		db:         s.db,
 		numWorkers: numWorkers,
 		tries:      par.Tries,
 		dst:        dst,
@@ -329,17 +368,13 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 
 	refT := newRefTracker(s.audioBackends, s, nil)
 
-	err = s.db.InTx(context.WithoutCancel(ctx), func(tx database.Store) error {
-		m := s.newMover(dst, tx, refT, par)
-		err = m.do(ctx, dbPar)
-		numRows = m.completedRows.Load()
+	m := s.newMover(dst, refT, par)
+	err = m.do(ctx, dbPar)
+	numRows = m.completedRows.Load()
 
-		if par.ProgressChan != nil {
-			par.ProgressChan <- numRows - 1
-		}
-
-		return err
-	}, pgx.TxOptions{})
+	if par.ProgressChan != nil {
+		par.ProgressChan <- numRows - 1
+	}
 
 	if err != nil {
 		go func() {
