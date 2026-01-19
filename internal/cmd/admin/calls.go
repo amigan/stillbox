@@ -68,7 +68,7 @@ func (p *progresser) ttyCb(msg client.ProgressMsg) {
 			progressbar.OptionShowCount(),
 			progressbar.OptionShowIts(),
 			progressbar.OptionOnCompletion(func() {
-				fmt.Fprint(os.Stderr, "\n")
+				os.Stderr.WriteString("\n")
 			}),
 			progressbar.OptionSpinnerType(14),
 			progressbar.OptionFullWidth(),

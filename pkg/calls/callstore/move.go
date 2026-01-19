@@ -137,9 +137,9 @@ func (m *mover) moveCallAudio(ctx context.Context, row *database.GetCallAudioRow
 		}
 
 		cao.audioRefOut[m.dst.Name] = crRef
-		if !m.par.Copy && fromBlob {
-			// we are from the DB and copy is disabled and we are a ref, clear blob
-			blob = nil
+		if m.par.Copy && fromBlob {
+			// we are from the DB and copy is enabled and we are a ref, set the blob
+			blob = ca.AudioBlob
 		}
 	}
 
@@ -210,23 +210,28 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) (err 
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	eg, wctx := errgroup.WithContext(ctx)
 
 	setCallAudioChan := make(chan setCallAudioRequest)
-	errCh := make(chan error)
+	setCallAudioThrErrCh := make(chan error)
 	go func() {
-		err := m.db.InTx(wctx, func(tx database.Store) error {
+		defer close(setCallAudioThrErrCh)
+		err := m.db.InTx(ctx, func(tx database.Store) error {
 			for scar := range setCallAudioChan {
-				err := m.db.SetCallAudio(wctx, scar.id, scar.audioRef, scar.audioBlob)
+				err := tx.SetCallAudio(ctx, scar.id, scar.audioRef, scar.audioBlob)
 				if err != nil {
-					return err
+					cancel()
+					return fmt.Errorf("SetCallAudio: %w", err)
 				}
 			}
 
 			return nil
 		}, pgx.TxOptions{})
-		errCh <- err
+		// drain the channel.
+		// this will only iterate if the exit above was not due to a closed channel
+		for range setCallAudioChan {
+		}
+		setCallAudioThrErrCh <- err
 	}()
 
 	workCh := make(chan *database.GetCallAudioRow)
@@ -263,12 +268,38 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) (err 
 		})
 	}
 
+	defer func() {
+		if gerr := eg.Wait(); gerr != nil {
+			// collapse cancelled context errors
+			if err != nil && !errors.Is(err, context.Canceled) {
+				err = multierror.Append(err, gerr)
+			} else {
+				err = gerr
+			}
+		}
+
+		close(setCallAudioChan)
+		scaErr := <-setCallAudioThrErrCh
+		if scaErr != nil {
+			// collapse cancelled context errors
+			if err != nil && !errors.Is(err, context.Canceled) {
+				err = multierror.Append(err, scaErr)
+			} else {
+				err = scaErr
+			}
+		}
+	}()
+
 	for count > 0 {
 		var last time.Time
-		err := m.db.GetCallAudioCb(ctx, dbPar, func(row *database.GetCallAudioRow) error {
+		err := m.db.GetCallAudioCb(wctx, dbPar, func(row *database.GetCallAudioRow) error {
 			last = row.CallDate
 			count--
-			workCh <- row
+			select {
+			case workCh <- row:
+			case <-wctx.Done():
+				return wctx.Err()
+			}
 			return nil
 		})
 		if err != nil {
@@ -282,26 +313,7 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) (err 
 		dbPar.Start = common.NilIfZero(last)
 	}
 
-	defer func() {
-		close(setCallAudioChan)
-		scaErr := <-errCh
-		close(errCh)
-		if scaErr != nil {
-			if err != nil {
-				err = multierror.Append(err, scaErr)
-			} else {
-				err = scaErr
-			}
-		}
-	}()
-
 	close(workCh)
-
-	if err := eg.Wait(); err != nil {
-		log.Info().Err(err).Msg("move done")
-
-		return err
-	}
 
 	return nil
 }
@@ -370,6 +382,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 
 	m := s.newMover(dst, refT, par)
 	err = m.do(ctx, dbPar)
+	log.Info().Err(err).Msg("move done")
 	numRows = m.completedRows.Load()
 
 	if par.ProgressChan != nil {
@@ -385,7 +398,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 			if rbErr != nil {
 				err = multierror.Append(err, rbErr)
 			} else {
-				log.Debug().Msg("move rollback finished")
+				log.Debug().Err(err).Msg("move rollback finished")
 			}
 		}()
 	} else {
@@ -399,10 +412,6 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 				log.Debug().Msg("move commit finished")
 			}
 		}()
-	}
-
-	if par.ProgressChan != nil {
-		close(par.ProgressChan)
 	}
 
 	return

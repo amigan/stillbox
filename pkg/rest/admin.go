@@ -58,11 +58,13 @@ func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 
 	rc := http.NewResponseController(w)
 	progress := strings.Contains(r.Header.Get("Accept"), "text/event-stream")
+	var progDone chan bool
 	var sentSSE atomic.Bool
 
 	if progress {
 		progCh := make(chan int64, 8)
 		par.ProgressChan = progCh
+		progDone = make(chan bool)
 
 		go func() {
 			totalCount, ok := <-progCh
@@ -80,19 +82,11 @@ func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 
 			rc.Flush()
 
-			for {
-				select {
-				case msg, ok := <-progCh:
-					if !ok {
-						return
-					}
-
-					fmt.Fprintf(w, "data:{\"completed\":%d}\n\n", msg)
-					rc.Flush()
-				case <-ctx.Done():
-					return
-				}
+			for msg := range progCh {
+				fmt.Fprintf(w, "data:{\"completed\":%d}\n\n", msg)
+				rc.Flush()
 			}
+			progDone <- true
 		}()
 	}
 
@@ -106,11 +100,13 @@ func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "data:%s\n", string(b))
 		} else {
 			wErr(w, r, autoError(err))
+			return
 		}
-		return
 	}
 
 	if progress {
+		close(par.ProgressChan)
+		<-progDone
 		fmt.Fprintf(w, "data:{\"final\":%d}\n\n", numRows)
 		rc.Flush()
 	} else {

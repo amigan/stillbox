@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/rs/zerolog/log"
 )
 
 type beRefMap map[AudioBackend][]AbsoluteRef
@@ -48,6 +49,7 @@ func (rt *refTracker) Rollback(ctx context.Context) error {
 
 	var err error
 	for b, refs := range rt.cre {
+		log.Debug().Str("type", b.Type()).Int("count", len(refs)).Msg("rolling back")
 		bErr := b.DeleteBulk(ctx, refs)
 		if bErr != nil {
 			err = multierror.Append(err, bErr)
