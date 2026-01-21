@@ -3,4 +3,10 @@
 
 package server
 
-func (s *Server) installPprof() {}
+import (
+	"net/http"
+
+	"dynatron.me/x/stillbox/internal/acl"
+)
+
+func (s *Server) pprof(_ *acl.IPConfig) http.Handler { return nil }

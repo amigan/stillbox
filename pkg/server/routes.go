@@ -41,7 +41,11 @@ func (s *Server) setupRoutes(ctx context.Context) error {
 	r.Use(s.WithCtxStores())
 
 	r.Use(s.auth.VerifyMiddleware())
-	s.installPprof()
+	prof := s.pprof(s.conf.Server.ProfileACL)
+	if prof != nil {
+		r.Mount("/debug", prof)
+	}
+
 	s.metrics.InstallRoute(r)
 
 	r.Group(func(r chi.Router) {

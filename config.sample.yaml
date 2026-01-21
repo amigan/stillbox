@@ -17,6 +17,11 @@ server:
   # if adminSocket is set/not null, it specifies a path where stillbox will
   # open a unix domain socket for local daemon control use
   adminSocket: /var/run/stillbox/stillbox.sock
+  # profileACL must be set for pprof builds to present profiling endpoints
+# profileACL:
+#   allow:
+#     - 192.168.1.1/24
+#     - fd39:c802:53ff::afff/64
 
 db:
   connect: 'postgres://postgres:password@localhost:5432/example'

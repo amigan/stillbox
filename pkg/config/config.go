@@ -41,6 +41,7 @@ type Server struct {
 	RateLimit   RateLimit     `yaml:"rateLimit"`
 	CORS        CORS          `yaml:"cors"`
 	AdminSocket *string       `yaml:"adminSocket"`
+	ProfileACL  *acl.IPConfig `yaml:"profileACL"`
 }
 
 type RateLimit struct {
