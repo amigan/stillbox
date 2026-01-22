@@ -1,11 +1,8 @@
 package rest
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
-	"sync/atomic"
 
 	"dynatron.me/x/stillbox/internal/forms"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
@@ -29,11 +26,13 @@ func (*adminAPI) runJournalGC(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	cst := callstore.FromCtx(ctx)
 	errCh := make(chan error)
-	errd := false
+	defer close(errCh)
 	go func() {
+		errd := false
 		for err := range errCh {
 			if !errd {
 				w.WriteHeader(http.StatusInternalServerError)
+				errd = true
 			}
 			fmt.Fprintln(w, err)
 		}
@@ -56,60 +55,28 @@ func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rc := http.NewResponseController(w)
-	progress := strings.Contains(r.Header.Get("Accept"), "text/event-stream")
-	var progDone chan bool
-	var sentSSE atomic.Bool
+	ps, progress := NewProgressSender(w, r)
 
-	if progress {
-		progCh := make(chan int64, 8)
-		par.ProgressChan = progCh
-		progDone = make(chan bool)
-
-		go func() {
-			totalCount, ok := <-progCh
-			if !ok {
-				return
-			}
-
-			sentSSE.Store(true)
-
-			w.Header().Set("Content-Type", "text/event-stream")
-			w.Header().Set("Cache-Control", "no-cache")
-			w.Header().Set("Connection", "keep-alive")
-
-			fmt.Fprintf(w, "data:{\"total\":%d}\n\n", totalCount)
-
-			rc.Flush()
-
-			for msg := range progCh {
-				fmt.Fprintf(w, "data:{\"completed\":%d}\n\n", msg)
-				rc.Flush()
-			}
-			progDone <- true
-		}()
-	}
+	par.ProgressChan = ps.Chan()
 
 	numRows, err := cst.MoveCallAudio(ctx, par)
 	if err != nil {
-		if progress && sentSSE.Load() {
-			b, err := json.Marshal(map[string]string{"error": err.Error()})
-			if err != nil {
-				log.Error().Err(err).Msg("move call rest encode")
+		var errSent bool
+		var nerr error
+		if progress {
+			errSent, nerr = ps.SendErr(err)
+			if nerr != nil {
+				log.Error().Err(nerr).Msg("move call rest encode")
 			}
-			fmt.Fprintf(w, "data:%s\n", string(b))
-		} else {
+		}
+
+		if !errSent {
 			wErr(w, r, autoError(err))
 			return
 		}
 	}
 
-	if progress {
-		close(par.ProgressChan)
-		<-progDone
-		fmt.Fprintf(w, "data:{\"final\":%d}\n\n", numRows)
-		rc.Flush()
-	} else {
+	if !ps.Close(numRows) {
 		respond(w, r, map[string]int64{"count": numRows})
 	}
 }
