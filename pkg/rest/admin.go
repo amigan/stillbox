@@ -55,7 +55,7 @@ func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ps, progress := NewProgressSender(w, r)
+	ps, progress := NewProgressSender[callstore.MoveProgressMsg](w, r)
 
 	par.ProgressChan = ps.Chan()
 
@@ -76,7 +76,8 @@ func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if !ps.Close(numRows) {
-		respond(w, r, map[string]int64{"count": numRows})
+	finalMsg := callstore.MoveProgressMsg{Final: &numRows}
+	if !ps.Close(finalMsg) {
+		respond(w, r, finalMsg)
 	}
 }

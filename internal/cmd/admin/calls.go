@@ -35,7 +35,7 @@ type progresser struct {
 	pb    *progressbar.ProgressBar
 }
 
-func (p *progresser) textCb(msg client.ProgressMsg) {
+func (p *progresser) textCb(msg callstore.MoveProgressMsg) {
 	switch {
 	case msg.Completed != nil:
 		fmt.Printf("%d calls (%d%%) done...\n", *msg.Completed, int((float32(*msg.Completed)/float32(p.total))*100))
@@ -46,7 +46,7 @@ func (p *progresser) textCb(msg client.ProgressMsg) {
 	}
 }
 
-func (p *progresser) ttyCb(msg client.ProgressMsg) {
+func (p *progresser) ttyCb(msg callstore.MoveProgressMsg) {
 	switch {
 	case msg.Completed != nil:
 		if p.pb == nil {
@@ -100,7 +100,7 @@ func moveCommand(cfg *config.Config) *cli.Command {
 			}
 
 			prog := progresser{}
-			var progressCb func(msg client.ProgressMsg)
+			var progressCb func(msg callstore.MoveProgressMsg)
 			if isatty.IsTerminal(os.Stdout.Fd()) {
 				progressCb = prog.ttyCb
 			} else {

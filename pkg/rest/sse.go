@@ -11,9 +11,9 @@ import (
 	"sync/atomic"
 )
 
-type progressSender struct {
+type progressSender[T any] struct {
 	progDone chan bool
-	progCh chan int64
+	progCh chan T
 	sentSSE atomic.Bool
 	r *http.Request
 	w http.ResponseWriter
@@ -21,7 +21,7 @@ type progressSender struct {
 }
 
 // Chan returns the progress channel for use by the routine doing work.
-func (ps *progressSender) Chan() chan int64 {
+func (ps *progressSender[T]) Chan() chan T {
 	if ps == nil {
 		return nil
 	}
@@ -30,7 +30,7 @@ func (ps *progressSender) Chan() chan int64 {
 }
 
 // SSEBegun returns whether the first SSE message has been sent yet.
-func (ps *progressSender) SSEBegun() bool {
+func (ps *progressSender[T]) SSEBegun() bool {
 	if ps == nil {
 		return false
 	}
@@ -40,7 +40,7 @@ func (ps *progressSender) SSEBegun() bool {
 
 // SendErr attempts to send an error in the event stream. If the event stream has not yet begun, it returns sent == false.
 // newErr is any error resulting from the sending.
-func (ps *progressSender) SendErr(err error) (sent bool, newErr error) {
+func (ps *progressSender[T]) SendErr(err error) (sent bool, newErr error) {
 	if !ps.SSEBegun() {
 		return false, nil
 	}
@@ -53,10 +53,20 @@ func (ps *progressSender) SendErr(err error) (sent bool, newErr error) {
 	return true, newErr
 }
 
-func (ps *progressSender) connWorker() {
+func (ps *progressSender[T]) writeMsg(msg T) {
+	msgJSON, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	msgSt := "data:" + string(msgJSON) + "\n\n"
+	_, _ = ps.w.Write([]byte(msgSt))
+	ps.rc.Flush()
+}
+
+func (ps *progressSender[T]) connWorker() {
 	defer close(ps.progDone)
 
-	totalCount, ok := <-ps.progCh
+	totalMsg, ok := <-ps.progCh
 	if !ok {
 		return
 	}
@@ -67,44 +77,41 @@ func (ps *progressSender) connWorker() {
 	ps.w.Header().Set("Cache-Control", "no-cache")
 	ps.w.Header().Set("Connection", "keep-alive")
 
-	fmt.Fprintf(ps.w, "data:{\"total\":%d}\n\n", totalCount)
-
-	ps.rc.Flush()
+	ps.writeMsg(totalMsg)
 
 	for msg := range ps.progCh {
-		fmt.Fprintf(ps.w, "data:{\"completed\":%d}\n\n", msg)
-		ps.rc.Flush()
+		ps.writeMsg(msg)
 	}
+
 	ps.progDone <- true
 }
 
 // Close cleans up a progressSender. It returns whether final progress was sent.
-func (ps *progressSender) Close(finalCompleted int64) bool {
+func (ps *progressSender[T]) Close(finalCompleted T) bool {
 	if ps == nil {
 		return false
 	}
 
 	close(ps.progCh)
 	<-ps.progDone
-	fmt.Fprintf(ps.w, "data:{\"final\":%d}\n\n", finalCompleted)
-	ps.rc.Flush()
+	ps.writeMsg(finalCompleted)
 
 	return true
 }
 
 // NewProgressSender creates and starts a progressSender. The bool return is whether the connection accepts SSE.
-func NewProgressSender(w http.ResponseWriter, r *http.Request) (*progressSender, bool) {
+func NewProgressSender[T any](w http.ResponseWriter, r *http.Request) (*progressSender[T], bool) {
 	progress := strings.Contains(r.Header.Get("Accept"), "text/event-stream")
 	if !progress {
 		return nil, false
 	}
 
-	ps := &progressSender{
+	ps := &progressSender[T]{
 		w: w,
 		r: r,
 		rc: http.NewResponseController(w),
 		progDone: make(chan bool),
-		progCh: make(chan int64, 8),
+		progCh: make(chan T, 8),
 	}
 
 	go ps.connWorker()

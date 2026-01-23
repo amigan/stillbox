@@ -13,16 +13,11 @@ import (
 
 type adminClient interface {
 	MoveCalls(ctx context.Context, p callstore.MoveCallParams) error
+	CallsGC(ctx context.Context) error
+	CallsFsck(ctx context.Context) error 
 }
 
-type ProgressMsg struct {
-	Total     *int64  `json:"total,omitempty"`
-	Final     *int64  `json:"final,omitempty"`
-	Completed *int64  `json:"completed,omitempty"`
-	Error     *string `json:"error,omitempty"`
-}
-
-type ProgressCallback func(ProgressMsg)
+type ProgressCallback func(callstore.MoveProgressMsg)
 
 func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, progressCb ProgressCallback) error {
 	ctx, cancel := context.WithCancel(ctx)
@@ -35,7 +30,7 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 
 	setSSErequestHeaders(req)
 
-	cb := func(m ProgressMsg) error {
+	cb := func(m callstore.MoveProgressMsg) error {
 		if m.Error != nil {
 			return errors.New(*m.Error)
 		}
@@ -51,7 +46,6 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 
 	defer resp.Body.Close()
 
-	//b := io.TeeReader(resp.Body, os.Stderr)
 	_ = os.Stderr
 	b := resp.Body
 
@@ -61,7 +55,7 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 			return err
 		}
 
-		var m ProgressMsg
+		var m callstore.MoveProgressMsg
 		err = json.Unmarshal(body, &m)
 		if err != nil {
 			return fmt.Errorf("decoding '%s': %w", string(body), err)
@@ -71,7 +65,7 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 		return err
 	}
 
-	ch, err := sseSubscribe[ProgressMsg](b)
+	ch, err := sseSubscribe[callstore.MoveProgressMsg](b)
 	if err != nil {
 		return err
 	}
