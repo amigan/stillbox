@@ -13,11 +13,12 @@ import (
 
 type progressSender[T any] struct {
 	progDone chan bool
-	progCh chan T
-	sentSSE atomic.Bool
-	r *http.Request
-	w http.ResponseWriter
-	rc *http.ResponseController
+	progCh   chan T
+	sentSSE  atomic.Bool
+	closed   atomic.Bool
+	r        *http.Request
+	w        http.ResponseWriter
+	rc       *http.ResponseController
 }
 
 // Chan returns the progress channel for use by the routine doing work.
@@ -60,7 +61,10 @@ func (ps *progressSender[T]) writeMsg(msg T) {
 	}
 	msgSt := "data:" + string(msgJSON) + "\n\n"
 	_, _ = ps.w.Write([]byte(msgSt))
-	ps.rc.Flush()
+
+	if !ps.closed.Load() {
+		ps.rc.Flush()
+	}
 }
 
 func (ps *progressSender[T]) connWorker() {
@@ -99,6 +103,10 @@ func (ps *progressSender[T]) Close(finalCompleted T) bool {
 	return true
 }
 
+func (ps *progressSender[T]) ConnClosed() {
+	ps.closed.Store(true)
+}
+
 // NewProgressSender creates and starts a progressSender. The bool return is whether the connection accepts SSE.
 func NewProgressSender[T any](w http.ResponseWriter, r *http.Request) (*progressSender[T], bool) {
 	progress := strings.Contains(r.Header.Get("Accept"), "text/event-stream")
@@ -107,11 +115,11 @@ func NewProgressSender[T any](w http.ResponseWriter, r *http.Request) (*progress
 	}
 
 	ps := &progressSender[T]{
-		w: w,
-		r: r,
-		rc: http.NewResponseController(w),
+		w:        w,
+		r:        r,
+		rc:       http.NewResponseController(w),
 		progDone: make(chan bool),
-		progCh: make(chan T, 8),
+		progCh:   make(chan T, 8),
 	}
 
 	go ps.connWorker()

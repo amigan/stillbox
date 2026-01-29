@@ -6,6 +6,7 @@ package mocks
 
 import (
 	"context"
+	"iter"
 	"net/netip"
 	"time"
 
@@ -507,6 +508,84 @@ func (_c *Store_CleanupSweptCalls_Call) RunAndReturn(run func(ctx context.Contex
 	return _c
 }
 
+// CopyIntoFsckTempTable provides a mock function for the type Store
+func (_mock *Store) CopyIntoFsckTempTable(ctx context.Context, tableName string, ids iter.Seq[uuid.UUID], progressChan chan<- int64) (int64, error) {
+	ret := _mock.Called(ctx, tableName, ids, progressChan)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CopyIntoFsckTempTable")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, iter.Seq[uuid.UUID], chan<- int64) (int64, error)); ok {
+		return returnFunc(ctx, tableName, ids, progressChan)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, iter.Seq[uuid.UUID], chan<- int64) int64); ok {
+		r0 = returnFunc(ctx, tableName, ids, progressChan)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, iter.Seq[uuid.UUID], chan<- int64) error); ok {
+		r1 = returnFunc(ctx, tableName, ids, progressChan)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_CopyIntoFsckTempTable_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CopyIntoFsckTempTable'
+type Store_CopyIntoFsckTempTable_Call struct {
+	*mock.Call
+}
+
+// CopyIntoFsckTempTable is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tableName string
+//   - ids iter.Seq[uuid.UUID]
+//   - progressChan chan<- int64
+func (_e *Store_Expecter) CopyIntoFsckTempTable(ctx interface{}, tableName interface{}, ids interface{}, progressChan interface{}) *Store_CopyIntoFsckTempTable_Call {
+	return &Store_CopyIntoFsckTempTable_Call{Call: _e.mock.On("CopyIntoFsckTempTable", ctx, tableName, ids, progressChan)}
+}
+
+func (_c *Store_CopyIntoFsckTempTable_Call) Run(run func(ctx context.Context, tableName string, ids iter.Seq[uuid.UUID], progressChan chan<- int64)) *Store_CopyIntoFsckTempTable_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 iter.Seq[uuid.UUID]
+		if args[2] != nil {
+			arg2 = args[2].(iter.Seq[uuid.UUID])
+		}
+		var arg3 chan<- int64
+		if args[3] != nil {
+			arg3 = args[3].(chan<- int64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_CopyIntoFsckTempTable_Call) Return(copied int64, err error) *Store_CopyIntoFsckTempTable_Call {
+	_c.Call.Return(copied, err)
+	return _c
+}
+
+func (_c *Store_CopyIntoFsckTempTable_Call) RunAndReturn(run func(ctx context.Context, tableName string, ids iter.Seq[uuid.UUID], progressChan chan<- int64) (int64, error)) *Store_CopyIntoFsckTempTable_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CountRefJournal provides a mock function for the type Store
 func (_mock *Store) CountRefJournal(ctx context.Context, missing *bool, since *time.Time, until *time.Time) (int64, error) {
 	ret := _mock.Called(ctx, missing, since, until)
@@ -638,6 +717,66 @@ func (_c *Store_CreateAPIKey_Call) Return(err error) *Store_CreateAPIKey_Call {
 }
 
 func (_c *Store_CreateAPIKey_Call) RunAndReturn(run func(ctx context.Context, arg database.CreateAPIKeyParams) error) *Store_CreateAPIKey_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateFsckTempTable provides a mock function for the type Store
+func (_mock *Store) CreateFsckTempTable(ctx context.Context) (string, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateFsckTempTable")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (string, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) string); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_CreateFsckTempTable_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateFsckTempTable'
+type Store_CreateFsckTempTable_Call struct {
+	*mock.Call
+}
+
+// CreateFsckTempTable is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *Store_Expecter) CreateFsckTempTable(ctx interface{}) *Store_CreateFsckTempTable_Call {
+	return &Store_CreateFsckTempTable_Call{Call: _e.mock.On("CreateFsckTempTable", ctx)}
+}
+
+func (_c *Store_CreateFsckTempTable_Call) Run(run func(ctx context.Context)) *Store_CreateFsckTempTable_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_CreateFsckTempTable_Call) Return(tableName string, err error) *Store_CreateFsckTempTable_Call {
+	_c.Call.Return(tableName, err)
+	return _c
+}
+
+func (_c *Store_CreateFsckTempTable_Call) RunAndReturn(run func(ctx context.Context) (string, error)) *Store_CreateFsckTempTable_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1711,6 +1850,63 @@ func (_c *Store_DisableUser_Call) RunAndReturn(run func(ctx context.Context, use
 	return _c
 }
 
+// DropFsckTempTable provides a mock function for the type Store
+func (_mock *Store) DropFsckTempTable(ctx context.Context, tableName string) error {
+	ret := _mock.Called(ctx, tableName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DropFsckTempTable")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = returnFunc(ctx, tableName)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_DropFsckTempTable_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DropFsckTempTable'
+type Store_DropFsckTempTable_Call struct {
+	*mock.Call
+}
+
+// DropFsckTempTable is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tableName string
+func (_e *Store_Expecter) DropFsckTempTable(ctx interface{}, tableName interface{}) *Store_DropFsckTempTable_Call {
+	return &Store_DropFsckTempTable_Call{Call: _e.mock.On("DropFsckTempTable", ctx, tableName)}
+}
+
+func (_c *Store_DropFsckTempTable_Call) Run(run func(ctx context.Context, tableName string)) *Store_DropFsckTempTable_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_DropFsckTempTable_Call) Return(err error) *Store_DropFsckTempTable_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_DropFsckTempTable_Call) RunAndReturn(run func(ctx context.Context, tableName string) error) *Store_DropFsckTempTable_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DropPartition provides a mock function for the type Store
 func (_mock *Store) DropPartition(ctx context.Context, partitionName string) error {
 	ret := _mock.Called(ctx, partitionName)
@@ -1821,6 +2017,78 @@ func (_c *Store_DropRefJournal_Call) Return(err error) *Store_DropRefJournal_Cal
 }
 
 func (_c *Store_DropRefJournal_Call) RunAndReturn(run func(ctx context.Context, id int64) error) *Store_DropRefJournal_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FsckRefs provides a mock function for the type Store
+func (_mock *Store) FsckRefs(ctx context.Context, tableName string, backend string) (int64, error) {
+	ret := _mock.Called(ctx, tableName, backend)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FsckRefs")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (int64, error)); ok {
+		return returnFunc(ctx, tableName, backend)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) int64); ok {
+		r0 = returnFunc(ctx, tableName, backend)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = returnFunc(ctx, tableName, backend)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_FsckRefs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FsckRefs'
+type Store_FsckRefs_Call struct {
+	*mock.Call
+}
+
+// FsckRefs is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tableName string
+//   - backend string
+func (_e *Store_Expecter) FsckRefs(ctx interface{}, tableName interface{}, backend interface{}) *Store_FsckRefs_Call {
+	return &Store_FsckRefs_Call{Call: _e.mock.On("FsckRefs", ctx, tableName, backend)}
+}
+
+func (_c *Store_FsckRefs_Call) Run(run func(ctx context.Context, tableName string, backend string)) *Store_FsckRefs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_FsckRefs_Call) Return(callsDangling int64, err error) *Store_FsckRefs_Call {
+	_c.Call.Return(callsDangling, err)
+	return _c
+}
+
+func (_c *Store_FsckRefs_Call) RunAndReturn(run func(ctx context.Context, tableName string, backend string) (int64, error)) *Store_FsckRefs_Call {
 	_c.Call.Return(run)
 	return _c
 }

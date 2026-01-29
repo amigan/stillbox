@@ -3,6 +3,7 @@ package callstore
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -79,7 +80,14 @@ type Store interface {
 
 	partman.PartmanCallAudioManager
 	PartMan() partman.PartitionManager
+
+	// Fsck checks that all audio references are good and marks as dangling ones that are not.
+	Fsck(ctx context.Context, par FsckParams) (FsckReport, error)
 }
+
+var (
+	ErrMaintenanceInProgress = errors.New("maintenance call (move, fsck) in progress")
+)
 
 type store struct {
 	db            database.Store
@@ -87,7 +95,8 @@ type store struct {
 	partman       partman.PartitionManager
 	now           NowFunc
 
-	moveInProgress sync.Mutex
+	// this mutex ensures very high request volume calls like move and fsck only happen one at a time.
+	maintInProgress sync.Mutex
 }
 
 func (s *store) PartMan() partman.PartitionManager {

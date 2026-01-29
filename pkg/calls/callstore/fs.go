@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"iter"
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -19,6 +19,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"github.com/go-viper/mapstructure/v2"
+	"github.com/google/uuid"
 )
 
 type fsBackend struct {
@@ -170,9 +171,40 @@ func (fsb *fsBackend) DeleteBulk(ctx context.Context, refs []AbsoluteRef) error 
 	return nil
 }
 
+func (fsb *fsBackend) ListCalls(ctx context.Context, prefix string) (iter.Seq[uuid.UUID], func() error) {
+	var iterErr error
+	seq := func(yield func(uuid.UUID) bool) {
+		err := filepath.WalkDir(filepath.Join(fsb.Root, prefix), func(path string, d fs.DirEntry, err error) error {
+			if !d.IsDir() && d.Type().IsRegular() {
+				uu, err := CallIDFromBlobPath(path)
+				if err != nil {
+					return err
+				}
+
+				if !yield(uu) {
+					return fs.SkipAll
+				}
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			iterErr = err
+			return
+		}
+	}
+
+	finish := func() error {
+		return iterErr
+	}
+
+	return seq, finish
+}
+
 // callPath composes an absolute path to the given call filename.
 func (fsb *fsBackend) callPath(blobPath string) string {
-	return path.Join(fsb.Root, blobPath)
+	return filepath.Join(fsb.Root, blobPath)
 }
 
 const (
@@ -189,7 +221,7 @@ func (fsb *fsBackend) Store(_ context.Context, call *calls.CallAudio) (AudioRef,
 		switch os.IsNotExist(err) {
 		case true:
 			// try creating missing directories
-			cdir := path.Dir(p)
+			cdir := filepath.Dir(p)
 			err := os.MkdirAll(cdir, FSDefaultDirectoryMode)
 			if err != nil {
 				return nil, err

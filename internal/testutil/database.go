@@ -2,11 +2,11 @@ package testutil
 
 import (
 	"context"
-	"math/rand"
 	"os"
 	"path"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/partman"
@@ -22,16 +22,6 @@ type DB struct {
 	PartConfig config.Partition
 
 	nowFunc NowFunc
-}
-
-var letters = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
-
-func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
 }
 
 func (db *DB) Cleanup() {
@@ -86,7 +76,7 @@ func NewDB(partCfg PartConfig, opts ...DBOpt) *DB {
 		panic("no test database connect string provided")
 	}
 	logQueries := os.Getenv("STILLBOX_LOG_QUERIES")
-	schemaName := "sb_test_" + randSeq(16)
+	schemaName := "sb_test_" + common.RandSeq(16)
 
 	schemaConn, err := pgx.Connect(ctx, dbConnect)
 	if err != nil {

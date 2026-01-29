@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -24,18 +25,19 @@ func CallsCommand(cfg *config.Configuration) *cli.Command {
 		Commands: []*cli.Command{
 			moveCommand(c),
 			gcCommand(c),
+			fsckCommand(c),
 		},
 	}
 
 	return callsCmd
 }
 
-type progresser struct {
+type moveProgresser struct {
 	total int64
 	pb    *progressbar.ProgressBar
 }
 
-func (p *progresser) textCb(msg callstore.MoveProgressMsg) {
+func (p *moveProgresser) textCb(msg callstore.MoveProgressMsg) {
 	switch {
 	case msg.Completed != nil:
 		fmt.Printf("%d calls (%d%%) done...\n", *msg.Completed, int((float32(*msg.Completed)/float32(p.total))*100))
@@ -46,7 +48,7 @@ func (p *progresser) textCb(msg callstore.MoveProgressMsg) {
 	}
 }
 
-func (p *progresser) ttyCb(msg callstore.MoveProgressMsg) {
+func (p *moveProgresser) ttyCb(msg callstore.MoveProgressMsg) {
 	switch {
 	case msg.Completed != nil:
 		if p.pb == nil {
@@ -70,9 +72,10 @@ func (p *progresser) ttyCb(msg callstore.MoveProgressMsg) {
 			progressbar.OptionOnCompletion(func() {
 				os.Stderr.WriteString("\n")
 			}),
-			progressbar.OptionSpinnerType(14),
+			progressbar.OptionSpinnerType(rand.Intn(75)),
 			progressbar.OptionFullWidth(),
 			progressbar.OptionSetRenderBlankState(true),
+			progressbar.OptionEnableColorCodes(true),
 		)
 	case msg.Final != nil:
 		if p.pb != nil {
@@ -99,7 +102,7 @@ func moveCommand(cfg *config.Config) *cli.Command {
 				return fmt.Errorf("no admin socket configured")
 			}
 
-			prog := progresser{}
+			prog := moveProgresser{}
 			var progressCb func(msg callstore.MoveProgressMsg)
 			if isatty.IsTerminal(os.Stdout.Fd()) {
 				progressCb = prog.ttyCb
@@ -157,6 +160,79 @@ func gcCommand(cfg *config.Config) *cli.Command {
 			return c.CallsGC(ctx)
 		},
 	}
+
+	return c
+}
+
+func fsckCommand(cfg *config.Config) *cli.Command {
+	params := new(callstore.FsckParams)
+	c := &cli.Command{
+		Name:        "fsck",
+		Usage:       "check that all call references exist",
+		Description: "check that all call references exist",
+		UsageText:   "stillbox admin calls fsck",
+		Flags:       []cli.Flag{},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			if cfg.Server.AdminSocket == nil {
+				return fmt.Errorf("no admin socket configured")
+			}
+
+			c, err := client.New(client.UnixSocket(*cfg.Server.AdminSocket))
+			if err != nil {
+				return err
+			}
+
+			isTty := isatty.IsTerminal(os.Stdout.Fd())
+			// this is a hack needed because sflags doesn't set nils
+			common.ZeroFields(params)
+
+			var pb *progressbar.ProgressBar
+			progressCb := func(msg callstore.FsckReport) {
+				fmt.Printf("%+v\n", msg)
+			}
+
+			if isTty {
+				pb = progressbar.NewOptions64(
+					-1, // indeterminate
+					progressbar.OptionSetDescription("fscking calls"),
+					progressbar.OptionSetWriter(os.Stderr),
+					progressbar.OptionSetWidth(10),
+					progressbar.OptionThrottle(65*time.Millisecond),
+					progressbar.OptionSpinnerType(rand.Intn(75)),
+					progressbar.OptionFullWidth(),
+					progressbar.OptionOnCompletion(func() {
+						os.Stderr.WriteString("\n")
+					}),
+					progressbar.OptionSetRenderBlankState(true),
+					progressbar.OptionShowCount(),
+					progressbar.OptionEnableColorCodes(true),
+				)
+				progressCb = func(msg callstore.FsckReport) {
+					if msg.Status != nil {
+						pb.Describe(*msg.Status)
+					}
+
+					if msg.FinalCallsDangling != nil {
+						pb.ChangeMax64(*msg.CallsEnumerated)
+						pb.Set64(*msg.CallsEnumerated)
+						fmt.Printf("%d calls dangling.\n", *msg.FinalCallsDangling)
+					} else if msg.CallsEnumerated != nil {
+						pb.Set64(*msg.CallsEnumerated)
+					}
+
+				}
+			}
+
+			return c.CallsFsck(ctx, params, progressCb)
+		},
+	}
+
+	flags, err := gcli.ParseV3(params)
+	if err != nil {
+		panic(err)
+	}
+
+	c.Flags = flags
 
 	return c
 }

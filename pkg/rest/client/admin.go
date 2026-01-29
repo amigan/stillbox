@@ -6,20 +6,20 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
+	"net/http"
 
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 )
 
 type adminClient interface {
-	MoveCalls(ctx context.Context, p callstore.MoveCallParams) error
+	MoveCalls(ctx context.Context, p *callstore.MoveCallParams, progressCb MoveProgressCallback) error
 	CallsGC(ctx context.Context) error
-	CallsFsck(ctx context.Context) error 
+	CallsFsck(ctx context.Context, progressCb FsckProgressCallback) error
 }
 
-type ProgressCallback func(callstore.MoveProgressMsg)
+type MoveProgressCallback func(callstore.MoveProgressMsg)
 
-func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, progressCb ProgressCallback) error {
+func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, progressCb MoveProgressCallback) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -46,11 +46,10 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 
 	defer resp.Body.Close()
 
-	_ = os.Stderr
 	b := resp.Body
 
-	if resp.StatusCode != 200 {
-		body, err := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(b)
 		if err != nil {
 			return err
 		}
@@ -113,4 +112,74 @@ func (c *client) CallsGC(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+type FsckProgressCallback func(callstore.FsckReport)
+
+func (c *client) CallsFsck(ctx context.Context, p *callstore.FsckParams, progressCb FsckProgressCallback) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	req, err := c.POST(ctx, "/admin/callsfsck", p)
+	if err != nil {
+		return err
+	}
+
+	cb := func(m callstore.FsckReport) error {
+		if m.Error != nil {
+			return errors.New(*m.Error)
+		}
+
+		progressCb(m)
+		return nil
+	}
+
+	setSSErequestHeaders(req)
+
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		var m callstore.FsckReport
+		err = json.Unmarshal(body, &m)
+		if err != nil {
+			return fmt.Errorf("decoding '%s': %w", string(body), err)
+		}
+
+		if m.Error == nil {
+			return fmt.Errorf("unknown error: %s", string(body))
+		}
+
+		return cb(m)
+	}
+
+	ch, err := sseSubscribe[callstore.FsckReport](resp.Body)
+	if err != nil {
+		return err
+	}
+
+	for {
+		select {
+		case msg, ok := <-ch:
+			if !ok {
+				return nil
+			}
+
+			err := cb(msg)
+			if err != nil {
+				return err
+			}
+		case <-ctx.Done():
+			return context.Canceled
+		}
+	}
 }

@@ -494,7 +494,7 @@ func (q *Queries) GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, e
 }
 
 const getCalls = `-- name: GetCalls :many
-SELECT calls.id, calls.submitter, calls.system, calls.talkgroup, calls.call_date, calls.audio_name, calls.audio_blob, calls.duration, calls.audio_type, calls.audio_ref, calls.frequency, calls.frequencies, calls.patches, calls.talker_alias, calls.tg_label, calls.tg_alpha_tag, calls.tg_group, calls.source, calls.transcript FROM calls WHERE id = ANY($1::UUID[])
+SELECT calls.id, calls.submitter, calls.system, calls.talkgroup, calls.call_date, calls.audio_name, calls.audio_blob, calls.duration, calls.audio_type, calls.audio_ref, calls.frequency, calls.frequencies, calls.patches, calls.talker_alias, calls.tg_label, calls.tg_alpha_tag, calls.tg_group, calls.source, calls.transcript, calls.dangling_at FROM calls WHERE id = ANY($1::UUID[])
 `
 
 type GetCallsRow struct {
@@ -530,6 +530,7 @@ func (q *Queries) GetCalls(ctx context.Context, ids []uuid.UUID) ([]GetCallsRow,
 			&i.Call.TGGroup,
 			&i.Call.Source,
 			&i.Call.Transcript,
+			&i.Call.DanglingAt,
 		); err != nil {
 			return nil, err
 		}

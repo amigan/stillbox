@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS calls(
 	tg_group TEXT,
 	source INTEGER NOT NULL,
 	transcript TEXT,
+	dangling_at TIMESTAMP,
 	PRIMARY KEY (id, call_date),
 	FOREIGN KEY (system, talkgroup) REFERENCES talkgroups(system_id, tgid)
 ) PARTITION BY RANGE (call_date);
@@ -127,6 +128,7 @@ CREATE TABLE swept_calls (
 	tg_group TEXT,
 	source INTEGER NOT NULL,
 	transcript TEXT,
+	dangling_at TIMESTAMP,
 	FOREIGN KEY (system, talkgroup) REFERENCES talkgroups(system_id, tgid)
 );
 

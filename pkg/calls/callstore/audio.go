@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"iter"
 	"net/url"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -110,6 +112,9 @@ type AudioBackend interface {
 
 	// Type returns the backend's type.
 	Type() string
+
+	// List enumerates all objects in the store, returning an iterator of call UUIDs.
+	ListCalls(ctx context.Context, prefix string) (iter.Seq[uuid.UUID], func() error)
 }
 
 type AudioBackends interface {
@@ -692,6 +697,14 @@ func (s *store) BlobPath(call *calls.CallAudio) (audioPath, audioRef string) {
 	}
 
 	return audPath, audPath
+}
+
+// CallIDFromBlobPath is the dual of BlobPath. It extracts a call ID from the path.
+func CallIDFromBlobPath(blobPath string) (uuid.UUID, error) {
+	basename := path.Base(blobPath)
+	id, _, _ := strings.Cut(basename, "_")
+
+	return uuid.Parse(id)
 }
 
 func CallAudioFromCAIDRow(id uuid.UUID, row database.GetCallAudioByIDRow) *calls.CallAudio {

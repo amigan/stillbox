@@ -18,6 +18,7 @@ func (aa *adminAPI) Subrouter() http.Handler {
 
 	r.Post("/move-calls", aa.moveCalls)
 	r.Post("/callsgc", aa.runJournalGC)
+	r.Post("/callsfsck", aa.runFsck)
 
 	return r
 }
@@ -27,6 +28,7 @@ func (*adminAPI) runJournalGC(w http.ResponseWriter, r *http.Request) {
 	cst := callstore.FromCtx(ctx)
 	errCh := make(chan error)
 	defer close(errCh)
+
 	go func() {
 		errd := false
 		for err := range errCh {
@@ -79,5 +81,48 @@ func (*adminAPI) moveCalls(w http.ResponseWriter, r *http.Request) {
 	finalMsg := callstore.MoveProgressMsg{Final: &numRows}
 	if !ps.Close(finalMsg) {
 		respond(w, r, finalMsg)
+	}
+}
+
+func (*adminAPI) runFsck(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	cst := callstore.FromCtx(ctx)
+
+	var par callstore.FsckParams
+	err := forms.Unmarshal(r, &par, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	ps, progress := NewProgressSender[callstore.FsckReport](w, r)
+	defer ps.ConnClosed()
+
+	par.ProgressChan = ps.Chan()
+
+	result, err := cst.Fsck(ctx, par)
+	if err != nil {
+		var errSent bool
+		var nerr error
+		if progress {
+			errSent, nerr = ps.SendErr(err)
+			if nerr != nil {
+				log.Error().Err(nerr).Msg("fsck call sse send error")
+			}
+		}
+
+		if !errSent {
+			wErr(w, r, autoError(err))
+			return
+		}
+	}
+
+	if progress {
+		par.ProgressChan <- result
+	}
+
+	if !ps.Close(result) {
+		respond(w, r, result)
 	}
 }
