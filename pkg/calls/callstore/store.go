@@ -76,7 +76,7 @@ type Store interface {
 	GoGC(ctx context.Context)
 
 	// DoGC runs an audio garbage collection cycle. The error channel will be closed upon completion.
-	DoGC(context.Context, chan error)
+	DoGC(context.Context, chan<- error)
 
 	partman.PartmanCallAudioManager
 	PartMan() partman.PartitionManager
@@ -445,6 +445,7 @@ func (s *store) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*call
 			TalkgroupGroup: c.TGGroup,
 			TGAlphaTag:     c.TGAlphaTag,
 			Transcript:     c.Transcript,
+			MissingAudio:   common.NilIfZero(c.DanglingAt != nil),
 		})
 	}
 
@@ -486,6 +487,7 @@ func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 		TalkgroupGroup: c.TGGroup,
 		TGAlphaTag:     c.TGAlphaTag,
 		Transcript:     c.Transcript,
+		MissingAudio:   common.NilIfZero(c.DanglingAt != nil),
 	}, nil
 }
 
@@ -499,6 +501,7 @@ type CallsParams struct {
 	AtLeastSeconds   *float32          `json:"atLeastSeconds,omitempty" desc:"call length at least seconds" flag:"length l"`
 	UnknownTG        bool              `json:"unknownTG,omitzero" desc:"talkgroup is unknown" flag:"unknown-tg u"`
 	TranscriptSearch *string           `json:"transcriptSearch,omitempty" desc:"transcript contains" flag:"transcript-search T"`
+	MissingAudio     bool              `json:"missingAudio,omitzero" desc:"dangling audio ref"`
 }
 
 type ListCallsParams struct {
@@ -541,6 +544,7 @@ func (s *store) Calls(ctx context.Context, p ListCallsParams) (rows []database.L
 		SourceFilter:     p.SourceFilter,
 		UnknownTG:        p.UnknownTG,
 		TranscriptSearch: p.TranscriptSearch,
+		Dangling:         p.MissingAudio,
 	}
 
 	par.LongerThan = toPGNumericMilliseconds(p.AtLeastSeconds)
@@ -558,6 +562,7 @@ func (s *store) Calls(ctx context.Context, p ListCallsParams) (rows []database.L
 			LongerThan:       par.LongerThan,
 			UnknownTG:        par.UnknownTG,
 			TranscriptSearch: par.TranscriptSearch,
+			Dangling:         p.MissingAudio,
 		})
 		if err != nil {
 			return err

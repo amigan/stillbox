@@ -28,11 +28,12 @@ const (
 var filePaths = FileMap{
 	"./pkg/database/models.go": AllFields(OmitEmpty | GenerateYaml),
 	"./pkg/database/calls.sql.go": FieldMap{
-		"TalkerAlias":              OmitEmpty,
-		"Incidents":                OmitEmpty | OmitZero,
-		"HasTranscript":            OmitZero,
-		"ListCallsPRow:Source":     OmitZero,
-		"ListCallsPRow:Transcript": OmitEmpty,
+		"TalkerAlias":                OmitEmpty,
+		"Incidents":                  OmitEmpty | OmitZero,
+		"HasTranscript":              OmitZero,
+		"ListCallsPRow:Source":       OmitZero,
+		"ListCallsPRow:Transcript":   OmitEmpty,
+		"ListCallsPRow:MissingAudio": OmitZero,
 	},
 }
 
