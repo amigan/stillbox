@@ -75,6 +75,14 @@ form {
   background-color: rgb(59, 0, 59);
 }
 
+.no-audio {
+  background-color: rgb(29, 0, 0);
+}
+
+call-player.no-audio {
+  opacity: 50%;
+}
+
 a.tgFilter:hover,
 a.srcFilter:hover {
   text-decoration: underline;
