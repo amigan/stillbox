@@ -392,6 +392,8 @@ INSERT INTO audio_ref_journal (
 
 -- name: SetRefJournalPrune :exec
 UPDATE audio_ref_journal SET
+	tries = tries + 1,
+	last_try = NOW(),
 	prune_after = sqlc.narg('prune_after')
 WHERE
 	id = $1;

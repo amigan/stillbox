@@ -986,6 +986,8 @@ func (q *Queries) SetCallTranscript(ctx context.Context, iD uuid.UUID, transcrip
 
 const setRefJournalPrune = `-- name: SetRefJournalPrune :exec
 UPDATE audio_ref_journal SET
+	tries = tries + 1,
+	last_try = NOW(),
 	prune_after = $2
 WHERE
 	id = $1

@@ -255,8 +255,8 @@ type cache struct {
 }
 
 type TGStoreMetrics struct {
-	Hits   prometheus.Counter `help:"Talkgroup cache hits"`
-	Misses prometheus.Counter `help:"Talkgroup cache misses"`
+	CacheHitCount  prometheus.Counter `help:"Talkgroup cache hits"`
+	CacheMissCount prometheus.Counter `help:"Talkgroup cache misses"`
 }
 
 // NewCache returns a new cache Store.
@@ -396,10 +396,10 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 		for _, id := range tgs {
 			rec, has := t.get(id)
 			if has {
-				t.metrics.Hits.Inc()
+				t.metrics.CacheHitCount.Inc()
 				resultList = append(resultList, rec)
 			} else {
-				t.metrics.Misses.Inc()
+				t.metrics.CacheMissCount.Inc()
 				toGet = append(toGet, id)
 			}
 		}
@@ -504,11 +504,11 @@ func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
 	rec, has := t.get(tg)
 
 	if has {
-		t.metrics.Hits.Inc()
+		t.metrics.CacheHitCount.Inc()
 		return rec, nil
 	}
 
-	t.metrics.Misses.Inc()
+	t.metrics.CacheMissCount.Inc()
 	record, err := t.db.GetTalkgroup(ctx, int32(tg.System), int32(tg.Talkgroup))
 	switch err {
 	case nil:

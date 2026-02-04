@@ -88,7 +88,7 @@ func (m *metrics) Register(subsys string, ms MetricStruct) {
 func initMetricsStruct(subsys string, ms MetricStruct, register func(prometheus.Collector) error) {
 	v := reflect.ValueOf(ms)
 
-	for v.Kind() == reflect.Ptr {
+	for v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 
@@ -153,7 +153,7 @@ func initMetricsStruct(subsys string, ms MetricStruct, register func(prometheus.
 		}
 
 		ftName := ft.Type.Name()
-		if ft.Type.Kind() == reflect.Ptr {
+		if ft.Type.Kind() == reflect.Pointer {
 			ftName = ft.Type.Elem().Name()
 		}
 

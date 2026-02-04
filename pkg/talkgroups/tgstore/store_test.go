@@ -292,8 +292,8 @@ func TestTGs(t *testing.T) {
 			},
 			ids: tids("407:10101", "3348:153", "407:1869", "407:11186", "407:11002"),
 			postFunc: func(_ context.Context, t *testing.T, tgs tgstore.Store) {
-				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().Hits), 2.0)
-				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().Misses), 3.0)
+				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().CacheHitCount), 2.0)
+				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().CacheMissCount), 3.0)
 			},
 		},
 		{
@@ -582,8 +582,8 @@ func TestUpsertTGs(t *testing.T) {
 			},
 			ids: tids("407:10101", "3348:153", "407:1869", "407:11186", "407:11002"),
 			postFunc: func(_ context.Context, t *testing.T, tgs tgstore.Store) {
-				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().Hits), 2.0)
-				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().Misses), 3.0)
+				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().CacheHitCount), 2.0)
+				assert.Equal(t, promtestutil.ToFloat64(tgs.Metrics().CacheMissCount), 3.0)
 			},
 		},
 		{
