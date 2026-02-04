@@ -38,8 +38,8 @@ type RelayManager struct {
 }
 
 type relayManagerMetrics struct {
-	RelayedSuccess *prometheus.CounterVec `help:"Calls successfully relayed" labels:"url"`
-	RelayedFailed  *prometheus.CounterVec `help:"Failed relay attempts" labels:"url"`
+	RelayedSuccessCount *prometheus.CounterVec `help:"Calls successfully relayed" labels:"url"`
+	RelayedFailedCount  *prometheus.CounterVec `help:"Failed relay attempts" labels:"url"`
 }
 
 type Relay struct {
@@ -173,7 +173,7 @@ func (s *Relay) Call(ctx context.Context, call *calls.Call) (err error) {
 	defer func() {
 		// metrics for failed disposition
 		if err != nil {
-			s.mgr.metrics.RelayedFailed.WithLabelValues(s.URL).Inc()
+			s.mgr.metrics.RelayedFailedCount.WithLabelValues(s.URL).Inc()
 		}
 	}()
 
@@ -214,7 +214,7 @@ func (s *Relay) Call(ctx context.Context, call *calls.Call) (err error) {
 
 	_, _ = io.Copy(io.Discard, resp.Body)
 
-	s.mgr.metrics.RelayedSuccess.WithLabelValues(s.URL).Inc()
+	s.mgr.metrics.RelayedSuccessCount.WithLabelValues(s.URL).Inc()
 
 	return nil
 }

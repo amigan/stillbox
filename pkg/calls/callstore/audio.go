@@ -178,10 +178,10 @@ type audioStorageBackend struct {
 }
 
 type audioStorageMetrics struct {
-	TotalStores    *prometheus.CounterVec `help:"Total call stores" labels:"backend,type"`
-	FailedStores   *prometheus.CounterVec `help:"Failed call storage attempts by backend" labels:"backend,type"`
-	JournalSize    *prometheus.GaugeVec   `help:"AudioRef journal size" labels:"backend,kind"`
-	JournalGCError *prometheus.CounterVec `help:"Journal garbage collection error count" labels:"backend,kind"`
+	StoredTotal         *prometheus.CounterVec `help:"Total call stores" labels:"backend,type"`
+	FailedStoreCount    *prometheus.CounterVec `help:"Failed call storage attempts by backend" labels:"backend,type"`
+	JournalSize         *prometheus.GaugeVec   `help:"AudioRef journal size" labels:"backend,kind"`
+	JournalGCErrorCount *prometheus.CounterVec `help:"Journal garbage collection error count" labels:"backend,kind"`
 }
 
 const (
@@ -204,7 +204,7 @@ func (ab *audioBackends) JournalGCErrorMetric(backendName string, missing bool) 
 		missingLabel = MissingCreateLabel
 	}
 
-	return ab.metrics.JournalGCError.WithLabelValues(backendName, missingLabel)
+	return ab.metrics.JournalGCErrorCount.WithLabelValues(backendName, missingLabel)
 }
 
 var _ AudioBackends = (*audioBackends)(nil)
@@ -436,7 +436,7 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (rfq *Audi
 		var ref AudioRef
 		ref, err = be.Store(ctx, call.ToCallAudio())
 		if err != nil {
-			ab.metrics.FailedStores.WithLabelValues(beName, be.Type()).Inc()
+			ab.metrics.FailedStoreCount.WithLabelValues(beName, be.Type()).Inc()
 
 			switch be.OnError {
 			case config.OnErrorFail:
@@ -450,7 +450,7 @@ func (ab *audioBackends) Store(ctx context.Context, call *calls.Call) (rfq *Audi
 
 			continue
 		} else if ref != nil {
-			ab.metrics.TotalStores.WithLabelValues(beName, be.Type()).Inc()
+			ab.metrics.StoredTotal.WithLabelValues(beName, be.Type()).Inc()
 		}
 		rfq = &AudioRefFQ{
 			Backend: be,

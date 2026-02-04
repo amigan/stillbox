@@ -72,10 +72,10 @@ type authn struct {
 }
 
 type authnMetrics struct {
-	SuccessfulLogins     prometheus.Counter `help:"Count of successful logins"`
-	FailedLogins         prometheus.Counter `help:"Count of failed logins"`
-	TokenRefreshes       prometheus.Counter `help:"Count of token refreshes"`
-	FailedTokenRefreshes prometheus.Counter `help:"Count of failed token refreshes"`
+	SuccessfulLoginCount    prometheus.Counter `help:"Count of successful logins"`
+	FailedLoginCount        prometheus.Counter `help:"Count of failed logins"`
+	TokenRefreshCount       prometheus.Counter `help:"Count of token refreshes"`
+	FailedTokenRefreshCount prometheus.Counter `help:"Count of failed token refreshes"`
 }
 
 func NewAuthn(cfg config.Auth, m metrics.Metrics, ust users.Store) (*authn, error) {

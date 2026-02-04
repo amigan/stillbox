@@ -30,7 +30,7 @@ type nexus struct {
 }
 
 type nexMetrics struct {
-	ActiveWSConns prometheus.Gauge `help:"Number of active websocket connections"`
+	ActiveWSConnectionCount prometheus.Gauge `help:"Number of active websocket connections"`
 }
 
 type Nexus interface {
@@ -117,7 +117,7 @@ func (n *nexus) Register(c *client) {
 	defer n.Unlock()
 
 	n.clients[c] = struct{}{}
-	n.metrics.ActiveWSConns.Inc()
+	n.metrics.ActiveWSConnectionCount.Inc()
 }
 
 func (n *nexus) Unregister(c *client) {
@@ -133,7 +133,7 @@ func (n *nexus) unregister(cl *client) {
 	}
 
 	delete(n.clients, cl)
-	n.metrics.ActiveWSConns.Dec()
+	n.metrics.ActiveWSConnectionCount.Dec()
 }
 
 func (n *nexus) Shutdown() {

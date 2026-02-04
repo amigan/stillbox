@@ -66,8 +66,8 @@ type Server struct {
 }
 
 type srvMetrics struct {
-	RequestsCount     *prometheus.CounterVec `help:"Requests count" labels:"code,method"`
-	RequestDurationMS prometheus.Histogram   `help:"Request durations" buckets:"1,5,10,30,100,200,500"`
+	RequestsCount          *prometheus.CounterVec `help:"Requests count" labels:"code,method"`
+	RequestDurationSeconds prometheus.Histogram   `help:"Request durations" buckets:"0.001,0.005,0.010,0.030,0.100,0.200,0.500"`
 }
 
 func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
@@ -227,7 +227,7 @@ func (s *Server) MetricsLogger() func(next http.Handler) http.Handler {
 				s.srvMetrics.RequestsCount.WithLabelValues(strconv.Itoa(status), r.Method).Inc()
 
 				// milliseconds
-				s.srvMetrics.RequestDurationMS.Observe(float64(dur.Microseconds()) / 1000)
+				s.srvMetrics.RequestDurationSeconds.Observe(dur.Seconds())
 			}()
 			next.ServeHTTP(ww, r)
 		}
