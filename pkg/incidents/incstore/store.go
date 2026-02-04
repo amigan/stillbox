@@ -15,7 +15,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type IncidentsParams struct {
@@ -136,7 +135,7 @@ func (s *postgresStore) CreateIncident(ctx context.Context, inc incidents.Incide
 		}
 
 		return nil
-	}, pgx.TxOptions{})
+	})
 	if txErr != nil {
 		return nil, txErr
 	}
@@ -181,7 +180,7 @@ func (s *postgresStore) AddRemoveIncidentCalls(ctx context.Context, incidentID u
 		}
 
 		return nil
-	}, pgx.TxOptions{})
+	})
 }
 
 func (s *postgresStore) Incidents(ctx context.Context, p IncidentsParams) (incs []Incident, totalCount int, err error) {
@@ -215,7 +214,7 @@ func (s *postgresStore) Incidents(ctx context.Context, p IncidentsParams) (incs 
 
 		rows, err = db.ListIncidentsP(ctx, dbParam)
 		return err
-	}, pgx.TxOptions{})
+	})
 	if txErr != nil {
 		return nil, 0, txErr
 	}
@@ -284,7 +283,7 @@ func (s *postgresStore) IncidentCalls(ctx context.Context, id uuid.UUID, pag *Ca
 		}
 
 		return nil
-	}, pgx.TxOptions{})
+	})
 	if txErr != nil {
 		return nil, txErr
 	}
@@ -380,7 +379,7 @@ func (s *postgresStore) Incident(ctx context.Context, id uuid.UUID, opts ...Inci
 		}
 
 		return nil
-	}, pgx.TxOptions{})
+	})
 	if txErr != nil {
 		return nil, txErr
 	}

@@ -446,7 +446,7 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 			}
 
 			return nil
-		}, pgx.TxOptions{})
+		})
 
 		if err != nil {
 			return nil, err
@@ -612,7 +612,7 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 		})
 
 		return oerr
-	}, pgx.TxOptions{})
+	})
 
 	if err != nil {
 		return nil, err
@@ -682,7 +682,7 @@ func (t *cache) DeleteTG(ctx context.Context, id tgsp.ID) error {
 		}
 
 		return db.DeleteTalkgroup(ctx, int32(id.System), int32(id.Talkgroup))
-	}, pgx.TxOptions{})
+	})
 
 	switch {
 	case err == nil:
@@ -842,7 +842,7 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 		})
 
 		return oerr
-	}, pgx.TxOptions{})
+	})
 
 	if err != nil {
 		return nil, err

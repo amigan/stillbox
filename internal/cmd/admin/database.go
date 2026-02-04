@@ -10,7 +10,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/database/partman"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/urfave/cli/v3"
 )
 
@@ -85,5 +84,5 @@ func Repartition(ctx context.Context, db database.Store, cfg config.Partition) e
 		}
 
 		return nil
-	}, pgx.TxOptions{})
+	})
 }

@@ -5,7 +5,6 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/database"
-	"github.com/jackc/pgx/v5"
 )
 
 type FsckParams struct {
@@ -83,6 +82,6 @@ func (s *store) Fsck(ctx context.Context, par FsckParams) (result FsckReport, er
 		result.FinalCallsDangling = &callsDangling
 
 		return nil
-	}, pgx.TxOptions{})
+	})
 	return
 }

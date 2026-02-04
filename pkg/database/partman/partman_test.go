@@ -11,7 +11,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/database/mocks"
 	"dynatron.me/x/stillbox/pkg/database/partman"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -20,7 +19,7 @@ import (
 var mctx = mock.Anything
 
 func inTx(s *mocks.Store) {
-	s.EXPECT().InTx(mctx, mock.AnythingOfType("func(database.Store) error"), mock.AnythingOfType("pgx.TxOptions")).RunAndReturn(func(ctx context.Context, f func(db database.Store) error, po pgx.TxOptions) error {
+	s.EXPECT().InTx(mctx, mock.AnythingOfType("func(database.Store) error")).RunAndReturn(func(ctx context.Context, f func(db database.Store) error) error {
 		return f(s)
 	})
 

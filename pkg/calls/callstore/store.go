@@ -28,7 +28,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog/log"
 )
@@ -282,7 +281,7 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
 		}
 
 		return nil
-	}, pgx.TxOptions{})
+	})
 
 	if err != nil && database.IsTGConstraintViolation(err) {
 		return db.InTx(ctx, func(tx database.Store) error {
@@ -297,7 +296,7 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
 			}
 
 			return nil
-		}, pgx.TxOptions{})
+		})
 	}
 
 	return err
@@ -574,7 +573,7 @@ func (s *store) Calls(ctx context.Context, p ListCallsParams) (rows []database.L
 
 		rows, err = db.ListCallsP(ctx, par)
 		return err
-	}, pgx.TxOptions{})
+	})
 	if txErr != nil {
 		return nil, 0, txErr
 	}

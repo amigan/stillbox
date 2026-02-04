@@ -16,7 +16,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 )
 
@@ -338,7 +337,7 @@ func (pm *partman) Check(ctx context.Context, now time.Time) error {
 
 		return nil
 
-	}, pgx.TxOptions{})
+	})
 }
 
 func (p Partition) PartitionName() string {

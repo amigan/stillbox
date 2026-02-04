@@ -18,7 +18,6 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
-	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 )
@@ -233,7 +232,7 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) (err 
 			}
 
 			return nil
-		}, pgx.TxOptions{})
+		})
 		// drain the channel.
 		// this will only iterate if the exit above was not due to a closed channel
 		for range setCallAudioChan {

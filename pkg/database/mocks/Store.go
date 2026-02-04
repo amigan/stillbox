@@ -4920,16 +4920,16 @@ func (_c *Store_GetUsers_Call) RunAndReturn(run func(ctx context.Context) ([]dat
 }
 
 // InTx provides a mock function for the type Store
-func (_mock *Store) InTx(context1 context.Context, fn func(database.Store) error, txOptions pgx.TxOptions) error {
-	ret := _mock.Called(context1, fn, txOptions)
+func (_mock *Store) InTx(context1 context.Context, fn func(database.Store) error) error {
+	ret := _mock.Called(context1, fn)
 
 	if len(ret) == 0 {
 		panic("no return value specified for InTx")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, func(database.Store) error, pgx.TxOptions) error); ok {
-		r0 = returnFunc(context1, fn, txOptions)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, func(database.Store) error) error); ok {
+		r0 = returnFunc(context1, fn)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -4944,12 +4944,11 @@ type Store_InTx_Call struct {
 // InTx is a helper method to define mock.On call
 //   - context1 context.Context
 //   - fn func(database.Store) error
-//   - txOptions pgx.TxOptions
-func (_e *Store_Expecter) InTx(context1 interface{}, fn interface{}, txOptions interface{}) *Store_InTx_Call {
-	return &Store_InTx_Call{Call: _e.mock.On("InTx", context1, fn, txOptions)}
+func (_e *Store_Expecter) InTx(context1 interface{}, fn interface{}) *Store_InTx_Call {
+	return &Store_InTx_Call{Call: _e.mock.On("InTx", context1, fn)}
 }
 
-func (_c *Store_InTx_Call) Run(run func(context1 context.Context, fn func(database.Store) error, txOptions pgx.TxOptions)) *Store_InTx_Call {
+func (_c *Store_InTx_Call) Run(run func(context1 context.Context, fn func(database.Store) error)) *Store_InTx_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -4959,14 +4958,9 @@ func (_c *Store_InTx_Call) Run(run func(context1 context.Context, fn func(databa
 		if args[1] != nil {
 			arg1 = args[1].(func(database.Store) error)
 		}
-		var arg2 pgx.TxOptions
-		if args[2] != nil {
-			arg2 = args[2].(pgx.TxOptions)
-		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
@@ -4977,7 +4971,7 @@ func (_c *Store_InTx_Call) Return(err error) *Store_InTx_Call {
 	return _c
 }
 
-func (_c *Store_InTx_Call) RunAndReturn(run func(context1 context.Context, fn func(database.Store) error, txOptions pgx.TxOptions) error) *Store_InTx_Call {
+func (_c *Store_InTx_Call) RunAndReturn(run func(context1 context.Context, fn func(database.Store) error) error) *Store_InTx_Call {
 	_c.Call.Return(run)
 	return _c
 }

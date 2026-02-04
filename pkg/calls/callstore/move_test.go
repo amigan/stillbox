@@ -12,7 +12,6 @@ import (
 	dbmock "dynatron.me/x/stillbox/pkg/database/mocks"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -67,7 +66,7 @@ func TestMove(t *testing.T) {
 		ctx, cancel := context.WithCancel(ctx)
 		db := dbmock.NewStore(t)
 		if tc.expectNumRows > 0 {
-			db.EXPECT().InTx(mock.Anything, mock.Anything, pgx.TxOptions{}).RunAndReturn(func(ctx context.Context, f func(database.Store) error, _ pgx.TxOptions) error {
+			db.EXPECT().InTx(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, f func(database.Store) error) error {
 				return f(db)
 			})
 		}
@@ -128,7 +127,7 @@ func BenchmarkMove(b *testing.B) {
 	for b.Loop() {
 		ctx, _ = context.WithCancel(ctx)
 		db := new(dbmock.Store)
-		db.EXPECT().InTx(mock.Anything, mock.Anything, pgx.TxOptions{}).RunAndReturn(func(ctx context.Context, f func(database.Store) error, _ pgx.TxOptions) error {
+		db.EXPECT().InTx(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, f func(database.Store) error) error {
 			return f(db)
 		})
 		db.EXPECT().GetCallAudioCount(mock.Anything, mock.AnythingOfType("database.GetCallAudioParams")).RunAndReturn(func(ctx context.Context, gp database.GetCallAudioParams) (int64, error) {

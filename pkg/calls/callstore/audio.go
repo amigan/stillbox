@@ -24,7 +24,6 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
-	"github.com/jackc/pgx/v5"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
@@ -741,5 +740,5 @@ func (s *store) StoreAudioFromDB(ctx context.Context, callID uuid.UUID, back *au
 		}
 
 		return db.SetCallAudio(ctx, callID, refJSON, nil)
-	}, pgx.TxOptions{})
+	})
 }
