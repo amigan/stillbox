@@ -9,6 +9,17 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: docker
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup-go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 'stable'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
   unit-test:
     runs-on: docker
     services:
