@@ -338,6 +338,16 @@ func (q *Queries) CopyIntoFsckTempTable(ctx context.Context, tableName string, i
 	return cf.CopyFrom(ctx, []string{tableName}, []string{"id"}, src)
 }
 
+const clearDangleUpdate = `
+UPDATE calls c
+SET dangling_at = NULL
+WHERE c.audio_ref->>$1 IS NOT NULL;`
+
+const sweptClearDangleUpdate = `
+UPDATE swept_calls c
+SET dangling_at = NULL
+WHERE c.audio_ref->>$1 IS NOT NULL;`
+
 const callsDangleUpdate = `
 UPDATE calls
 SET dangling_at = $1
@@ -360,6 +370,18 @@ func subTableName(s, tblName string) string {
 
 func (q *Queries) FsckRefs(ctx context.Context, tableName, backend string) (callsDangling int64, err error) {
 	fsckBatch := pgtype.Timestamp{Time: time.Now().UTC(), Valid: true}
+
+	// clear dangling_at for all calls with this backend
+	_, err = q.db.Exec(ctx, clearDangleUpdate, backend)
+	if err != nil {
+		return
+	}
+
+	// clear dangling_at for all swept calls with this backend
+	_, err = q.db.Exec(ctx, sweptClearDangleUpdate, backend)
+	if err != nil {
+		return
+	}
 
 	ct, err := q.db.Exec(ctx, subTableName(callsDangleUpdate, tableName), fsckBatch, backend)
 	if err != nil {
