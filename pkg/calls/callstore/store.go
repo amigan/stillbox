@@ -29,6 +29,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
 
@@ -77,11 +78,16 @@ type Store interface {
 	// DoGC runs an audio garbage collection cycle. The error channel will be closed upon completion.
 	DoGC(context.Context, chan<- error)
 
-	partman.PartmanCallAudioManager
+	// PartmMan returns the partition manager subsystem of the store.
 	PartMan() partman.PartitionManager
+	partman.PartmanCallAudioManager
 
 	// Fsck checks that all audio references are good and marks as dangling ones that are not.
 	Fsck(ctx context.Context, par FsckParams) (FsckReport, error)
+}
+
+type storeMetrics struct {
+	IngestErrorCount prometheus.Counter `help:"Add Call error count"`
 }
 
 var (
@@ -93,6 +99,7 @@ type store struct {
 	audioBackends *audioBackends
 	partman       partman.PartitionManager
 	now           NowFunc
+	metrics       storeMetrics
 
 	// this mutex ensures very high request volume calls like move and fsck only happen one at a time.
 	maintInProgress sync.Mutex
@@ -120,6 +127,8 @@ func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, m
 	for _, opt := range opts {
 		opt(st)
 	}
+
+	met.Register("callstore", &st.metrics)
 
 	be, err := st.MakeBackends(ctx, tgc, met, callStorage)
 	if err != nil {
@@ -217,6 +226,13 @@ func toAddCallParams(call *calls.Call, audioRef AudioRefJSON, audioBlob []byte) 
 }
 
 func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
+	defer func() {
+		if err != nil {
+			log.Error().Msg("inc err cnt")
+			s.metrics.IngestErrorCount.Inc()
+		}
+	}()
+
 	_, err = authz.Check(ctx, call, authz.WithActions(entities.ActionCreate))
 	if err != nil {
 		return err

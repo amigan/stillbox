@@ -152,7 +152,6 @@ func ErrorResponse(w http.ResponseWriter, err error) {
 	case ErrInternal:
 		fallthrough
 	default:
-		log.Error().Err(err).Msg("authn error")
 		http.Error(w, ErrInternal.Error(), http.StatusInternalServerError)
 	}
 }
