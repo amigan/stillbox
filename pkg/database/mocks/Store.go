@@ -1850,63 +1850,6 @@ func (_c *Store_DisableUser_Call) RunAndReturn(run func(ctx context.Context, use
 	return _c
 }
 
-// DropFsckTempTable provides a mock function for the type Store
-func (_mock *Store) DropFsckTempTable(ctx context.Context, tableName string) error {
-	ret := _mock.Called(ctx, tableName)
-
-	if len(ret) == 0 {
-		panic("no return value specified for DropFsckTempTable")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = returnFunc(ctx, tableName)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// Store_DropFsckTempTable_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DropFsckTempTable'
-type Store_DropFsckTempTable_Call struct {
-	*mock.Call
-}
-
-// DropFsckTempTable is a helper method to define mock.On call
-//   - ctx context.Context
-//   - tableName string
-func (_e *Store_Expecter) DropFsckTempTable(ctx interface{}, tableName interface{}) *Store_DropFsckTempTable_Call {
-	return &Store_DropFsckTempTable_Call{Call: _e.mock.On("DropFsckTempTable", ctx, tableName)}
-}
-
-func (_c *Store_DropFsckTempTable_Call) Run(run func(ctx context.Context, tableName string)) *Store_DropFsckTempTable_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_DropFsckTempTable_Call) Return(err error) *Store_DropFsckTempTable_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *Store_DropFsckTempTable_Call) RunAndReturn(run func(ctx context.Context, tableName string) error) *Store_DropFsckTempTable_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // DropPartition provides a mock function for the type Store
 func (_mock *Store) DropPartition(ctx context.Context, partitionName string) error {
 	ret := _mock.Called(ctx, partitionName)
@@ -2017,6 +1960,63 @@ func (_c *Store_DropRefJournal_Call) Return(err error) *Store_DropRefJournal_Cal
 }
 
 func (_c *Store_DropRefJournal_Call) RunAndReturn(run func(ctx context.Context, id int64) error) *Store_DropRefJournal_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DropTable provides a mock function for the type Store
+func (_mock *Store) DropTable(ctx context.Context, tableName string) error {
+	ret := _mock.Called(ctx, tableName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DropTable")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = returnFunc(ctx, tableName)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_DropTable_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DropTable'
+type Store_DropTable_Call struct {
+	*mock.Call
+}
+
+// DropTable is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tableName string
+func (_e *Store_Expecter) DropTable(ctx interface{}, tableName interface{}) *Store_DropTable_Call {
+	return &Store_DropTable_Call{Call: _e.mock.On("DropTable", ctx, tableName)}
+}
+
+func (_c *Store_DropTable_Call) Run(run func(ctx context.Context, tableName string)) *Store_DropTable_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_DropTable_Call) Return(err error) *Store_DropTable_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_DropTable_Call) RunAndReturn(run func(ctx context.Context, tableName string) error) *Store_DropTable_Call {
 	_c.Call.Return(run)
 	return _c
 }

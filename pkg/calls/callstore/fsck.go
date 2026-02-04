@@ -60,7 +60,7 @@ func (s *store) Fsck(ctx context.Context, par FsckParams) (result FsckReport, er
 			return err
 		}
 
-		defer tx.DropFsckTempTable(ctx, tableName)
+		defer tx.DropTable(ctx, tableName)
 
 		if err := errf(); err != nil {
 			return err

@@ -33,9 +33,6 @@ type callsQuerier interface {
 
 	// CreateFsckTempTable generates a table name and creates it.
 	CreateFsckTempTable(ctx context.Context) (tableName string, err error)
-
-	// DropFsckTempTable drops table "audio_ref_fsck"
-	DropFsckTempTable(ctx context.Context, tableName string) error
 }
 
 // GetCallAudioCount is here because the following query crashes sqlc.
@@ -396,9 +393,4 @@ func (q *Queries) FsckRefs(ctx context.Context, tableName, backend string) (call
 	callsDangling += ct.RowsAffected()
 
 	return
-}
-
-func (q *Queries) DropFsckTempTable(ctx context.Context, tableName string) error {
-	_, err := q.db.Exec(ctx, "DROP TABLE "+tableName+";")
-	return err
 }

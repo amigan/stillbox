@@ -32,6 +32,9 @@ type Store interface {
 	DBTX() DBTX
 	InTx(context.Context, func(Store) error, pgx.TxOptions) error
 	PoolTx(ctx context.Context, opts pgx.TxOptions) (dbtx *Postgres, tx pgx.Tx, err error)
+
+	// DropTable drops the specified table.
+	DropTable(ctx context.Context, tableName string) error
 }
 
 type Postgres struct {
@@ -45,6 +48,11 @@ func (q *Queries) DBTX() DBTX {
 
 func (db *Postgres) DB() *Postgres {
 	return db
+}
+
+func (q *Queries) DropTable(ctx context.Context, tableName string) error {
+	_, err := q.db.Exec(ctx, "DROP TABLE "+tableName+";")
+	return err
 }
 
 func (db *Postgres) PoolTx(ctx context.Context, opts pgx.TxOptions) (dbtx *Postgres, tx pgx.Tx, err error) {
