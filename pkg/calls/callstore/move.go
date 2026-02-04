@@ -60,7 +60,14 @@ type MoveCallParams struct {
 
 	// ProgressChan, if not nil, is a channel where the number of rows is written as the call progresses.
 	// It is closed by MoveCalls on finish (or error)
-	ProgressChan chan int64 `json:"-"`
+	ProgressChan chan MoveProgressMsg `json:"-"`
+}
+
+type MoveProgressMsg struct {
+	Total     *int64  `json:"total,omitempty"`
+	Final     *int64  `json:"final,omitempty"`
+	Completed *int64  `json:"completed,omitempty"`
+	Error     *string `json:"error,omitempty"`
 }
 
 const (
@@ -180,7 +187,7 @@ func (m *mover) moveWorker(ctx context.Context, row *database.GetCallAudioRow, s
 
 	cr := m.completedRows.Add(1)
 	if cr%progressInterval == 0 && m.par.ProgressChan != nil {
-		m.par.ProgressChan <- cr
+		m.par.ProgressChan <- MoveProgressMsg{Completed: &cr}
 	}
 
 	return nil
@@ -201,7 +208,7 @@ func (m *mover) do(ctx context.Context, dbPar database.GetCallAudioParams) (err 
 	log.Info().Int64("count", count).Msg("move begin")
 
 	if m.par.ProgressChan != nil {
-		m.par.ProgressChan <- count // first message is always total
+		m.par.ProgressChan <- MoveProgressMsg{Total: &count}
 	}
 
 	// if we are dry run, or there were no rows, we can finish now
@@ -335,8 +342,7 @@ func (s *store) newMover(dst *audioStorageBackend, rt *refTracker, par MoveCallP
 }
 
 var (
-	ErrSrcDestSame    = errors.New("source and destination backend are the same")
-	ErrMoveInProgress = errors.New("move in progress")
+	ErrSrcDestSame = errors.New("source and destination backend are the same")
 )
 
 // MoveCallAudio moves calls from one audio backing store to another. It returns the number of rows moved.
@@ -346,8 +352,8 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		return 0, err
 	}
 
-	if !s.moveInProgress.TryLock() {
-		return 0, ErrMoveInProgress
+	if !s.maintInProgress.TryLock() {
+		return 0, ErrMaintenanceInProgress
 	}
 
 	var dst *audioStorageBackend
@@ -386,13 +392,13 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	numRows = m.completedRows.Load()
 
 	if par.ProgressChan != nil {
-		par.ProgressChan <- numRows - 1
+		par.ProgressChan <- MoveProgressMsg{Completed: common.PtrTo(numRows - 1)}
 	}
 
 	if err != nil {
 		go func() {
 			// unlock only after the rollback finishes
-			defer s.moveInProgress.Unlock()
+			defer s.maintInProgress.Unlock()
 			numRows = 0
 			rbErr := refT.Rollback(context.WithoutCancel(ctx))
 			if rbErr != nil {
@@ -404,7 +410,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	} else {
 		go func() {
 			// unlock only after the commit finishes
-			defer s.moveInProgress.Unlock()
+			defer s.maintInProgress.Unlock()
 			err := refT.Commit(context.WithoutCancel(ctx))
 			if err != nil {
 				log.Error().Err(err).Msg("move tx commit")

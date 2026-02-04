@@ -3,6 +3,7 @@ package callstore
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -75,11 +76,18 @@ type Store interface {
 	GoGC(ctx context.Context)
 
 	// DoGC runs an audio garbage collection cycle. The error channel will be closed upon completion.
-	DoGC(context.Context, chan error)
+	DoGC(context.Context, chan<- error)
 
 	partman.PartmanCallAudioManager
 	PartMan() partman.PartitionManager
+
+	// Fsck checks that all audio references are good and marks as dangling ones that are not.
+	Fsck(ctx context.Context, par FsckParams) (FsckReport, error)
 }
+
+var (
+	ErrMaintenanceInProgress = errors.New("maintenance call (move, fsck) in progress")
+)
 
 type store struct {
 	db            database.Store
@@ -87,7 +95,8 @@ type store struct {
 	partman       partman.PartitionManager
 	now           NowFunc
 
-	moveInProgress sync.Mutex
+	// this mutex ensures very high request volume calls like move and fsck only happen one at a time.
+	maintInProgress sync.Mutex
 }
 
 func (s *store) PartMan() partman.PartitionManager {
@@ -436,6 +445,7 @@ func (s *store) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*call
 			TalkgroupGroup: c.TGGroup,
 			TGAlphaTag:     c.TGAlphaTag,
 			Transcript:     c.Transcript,
+			MissingAudio:   common.NilIfZero(c.DanglingAt != nil),
 		})
 	}
 
@@ -477,6 +487,7 @@ func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 		TalkgroupGroup: c.TGGroup,
 		TGAlphaTag:     c.TGAlphaTag,
 		Transcript:     c.Transcript,
+		MissingAudio:   common.NilIfZero(c.DanglingAt != nil),
 	}, nil
 }
 
@@ -490,6 +501,7 @@ type CallsParams struct {
 	AtLeastSeconds   *float32          `json:"atLeastSeconds,omitempty" desc:"call length at least seconds" flag:"length l"`
 	UnknownTG        bool              `json:"unknownTG,omitzero" desc:"talkgroup is unknown" flag:"unknown-tg u"`
 	TranscriptSearch *string           `json:"transcriptSearch,omitempty" desc:"transcript contains" flag:"transcript-search T"`
+	MissingAudio     bool              `json:"missingAudio,omitzero" desc:"dangling audio ref"`
 }
 
 type ListCallsParams struct {
@@ -532,6 +544,7 @@ func (s *store) Calls(ctx context.Context, p ListCallsParams) (rows []database.L
 		SourceFilter:     p.SourceFilter,
 		UnknownTG:        p.UnknownTG,
 		TranscriptSearch: p.TranscriptSearch,
+		Dangling:         p.MissingAudio,
 	}
 
 	par.LongerThan = toPGNumericMilliseconds(p.AtLeastSeconds)
@@ -549,6 +562,7 @@ func (s *store) Calls(ctx context.Context, p ListCallsParams) (rows []database.L
 			LongerThan:       par.LongerThan,
 			UnknownTG:        par.UnknownTG,
 			TranscriptSearch: par.TranscriptSearch,
+			Dangling:         p.MissingAudio,
 		})
 		if err != nil {
 			return err

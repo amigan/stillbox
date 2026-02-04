@@ -98,6 +98,7 @@ type Call struct {
 	TGGroup     *string       `db:"tg_group" json:"tgGroup,omitempty" yaml:"tg_group,omitempty"`
 	Source      int           `db:"source" json:"source,omitempty" yaml:"source,omitempty"`
 	Transcript  *string       `db:"transcript" json:"transcript,omitempty" yaml:"transcript,omitempty"`
+	DanglingAt  *time.Time    `db:"dangling_at" json:"danglingAt,omitempty" yaml:"dangling_at,omitempty"`
 }
 
 type Incident struct {
@@ -156,6 +157,7 @@ type SweptCall struct {
 	TGGroup     *string       `db:"tg_group" json:"tgGroup,omitempty" yaml:"tg_group,omitempty"`
 	Source      int           `db:"source" json:"source,omitempty" yaml:"source,omitempty"`
 	Transcript  *string       `db:"transcript" json:"transcript,omitempty" yaml:"transcript,omitempty"`
+	DanglingAt  *time.Time    `db:"dangling_at" json:"danglingAt,omitempty" yaml:"dangling_at,omitempty"`
 }
 
 type System struct {

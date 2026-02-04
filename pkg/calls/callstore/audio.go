@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"iter"
 	"net/url"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -110,6 +112,9 @@ type AudioBackend interface {
 
 	// Type returns the backend's type.
 	Type() string
+
+	// List enumerates all objects in the store, returning an iterator of call UUIDs.
+	ListCalls(ctx context.Context, prefix string) (iter.Seq[uuid.UUID], func() error)
 }
 
 type AudioBackends interface {
@@ -142,7 +147,7 @@ type AudioBackends interface {
 	JournalGCErrorMetric(backendName string, missing bool) prometheus.Counter
 
 	// DoGC performs a journal garbage collection cycle.
-	DoGC(context.Context, chan error)
+	DoGC(context.Context, chan<- error)
 }
 
 type audioBackends struct {
@@ -488,7 +493,7 @@ func (ab *audioBackends) Count() int {
 	return len(ab.backends)
 }
 
-func (s *audioBackends) DoGC(ctx context.Context, errCh chan error) {
+func (s *audioBackends) DoGC(ctx context.Context, errCh chan<- error) {
 	gcCount, gcAttempted, err := s.journal.GC(ctx, database.GetRefJournalParams{}, errCh)
 	if err != nil {
 		s.JournalGCErrorMetric("", false).Inc()
@@ -498,7 +503,7 @@ func (s *audioBackends) DoGC(ctx context.Context, errCh chan error) {
 	}
 }
 
-func (s *store) DoGC(ctx context.Context, errCh chan error) {
+func (s *store) DoGC(ctx context.Context, errCh chan<- error) {
 	s.audioBackends.DoGC(ctx, errCh)
 }
 
@@ -692,6 +697,14 @@ func (s *store) BlobPath(call *calls.CallAudio) (audioPath, audioRef string) {
 	}
 
 	return audPath, audPath
+}
+
+// CallIDFromBlobPath is the dual of BlobPath. It extracts a call ID from the path.
+func CallIDFromBlobPath(blobPath string) (uuid.UUID, error) {
+	basename := path.Base(blobPath)
+	id, _, _ := strings.Cut(basename, "_")
+
+	return uuid.Parse(id)
 }
 
 func CallAudioFromCAIDRow(id uuid.UUID, row database.GetCallAudioByIDRow) *calls.CallAudio {

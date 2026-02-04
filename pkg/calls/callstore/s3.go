@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"iter"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 
 	"github.com/go-viper/mapstructure/v2"
+	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -439,6 +441,37 @@ func (sb *s3Backend) DeleteBulk(ctx context.Context, refs []AbsoluteRef) error {
 	}
 
 	return err
+}
+
+func (sb *s3Backend) ListCalls(ctx context.Context, prefix string) (iter.Seq[uuid.UUID], func() error) {
+	var iterErr error
+	seq := func(yield func(uuid.UUID) bool) {
+		for it := range sb.cli.ListObjectsIter(ctx, sb.Bucket, minio.ListObjectsOptions{
+			Prefix:    prefix,
+			Recursive: true,
+		}) {
+			if it.Err != nil {
+				iterErr = it.Err
+				return
+			}
+
+			uu, err := CallIDFromBlobPath(it.Key)
+			if err != nil {
+				iterErr = err
+				return
+			}
+
+			if !yield(uu) {
+				return
+			}
+		}
+	}
+
+	finish := func() error {
+		return iterErr
+	}
+
+	return seq, finish
 }
 
 func (sb *s3Backend) ctxTimeout(ctx context.Context) (context.Context, context.CancelFunc) {

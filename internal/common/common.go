@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -159,4 +160,14 @@ func CollectStack() []byte {
 	buf := make([]byte, 64<<10)
 	buf = buf[:runtime.Stack(buf, false)]
 	return buf
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
+
+func RandSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

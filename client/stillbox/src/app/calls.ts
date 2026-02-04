@@ -9,6 +9,7 @@ export interface CallRecord {
   transcript: string | null;
   source: number | null;
   incidents: number; // in incident
+  missingAudio: boolean | null;
 }
 
 export interface CallStats {

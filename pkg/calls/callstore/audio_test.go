@@ -3,6 +3,7 @@ package callstore_test
 import (
 	"context"
 	"fmt"
+	"iter"
 	"net/url"
 	"sync"
 	"testing"
@@ -56,6 +57,25 @@ func (m *mockAudioBackend) Delete(ctx context.Context, _ *calls.CallAudio, audio
 
 func (m *mockAudioBackend) DeleteBulk(ctx context.Context, refs []callstore.AbsoluteRef) error {
 	return nil
+}
+
+func (m *mockAudioBackend) ListCalls(ctx context.Context, prefix string) (iter.Seq[uuid.UUID], func() error) {
+	var rerr error
+	return func(yield func(uuid.UUID) bool) {
+			for k := range m.calls {
+				uu, err := uuid.Parse(k)
+				if err != nil {
+					rerr = err
+					return
+				}
+
+				if !yield(uu) {
+					return
+				}
+			}
+		}, func() error {
+			return rerr
+		}
 }
 
 func (m *mockAudioBackend) Type() string {

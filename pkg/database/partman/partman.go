@@ -68,10 +68,19 @@ func PartitionError(pname string, err ...error) PartitionErr {
 }
 
 type PartitionManager interface {
+	// Go starts the partition manager thread.
 	Go(ctx context.Context)
+
+	// Check ensures that all partitions that should exist, do.
 	Check(ctx context.Context, now time.Time) error
+
+	// Interval returns the configured partitioning interval.
 	Interval() common.Interval
+
+	// ExistingPartitions returns a list of existing partitions in the database.
 	ExistingPartitions(parts []database.PartitionResult) ([]Partition, error)
+
+	// PartitionPrefix returns the partition prefix for a call with the given Time.
 	PartitionPrefix(time.Time) string
 }
 

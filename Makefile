@@ -17,7 +17,7 @@ client/stillbox/dist:
 web: web-install web-build
 
 web-build:
-	cd client/stillbox && ng build -c production
+	cd client/stillbox && node_modules/.bin/ng build -c production
 
 web-install:
 	cd client/stillbox && npm install

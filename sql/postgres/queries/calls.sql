@@ -177,7 +177,8 @@ WITH to_sweep AS (
 	tg_alpha_tag,
 	tg_group,
 	source,
-	transcript
+	transcript,
+	dangling_at
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= @range_start AND calls.call_date < @range_end
@@ -200,7 +201,8 @@ WITH to_sweep AS (
 	tg_alpha_tag,
 	tg_group,
 	source,
-	transcript
+	transcript,
+	dangling_at
 ) SELECT 
 	id,
 	submitter,
@@ -220,7 +222,8 @@ WITH to_sweep AS (
 	tg_alpha_tag,
 	tg_group,
 	source,
-	transcript
+	transcript,
+	dangling_at
 FROM to_sweep ON CONFLICT DO NOTHING;
 
 -- name: CleanupSweptCalls :execrows
@@ -251,7 +254,8 @@ c.source,
 		'HighlightAll=true')
 	ELSE NULL END) transcript,
 COUNT(ic.incident_id) incidents,
-(c.transcript IS NOT NULL)::BOOLEAN has_transcript
+(c.transcript IS NOT NULL)::BOOLEAN has_transcript,
+(c.dangling_at IS NOT NULL)::BOOLEAN missing_audio
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
 LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
@@ -280,7 +284,9 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN sqlc.narg('transcript_search')::TEXT IS NOT NULL AND @transcript_search != '' THEN (
 	to_tsvector('english', c.transcript) @@ websearch_to_tsquery('english', @transcript_search)
-	) ELSE TRUE END)
+	) ELSE TRUE END) AND
+(CASE WHEN @dangling::BOOLEAN = TRUE THEN (
+	c.dangling_at IS NOT NULL) ELSE TRUE END)
 GROUP BY c.id, c.call_date
 ORDER BY
 CASE WHEN @direction::TEXT = 'asc' THEN c.call_date END ASC,
@@ -319,7 +325,9 @@ CASE WHEN sqlc.narg('tags_not')::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN sqlc.narg('transcript_search')::TEXT IS NOT NULL AND @transcript_search != '' THEN (
 	to_tsvector('english', transcript) @@ websearch_to_tsquery('english', @transcript_search)
-	) ELSE TRUE END)
+	) ELSE TRUE END) AND
+(CASE WHEN @dangling::BOOLEAN = TRUE THEN (
+	c.dangling_at IS NOT NULL) ELSE TRUE END)
 ;
 
 -- name: DeleteCall :exec
@@ -357,7 +365,8 @@ SELECT
 	tg_alpha_tag,
 	tg_group,
 	source,
-	transcript
+	transcript,
+	dangling_at
 FROM calls
 WHERE id = @id;
 

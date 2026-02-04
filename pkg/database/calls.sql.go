@@ -252,7 +252,8 @@ SELECT
 	tg_alpha_tag,
 	tg_group,
 	source,
-	transcript
+	transcript,
+	dangling_at
 FROM calls
 WHERE id = $1
 `
@@ -276,6 +277,7 @@ type GetCallRow struct {
 	TGGroup     *string       `db:"tg_group" json:"tgGroup"`
 	Source      int           `db:"source" json:"source"`
 	Transcript  *string       `db:"transcript" json:"transcript"`
+	DanglingAt  *time.Time    `db:"dangling_at" json:"danglingAt"`
 }
 
 func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error) {
@@ -300,6 +302,7 @@ func (q *Queries) GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
 		&i.TGGroup,
 		&i.Source,
 		&i.Transcript,
+		&i.DanglingAt,
 	)
 	return i, err
 }
@@ -494,7 +497,7 @@ func (q *Queries) GetCallSubmitter(ctx context.Context, id uuid.UUID) (*int32, e
 }
 
 const getCalls = `-- name: GetCalls :many
-SELECT calls.id, calls.submitter, calls.system, calls.talkgroup, calls.call_date, calls.audio_name, calls.audio_blob, calls.duration, calls.audio_type, calls.audio_ref, calls.frequency, calls.frequencies, calls.patches, calls.talker_alias, calls.tg_label, calls.tg_alpha_tag, calls.tg_group, calls.source, calls.transcript FROM calls WHERE id = ANY($1::UUID[])
+SELECT calls.id, calls.submitter, calls.system, calls.talkgroup, calls.call_date, calls.audio_name, calls.audio_blob, calls.duration, calls.audio_type, calls.audio_ref, calls.frequency, calls.frequencies, calls.patches, calls.talker_alias, calls.tg_label, calls.tg_alpha_tag, calls.tg_group, calls.source, calls.transcript, calls.dangling_at FROM calls WHERE id = ANY($1::UUID[])
 `
 
 type GetCallsRow struct {
@@ -530,6 +533,7 @@ func (q *Queries) GetCalls(ctx context.Context, ids []uuid.UUID) ([]GetCallsRow,
 			&i.Call.TGGroup,
 			&i.Call.Source,
 			&i.Call.Transcript,
+			&i.Call.DanglingAt,
 		); err != nil {
 			return nil, err
 		}
@@ -776,7 +780,9 @@ CASE WHEN $4::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN $9::TEXT IS NOT NULL AND $9 != '' THEN (
 	to_tsvector('english', transcript) @@ websearch_to_tsquery('english', $9)
-	) ELSE TRUE END)
+	) ELSE TRUE END) AND
+(CASE WHEN $10::BOOLEAN = TRUE THEN (
+	c.dangling_at IS NOT NULL) ELSE TRUE END)
 `
 
 type ListCallsCountParams struct {
@@ -789,6 +795,7 @@ type ListCallsCountParams struct {
 	LongerThan       pgtype.Numeric `db:"longer_than" json:"longerThan"`
 	UnknownTG        bool           `db:"unknown_tg" json:"unknownTg"`
 	TranscriptSearch *string        `db:"transcript_search" json:"transcriptSearch"`
+	Dangling         bool           `db:"dangling" json:"dangling"`
 }
 
 func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error) {
@@ -802,6 +809,7 @@ func (q *Queries) ListCallsCount(ctx context.Context, arg ListCallsCountParams) 
 		arg.LongerThan,
 		arg.UnknownTG,
 		arg.TranscriptSearch,
+		arg.Dangling,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -825,7 +833,8 @@ c.source,
 		'HighlightAll=true')
 	ELSE NULL END) transcript,
 COUNT(ic.incident_id) incidents,
-(c.transcript IS NOT NULL)::BOOLEAN has_transcript
+(c.transcript IS NOT NULL)::BOOLEAN has_transcript,
+(c.dangling_at IS NOT NULL)::BOOLEAN missing_audio
 FROM calls c
 JOIN talkgroups tgs ON c.talkgroup = tgs.tgid AND c.system = tgs.system_id
 LEFT JOIN incidents_calls ic ON c.id = ic.calls_tbl_id AND c.call_date = ic.call_date
@@ -854,13 +863,15 @@ CASE WHEN $5::TEXT[] IS NOT NULL THEN
 	) ELSE TRUE END) AND
 (CASE WHEN $1::TEXT IS NOT NULL AND $1 != '' THEN (
 	to_tsvector('english', c.transcript) @@ websearch_to_tsquery('english', $1)
-	) ELSE TRUE END)
+	) ELSE TRUE END) AND
+(CASE WHEN $10::BOOLEAN = TRUE THEN (
+	c.dangling_at IS NOT NULL) ELSE TRUE END)
 GROUP BY c.id, c.call_date
 ORDER BY
-CASE WHEN $10::TEXT = 'asc' THEN c.call_date END ASC,
-CASE WHEN $10 = 'desc' THEN c.call_date END DESC
-OFFSET $11 ROWS
-FETCH NEXT $12 ROWS ONLY
+CASE WHEN $11::TEXT = 'asc' THEN c.call_date END ASC,
+CASE WHEN $11 = 'desc' THEN c.call_date END DESC
+OFFSET $12 ROWS
+FETCH NEXT $13 ROWS ONLY
 `
 
 type ListCallsPParams struct {
@@ -873,6 +884,7 @@ type ListCallsPParams struct {
 	SourceFilter     *string        `db:"source_filter" json:"sourceFilter"`
 	LongerThan       pgtype.Numeric `db:"longer_than" json:"longerThan"`
 	UnknownTG        bool           `db:"unknown_tg" json:"unknownTg"`
+	Dangling         bool           `db:"dangling" json:"dangling"`
 	Direction        string         `db:"direction" json:"direction"`
 	Offset           int32          `db:"offset" json:"offset"`
 	PerPage          int32          `db:"per_page" json:"perPage"`
@@ -889,6 +901,7 @@ type ListCallsPRow struct {
 	Transcript    interface{} `db:"transcript" json:"transcript,omitempty"`
 	Incidents     int64       `db:"incidents" json:"incidents,omitempty,omitzero"`
 	HasTranscript bool        `db:"has_transcript" json:"hasTranscript,omitzero"`
+	MissingAudio  bool        `db:"missing_audio" json:"missingAudio,omitzero"`
 }
 
 func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error) {
@@ -902,6 +915,7 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 		arg.SourceFilter,
 		arg.LongerThan,
 		arg.UnknownTG,
+		arg.Dangling,
 		arg.Direction,
 		arg.Offset,
 		arg.PerPage,
@@ -924,6 +938,7 @@ func (q *Queries) ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListC
 			&i.Transcript,
 			&i.Incidents,
 			&i.HasTranscript,
+			&i.MissingAudio,
 		); err != nil {
 			return nil, err
 		}
@@ -1020,7 +1035,8 @@ WITH to_sweep AS (
 	tg_alpha_tag,
 	tg_group,
 	source,
-	transcript
+	transcript,
+	dangling_at
 	FROM calls
 	JOIN incidents_calls ic ON ic.call_id = calls.id
 	WHERE calls.call_date >= $1 AND calls.call_date < $2
@@ -1043,7 +1059,8 @@ WITH to_sweep AS (
 	tg_alpha_tag,
 	tg_group,
 	source,
-	transcript
+	transcript,
+	dangling_at
 ) SELECT 
 	id,
 	submitter,
@@ -1063,7 +1080,8 @@ WITH to_sweep AS (
 	tg_alpha_tag,
 	tg_group,
 	source,
-	transcript
+	transcript,
+	dangling_at
 FROM to_sweep ON CONFLICT DO NOTHING
 `
 
