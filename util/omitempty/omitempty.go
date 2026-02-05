@@ -111,7 +111,7 @@ func process(filePath string, fd FieldDecider) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer outputFile.Close()
+	defer outputFile.Close() //nolint:errcheck
 	_, err = outputFile.Write(buf.Bytes())
 	if err != nil {
 		log.Fatal(err)

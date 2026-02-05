@@ -12,6 +12,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"github.com/hashicorp/go-multierror"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -132,7 +133,10 @@ func NewClient(ctx context.Context, conf config.DB) (*Postgres, error) {
 		log.Info().Err(err).Msg("migrations done")
 	}
 
-	m.Close()
+	serr, dberr := m.Close()
+	if serr != nil || dberr != nil {
+		return nil, multierror.Append(serr, dberr)
+	}
 
 	pgConf, err := pgxpool.ParseConfig(conf.Connect)
 	if err != nil {

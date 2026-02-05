@@ -59,7 +59,7 @@ func main() {
 
 	err := app.Run(context.Background(), os.Args)
 	if err != nil {
-		os.Stderr.Write([]byte("Error: " + err.Error() + "\n"))
+		_, _ = os.Stderr.Write([]byte("Error: " + err.Error() + "\n"))
 		os.Exit(1)
 	}
 }

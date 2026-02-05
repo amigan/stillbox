@@ -70,7 +70,7 @@ func (p *moveProgresser) ttyCb(msg callstore.MoveProgressMsg) {
 			progressbar.OptionShowCount(),
 			progressbar.OptionShowIts(),
 			progressbar.OptionOnCompletion(func() {
-				os.Stderr.WriteString("\n")
+				_, _ = os.Stderr.WriteString("\n")
 			}),
 			progressbar.OptionSpinnerType(rand.Intn(75)),
 			progressbar.OptionFullWidth(),
@@ -201,7 +201,7 @@ func fsckCommand(cfg *config.Config) *cli.Command {
 					progressbar.OptionSpinnerType(rand.Intn(75)),
 					progressbar.OptionFullWidth(),
 					progressbar.OptionOnCompletion(func() {
-						os.Stderr.WriteString("\n")
+						_, _ = os.Stderr.WriteString("\n")
 					}),
 					progressbar.OptionSetRenderBlankState(true),
 					progressbar.OptionShowCount(),

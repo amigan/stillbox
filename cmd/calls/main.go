@@ -59,7 +59,7 @@ func getCreds() {
 	if password == nil || *password == "" {
 		fmt.Print("Password: ")
 		bytePass, err := term.ReadPassword(int(syscall.Stdin))
-		os.Stderr.Write([]byte{'\n'})
+		_, _ = os.Stderr.Write([]byte{'\n'})
 		if err != nil {
 			panic(err)
 		}
@@ -147,7 +147,7 @@ func main() {
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
-	defer c.Close()
+	defer c.Close() //nolint:errcheck
 	log.Printf("connected")
 
 	done := make(chan struct{})

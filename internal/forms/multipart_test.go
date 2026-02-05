@@ -32,7 +32,9 @@ func makeExportRequest(ej *xport.ExportJob, url string) *http.Request {
 	_, err = w.Write(ej.Template)
 	perr(err)
 
-	body.Close()
+	if err := body.Close(); err != nil {
+		panic(err)
+	}
 
 	r, err := http.NewRequest(http.MethodPost, url, &buf)
 	perr(err)

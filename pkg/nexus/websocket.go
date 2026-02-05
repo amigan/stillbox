@@ -125,7 +125,7 @@ func (conn *wsConn) writePump() {
 	pingTicker := time.NewTicker(pingInterval)
 	defer func() {
 		pingTicker.Stop()
-		conn.Close()
+		_ = conn.Close()
 	}()
 
 	for {

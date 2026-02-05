@@ -121,7 +121,7 @@ func (s *Server) clientRoute(r chi.Router, clientRoot fs.FS) {
 				return
 			}
 		} else {
-			f.Close()
+			_ = f.Close()
 		}
 
 		rctx := chi.RouteContext(r.Context())

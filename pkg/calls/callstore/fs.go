@@ -67,7 +67,7 @@ func (fsb *fsBackend) Get(ctx context.Context, call *calls.CallAudio, refPath Au
 
 		return nil, nil, err
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck
 
 	// special case: we have a ResponseWriter set. Emit the file directly out the socket.
 	if w := opts.zcrw; w != nil {

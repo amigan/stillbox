@@ -71,7 +71,7 @@ func (l *Logger) Install() {
 
 func (l *Logger) Close() {
 	for _, lg := range l.files {
-		lg.Close()
+		_ = lg.Close()
 	}
 
 	l.writers = nil

@@ -93,7 +93,6 @@ func (f *Filter) IsEmpty() bool {
 	defer f.RUnlock()
 
 	if len(f.Talkgroups) > 0 ||
-		len(f.TalkgroupsNot) > 0 ||
 		len(f.TalkgroupTagsAll) > 0 ||
 		len(f.TalkgroupTagsAny) > 0 ||
 		len(f.TalkgroupsNot) > 0 {

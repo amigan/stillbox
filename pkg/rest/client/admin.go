@@ -44,7 +44,7 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	b := resp.Body
 
@@ -100,7 +100,7 @@ func (c *client) CallsGC(ctx context.Context) error {
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode != 200 {
 		body, err := io.ReadAll(resp.Body)
@@ -141,7 +141,7 @@ func (c *client) CallsFsck(ctx context.Context, p *callstore.FsckParams, progres
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(resp.Body)
