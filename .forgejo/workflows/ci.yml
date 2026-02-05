@@ -1,4 +1,4 @@
-name: testing
+name: ci
 enable-email-notifications: true
 
 on:
