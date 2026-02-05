@@ -20,7 +20,6 @@ type DBTestSuite struct {
 	suite.Suite
 	db    *testutil.DB
 	store callstore.Store
-	tgs   tgstore.Store
 }
 
 func (s *DBTestSuite) TearDownTest() {

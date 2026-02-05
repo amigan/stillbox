@@ -135,6 +135,7 @@ func (a *authn) SubjectMiddleware(requireToken bool) func(http.Handler) http.Han
 	}
 }
 
+//nolint:staticcheck // These are emitted as HTTP errors and should be capitalized
 var (
 	ErrLoginFailed  = errors.New("Login failed")
 	ErrInternal     = errors.New("Internal server error")
@@ -152,7 +153,6 @@ func ErrorResponse(w http.ResponseWriter, err error) {
 	case ErrInternal:
 		fallthrough
 	default:
-		log.Error().Err(err).Msg("authn error")
 		http.Error(w, ErrInternal.Error(), http.StatusInternalServerError)
 	}
 }

@@ -36,7 +36,11 @@ func call(url string, call *calls.Call) error {
 	if err != nil {
 		return fmt.Errorf("relay form parse: %w", err)
 	}
-	body.Close()
+
+	err = body.Close()
+	if err != nil {
+		return err
+	}
 
 	r, err := http.NewRequest(http.MethodPost, url, &buf)
 	if err != nil {

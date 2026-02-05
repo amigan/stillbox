@@ -164,10 +164,7 @@ func (ipa *IP) Allowed(r *http.Request) error {
 		return nil
 	}
 
-	allowed := false
-	if ipa.allowed != nil && ipa.allowed.Contains(addr) {
-		allowed = true
-	}
+	allowed := ipa.allowed != nil && ipa.allowed.Contains(addr)
 
 	if ipa.denied != nil && ipa.denied.Contains(addr) {
 		return ErrAccessDenied

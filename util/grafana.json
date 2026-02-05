@@ -98,7 +98,23 @@
               {
                 "id": "color",
                 "value": {
-                  "mode": "continuous-RdYlGr"
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "stillbox store call errors per min"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-red",
+                  "mode": "fixed"
                 }
               }
             ]
@@ -153,6 +169,20 @@
           "legendFormat": "$prom_job_name filtered calls per min",
           "range": true,
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "e0ycKTz4k"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "rate(stillbox_callstore_ingest_error_count{job=\"$prom_job_name\"}[$__rate_interval])*60",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "$prom_job_name store call errors per min",
+          "range": true,
+          "refId": "C"
         }
       ],
       "title": "Calls ingested",
@@ -1616,7 +1646,7 @@
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {
@@ -1635,5 +1665,5 @@
   "timezone": "",
   "title": "StillboxAPM",
   "uid": "etQuvBTgf",
-  "version": 36
+  "version": 40
 }

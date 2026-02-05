@@ -273,7 +273,7 @@ func (sb *s3Backend) getBlob(ctx context.Context, objKey string) ([]byte, error)
 		return nil, err
 	}
 
-	defer b.Close()
+	defer b.Close() //nolint:errcheck
 
 	return io.ReadAll(b)
 }

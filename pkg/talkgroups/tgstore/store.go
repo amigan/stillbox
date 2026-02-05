@@ -602,7 +602,7 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 			SystemID:  *input.SystemID,
 			TGID:      *input.TGID,
 		}})
-		defer versionBatch.Close()
+		defer versionBatch.Close() //nolint:errcheck
 
 		versionBatch.Exec(func(_ int, err error) {
 			if err != nil {
@@ -808,7 +808,7 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 		}
 
 		tgUpsertBatch := db.UpsertTalkgroup(ctx, input)
-		defer tgUpsertBatch.Close()
+		defer tgUpsertBatch.Close() //nolint:errcheck
 
 		tgUpsertBatch.QueryRow(func(_ int, r database.Talkgroup, err error) {
 			if err != nil {
@@ -832,7 +832,7 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 		}
 
 		versionBatch := db.StoreTGVersion(ctx, versionParams)
-		defer versionBatch.Close()
+		defer versionBatch.Close() //nolint:errcheck
 
 		versionBatch.Exec(func(_ int, err error) {
 			if err != nil {

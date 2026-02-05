@@ -5,6 +5,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/database"
+	"github.com/hashicorp/go-multierror"
 )
 
 type FsckParams struct {
@@ -27,8 +28,6 @@ func (s *store) Fsck(ctx context.Context, par FsckParams) (result FsckReport, er
 	defer s.maintInProgress.Unlock()
 
 	err = s.db.InTx(ctx, func(tx database.Store) error {
-		defer func() {
-		}()
 		backend := s.audioBackends.Backend(par.Backend)
 		if backend == nil {
 			return ErrNXBackend
@@ -53,13 +52,22 @@ func (s *store) Fsck(ctx context.Context, par FsckParams) (result FsckReport, er
 			return err
 		}
 
+		defer func() {
+			nerr := tx.DropTable(ctx, tableName)
+			if nerr != nil {
+				if err != nil {
+					err = multierror.Append(err, nerr)
+				} else {
+					err = nerr
+				}
+			}
+		}()
+
 		it, errf := backend.ListCalls(ctx, "")
 		copied, err := tx.CopyIntoFsckTempTable(ctx, tableName, it, copyProgCh)
 		if err != nil {
 			return err
 		}
-
-		defer tx.DropTable(ctx, tableName)
 
 		if err := errf(); err != nil {
 			return err

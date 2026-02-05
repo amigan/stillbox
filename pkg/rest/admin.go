@@ -36,7 +36,7 @@ func (*adminAPI) runJournalGC(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 				errd = true
 			}
-			fmt.Fprintln(w, err)
+			_, _ = fmt.Fprintln(w, err)
 		}
 	}()
 	cst.DoGC(ctx, errCh)

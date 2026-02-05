@@ -190,7 +190,10 @@ func (s *Relay) Call(ctx context.Context, call *calls.Call) (err error) {
 		return fmt.Errorf("relay set API key: %w", err)
 	}
 
-	body.Close()
+	err = body.Close()
+	if err != nil {
+		return fmt.Errorf("relay multipart close: %w", err)
+	}
 
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, s.url.String(), &buf)
 	if err != nil {
@@ -205,7 +208,7 @@ func (s *Relay) Call(ctx context.Context, call *calls.Call) (err error) {
 		return fmt.Errorf("relay %s: %w", s.name, err)
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode != http.StatusOK {
 		et, _ := io.ReadAll(r.Body)

@@ -63,7 +63,7 @@ func (ps *progressSender[T]) writeMsg(msg T) {
 	_, _ = ps.w.Write([]byte(msgSt))
 
 	if !ps.closed.Load() {
-		ps.rc.Flush()
+		_ = ps.rc.Flush()
 	}
 }
 

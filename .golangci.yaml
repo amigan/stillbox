@@ -1,0 +1,7 @@
+version: "2"
+linters:
+  settings:
+    staticcheck:
+      checks:
+        - '-QF1001' # De Morgan's law; does not always make expressions clearer
+        - '-QF1008' # embedded field elide; ditto

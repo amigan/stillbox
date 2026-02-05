@@ -26,8 +26,6 @@ type TestSuite struct {
 	db *testutil.DB
 }
 
-type testHook func(context.Context, *testing.T, incstore.Store)
-
 func SetupTest() *TestSuite {
 	suite := &TestSuite{
 		db: testutil.NewDB(testutil.DailyPartConfig()),

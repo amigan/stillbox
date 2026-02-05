@@ -32,7 +32,6 @@ type pipe struct {
 	relayer     *sinks.RelayManager
 	metrics     pipeMetrics
 	filters     []ingestFilter
-	ifCfgHash   int64
 	tgstore     tgstore.Store
 }
 

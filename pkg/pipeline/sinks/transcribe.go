@@ -330,7 +330,7 @@ func (h *httpTranscriberTransport) Dispatch(ctx context.Context, call *calls.Cal
 		return err
 	}
 
-	defer r.Body.Close()
+	defer r.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode != http.StatusOK {
 		et, _ := io.ReadAll(r.Body)
