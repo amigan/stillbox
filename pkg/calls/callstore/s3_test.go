@@ -33,7 +33,6 @@ const TestBucketName = "test"
 type s3TestInstance struct {
 	bucket string
 
-	b2Mode        bool
 	oldPrefixMode bool
 	svr           *httptest.Server
 	url           *url.URL
@@ -236,8 +235,6 @@ func (s *s3TestInstance) BackendConfig(b2mode bool, legacyPrefix bool) config.St
 		Ingest: true,
 	}
 }
-
-type s3testHook func(ctx context.Context, ti *s3TestInstance)
 
 func TestS3Prune(t *testing.T) {
 	ctx := fillCtxRbac(t, t.Context())

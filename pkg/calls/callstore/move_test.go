@@ -52,6 +52,7 @@ func TestMove(t *testing.T) {
 				time.Sleep(time.Millisecond * 200)
 				cancel()
 			},
+			expectErr: context.Canceled,
 		},
 		{
 			desc:          "base zero rows",
@@ -81,7 +82,10 @@ func TestMove(t *testing.T) {
 				time.Sleep(time.Duration(rand.Intn(4)) * time.Millisecond)
 				for range dbCalls[0:tc.expectNumRows] {
 					gcaIter++
-					cb(&dbCalls[gcaIter])
+					err := cb(&dbCalls[gcaIter])
+					if err != nil {
+						return err
+					}
 				}
 				return nil
 			})
@@ -125,7 +129,6 @@ func BenchmarkMove(b *testing.B) {
 	log.Logger = log.Level(zerolog.Disabled)
 
 	for b.Loop() {
-		ctx, _ = context.WithCancel(ctx)
 		db := new(dbmock.Store)
 		db.EXPECT().InTx(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, f func(database.Store) error) error {
 			return f(db)
@@ -140,7 +143,10 @@ func BenchmarkMove(b *testing.B) {
 			time.Sleep(time.Duration(rand.Intn(4)) * time.Millisecond)
 			for range dbCalls[0:expectNumRows] {
 				gcaIter++
-				cb(&dbCalls[gcaIter])
+				err := cb(&dbCalls[gcaIter])
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		})

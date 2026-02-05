@@ -214,10 +214,16 @@ func fsckCommand(cfg *config.Config) *cli.Command {
 
 					if msg.FinalCallsDangling != nil {
 						pb.ChangeMax64(*msg.CallsEnumerated)
-						pb.Set64(*msg.CallsEnumerated)
+						err := pb.Set64(*msg.CallsEnumerated)
+						if err != nil {
+							panic(err)
+						}
 						fmt.Printf("%d calls dangling.\n", *msg.FinalCallsDangling)
 					} else if msg.CallsEnumerated != nil {
-						pb.Set64(*msg.CallsEnumerated)
+						err := pb.Set64(*msg.CallsEnumerated)
+						if err != nil {
+							panic(err)
+						}
 					}
 
 				}
