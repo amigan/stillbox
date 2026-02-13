@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -388,17 +389,20 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 	m := s.newMover(dst, refT, par)
 	err = m.do(ctx, dbPar)
 	log.Info().Err(err).Msg("move done")
+	var numRowsWg sync.WaitGroup // this is used a little differently from a normal wg, it is just to synchronize numRows
 	numRows = m.completedRows.Load()
 
 	if par.ProgressChan != nil {
 		par.ProgressChan <- MoveProgressMsg{Completed: common.PtrTo(numRows - 1)}
 	}
 
+	numRowsWg.Add(1)
 	if err != nil {
 		go func() {
 			// unlock only after the rollback finishes
 			defer s.maintInProgress.Unlock()
 			numRows = 0
+			numRowsWg.Done()
 			rbErr := refT.Rollback(context.WithoutCancel(ctx))
 			if rbErr != nil {
 				err = multierror.Append(err, rbErr)
@@ -410,6 +414,7 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 		go func() {
 			// unlock only after the commit finishes
 			defer s.maintInProgress.Unlock()
+			numRowsWg.Done()
 			err := refT.Commit(context.WithoutCancel(ctx))
 			if err != nil {
 				log.Error().Err(err).Msg("move tx commit")
@@ -418,6 +423,8 @@ func (s *store) MoveCallAudio(ctx context.Context, par MoveCallParams) (numRows 
 			}
 		}()
 	}
+
+	numRowsWg.Wait()
 
 	return
 }
