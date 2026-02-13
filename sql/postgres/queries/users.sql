@@ -45,11 +45,12 @@ WHERE username = $1;
 INSERT INTO api_keys(
 	owner_id,
 	name,
+	kind,
 	created_at,
 	expires,
 	disabled,
 	api_key
-	) VALUES (@owner_id, @name, @created_at, @expires, @disabled, @hashed_key);
+	) VALUES (@owner_id, @name, @kind, @created_at, @expires, @disabled, @hashed_key);
 
 -- name: DeleteAPIKey :exec
 DELETE FROM api_keys WHERE api_key = $1;
@@ -59,6 +60,7 @@ SELECT
 	a.id,
 	a.owner_id,
 	a.name,
+	a.kind,
 	a.created_at,
 	a.expires,
 	a.disabled,
@@ -66,7 +68,7 @@ SELECT
 	u.username
 FROM api_keys a
 JOIN users u ON (a.owner_id = u.id)
-WHERE api_key = $1;
+WHERE api_key = @key AND kind = @kind;
 
 -- name: GetAppPrefs :one
 SELECT (prefs->>(@app_name::TEXT))::JSONB FROM users WHERE id = @uid;

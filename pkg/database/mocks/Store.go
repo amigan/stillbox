@@ -2094,8 +2094,8 @@ func (_c *Store_FsckRefs_Call) RunAndReturn(run func(ctx context.Context, tableN
 }
 
 // GetAPIKey provides a mock function for the type Store
-func (_mock *Store) GetAPIKey(ctx context.Context, apiKey string) (database.GetAPIKeyRow, error) {
-	ret := _mock.Called(ctx, apiKey)
+func (_mock *Store) GetAPIKey(ctx context.Context, key string, kind int) (database.GetAPIKeyRow, error) {
+	ret := _mock.Called(ctx, key, kind)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetAPIKey")
@@ -2103,16 +2103,16 @@ func (_mock *Store) GetAPIKey(ctx context.Context, apiKey string) (database.GetA
 
 	var r0 database.GetAPIKeyRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (database.GetAPIKeyRow, error)); ok {
-		return returnFunc(ctx, apiKey)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) (database.GetAPIKeyRow, error)); ok {
+		return returnFunc(ctx, key, kind)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) database.GetAPIKeyRow); ok {
-		r0 = returnFunc(ctx, apiKey)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) database.GetAPIKeyRow); ok {
+		r0 = returnFunc(ctx, key, kind)
 	} else {
 		r0 = ret.Get(0).(database.GetAPIKeyRow)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = returnFunc(ctx, apiKey)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int) error); ok {
+		r1 = returnFunc(ctx, key, kind)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -2126,12 +2126,13 @@ type Store_GetAPIKey_Call struct {
 
 // GetAPIKey is a helper method to define mock.On call
 //   - ctx context.Context
-//   - apiKey string
-func (_e *Store_Expecter) GetAPIKey(ctx interface{}, apiKey interface{}) *Store_GetAPIKey_Call {
-	return &Store_GetAPIKey_Call{Call: _e.mock.On("GetAPIKey", ctx, apiKey)}
+//   - key string
+//   - kind int
+func (_e *Store_Expecter) GetAPIKey(ctx interface{}, key interface{}, kind interface{}) *Store_GetAPIKey_Call {
+	return &Store_GetAPIKey_Call{Call: _e.mock.On("GetAPIKey", ctx, key, kind)}
 }
 
-func (_c *Store_GetAPIKey_Call) Run(run func(ctx context.Context, apiKey string)) *Store_GetAPIKey_Call {
+func (_c *Store_GetAPIKey_Call) Run(run func(ctx context.Context, key string, kind int)) *Store_GetAPIKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -2141,9 +2142,14 @@ func (_c *Store_GetAPIKey_Call) Run(run func(ctx context.Context, apiKey string)
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -2154,7 +2160,7 @@ func (_c *Store_GetAPIKey_Call) Return(getAPIKeyRow database.GetAPIKeyRow, err e
 	return _c
 }
 
-func (_c *Store_GetAPIKey_Call) RunAndReturn(run func(ctx context.Context, apiKey string) (database.GetAPIKeyRow, error)) *Store_GetAPIKey_Call {
+func (_c *Store_GetAPIKey_Call) RunAndReturn(run func(ctx context.Context, key string, kind int) (database.GetAPIKeyRow, error)) *Store_GetAPIKey_Call {
 	_c.Call.Return(run)
 	return _c
 }

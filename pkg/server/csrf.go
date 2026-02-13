@@ -2,12 +2,11 @@ package server
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
 	"fmt"
-	"math/big"
 	"net/http"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/authn"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"github.com/go-chi/jwtauth/v5"
@@ -19,20 +18,7 @@ const (
 )
 
 func genCSRFKey() string {
-	result := ""
-	for {
-		if len(result) >= 32 {
-			return result
-		}
-		num, err := rand.Int(rand.Reader, big.NewInt(int64(127)))
-		if err != nil {
-			panic(err)
-		}
-		n := num.Int64()
-		if n > 32 && n < 127 {
-			result += string(rune(n))
-		}
-	}
+	return common.CryptRandSeq(32)
 }
 
 // CSRFMiddleware returns a middleware to generate and validate CSRF tokens.

@@ -65,6 +65,7 @@ type ApiKey struct {
 	CreatedAt time.Time  `db:"created_at" json:"createdAt,omitempty" yaml:"created_at,omitempty"`
 	Expires   *time.Time `db:"expires" json:"expires,omitempty" yaml:"expires,omitempty"`
 	Disabled  bool       `db:"disabled" json:"disabled,omitempty" yaml:"disabled,omitempty"`
+	Kind      int        `db:"kind" json:"kind,omitempty" yaml:"kind,omitempty"`
 	ApiKey    string     `db:"api_key" json:"apiKey,omitempty" yaml:"api_key,omitempty"`
 }
 

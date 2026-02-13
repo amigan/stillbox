@@ -48,10 +48,10 @@ type Store interface {
 	RecordLogin(ctx context.Context, username, source string) error
 
 	// GetUserByAPIKey gets a user by API key.
-	GetAPIKey(ctx context.Context, key string) (database.GetAPIKeyRow, error)
+	GetAPIKey(ctx context.Context, keyKind APIKeyKind, key string) (database.GetAPIKeyRow, error)
 
 	// CreateAPIKey creates a new API key.
-	CreateAPIKey(ctx context.Context, uid *UserID, name *string, expiresAt *time.Time, disabled bool) (*APIKey, error)
+	CreateAPIKey(ctx context.Context, uid *UserID, name *string, expiresAt *time.Time, disabled bool, kind APIKeyKind) (*APIKey, error)
 
 	// ChangePassword changes a user's password.
 	ChangePassword(ctx context.Context, username string, newPassword string) error
@@ -193,8 +193,12 @@ func (s *postgresStore) SetUserPrefs(ctx context.Context, username string, appNa
 	return s.db.SetAppPrefs(ctx, appName, prefs, int(u.ID))
 }
 
-func (s *postgresStore) GetAPIKey(ctx context.Context, b64hash string) (database.GetAPIKeyRow, error) {
-	return s.db.GetAPIKey(ctx, b64hash)
+func (s *postgresStore) GetAPIKey(ctx context.Context, keyKind APIKeyKind, b64hash string) (database.GetAPIKeyRow, error) {
+	if !keyKind.Valid() {
+		return database.GetAPIKeyRow{}, ErrAPIKeyKindInvalid
+	}
+
+	return s.db.GetAPIKey(ctx, b64hash, int(keyKind))
 }
 
 func (s *postgresStore) RecordLogin(ctx context.Context, username, source string) error {
@@ -207,7 +211,7 @@ func (s *postgresStore) RecordLogin(ctx context.Context, username, source string
 	return s.db.RecordUserLogin(ctx, username, &now, &ip)
 }
 
-func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *string, expiresAt *time.Time, disabled bool) (*APIKey, error) {
+func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *string, expiresAt *time.Time, disabled bool, kind APIKeyKind) (*APIKey, error) {
 	var userID UserID
 	if owner != nil {
 		userID = *owner
@@ -223,6 +227,7 @@ func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *s
 	ak := &APIKey{
 		OwnerID:   userID,
 		Name:      name,
+		Kind:      kind,
 		CreatedAt: jsontypes.Time(time.Now()),
 		Expires:   (*jsontypes.Time)(expiresAt),
 		Disabled:  disabled,
@@ -234,13 +239,17 @@ func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *s
 	}
 
 	// generate it after auth
-	uu := uuid.New()
-	hash256 := sha256.Sum256([]byte(uu.String()))
-	hashedKey := base64.StdEncoding.EncodeToString(hash256[:])
+	key, hashedKey, err := GenerateAPIKey(kind)
+	if err != nil {
+		return nil, err
+	}
+
+	ak.Key = key
 
 	err = s.db.CreateAPIKey(ctx, database.CreateAPIKeyParams{
 		CreatedAt: ak.CreatedAt.Time(),
 		Name:      ak.Name,
+		Kind:      int(ak.Kind),
 		OwnerID:   ak.OwnerID.Int(),
 		Expires:   expiresAt,
 		Disabled:  disabled,
@@ -255,10 +264,27 @@ func (s *postgresStore) CreateAPIKey(ctx context.Context, owner *UserID, name *s
 		}
 	}
 
-	ju := jsontypes.UUID(uu)
-	ak.Key = &ju
-
 	return ak, nil
+}
+
+func GenerateAPIKey(kind APIKeyKind) (key, hash string, err error) {
+	if kind.Valid() {
+		return "", "", ErrAPIKeyKindInvalid
+	}
+
+	switch kind {
+	case APIKeyKindRdio:
+		key = uuid.New().String()
+	case APIKeyKindAPIKey:
+		key = common.CryptRandSeq(256)
+	}
+
+	return key, APIKeyHash(key), nil
+}
+
+func APIKeyHash(key string) string {
+	hash := sha256.Sum256([]byte(key))
+	return base64.StdEncoding.EncodeToString(hash[:])
 }
 
 func (s *postgresStore) ChangePassword(ctx context.Context, username string, newPassword string) (err error) {

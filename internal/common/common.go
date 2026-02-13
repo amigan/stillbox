@@ -2,7 +2,9 @@ package common
 
 import (
 	"context"
+	cryptrand "crypto/rand"
 	"fmt"
+	"math/big"
 	"math/rand"
 	"reflect"
 	"runtime"
@@ -170,4 +172,21 @@ func RandSeq(n int) string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func CryptRandSeq(n int) string {
+	result := ""
+	for {
+		if len(result) >= n {
+			return result
+		}
+		num, err := cryptrand.Int(cryptrand.Reader, big.NewInt(int64(127)))
+		if err != nil {
+			panic(err)
+		}
+		n := num.Int64()
+		if n > 32 && n < 127 {
+			result += string(rune(n))
+		}
+	}
 }

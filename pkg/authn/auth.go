@@ -39,8 +39,11 @@ type Authn interface {
 	// NewAccessToken generates a new access token.
 	NewAccessToken(username string) string
 
-	// APIKeyMiddleware requires a multipart/form-data API key be set.
-	APIKeyMiddleware(formKey string) func(http.Handler) http.Handler
+	// MultipartAPIKeyMiddleware requires a multipart/form-data API key be set.
+	MultipartAPIKeyMiddleware(formKey string) func(http.Handler) http.Handler
+
+	// APIKeyMiddleware requires an API key passed in the Authorization: header.
+	APIKeyMiddleware() func(http.Handler) http.Handler
 
 	// LocalAdminMiddleware is used for local Unix domain socket connections..
 	LocalAdminMiddleware() func(http.Handler) http.Handler

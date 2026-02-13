@@ -15,16 +15,18 @@ const createAPIKey = `-- name: CreateAPIKey :exec
 INSERT INTO api_keys(
 	owner_id,
 	name,
+	kind,
 	created_at,
 	expires,
 	disabled,
 	api_key
-	) VALUES ($1, $2, $3, $4, $5, $6)
+	) VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type CreateAPIKeyParams struct {
 	OwnerID   int        `db:"owner_id" json:"ownerId"`
 	Name      *string    `db:"name" json:"name"`
+	Kind      int        `db:"kind" json:"kind"`
 	CreatedAt time.Time  `db:"created_at" json:"createdAt"`
 	Expires   *time.Time `db:"expires" json:"expires"`
 	Disabled  bool       `db:"disabled" json:"disabled"`
@@ -35,6 +37,7 @@ func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) erro
 	_, err := q.db.Exec(ctx, createAPIKey,
 		arg.OwnerID,
 		arg.Name,
+		arg.Kind,
 		arg.CreatedAt,
 		arg.Expires,
 		arg.Disabled,
@@ -120,6 +123,7 @@ SELECT
 	a.id,
 	a.owner_id,
 	a.name,
+	a.kind,
 	a.created_at,
 	a.expires,
 	a.disabled,
@@ -127,13 +131,14 @@ SELECT
 	u.username
 FROM api_keys a
 JOIN users u ON (a.owner_id = u.id)
-WHERE api_key = $1
+WHERE api_key = $1 AND kind = $2
 `
 
 type GetAPIKeyRow struct {
 	ID        int        `db:"id" json:"id"`
 	OwnerID   int        `db:"owner_id" json:"ownerId"`
 	Name      *string    `db:"name" json:"name"`
+	Kind      int        `db:"kind" json:"kind"`
 	CreatedAt time.Time  `db:"created_at" json:"createdAt"`
 	Expires   *time.Time `db:"expires" json:"expires"`
 	Disabled  bool       `db:"disabled" json:"disabled"`
@@ -141,13 +146,14 @@ type GetAPIKeyRow struct {
 	Username  string     `db:"username" json:"username"`
 }
 
-func (q *Queries) GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, error) {
-	row := q.db.QueryRow(ctx, getAPIKey, apiKey)
+func (q *Queries) GetAPIKey(ctx context.Context, key string, kind int) (GetAPIKeyRow, error) {
+	row := q.db.QueryRow(ctx, getAPIKey, key, kind)
 	var i GetAPIKeyRow
 	err := row.Scan(
 		&i.ID,
 		&i.OwnerID,
 		&i.Name,
+		&i.Kind,
 		&i.CreatedAt,
 		&i.Expires,
 		&i.Disabled,

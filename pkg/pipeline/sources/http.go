@@ -38,12 +38,12 @@ func NewRdioHTTP(auth authn.Authn, ing Ingestor) *RdioHTTP {
 
 // InstallPublicRoutes installs the HTTP source's routes to the provided chi Router.
 func (h *RdioHTTP) InstallPublicRoutes(r chi.Router) {
-	r.With(h.auth.APIKeyMiddleware("key")).Post("/api/call-upload", h.routeCallUpload)
+	r.With(h.auth.MultipartAPIKeyMiddleware("key")).Post("/api/call-upload", h.routeCallUpload)
 }
 
 type CallUploadRequest struct {
-	Audio          []byte `form:"audio" filenameField:"AudioName"`
-	AudioName      string
+	Audio          []byte    `form:"audio" filenameField:"AudioName"`
+	AudioName      string    // no tag because it is set by filenameField above
 	AudioType      string    `form:"audioType"`
 	DateTime       time.Time `form:"dateTime"`
 	Frequencies    []int     `form:"frequencies"`

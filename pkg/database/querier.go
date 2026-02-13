@@ -36,7 +36,7 @@ type Querier interface {
 	DetailedCountRefJournal(ctx context.Context) ([]DetailedCountRefJournalRow, error)
 	DisableUser(ctx context.Context, username string) error
 	DropRefJournal(ctx context.Context, id int64) error
-	GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, error)
+	GetAPIKey(ctx context.Context, key string, kind int) (GetAPIKeyRow, error)
 	GetAllTalkgroupTags(ctx context.Context) ([]string, error)
 	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
 	GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)

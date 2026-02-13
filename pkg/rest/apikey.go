@@ -24,10 +24,11 @@ func (aa *apiKeyAPI) Subrouter() http.Handler {
 
 func (*apiKeyAPI) createAPIkey(w http.ResponseWriter, r *http.Request) {
 	input := struct {
-		OwnerID   *int            `json:"ownerID"`
-		Name      *string         `json:"name"`
-		ExpiresAt *jsontypes.Time `json:"expiresAt"`
-		Disabled  *bool           `json:"disabled"`
+		OwnerID   *int             `json:"ownerID"`
+		Name      *string          `json:"name"`
+		ExpiresAt *jsontypes.Time  `json:"expiresAt"`
+		Disabled  *bool            `json:"disabled"`
+		Kind      users.APIKeyKind `json:"kind"`
 	}{}
 
 	err := forms.Unmarshal(r, &input, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
@@ -38,7 +39,7 @@ func (*apiKeyAPI) createAPIkey(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	ust := users.FromCtx(ctx)
-	key, err := ust.CreateAPIKey(ctx, (*users.UserID)(input.OwnerID), input.Name, (*time.Time)(input.ExpiresAt), common.ZeroIfNil(input.Disabled))
+	key, err := ust.CreateAPIKey(ctx, (*users.UserID)(input.OwnerID), input.Name, (*time.Time)(input.ExpiresAt), common.ZeroIfNil(input.Disabled), input.Kind)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
