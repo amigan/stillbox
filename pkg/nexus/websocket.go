@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
+	nxerrors "dynatron.me/x/stillbox/pkg/nexus/errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
@@ -36,15 +38,15 @@ func newWsManager(r Registry) *wsManager {
 type wsConn struct {
 	*websocket.Conn
 
-	out chan ToClientMsg
+	out chan broadcast.ToClientMsg
 }
 
-func (w *wsConn) Send(msg ToClientMsg) error {
+func (w *wsConn) Send(msg broadcast.ToClientMsg) error {
 	select {
 	case w.out <- msg:
 	default:
 		log.Debug().Str("conn", w.RemoteAddr().String()).Msg("send channel not ready, closing")
-		return ErrSentToClosed
+		return nxerrors.ErrSentToClosed
 	}
 
 	return nil
@@ -53,7 +55,7 @@ func (w *wsConn) Send(msg ToClientMsg) error {
 func newWsConn(c *websocket.Conn) *wsConn {
 	wc := &wsConn{
 		Conn: c,
-		out:  make(chan ToClientMsg, qSize),
+		out:  make(chan broadcast.ToClientMsg, qSize),
 	}
 
 	return wc
@@ -164,8 +166,8 @@ func (conn *wsConn) writePump() {
 	}
 }
 
-func (conn *wsConn) writeToClient(w io.WriteCloser, msg ToClientMsg) {
-	packWrite := func(msg ToClientMsg) {
+func (conn *wsConn) writeToClient(w io.WriteCloser, msg broadcast.ToClientMsg) {
+	packWrite := func(msg broadcast.ToClientMsg) {
 		packed, err := proto.Marshal(msg)
 		if err != nil {
 			log.Error().Err(err).Msg("pack message")

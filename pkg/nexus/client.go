@@ -2,7 +2,6 @@ package nexus
 
 import (
 	"context"
-	"errors"
 	"io"
 	"runtime"
 	"sync"
@@ -16,7 +15,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type client struct {
@@ -31,16 +29,10 @@ type client struct {
 
 	subscriptions broadcast.Type
 
+	isTranscriptWorker bool
+
 	nexus *nexus
 }
-
-type ToClientMsg interface {
-	protoreflect.ProtoMessage
-}
-
-var (
-	ErrSentToClosed = errors.New("sent to closed connection")
-)
 
 type Connection interface {
 	io.Closer
@@ -48,7 +40,7 @@ type Connection interface {
 
 	Shutdown()
 
-	Send(ToClientMsg) error
+	Send(broadcast.ToClientMsg) error
 }
 
 func (n *nexus) NewClient(conn Connection, subject entities.Subject) *client {

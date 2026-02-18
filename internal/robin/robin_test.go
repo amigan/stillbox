@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func expectVals(t *testing.T, r Robin[string], expect ...string) {
+func expectVals(t *testing.T, r Round[string], expect ...string) {
 	compare := make([]string, 0, len(expect))
 	for range expect {
 		compare = append(compare, r.Next())

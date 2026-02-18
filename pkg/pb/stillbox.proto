@@ -73,6 +73,8 @@ message Command {
     Live live_command = 2;
     Search search_command = 3;
     Talkgroup tg_command = 4;
+    Register register_command = 5;
+    SetTranscript set_transcript = 6;
   }
 }
 
@@ -101,6 +103,11 @@ message Live {
   bool transcripts = 4;
 }
 
+message Register {
+  bool transcript_worker = 1;
+  string worker_key = 2;
+}
+
 message Talkgroup {
   int32 system = 1;
   int32 talkgroup = 2;
@@ -126,8 +133,8 @@ message ServerInfo {
   string db_size = 5;
 }
 
-message CallTranscribeRequest {
-	Call call = 1;
-	string callback = 2;
-	string token = 3;
+message SetTranscript {
+  string id = 1;
+  string transcript = 2;
+  optional int64 elapsed_ms = 3;
 }

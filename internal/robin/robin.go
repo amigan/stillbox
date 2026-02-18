@@ -2,26 +2,91 @@
 package robin
 
 import (
-	"sync/atomic"
+	"errors"
+	"sync"
 )
 
-type Robin[E any] interface {
+var (
+	ErrExists = errors.New("item already exists")
+)
+
+type Round[E comparable] interface {
 	Next() E
+	Delete(E)
+	Add(E) error
 }
 
-type robin[E any] struct {
+type round[E comparable] struct {
+	sync.Mutex
+
+	m map[E]struct{}
 	items []E
 
-	i uint32 // 32b so we don't hard depend on SIMD for atomic
+	i uint
 }
 
-func (r *robin[E]) Next() E {
-	i := atomic.AddUint32(&r.i, 1) - 1
-	return r.items[i%uint32(len(r.items))]
+func (r *round[E]) Next() E {
+	r.Lock()
+	defer r.Unlock()
+
+	var zero E
+
+	if len(r.items) == 0 {
+		return zero
+	}
+
+	r.i++
+	return r.items[r.i%uint(len(r.items))]
 }
 
-func New[E any](items []E) *robin[E] {
-	return &robin[E]{
-		items: items,
+func New[E comparable]() Round[E] {
+	return &round[E]{
+		m: make(map[E]struct{}),
+	}
+}
+
+func (r *round[E]) has(e E) bool {
+	_, has := r.m[e]
+
+	return has
+}
+
+func (r *round[E]) Has(e E) bool {
+	r.Lock()
+	defer r.Unlock()
+
+	return r.has(e)
+}
+
+func (r *round[E]) Add(e E) error {
+	r.Lock()
+	defer r.Unlock()
+
+	if r.has(e) {
+		return ErrExists
+	}
+
+	r.m[e] = struct{}{}
+	r.items = append(r.items, e)
+
+	return nil
+}
+
+func (r *round[E]) Delete(e E) {
+	r.Lock()
+	defer r.Unlock()
+
+	if _, has := r.m[e]; !has {
+		return
+	}
+
+	for i := range r.items {
+		if r.items[i] == e {
+			r.items[i] = r.items[len(r.items)-1]
+			r.items = r.items[:len(r.items)-1]
+			delete(r.m, e)
+
+			return
+		}
 	}
 }

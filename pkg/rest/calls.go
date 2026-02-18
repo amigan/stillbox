@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
@@ -19,13 +18,12 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/nexus"
-	"dynatron.me/x/stillbox/pkg/pipeline/sinks"
 	"dynatron.me/x/stillbox/pkg/stats"
+	"dynatron.me/x/stillbox/pkg/workers"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
-	"github.com/microcosm-cc/bluemonday"
 )
 
 const (
@@ -40,14 +38,12 @@ var (
 
 type callsAPI struct {
 	nex         nexus.Nexus
-	htmlSani    *bluemonday.Policy
-	transcripts sinks.Transcriber
+	transcripts workers.Manager
 }
 
-func newCallsAPI(nex nexus.Nexus, transcripts sinks.Transcriber) *callsAPI {
+func newCallsAPI(nex nexus.Nexus, transcripts workers.Manager) *callsAPI {
 	return &callsAPI{
 		nex:         nex,
-		htmlSani:    bluemonday.StrictPolicy(),
 		transcripts: transcripts,
 	}
 }
@@ -105,7 +101,7 @@ func (ca *callsAPI) dispatchTranscriptRoute(w http.ResponseWriter, r *http.Reque
 	var errs multierror.Error
 
 	for _, c := range calls {
-		err := ca.transcripts.UnfilteredCall(ctx, c)
+		err := ca.transcripts.DispatchUnfiltered(ctx, c)
 		if err != nil {
 			errs.Errors = append(errs.Errors, fmt.Errorf("%s: %w", c.ID.String(), err))
 		}
@@ -118,10 +114,6 @@ func (ca *callsAPI) dispatchTranscriptRoute(w http.ResponseWriter, r *http.Reque
 
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// entityReplacer turns quote entities back into quotes; there does not seem to be a way to make
-// bluemonday pass them through.
-var entityReplacer = strings.NewReplacer("&#39;", "'", "&#34;", `"`)
 
 func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
 	p := struct {
@@ -143,7 +135,7 @@ func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	txc := struct {
-		Text      string `json:"text"`
+		Text      *string `json:"text"`
 		ElapsedMS *int   `json:"elapsedMS"`
 	}{}
 
@@ -153,24 +145,10 @@ func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sani := ca.htmlSani.Sanitize(txc.Text)
-
-	var txv *string
-	if len(sani) > 0 {
-		xsc := strings.Trim(entityReplacer.Replace(sani), " \t")
-		if xsc != "" {
-			txv = &xsc
-		}
-	}
-
-	tsc, err := callstore.FromCtx(ctx).UpdateTranscription(ctx, p.CallID, txv)
+	tsc, err := callstore.FromCtx(ctx).UpdateTranscription(ctx, p.CallID, txc.Text)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
-	}
-
-	if txc.ElapsedMS != nil {
-		ca.transcripts.TranscribeDuration(time.Duration(*txc.ElapsedMS) * time.Millisecond)
 	}
 
 	if ctx.Err() == nil {
