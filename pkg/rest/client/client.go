@@ -18,13 +18,25 @@ var (
 )
 
 type Client interface {
+	BaseURL() *url.URL
+	HTTPClient() *http.Client
 	adminClient
+	Login(ctx context.Context, username, password string) (*JWT, error)
 }
 
 type client struct {
 	unixSocket *string
 	baseURL    *url.URL
 	hc         http.Client
+	debug      io.Writer
+}
+
+func (c *client) HTTPClient() *http.Client {
+	return &c.hc
+}
+
+func (c *client) BaseURL() *url.URL {
+	return c.baseURL
 }
 
 type ClientOption func(*client)
@@ -44,6 +56,37 @@ func UnixSocket(p string) ClientOption {
 func BaseURL(u *url.URL) ClientOption {
 	return func(c *client) {
 		c.baseURL = u
+	}
+}
+
+func Debug(w io.Writer) ClientOption {
+	return func(c *client) {
+		c.debug = w
+	}
+}
+
+func WithCookieJar(jar http.CookieJar) ClientOption {
+	return func(c *client) {
+		c.hc.Jar = jar
+	}
+}
+
+type debugCloser struct {
+	io.Reader
+	cl io.ReadCloser
+}
+
+func (d *debugCloser) Close() error {
+	return d.cl.Close()
+}
+
+func (c *client) debugTee(resp *http.Response) {
+	if c.debug != nil {
+		cl := &debugCloser{
+			cl: resp.Body,
+		}
+		cl.Reader = io.TeeReader(resp.Body, c.debug)
+		resp.Body = cl
 	}
 }
 

@@ -14,7 +14,7 @@ import (
 type adminClient interface {
 	MoveCalls(ctx context.Context, p *callstore.MoveCallParams, progressCb MoveProgressCallback) error
 	CallsGC(ctx context.Context) error
-	CallsFsck(ctx context.Context, progressCb FsckProgressCallback) error
+	CallsFsck(ctx context.Context, p *callstore.FsckParams, progressCb FsckProgressCallback) error
 }
 
 type MoveProgressCallback func(callstore.MoveProgressMsg)

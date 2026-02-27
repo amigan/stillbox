@@ -64,7 +64,6 @@ func New(transcriptCfg config.Workers, tgst tgstore.Store, met metrics.Metrics) 
 		clients:   make(map[*client]struct{}),
 		bcastChan: make(chan broadcast.Message),
 		tgst:      tgst,
-
 	}
 
 	var err error
@@ -128,7 +127,7 @@ func (n *nexus) broadcastToClients(ctx context.Context, msg broadcast.Message) {
 		cl.RUnlock()
 	}
 
-	if  n.transcriptWorkers != nil {
+	if n.transcriptWorkers != nil {
 		err := n.transcriptWorkers.Dispatch(ctx, msg)
 		if err != nil {
 			log.Error().Err(err).Msg("could not broadcast")

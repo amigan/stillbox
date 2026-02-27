@@ -28,7 +28,7 @@ type Config struct {
 	Notify        Notify         `yaml:"notify"`
 	CallStorage   CallStorage    `yaml:"callStorage"`
 	Relay         []Relay        `yaml:"relay"`
-	Transcription Workers  `yaml:"transcription"`
+	Transcription Workers        `yaml:"transcription"`
 	Metrics       Metrics        `yaml:"metrics"`
 }
 

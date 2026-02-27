@@ -26,12 +26,12 @@ type pipe struct {
 	// protects ingest filters
 	sync.Mutex
 
-	sources     sources.Sources
-	sinks       sinks.Sinks
-	relayer     *sinks.RelayManager
-	metrics     pipeMetrics
-	filters     []ingestFilter
-	tgstore     tgstore.Store
+	sources sources.Sources
+	sinks   sinks.Sinks
+	relayer *sinks.RelayManager
+	metrics pipeMetrics
+	filters []ingestFilter
+	tgstore tgstore.Store
 }
 
 type pipeMetrics struct {
@@ -62,8 +62,8 @@ func New(
 	sinkMgr := sinks.NewSinkManager()
 
 	p := &pipe{
-		sinks:       sinkMgr,
-		tgstore:     tgs,
+		sinks:   sinkMgr,
+		tgstore: tgs,
 	}
 
 	p.sinks.Register(sinks.NewCallstoreSink(callStore, tgs), sinks.RequiredFlag)
