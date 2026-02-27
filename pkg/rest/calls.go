@@ -136,7 +136,7 @@ func (ca *callsAPI) transcriptRoute(w http.ResponseWriter, r *http.Request) {
 
 	txc := struct {
 		Text      *string `json:"text"`
-		ElapsedMS *int   `json:"elapsedMS"`
+		ElapsedMS *int    `json:"elapsedMS"`
 	}{}
 
 	err = json.NewDecoder(r.Body).Decode(&txc)

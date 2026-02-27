@@ -19,7 +19,7 @@ type Round[E comparable] interface {
 type round[E comparable] struct {
 	sync.Mutex
 
-	m map[E]struct{}
+	m     map[E]struct{}
 	items []E
 
 	i uint

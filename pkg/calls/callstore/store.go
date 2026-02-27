@@ -103,8 +103,7 @@ type store struct {
 	now           NowFunc
 	metrics       storeMetrics
 
- 
-	htmlSani    *bluemonday.Policy
+	htmlSani *bluemonday.Policy
 
 	// this mutex ensures very high request volume calls like move and fsck only happen one at a time.
 	maintInProgress sync.Mutex
@@ -125,9 +124,9 @@ func WithNow(nf NowFunc) StoreOption {
 
 func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, callStorage config.CallStorage, partConfig config.Partition, opts ...StoreOption) (*store, error) {
 	st := &store{
-		db:  db,
-		now: time.Now,
-		htmlSani:    bluemonday.StrictPolicy(),
+		db:       db,
+		now:      time.Now,
+		htmlSani: bluemonday.StrictPolicy(),
 	}
 
 	for _, opt := range opts {

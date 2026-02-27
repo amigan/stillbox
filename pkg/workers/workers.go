@@ -46,7 +46,7 @@ type Manager interface {
 	Unregister(Client)
 
 	// SetTranscript sets a transcript.
-	SetTranscript(ctx context.Context, stx *pb.SetTranscript) error 
+	SetTranscript(ctx context.Context, stx *pb.SetTranscript) error
 
 	// HUP implements Hupper.
 	HUP(config.Workers)
@@ -58,12 +58,12 @@ type Broadcaster interface {
 
 type workerManager struct {
 	sync.Mutex
-	filter *filter.Filter
-	tgst tgstore.Store
+	filter  *filter.Filter
+	tgst    tgstore.Store
 	metrics workerMetrics
 	workers robin.Round[Client]
 	bcaster Broadcaster
-	cfg config.Workers
+	cfg     config.Workers
 	cfgHash uint64
 }
 
@@ -92,13 +92,13 @@ func (wm *workerManager) initFilter(cfg config.Workers) error {
 	wm.tgst.RegisterFilter(wm.filter)
 
 	return nil
-} 
+}
 
 func (wm *workerManager) HUP(cfg config.Workers) {
 	wm.Lock()
 	defer wm.Unlock()
 
-		hash, err := hashstructure.Hash(cfg, nil)
+	hash, err := hashstructure.Hash(cfg, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("hup transcription config hash")
 		return
@@ -124,13 +124,12 @@ func (wm *workerManager) HUP(cfg config.Workers) {
 }
 
 type workerMetrics struct {
-	NoWorkersCount prometheus.Counter `help:"Transcript calls with no workers count"`
+	NoWorkersCount prometheus.Counter     `help:"Transcript calls with no workers count"`
 	DispatchCount  *prometheus.CounterVec `help:"Dispatched transcriptions" labels:"type,id"`
 	ElapsedSeconds prometheus.Histogram   `help:"Transcription elapsed time" buckets:"0.1,0.2,0.5,1,1.5,2,5,10,20,50"`
 }
 
-
-func (wm *workerManager) SetTranscript(ctx context.Context, stx *pb.SetTranscript) error  {
+func (wm *workerManager) SetTranscript(ctx context.Context, stx *pb.SetTranscript) error {
 	callID, err := uuid.Parse(stx.GetId())
 	if err != nil {
 		return err
@@ -155,16 +154,16 @@ func NewWorkerManager(met metrics.Metrics, nexus Broadcaster, tgst tgstore.Store
 	wm := &workerManager{
 		workers: robin.New[Client](),
 		bcaster: nexus,
-		cfg: cfg,
+		cfg:     cfg,
 		cfgHash: cfgHash,
-		tgst: tgst,
+		tgst:    tgst,
 	}
 
 	err = wm.config(cfg)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	met.Register("workers", &wm.metrics)
 
 	return wm, nil
@@ -228,9 +227,9 @@ func (wm *workerManager) Dispatch(ctx context.Context, msg broadcast.Message) er
 	}
 
 	if !msg.BroadcastType().Has(broadcast.BcastCall) ||
-	!msg.ShouldStore() ||
-	duration > time.Duration(wm.cfg.AtLeastSeconds) * time.Second ||
-	!wm.filter.Test(ctx, msg) {
+		!msg.ShouldStore() ||
+		duration > time.Duration(wm.cfg.AtLeastSeconds)*time.Second ||
+		!wm.filter.Test(ctx, msg) {
 		return nil
 	}
 
