@@ -54,7 +54,11 @@ func New(restClient client.Client) (*nexusClient, error) {
 }
 
 func (c *nexusClient) Close() error {
-	return c.wsc.Close()
+	if c.wsc != nil {
+		return c.wsc.Close()
+	}
+
+	return nil
 }
 
 func (c *nexusClient) Shutdown() error {
@@ -138,12 +142,16 @@ func (c *nexusClient) Dial() error {
 	var resp *http.Response
 	c.wsc, resp, err = dialer.Dial(c.wsu.String(), http.Header{})
 	if err != nil {
-		switch resp.StatusCode {
-		case http.StatusUnauthorized:
-			return ErrUnauthorized
-		default:
-			return fmt.Errorf("dial: http %d: %w", resp.StatusCode, err)
+		if resp != nil {
+			switch resp.StatusCode {
+			case http.StatusUnauthorized:
+				return ErrUnauthorized
+			default:
+				return fmt.Errorf("dial: http %d: %w", resp.StatusCode, err)
+			}
 		}
+
+		return err
 	}
 
 	return nil
