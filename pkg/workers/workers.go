@@ -33,10 +33,10 @@ type Client interface {
 }
 
 type Manager interface {
-	// Broadcast broadcasts this message if it passes filtering.
+	// Dispatch selects a worker to take this message if it passes filtering.
 	Dispatch(ctx context.Context, msg broadcast.Message) error
 
-	// Broadcast broadcasts this message if it passes filtering.
+	// DispatchUnfiltered selects a worker to take this message without filtering.
 	DispatchUnfiltered(ctx context.Context, msg broadcast.Message) error
 
 	// Register registers a client to the pool.
@@ -140,6 +140,11 @@ func (wm *workerManager) SetTranscript(ctx context.Context, stx *pb.SetTranscrip
 		return err
 	}
 
+	if stx.ElapsedMs != nil {
+		ed := time.Millisecond * time.Duration(*stx.ElapsedMs)
+		wm.ObserveTranscribeElapsed(ed)
+	}
+
 	wm.bcaster.Broadcast(tsc)
 
 	return nil
@@ -182,7 +187,7 @@ func (wm *workerManager) Register(ctx context.Context, client Client, cmd *pb.Re
 	return nil
 }
 
-func (wm *workerManager) TranscribeDuration(t time.Duration) {
+func (wm *workerManager) ObserveTranscribeElapsed(t time.Duration) {
 	wm.metrics.ElapsedSeconds.Observe(t.Seconds())
 }
 
