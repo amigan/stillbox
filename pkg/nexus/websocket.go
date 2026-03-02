@@ -79,6 +79,12 @@ func (w *wsConn) CloseCh() {
 func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	subject, err := authz.Check(ctx, authz.UseResource(entities.ResourceNexus), authz.WithActions(entities.ActionConnect))
+	if err != nil {
+		log.Error().Err(err).Msg("nexus not allowed")
+		http.Error(w, "nexus not allowed", http.StatusForbidden)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("upgrade failed")

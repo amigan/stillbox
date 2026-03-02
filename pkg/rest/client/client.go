@@ -32,7 +32,6 @@ type client struct {
 	hc         http.Client
 	headers    http.Header
 	debug      io.Writer
-	cookies    []*http.Cookie
 }
 
 func (c *client) HTTPClient() *http.Client {

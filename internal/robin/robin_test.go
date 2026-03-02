@@ -18,7 +18,7 @@ func expectVals(t *testing.T, r Round[string], expect ...string) {
 func robinWith[E comparable](e ...E) Round[E] {
 	r := New[E]()
 	for _, el := range e {
-		r.Add(el)
+		_ = r.Add(el)
 	}
 
 	return r
@@ -27,6 +27,12 @@ func robinWith[E comparable](e ...E) Round[E] {
 func TestRobin(t *testing.T) {
 	r := robinWith("one", "two", "three")
 	expectVals(t, r, "one", "two", "three", "one", "two", "three", "one")
+}
+
+func TestAddDupe(t *testing.T) {
+	r := robinWith("one", "two", "three")
+	expectVals(t, r, "one", "two", "three", "one", "two", "three", "one")
+	assert.Error(t, assert.AnError, r.Add("two"))
 }
 
 func TestDelete(t *testing.T) {

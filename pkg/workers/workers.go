@@ -124,9 +124,9 @@ func (wm *workerManager) HUP(cfg config.Workers) {
 }
 
 type workerMetrics struct {
-	NoWorkersCount prometheus.Counter     `help:"Transcript calls with no workers count"`
-	DispatchCount  prometheus.Counter     `help:"Dispatched transcriptions"`
-	ElapsedSeconds prometheus.Histogram   `help:"Transcription elapsed time" buckets:"0.1,0.2,0.5,1,1.5,2,5,10,20,50"`
+	NoWorkersCount prometheus.Counter   `help:"Transcript calls with no workers count"`
+	DispatchCount  prometheus.Counter   `help:"Dispatched transcriptions"`
+	ElapsedSeconds prometheus.Histogram `help:"Transcription elapsed time" buckets:"0.1,0.2,0.5,1,1.5,2,5,10,20,50"`
 }
 
 func (wm *workerManager) SetTranscript(ctx context.Context, stx *pb.SetTranscript) error {

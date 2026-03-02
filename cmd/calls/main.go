@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -14,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/nexus/client"
 	"dynatron.me/x/stillbox/pkg/pb"
 	restclient "dynatron.me/x/stillbox/pkg/rest/client"
@@ -30,14 +28,7 @@ var (
 	username = flag.String("user", "", "username")
 	password = flag.String("password", "", "password")
 	secure   = flag.Bool("s", false, "secure (https/wss)")
-	debug    = flag.Bool("d", false, "emit HTTP response")
-
-	uaString = version.HttpString(AppName)
 )
-
-func userAgent(h http.Header) {
-	h.Set("User-Agent", uaString)
-}
 
 func getCreds() {
 	rdr := bufio.NewReader(os.Stdin)
