@@ -69,6 +69,9 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Preset: PresetDeleteOwn},
 					&restrict.Permission{Preset: PresetReadOwn},
 				},
+				entities.ResourceNexus: {
+					&restrict.Permission{Action: entities.ActionConnect},
+				},
 			},
 		},
 		entities.RoleSubmitter: {
@@ -81,6 +84,9 @@ var Policy = &restrict.PolicyDefinition{
 					// for learning TGs
 					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Action: entities.ActionUpdate},
+				},
+				entities.ResourceNexus: {
+					&restrict.Permission{Action: entities.ActionConnect},
 				},
 			},
 		},

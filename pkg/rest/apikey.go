@@ -2,16 +2,18 @@ package rest
 
 import (
 	"net/http"
-	"time"
 
-	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/forms"
-	"dynatron.me/x/stillbox/internal/jsontypes"
-	"dynatron.me/x/stillbox/pkg/users"
+	"dynatron.me/x/stillbox/pkg/authn"
 	"github.com/go-chi/chi/v5"
 )
 
 type apiKeyAPI struct {
+	authn authn.Authn
+}
+
+func newAPIKeyAPI(auth authn.Authn) *apiKeyAPI {
+	return &apiKeyAPI{authn: auth}
 }
 
 func (aa *apiKeyAPI) Subrouter() http.Handler {
@@ -22,24 +24,17 @@ func (aa *apiKeyAPI) Subrouter() http.Handler {
 	return r
 }
 
-func (*apiKeyAPI) createAPIkey(w http.ResponseWriter, r *http.Request) {
-	input := struct {
-		OwnerID   *int             `json:"ownerID"`
-		Name      *string          `json:"name"`
-		ExpiresAt *jsontypes.Time  `json:"expiresAt"`
-		Disabled  *bool            `json:"disabled"`
-		Kind      users.APIKeyKind `json:"kind"`
-	}{}
+func (a *apiKeyAPI) createAPIkey(w http.ResponseWriter, r *http.Request) {
+	var input authn.CreateAPIKeyRequest
 
 	err := forms.Unmarshal(r, &input, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
 	if err != nil {
-		wErr(w, r, badRequest(err))
+		wErr(w, r, autoError(err))
 		return
 	}
 
 	ctx := r.Context()
-	ust := users.FromCtx(ctx)
-	key, err := ust.CreateAPIKey(ctx, (*users.UserID)(input.OwnerID), input.Name, (*time.Time)(input.ExpiresAt), common.ZeroIfNil(input.Disabled), input.Kind)
+	key, err := a.authn.CreateAPIKey(ctx, input)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return

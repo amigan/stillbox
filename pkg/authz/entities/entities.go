@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/el-mike/restrict/v2"
-	"github.com/google/uuid"
 )
 
 const (
@@ -29,6 +28,7 @@ const (
 	ResourceCallStats = "CallStats"
 	ResourceSetting   = "Setting"
 	ResourceUser      = "User"
+	ResourceNexus     = "Nexus"
 
 	ActionRead             = "read"
 	ActionReadPrivileged   = "readPrivileged"
@@ -41,6 +41,10 @@ const (
 	ActionSimulate         = "simulate"
 	ActionTestNotify       = "testNotify"
 	ActionMoveCallAudio    = "moveCallAudio"
+	ActionConnect          = "connect"
+
+	ScopeSubmit     = "submit"
+	ScopeTranscribe = "transcribe"
 )
 
 func SubjectFrom(ctx context.Context) Subject {
@@ -56,6 +60,10 @@ type Subject interface {
 	fmt.Stringer
 	restrict.Subject
 	GetName() string
+}
+
+type SubjectWrapper interface {
+	UnwrapSubject() Subject
 }
 
 func CtxWithSubject(ctx context.Context, sub Subject) context.Context {
@@ -147,20 +155,48 @@ func (s *SystemServiceSubject) GetRoles() []string {
 	return []string{RoleSystem}
 }
 
-type CallSubject struct {
-	CallID uuid.UUID
+type APIKeySubject struct {
+	Subject
+
+	scopes []string
+	roles  []string
 }
 
-func (s *CallSubject) GetRoles() []string {
-	return []string{RoleTranscriber}
+func (s *APIKeySubject) UnwrapSubject() Subject {
+	return s.Subject
 }
 
-func (s *CallSubject) GetName() string {
-	return "TRANSCRIBER:" + s.CallID.String()
+var apiKeyScopes = map[string]string{
+	ScopeSubmit:     RoleSubmitter,
+	ScopeTranscribe: RoleTranscriber,
 }
 
-func (s *CallSubject) String() string {
-	return s.GetName()
+// ValidateScopes validates that all scopes exist. If any are invalid, it returns false.
+func ValidateScopes(scopes []string) bool {
+	for _, s := range scopes {
+		if _, hasScope := apiKeyScopes[s]; !hasScope {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (s *APIKeySubject) GetRoles() []string {
+	if s.scopes != nil && s.roles == nil {
+		s.roles = make([]string, 0, len(s.scopes))
+		for _, sc := range s.scopes {
+			if role, has := apiKeyScopes[sc]; has {
+				s.roles = append(s.roles, role)
+			}
+		}
+	}
+
+	return s.roles
+}
+
+func NewAPIKeySubject(user Subject, scope ...string) *APIKeySubject {
+	return &APIKeySubject{Subject: user, scopes: scope}
 }
 
 func IsSystemService(sub Subject) bool {

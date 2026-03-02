@@ -41,6 +41,8 @@ func (c *client) HandleCommand(ctx context.Context, cmd *pb.Command) {
 	case *pb.Command_SearchCommand:
 	case *pb.Command_TgCommand:
 		err = c.Talkgroup(ctx, cc.TgCommand)
+	case *pb.Command_SetTranscript:
+		err = c.nexus.transcriptWorkers.SetTranscript(ctx, cc.SetTranscript)
 	default:
 		log.Error().Msgf("unknown command %#v", cmd)
 	}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	nxerrors "dynatron.me/x/stillbox/pkg/nexus/errors"
@@ -71,6 +72,8 @@ func (w *wsConn) CloseCh() {
 }
 
 func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	subject, err := authz.Check(ctx, authz.UseResource(entities.ResourceNexus), authz.WithActions(entities.ActionConnect))
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("upgrade failed")
@@ -78,8 +81,6 @@ func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
-	subject := entities.SubjectFrom(ctx)
 	wsc := newWsConn(conn)
 	cli := wm.NewClient(wsc, subject)
 	wm.Register(cli)

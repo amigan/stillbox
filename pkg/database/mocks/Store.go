@@ -13,6 +13,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/database"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -1207,7 +1208,7 @@ func (_c *Store_DBTX_Call) RunAndReturn(run func() database.DBTX) *Store_DBTX_Ca
 }
 
 // DeleteAPIKey provides a mock function for the type Store
-func (_mock *Store) DeleteAPIKey(ctx context.Context, apiKey string) error {
+func (_mock *Store) DeleteAPIKey(ctx context.Context, apiKey *string) error {
 	ret := _mock.Called(ctx, apiKey)
 
 	if len(ret) == 0 {
@@ -1215,7 +1216,7 @@ func (_mock *Store) DeleteAPIKey(ctx context.Context, apiKey string) error {
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) error); ok {
 		r0 = returnFunc(ctx, apiKey)
 	} else {
 		r0 = ret.Error(0)
@@ -1230,20 +1231,20 @@ type Store_DeleteAPIKey_Call struct {
 
 // DeleteAPIKey is a helper method to define mock.On call
 //   - ctx context.Context
-//   - apiKey string
+//   - apiKey *string
 func (_e *Store_Expecter) DeleteAPIKey(ctx interface{}, apiKey interface{}) *Store_DeleteAPIKey_Call {
 	return &Store_DeleteAPIKey_Call{Call: _e.mock.On("DeleteAPIKey", ctx, apiKey)}
 }
 
-func (_c *Store_DeleteAPIKey_Call) Run(run func(ctx context.Context, apiKey string)) *Store_DeleteAPIKey_Call {
+func (_c *Store_DeleteAPIKey_Call) Run(run func(ctx context.Context, apiKey *string)) *Store_DeleteAPIKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
+		var arg1 *string
 		if args[1] != nil {
-			arg1 = args[1].(string)
+			arg1 = args[1].(*string)
 		}
 		run(
 			arg0,
@@ -1258,7 +1259,7 @@ func (_c *Store_DeleteAPIKey_Call) Return(err error) *Store_DeleteAPIKey_Call {
 	return _c
 }
 
-func (_c *Store_DeleteAPIKey_Call) RunAndReturn(run func(ctx context.Context, apiKey string) error) *Store_DeleteAPIKey_Call {
+func (_c *Store_DeleteAPIKey_Call) RunAndReturn(run func(ctx context.Context, apiKey *string) error) *Store_DeleteAPIKey_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2094,8 +2095,8 @@ func (_c *Store_FsckRefs_Call) RunAndReturn(run func(ctx context.Context, tableN
 }
 
 // GetAPIKey provides a mock function for the type Store
-func (_mock *Store) GetAPIKey(ctx context.Context, key string, kind int) (database.GetAPIKeyRow, error) {
-	ret := _mock.Called(ctx, key, kind)
+func (_mock *Store) GetAPIKey(ctx context.Context, key *string, jwtID pgtype.UUID, kind int) (database.GetAPIKeyRow, error) {
+	ret := _mock.Called(ctx, key, jwtID, kind)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetAPIKey")
@@ -2103,16 +2104,16 @@ func (_mock *Store) GetAPIKey(ctx context.Context, key string, kind int) (databa
 
 	var r0 database.GetAPIKeyRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) (database.GetAPIKeyRow, error)); ok {
-		return returnFunc(ctx, key, kind)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *string, pgtype.UUID, int) (database.GetAPIKeyRow, error)); ok {
+		return returnFunc(ctx, key, jwtID, kind)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) database.GetAPIKeyRow); ok {
-		r0 = returnFunc(ctx, key, kind)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *string, pgtype.UUID, int) database.GetAPIKeyRow); ok {
+		r0 = returnFunc(ctx, key, jwtID, kind)
 	} else {
 		r0 = ret.Get(0).(database.GetAPIKeyRow)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int) error); ok {
-		r1 = returnFunc(ctx, key, kind)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *string, pgtype.UUID, int) error); ok {
+		r1 = returnFunc(ctx, key, jwtID, kind)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -2126,30 +2127,36 @@ type Store_GetAPIKey_Call struct {
 
 // GetAPIKey is a helper method to define mock.On call
 //   - ctx context.Context
-//   - key string
+//   - key *string
+//   - jwtID pgtype.UUID
 //   - kind int
-func (_e *Store_Expecter) GetAPIKey(ctx interface{}, key interface{}, kind interface{}) *Store_GetAPIKey_Call {
-	return &Store_GetAPIKey_Call{Call: _e.mock.On("GetAPIKey", ctx, key, kind)}
+func (_e *Store_Expecter) GetAPIKey(ctx interface{}, key interface{}, jwtID interface{}, kind interface{}) *Store_GetAPIKey_Call {
+	return &Store_GetAPIKey_Call{Call: _e.mock.On("GetAPIKey", ctx, key, jwtID, kind)}
 }
 
-func (_c *Store_GetAPIKey_Call) Run(run func(ctx context.Context, key string, kind int)) *Store_GetAPIKey_Call {
+func (_c *Store_GetAPIKey_Call) Run(run func(ctx context.Context, key *string, jwtID pgtype.UUID, kind int)) *Store_GetAPIKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
+		var arg1 *string
 		if args[1] != nil {
-			arg1 = args[1].(string)
+			arg1 = args[1].(*string)
 		}
-		var arg2 int
+		var arg2 pgtype.UUID
 		if args[2] != nil {
-			arg2 = args[2].(int)
+			arg2 = args[2].(pgtype.UUID)
+		}
+		var arg3 int
+		if args[3] != nil {
+			arg3 = args[3].(int)
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -2160,7 +2167,7 @@ func (_c *Store_GetAPIKey_Call) Return(getAPIKeyRow database.GetAPIKeyRow, err e
 	return _c
 }
 
-func (_c *Store_GetAPIKey_Call) RunAndReturn(run func(ctx context.Context, key string, kind int) (database.GetAPIKeyRow, error)) *Store_GetAPIKey_Call {
+func (_c *Store_GetAPIKey_Call) RunAndReturn(run func(ctx context.Context, key *string, jwtID pgtype.UUID, kind int) (database.GetAPIKeyRow, error)) *Store_GetAPIKey_Call {
 	_c.Call.Return(run)
 	return _c
 }

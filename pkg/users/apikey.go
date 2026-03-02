@@ -6,6 +6,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"github.com/google/uuid"
 )
 
 type APIKey struct {
@@ -15,8 +16,10 @@ type APIKey struct {
 	CreatedAt jsontypes.Time  `json:"createdAt"`
 	Expires   *jsontypes.Time `json:"expires,omitempty"`
 	Disabled  bool            `json:"disabled"`
+	Scopes    []string        `json:"scopes,omitempty"`
 	Key       string          `json:"key,omitzero"`
-	Hash      string          `json:"-"`
+	JWTID     *uuid.UUID      `json:"-"`
+	Hash      *string         `json:"-"`
 }
 
 type APIKeyKind int
@@ -26,10 +29,17 @@ const (
 	APIKeyKindAPIKey
 )
 
-var ErrAPIKeyKindInvalid = errors.New("invalid API key kind")
+var (
+	ErrAPIKeyKindInvalid = errors.New("invalid API key kind")
+	ErrAPIKeyExpired     = errors.New("API key expired")
+)
 
 func (k *APIKeyKind) UnmarshalText(t []byte) error {
-	switch strings.ToLower(string(t)) {
+	return k.Parse(string(t))
+}
+
+func (k *APIKeyKind) Parse(s string) error {
+	switch strings.ToLower(s) {
 	case "rdio":
 		*k = APIKeyKindRdio
 	case "apikey":
@@ -39,6 +49,19 @@ func (k *APIKeyKind) UnmarshalText(t []byte) error {
 	}
 
 	return nil
+}
+
+func (k *APIKeyKind) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), `"`)
+	return k.Parse(s)
+}
+
+func (k *APIKeyKind) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + k.String() + `"`), nil
+}
+
+func (k *APIKeyKind) MarshalText() ([]byte, error) {
+	return []byte(k.String()), nil
 }
 
 func (k APIKeyKind) String() string {

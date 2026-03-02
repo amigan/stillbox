@@ -59,14 +59,16 @@ func (ns NullAudioMIME) Value() (driver.Value, error) {
 }
 
 type ApiKey struct {
-	ID        int        `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
-	OwnerID   int        `db:"owner_id" json:"ownerId,omitempty" yaml:"owner_id,omitempty"`
-	Name      *string    `db:"name" json:"name,omitempty" yaml:"name,omitempty"`
-	CreatedAt time.Time  `db:"created_at" json:"createdAt,omitempty" yaml:"created_at,omitempty"`
-	Expires   *time.Time `db:"expires" json:"expires,omitempty" yaml:"expires,omitempty"`
-	Disabled  bool       `db:"disabled" json:"disabled,omitempty" yaml:"disabled,omitempty"`
-	Kind      int        `db:"kind" json:"kind,omitempty" yaml:"kind,omitempty"`
-	ApiKey    string     `db:"api_key" json:"apiKey,omitempty" yaml:"api_key,omitempty"`
+	ID        uuid.UUID   `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	OwnerID   int         `db:"owner_id" json:"ownerId,omitempty" yaml:"owner_id,omitempty"`
+	Name      *string     `db:"name" json:"name,omitempty" yaml:"name,omitempty"`
+	CreatedAt time.Time   `db:"created_at" json:"createdAt,omitempty" yaml:"created_at,omitempty"`
+	Expires   *time.Time  `db:"expires" json:"expires,omitempty" yaml:"expires,omitempty"`
+	Disabled  bool        `db:"disabled" json:"disabled,omitempty" yaml:"disabled,omitempty"`
+	Kind      int         `db:"kind" json:"kind,omitempty" yaml:"kind,omitempty"`
+	ApiKey    *string     `db:"api_key" json:"apiKey,omitempty" yaml:"api_key,omitempty"`
+	JwtID     pgtype.UUID `db:"jwt_id" json:"jwtId,omitempty" yaml:"jwt_id,omitempty"`
+	Scopes    []string    `db:"scopes" json:"scopes,omitempty" yaml:"scopes,omitempty"`
 }
 
 type AudioRefJournal struct {

@@ -35,8 +35,11 @@ func (r *round[E]) Next() E {
 		return zero
 	}
 
+	v := r.items[r.i%uint(len(r.items))]
+
 	r.i++
-	return r.items[r.i%uint(len(r.items))]
+
+	return v
 }
 
 func New[E comparable]() Round[E] {

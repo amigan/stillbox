@@ -54,6 +54,10 @@ func FromSubject(sub entities.Subject) (*User, error) {
 		return nil, authz.ErrBadSubject
 	}
 
+	if sw, isWrapper := sub.(entities.SubjectWrapper); isWrapper {
+		sub = sw.UnwrapSubject()
+	}
+
 	user, isUser := sub.(*User)
 	if !isUser || user == nil || !user.ID.IsValid() {
 		return nil, authz.ErrBadSubject

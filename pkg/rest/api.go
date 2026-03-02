@@ -60,7 +60,7 @@ func New(baseURL url.URL, nex nexus.Nexus, auth authn.Authn) *api {
 		calls:     newCallsAPI(nex, nex.Transcriber()),
 		incidents: newIncidentsAPI(&baseURL),
 		users:     newUsersAPI(auth),
-		apiKeys:   new(apiKeyAPI),
+		apiKeys:   newAPIKeyAPI(auth),
 		prefs:     new(prefsAPI),
 		admin:     new(adminAPI),
 	}
@@ -211,8 +211,11 @@ var statusMapping = map[error]errResponder{
 	callstore.ErrMaintenanceInProgress: tooManyRequestsErrText,
 	users.ErrNoUIDSpecified:            badRequestErrText,
 	users.ErrDuplicateName:             badRequestErrText,
+	users.ErrAPIKeyKindInvalid:         badRequestErrText,
+	users.ErrNoSuchUser:                notFoundErrText,
 	authn.ErrBadPassword:               badRequestErrText,
 	authn.ErrPasswordValidation:        badRequestErrText,
+	authn.ErrInvalidScopes:             badRequestErrText,
 }
 
 func autoError(err error) render.Renderer {
