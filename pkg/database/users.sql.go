@@ -10,7 +10,6 @@ import (
 	"net/netip"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -144,14 +143,14 @@ FROM api_keys a
 JOIN users u ON (a.owner_id = u.id)
 WHERE 
 (CASE
-	WHEN $1::TEXT IS NOT NULL THEN aapi_key = $1
+	WHEN $1::TEXT IS NOT NULL THEN a.api_key = $1
 	WHEN $2::UUID IS NOT NULL THEN a.jwt_id = $2
 	ELSE FALSE END)
 AND kind = $3
 `
 
 type GetAPIKeyRow struct {
-	ID        uuid.UUID   `db:"id" json:"id"`
+	ID        int         `db:"id" json:"id"`
 	OwnerID   int         `db:"owner_id" json:"ownerId"`
 	Name      *string     `db:"name" json:"name"`
 	Kind      int         `db:"kind" json:"kind"`

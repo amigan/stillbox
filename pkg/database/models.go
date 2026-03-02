@@ -59,7 +59,7 @@ func (ns NullAudioMIME) Value() (driver.Value, error) {
 }
 
 type ApiKey struct {
-	ID        uuid.UUID   `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	ID        int         `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
 	OwnerID   int         `db:"owner_id" json:"ownerId,omitempty" yaml:"owner_id,omitempty"`
 	Name      *string     `db:"name" json:"name,omitempty" yaml:"name,omitempty"`
 	CreatedAt time.Time   `db:"created_at" json:"createdAt,omitempty" yaml:"created_at,omitempty"`

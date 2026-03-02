@@ -74,7 +74,7 @@ FROM api_keys a
 JOIN users u ON (a.owner_id = u.id)
 WHERE 
 (CASE
-	WHEN sqlc.narg('key')::TEXT IS NOT NULL THEN aapi_key = @key
+	WHEN sqlc.narg('key')::TEXT IS NOT NULL THEN a.api_key = @key
 	WHEN sqlc.narg('jwt_id')::UUID IS NOT NULL THEN a.jwt_id = @jwt_id
 	ELSE FALSE END)
 AND kind = @kind;

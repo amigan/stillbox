@@ -63,7 +63,7 @@ func (a *authn) rdioAPIKeySubject(ctx context.Context, key string) (entities.Sub
 		return nil, err
 	}
 
-	return entities.NewAPIKeySubject(user, entities.RoleSubmitter), nil
+	return entities.NewAPIKeySubject(user, entities.ScopeSubmit), nil
 }
 
 // MultipartAPIKeyMiddleware validates the provided key and sets the Subject in context with the resolved User.
