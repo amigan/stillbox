@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/rest/client"
 	"google.golang.org/protobuf/proto"
@@ -18,6 +19,9 @@ type Nexus interface {
 	Dial() error
 	Live(state pb.LiveState, calls, transcripts bool) error
 	Shutdown() error
+	Register() error
+	ReadMessage() (*pb.Message, error)
+	SetTranscript(id, transcript string, elapsed time.Duration) error
 }
 
 type nexusClient struct {
@@ -75,8 +79,17 @@ func (c *nexusClient) ReadMessage() (*pb.Message, error) {
 	return m, nil
 }
 
+func (c *nexusClient) sendCommand(cmd *pb.Command) error {
+	mm, err := proto.Marshal(cmd)
+	if err != nil {
+		return err
+	}
+
+	return c.wsc.WriteMessage(websocket.BinaryMessage, mm)
+}
+
 func (c *nexusClient) Live(state pb.LiveState, calls, transcripts bool) error {
-	msg := &pb.Command{
+	return c.sendCommand(&pb.Command{
 		Command: &pb.Command_LiveCommand{
 			LiveCommand: &pb.Live{
 				State:       &state,
@@ -84,18 +97,29 @@ func (c *nexusClient) Live(state pb.LiveState, calls, transcripts bool) error {
 				Transcripts: transcripts,
 			},
 		},
-	}
-	mm, err := proto.Marshal(msg)
-	if err != nil {
-		return err
-	}
+	})
+}
 
-	err = c.wsc.WriteMessage(websocket.BinaryMessage, mm)
-	if err != nil {
-		return err
-	}
+func (c *nexusClient) Register() error {
+	return c.sendCommand(&pb.Command{
+		Command: &pb.Command_RegisterCommand{
+			RegisterCommand: &pb.Register{
+				TranscriptWorker: true,
+			},
+		},
+	})
+}
 
-	return nil
+func (c *nexusClient) SetTranscript(id, transcript string, elapsed time.Duration) error {
+	return c.sendCommand(&pb.Command{
+		Command: &pb.Command_SetTranscript{
+			SetTranscript: &pb.SetTranscript{
+				Id:         id,
+				Transcript: transcript,
+				ElapsedMs:  common.PtrTo(elapsed.Milliseconds()),
+			},
+		},
+	})
 }
 
 func (c *nexusClient) Dial() error {

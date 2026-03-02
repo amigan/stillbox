@@ -35,7 +35,7 @@ func (c *client) Login(ctx context.Context, username, password string) (*JWT, er
 		c.hc.Jar = jar
 	}
 
-	resp, err := c.hc.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, err
 	}

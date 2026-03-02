@@ -4,14 +4,11 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
@@ -22,7 +19,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/pb"
 
 	whisper "github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
-	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -34,17 +30,16 @@ var (
 type transcriber struct {
 	model      whisper.Model
 	ch         chan txRq
-	cli        *http.Client
-	noCallback bool
 	thresh     float64
 }
 
 type Transcriber interface {
-	Transcribe(call *pb.CallTranscribeRequest) error
+	Transcribe(call *pb.Call)
+	Go(ctx context.Context, resultCh chan *Transcription)
 	Close()
 }
 
-func NewTranscriber(modelName string, tokThresh float64, noCallback bool) (*transcriber, error) {
+func NewTranscriber(modelName string, tokThresh float64) (*transcriber, error) {
 	model, err := whisper.New(modelName)
 	if err != nil {
 		return nil, err
@@ -52,9 +47,7 @@ func NewTranscriber(modelName string, tokThresh float64, noCallback bool) (*tran
 	t := &transcriber{
 		model:      model,
 		ch:         make(chan txRq, 256),
-		cli:        &http.Client{},
 		thresh:     tokThresh,
-		noCallback: noCallback,
 	}
 
 	return t, nil
@@ -67,21 +60,18 @@ func (t *transcriber) Close() {
 	}
 
 	close(t.ch)
-
-	t.cli.CloseIdleConnections()
 }
 
 type txRq struct {
-	*pb.CallTranscribeRequest
+	*pb.Call
 	t time.Time
 }
 
-func (t *transcriber) Transcribe(call *pb.CallTranscribeRequest) error {
-	t.ch <- txRq{CallTranscribeRequest: call, t: time.Now()}
-	return nil
+func (t *transcriber) Transcribe(call *pb.Call) {
+	t.ch <- txRq{Call: call, t: time.Now()}
 }
 
-func (t *transcriber) Go(ctx context.Context) {
+func (t *transcriber) Go(ctx context.Context, resCh chan *Transcription) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -91,103 +81,25 @@ func (t *transcriber) Go(ctx context.Context) {
 				continue
 			}
 
+			begin := time.Now()
 			transcription, err := t.transcribe(rq.Call)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
-			elapsed := time.Since(rq.t)
+			sinceDispatch := time.Since(rq.t)
+			elapsed := time.Since(begin)
 			transcription.ElapsedMS = int(elapsed.Milliseconds())
 
-			log.Printf("Call [Q%d] %s %s %d:%d %s", len(t.ch), elapsed.Round(time.Millisecond).String(), rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text)
-			if t.noCallback {
-				continue
-			}
+			log.Printf("Call [Q%d] d:%s e:%s %s %d:%d %s", len(t.ch), sinceDispatch.Round(time.Millisecond).String(), elapsed.Round(time.Millisecond).String(), rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text)
+			resCh <- transcription
 
-			err = t.txCallback(rq.CallTranscribeRequest, transcription)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
 		}
 	}
-}
-
-func (t *transcriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	contentType := r.Header.Get("Content-Type")
-	payload, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	ct := strings.Split(contentType, ";")[0]
-	var rq *pb.CallTranscribeRequest
-	switch ct {
-	case "application/x-protobuf":
-		rq = new(pb.CallTranscribeRequest)
-		err = proto.Unmarshal(payload, rq)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		log.Printf("TxRq [Q%d] %s len %d\n", len(t.ch), rq.Call.Id, len(payload))
-	case "audio/mpeg":
-		l := int32(1234)
-		log.Printf("Test call len %d\n", len(payload))
-		rq = &pb.CallTranscribeRequest{
-			Call: &pb.Call{
-				Duration:  &l,
-				Audio:     payload,
-				AudioType: ct,
-			},
-		}
-	default:
-		http.Error(w, "Not a protobuf", http.StatusBadRequest)
-		return
-	}
-
-	err = t.Transcribe(rq)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println(err)
-		return
-	}
-}
-
-func (t *transcriber) txCallback(rq *pb.CallTranscribeRequest, tx *Transcription) error {
-	enc, err := json.Marshal(tx)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("POST", rq.Callback, bytes.NewReader(enc))
-	if err != nil {
-		return err
-	}
-
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", rq.Token))
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Set("User-Agent", UserAgent)
-
-	resp, err := t.cli.Do(req)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
-		et, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("got status %d: %s", resp.StatusCode, string(et))
-	}
-
-	_, _ = io.Copy(io.Discard, resp.Body)
-
-	return nil
 }
 
 type Transcription struct {
+	CallID string `json:"callID"`
 	Text string `json:"text"`
 	ElapsedMS int `json:"elapsedMS"`
 }
@@ -195,7 +107,10 @@ type Transcription struct {
 var SpaceReplacer = strings.NewReplacer("    ", " ", "   ", " ", "  ", " ")
 
 func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
-	tx := &Transcription{}
+	tx := &Transcription{
+		CallID: call.Id,
+	}
+
 	ctx, err := t.model.NewContext()
 	if err != nil {
 		return nil, err

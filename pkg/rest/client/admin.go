@@ -39,7 +39,7 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 		return nil
 	}
 
-	resp, err := c.hc.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (c *client) CallsGC(ctx context.Context) error {
 		return err
 	}
 
-	resp, err := c.hc.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func (c *client) CallsFsck(ctx context.Context, p *callstore.FsckParams, progres
 
 	setSSErequestHeaders(req)
 
-	resp, err := c.hc.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return err
 	}
