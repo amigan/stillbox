@@ -619,7 +619,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(increase(stillbox_transcribe_elapsed_seconds_bucket{job=\"$prom_job_name\"}[$__range])) by (le)",
+          "expr": "sum(increase(stillbox_workers_elapsed_seconds_bucket{job=\"$prom_job_name\"}[$__range])) by (le)",
           "format": "heatmap",
           "instant": false,
           "interval": "",
@@ -1447,7 +1447,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1558,7 +1558,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1639,5 +1639,5 @@
   "timezone": "",
   "title": "StillboxAPM",
   "uid": "etQuvBTgf",
-  "version": 44
+  "version": 45
 }
