@@ -125,7 +125,7 @@ func (wm *workerManager) HUP(cfg config.Workers) {
 
 type workerMetrics struct {
 	NoWorkersCount prometheus.Counter     `help:"Transcript calls with no workers count"`
-	DispatchCount  *prometheus.CounterVec `help:"Dispatched transcriptions" labels:"type,id"`
+	DispatchCount  prometheus.Counter     `help:"Dispatched transcriptions"`
 	ElapsedSeconds prometheus.Histogram   `help:"Transcription elapsed time" buckets:"0.1,0.2,0.5,1,1.5,2,5,10,20,50"`
 }
 
@@ -241,6 +241,8 @@ func (wm *workerManager) Dispatch(ctx context.Context, msg broadcast.Message) er
 	default:
 		return err
 	}
+
+	wm.metrics.DispatchCount.Add(1.0)
 
 	return nil
 }
