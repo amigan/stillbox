@@ -87,7 +87,14 @@ func main() {
 
 	for {
 		err = cl.Dial()
-		if err != nil {
+		switch err {
+		case nil:
+		case client.ErrUnauthorized:
+			if attempts == 0 || attempts > 10{
+				log.Fatal(err)
+			}
+			fallthrough
+		default:
 			log.Println(err)
 			backoff()
 			continue

@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -12,6 +13,10 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/gorilla/websocket"
+)
+
+var (
+	ErrUnauthorized = errors.New("unauthorized; check credentials")
 )
 
 type Nexus interface {
@@ -130,9 +135,15 @@ func (c *nexusClient) Dial() error {
 	}
 
 	var err error
-	c.wsc, _, err = dialer.Dial(c.wsu.String(), http.Header{})
+	var resp *http.Response
+	c.wsc, resp, err = dialer.Dial(c.wsu.String(), http.Header{})
 	if err != nil {
-		return err
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return ErrUnauthorized
+		default:
+			return fmt.Errorf("dial: http %d: %w", resp.StatusCode, err)
+		}
 	}
 
 	return nil
