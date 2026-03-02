@@ -151,10 +151,16 @@ func (a *jwtAuthenticator) AuthenticateJWT(ctx context.Context, r *http.Request)
 		var scopes []string
 		if sc, has := token.Get("scope"); has {
 			switch scp := sc.(type) {
-			case []string:
-				scopes = scp
-			case string:
-				scopes = strings.Split(scp, " ")
+			case []any:
+				for _, scope := range scp {
+					if str, isStr := scope.(string); isStr {
+						scopes = append(scopes, str)
+					}
+				}
+			case any:
+				if str, isStr := scp.(string); isStr {
+					scopes = strings.Split(str, " ")
+				}
 			}
 		}
 

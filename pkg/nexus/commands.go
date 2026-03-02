@@ -2,6 +2,7 @@ package nexus
 
 import (
 	"context"
+	"time"
 
 	tgfilter "dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
@@ -43,6 +44,11 @@ func (c *client) HandleCommand(ctx context.Context, cmd *pb.Command) {
 		err = c.Talkgroup(ctx, cc.TgCommand)
 	case *pb.Command_SetTranscript:
 		err = c.nexus.transcriptWorkers.SetTranscript(ctx, cc.SetTranscript)
+		var elapsed time.Duration
+		if cc.SetTranscript.ElapsedMs != nil {
+			elapsed = time.Duration(*cc.SetTranscript.ElapsedMs) * time.Millisecond
+		}
+		log.Debug().Err(err).Str("call", cc.SetTranscript.Id).Str("worker", c.NetConn().RemoteAddr().String()).Str("elapsed", elapsed.String()).Msg("transcript set")
 	default:
 		log.Error().Msgf("unknown command %#v", cmd)
 	}

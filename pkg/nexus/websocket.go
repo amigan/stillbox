@@ -3,6 +3,7 @@ package nexus
 import (
 	"context"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
@@ -40,6 +41,10 @@ type wsConn struct {
 	*websocket.Conn
 
 	out chan broadcast.ToClientMsg
+}
+
+func (w *wsConn) Connection() net.Conn {
+	return w.Conn.NetConn()
 }
 
 func (w *wsConn) Send(msg broadcast.ToClientMsg) error {

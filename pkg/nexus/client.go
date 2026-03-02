@@ -3,6 +3,7 @@ package nexus
 import (
 	"context"
 	"io"
+	"net"
 	"runtime"
 	"sync"
 
@@ -37,6 +38,8 @@ type client struct {
 type Connection interface {
 	io.Closer
 	CloseCh()
+
+	NetConn() net.Conn
 
 	Shutdown()
 
