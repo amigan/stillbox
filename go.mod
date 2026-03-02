@@ -1,6 +1,6 @@
 module dynatron.me/x/stillbox
 
-go 1.25.7
+go 1.26
 
 require (
 	dynatron.me/x/go-minimp3 v0.0.0-20250314003403-7c2c5bbc9d65
