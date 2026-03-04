@@ -3,10 +3,14 @@ package nexus
 import (
 	"context"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
+	nxerrors "dynatron.me/x/stillbox/pkg/nexus/errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
@@ -36,15 +40,19 @@ func newWsManager(r Registry) *wsManager {
 type wsConn struct {
 	*websocket.Conn
 
-	out chan ToClientMsg
+	out chan broadcast.ToClientMsg
 }
 
-func (w *wsConn) Send(msg ToClientMsg) error {
+func (w *wsConn) Connection() net.Conn {
+	return w.Conn.NetConn()
+}
+
+func (w *wsConn) Send(msg broadcast.ToClientMsg) error {
 	select {
 	case w.out <- msg:
 	default:
 		log.Debug().Str("conn", w.RemoteAddr().String()).Msg("send channel not ready, closing")
-		return ErrSentToClosed
+		return nxerrors.ErrSentToClosed
 	}
 
 	return nil
@@ -53,7 +61,7 @@ func (w *wsConn) Send(msg ToClientMsg) error {
 func newWsConn(c *websocket.Conn) *wsConn {
 	wc := &wsConn{
 		Conn: c,
-		out:  make(chan ToClientMsg, qSize),
+		out:  make(chan broadcast.ToClientMsg, qSize),
 	}
 
 	return wc
@@ -69,6 +77,14 @@ func (w *wsConn) CloseCh() {
 }
 
 func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	subject, err := authz.Check(ctx, authz.UseResource(entities.ResourceNexus), authz.WithActions(entities.ActionConnect))
+	if err != nil {
+		log.Error().Err(err).Msg("nexus not allowed")
+		http.Error(w, "nexus not allowed", http.StatusForbidden)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("upgrade failed")
@@ -76,8 +92,6 @@ func (wm *wsManager) serveWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
-	subject := entities.SubjectFrom(ctx)
 	wsc := newWsConn(conn)
 	cli := wm.NewClient(wsc, subject)
 	wm.Register(cli)
@@ -164,8 +178,8 @@ func (conn *wsConn) writePump() {
 	}
 }
 
-func (conn *wsConn) writeToClient(w io.WriteCloser, msg ToClientMsg) {
-	packWrite := func(msg ToClientMsg) {
+func (conn *wsConn) writeToClient(w io.WriteCloser, msg broadcast.ToClientMsg) {
+	packWrite := func(msg broadcast.ToClientMsg) {
 		packed, err := proto.Marshal(msg)
 		if err != nil {
 			log.Error().Err(err).Msg("pack message")

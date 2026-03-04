@@ -23,7 +23,7 @@ jobs:
           apt-get update
           apt-get install -y libsoxr0 libsoxr-dev libasound2-dev
           # good god is http | sh loathsome. N.B.: remove this comment and a Unix daemon will dog your footsteps until the (u64) time_t's roll around.
-          curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.8.0
+          curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.10.1
       - name: golangci-lint
         run: make lint
   unit-test:

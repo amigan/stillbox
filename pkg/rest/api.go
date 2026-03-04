@@ -12,7 +12,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/nexus"
-	"dynatron.me/x/stillbox/pkg/pipeline"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
@@ -53,15 +52,15 @@ func (a *api) ShareRouter() http.Handler {
 	return a.shares.RootRouter()
 }
 
-func New(baseURL url.URL, nex nexus.Nexus, pipe pipeline.Pipeline, auth authn.Authn) *api {
+func New(baseURL url.URL, nex nexus.Nexus, auth authn.Authn) *api {
 	s := &api{
 		baseURL:   &baseURL,
 		nex:       nex,
 		tgs:       new(talkgroupAPI),
-		calls:     newCallsAPI(nex, pipe.Transcriber()),
+		calls:     newCallsAPI(nex, nex.Transcriber()),
 		incidents: newIncidentsAPI(&baseURL),
 		users:     newUsersAPI(auth),
-		apiKeys:   new(apiKeyAPI),
+		apiKeys:   newAPIKeyAPI(auth),
 		prefs:     new(prefsAPI),
 		admin:     new(adminAPI),
 	}
@@ -212,8 +211,11 @@ var statusMapping = map[error]errResponder{
 	callstore.ErrMaintenanceInProgress: tooManyRequestsErrText,
 	users.ErrNoUIDSpecified:            badRequestErrText,
 	users.ErrDuplicateName:             badRequestErrText,
+	users.ErrAPIKeyKindInvalid:         badRequestErrText,
+	users.ErrNoSuchUser:                notFoundErrText,
 	authn.ErrBadPassword:               badRequestErrText,
 	authn.ErrPasswordValidation:        badRequestErrText,
+	authn.ErrInvalidScopes:             badRequestErrText,
 }
 
 func autoError(err error) render.Renderer {

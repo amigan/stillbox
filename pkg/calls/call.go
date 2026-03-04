@@ -67,6 +67,10 @@ type CallTranscription struct {
 	Transcript *string       `json:"transcript"`
 }
 
+func (*CallTranscription) ShouldStore() bool {
+	return true
+}
+
 func (*CallTranscription) BroadcastType() broadcast.Type {
 	return broadcast.BcastTranscription
 }
@@ -146,6 +150,10 @@ func (c *Call) GetResourceName() string {
 	return entities.ResourceCall
 }
 
+func (c *Call) GetDuration() time.Duration {
+	return c.Duration.Duration()
+}
+
 func (c *Call) String() string {
 	var from string
 	switch {
@@ -173,13 +181,13 @@ func (c *Call) SetShareURL(baseURL url.URL, shareID string) {
 	c.AudioURL = common.PtrTo(baseURL.String())
 }
 
-func Make(call *Call, dontStore bool) (*Call, error) {
+func Make(call *Call, shouldStore bool) (*Call, error) {
 	err := call.computeLength()
 	if err != nil {
 		return nil, err
 	}
 
-	call.shouldStore = dontStore
+	call.shouldStore = shouldStore
 	call.ID = uuid.New()
 
 	return call, nil

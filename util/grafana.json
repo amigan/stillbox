@@ -141,7 +141,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -251,21 +251,6 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "http://localhost:3051/"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
               "options": "FAIL http://localhost:3051/"
             },
             "properties": [
@@ -281,22 +266,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "FAIL http://10.68.80.66:3053/call (http)"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "OK http://10.68.80.66:3053/call (http)"
+              "options": "OK"
             },
             "properties": [
               {
@@ -330,7 +300,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -338,8 +308,8 @@
             "uid": "e0ycKTz4k"
           },
           "editorMode": "code",
-          "expr": "rate(stillbox_transcribe_dispatch_count{job=\"$prom_job_name\"}[$__rate_interval])*60",
-          "legendFormat": "OK {{id}} ({{type}})",
+          "expr": "rate(stillbox_workers_dispatch_count{job=\"$prom_job_name\"}[$__rate_interval])*60",
+          "legendFormat": "OK",
           "range": true,
           "refId": "A"
         },
@@ -350,7 +320,7 @@
           },
           "editorMode": "code",
           "expr": "rate(stillbox_transcribe_failed_count{job=\"$prom_job_name\"}[$__rate_interval])*60",
-          "hide": false,
+          "hide": true,
           "legendFormat": "FAIL {{id}} ({{type}})",
           "range": true,
           "refId": "B"
@@ -439,6 +409,10 @@
                   "fixedColor": "#4e42ed6e",
                   "mode": "fixed"
                 }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 30
               }
             ]
           },
@@ -532,7 +506,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -636,7 +610,7 @@
           "unit": "s"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -645,7 +619,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(increase(stillbox_transcribe_elapsed_seconds_bucket{job=\"$prom_job_name\"}[$__range])) by (le)",
+          "expr": "sum(increase(stillbox_workers_elapsed_seconds_bucket{job=\"$prom_job_name\"}[$__range])) by (le)",
           "format": "heatmap",
           "instant": false,
           "interval": "",
@@ -741,7 +715,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -838,7 +812,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1003,7 +977,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1094,7 +1068,7 @@
           "unit": "s"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1200,7 +1174,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1329,7 +1303,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1473,7 +1447,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1584,7 +1558,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -1665,5 +1639,5 @@
   "timezone": "",
   "title": "StillboxAPM",
   "uid": "etQuvBTgf",
-  "version": 40
+  "version": 45
 }

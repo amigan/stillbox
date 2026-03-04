@@ -9,34 +9,45 @@ import (
 	"context"
 	"net/netip"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createAPIKey = `-- name: CreateAPIKey :exec
 INSERT INTO api_keys(
 	owner_id,
 	name,
+	kind,
 	created_at,
 	expires,
+	jwt_id,
+	scopes,
 	disabled,
 	api_key
-	) VALUES ($1, $2, $3, $4, $5, $6)
+	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 `
 
 type CreateAPIKeyParams struct {
-	OwnerID   int        `db:"owner_id" json:"ownerId"`
-	Name      *string    `db:"name" json:"name"`
-	CreatedAt time.Time  `db:"created_at" json:"createdAt"`
-	Expires   *time.Time `db:"expires" json:"expires"`
-	Disabled  bool       `db:"disabled" json:"disabled"`
-	HashedKey string     `db:"hashed_key" json:"hashedKey"`
+	OwnerID   int         `db:"owner_id" json:"ownerId"`
+	Name      *string     `db:"name" json:"name"`
+	Kind      int         `db:"kind" json:"kind"`
+	CreatedAt time.Time   `db:"created_at" json:"createdAt"`
+	Expires   *time.Time  `db:"expires" json:"expires"`
+	JwtID     pgtype.UUID `db:"jwt_id" json:"jwtId"`
+	Scopes    []string    `db:"scopes" json:"scopes"`
+	Disabled  bool        `db:"disabled" json:"disabled"`
+	HashedKey *string     `db:"hashed_key" json:"hashedKey"`
 }
 
 func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error {
 	_, err := q.db.Exec(ctx, createAPIKey,
 		arg.OwnerID,
 		arg.Name,
+		arg.Kind,
 		arg.CreatedAt,
 		arg.Expires,
+		arg.JwtID,
+		arg.Scopes,
 		arg.Disabled,
 		arg.HashedKey,
 	)
@@ -92,7 +103,7 @@ const deleteAPIKey = `-- name: DeleteAPIKey :exec
 DELETE FROM api_keys WHERE api_key = $1
 `
 
-func (q *Queries) DeleteAPIKey(ctx context.Context, apiKey string) error {
+func (q *Queries) DeleteAPIKey(ctx context.Context, apiKey *string) error {
 	_, err := q.db.Exec(ctx, deleteAPIKey, apiKey)
 	return err
 }
@@ -120,38 +131,52 @@ SELECT
 	a.id,
 	a.owner_id,
 	a.name,
+	a.kind,
 	a.created_at,
 	a.expires,
 	a.disabled,
 	a.api_key,
+	a.jwt_id,
+	a.scopes,
 	u.username
 FROM api_keys a
 JOIN users u ON (a.owner_id = u.id)
-WHERE api_key = $1
+WHERE 
+(CASE
+	WHEN $1::TEXT IS NOT NULL THEN a.api_key = $1
+	WHEN $2::UUID IS NOT NULL THEN a.jwt_id = $2
+	ELSE FALSE END)
+AND kind = $3
 `
 
 type GetAPIKeyRow struct {
-	ID        int        `db:"id" json:"id"`
-	OwnerID   int        `db:"owner_id" json:"ownerId"`
-	Name      *string    `db:"name" json:"name"`
-	CreatedAt time.Time  `db:"created_at" json:"createdAt"`
-	Expires   *time.Time `db:"expires" json:"expires"`
-	Disabled  bool       `db:"disabled" json:"disabled"`
-	ApiKey    string     `db:"api_key" json:"apiKey"`
-	Username  string     `db:"username" json:"username"`
+	ID        int         `db:"id" json:"id"`
+	OwnerID   int         `db:"owner_id" json:"ownerId"`
+	Name      *string     `db:"name" json:"name"`
+	Kind      int         `db:"kind" json:"kind"`
+	CreatedAt time.Time   `db:"created_at" json:"createdAt"`
+	Expires   *time.Time  `db:"expires" json:"expires"`
+	Disabled  bool        `db:"disabled" json:"disabled"`
+	ApiKey    *string     `db:"api_key" json:"apiKey"`
+	JwtID     pgtype.UUID `db:"jwt_id" json:"jwtId"`
+	Scopes    []string    `db:"scopes" json:"scopes"`
+	Username  string      `db:"username" json:"username"`
 }
 
-func (q *Queries) GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, error) {
-	row := q.db.QueryRow(ctx, getAPIKey, apiKey)
+func (q *Queries) GetAPIKey(ctx context.Context, key *string, jwtID pgtype.UUID, kind int) (GetAPIKeyRow, error) {
+	row := q.db.QueryRow(ctx, getAPIKey, key, jwtID, kind)
 	var i GetAPIKeyRow
 	err := row.Scan(
 		&i.ID,
 		&i.OwnerID,
 		&i.Name,
+		&i.Kind,
 		&i.CreatedAt,
 		&i.Expires,
 		&i.Disabled,
 		&i.ApiKey,
+		&i.JwtID,
+		&i.Scopes,
 		&i.Username,
 	)
 	return i, err

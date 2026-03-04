@@ -21,7 +21,6 @@ const (
 	PresetReadInSharedIncident = "readInSharedIncident"
 	PresetReadPrivilegedSelf   = "readPrivileged"
 	PresetUpdateSelf           = "updateSelf"
-	PresetTranscribeCallID     = "transcribeCallID"
 	PresetTranscribeSubmitter  = "transcribeSubmitter"
 )
 
@@ -69,6 +68,9 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Preset: PresetDeleteOwn},
 					&restrict.Permission{Preset: PresetReadOwn},
 				},
+				entities.ResourceNexus: {
+					&restrict.Permission{Action: entities.ActionConnect},
+				},
 			},
 		},
 		entities.RoleSubmitter: {
@@ -81,6 +83,9 @@ var Policy = &restrict.PolicyDefinition{
 					// for learning TGs
 					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Action: entities.ActionUpdate},
+				},
+				entities.ResourceNexus: {
+					&restrict.Permission{Action: entities.ActionConnect},
 				},
 			},
 		},
@@ -185,7 +190,7 @@ var Policy = &restrict.PolicyDefinition{
 			Description: "Call transcription service",
 			Grants: restrict.GrantsMap{
 				entities.ResourceCall: {
-					&restrict.Permission{Preset: PresetTranscribeCallID},
+					&restrict.Permission{Action: entities.ActionTranscribe},
 				},
 			},
 		},
@@ -375,22 +380,6 @@ var Policy = &restrict.PolicyDefinition{
 					Left: &restrict.ValueDescriptor{
 						Source: restrict.SubjectField,
 						Field:  "ID",
-					},
-					Right: &restrict.ValueDescriptor{
-						Source: restrict.ResourceField,
-						Field:  "ID",
-					},
-				},
-			},
-		},
-		PresetTranscribeCallID: &restrict.Permission{
-			Action: entities.ActionTranscribe,
-			Conditions: restrict.Conditions{
-				&restrict.EqualCondition{
-					ID: "callIDSame",
-					Left: &restrict.ValueDescriptor{
-						Source: restrict.SubjectField,
-						Field:  "CallID",
 					},
 					Right: &restrict.ValueDescriptor{
 						Source: restrict.ResourceField,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,9 +19,9 @@ import (
 )
 
 const (
-	CallRealm    = "me.dynatron.stillbox.call"
 	RefreshRealm = "me.dynatron.stillbox.refresh"
 	AccessRealm  = "me.dynatron.stillbox.access"
+	APIKeyRealm  = "me.dynatron.stillbox.apiKey"
 )
 
 var (
@@ -136,18 +137,34 @@ func (a *jwtAuthenticator) AuthenticateJWT(ctx context.Context, r *http.Request)
 		}
 	}
 
+	ust := users.FromCtx(ctx)
+
 	switch realmStr {
-	case CallRealm:
-		cUUID, err := uuid.Parse(subjectString)
+	case "", RefreshRealm, AccessRealm:
+		return ust.GetUser(ctx, subjectString)
+	case APIKeyRealm:
+		user, err := ust.GetUser(ctx, subjectString)
 		if err != nil {
 			return nil, err
 		}
 
-		return &entities.CallSubject{
-			CallID: cUUID,
-		}, nil
-	case "", RefreshRealm, AccessRealm:
-		return users.FromCtx(ctx).GetUser(ctx, subjectString)
+		var scopes []string
+		if sc, has := token.Get("scope"); has {
+			switch scp := sc.(type) {
+			case []any:
+				for _, scope := range scp {
+					if str, isStr := scope.(string); isStr {
+						scopes = append(scopes, str)
+					}
+				}
+			case any:
+				if str, isStr := scp.(string); isStr {
+					scopes = strings.Split(str, " ")
+				}
+			}
+		}
+
+		return entities.NewAPIKeySubject(user, scopes...), nil
 	default:
 		return nil, ErrBadRealm
 	}
@@ -209,20 +226,22 @@ func (a *jwtAuthenticator) NewRefreshToken(username string) (string, error) {
 	return tokenString, err
 }
 
-func (a *jwtAuthenticator) NewCallToken(callID string) string {
+func (a *jwtAuthenticator) NewAPIKeyToken(username string, expires *time.Time, keyID uuid.UUID, scopes []string) (string, error) {
 	claims := claims{
-		"sub":   callID,
-		"realm": CallRealm,
+		"sub":   username,
+		"realm": APIKeyRealm,
+		"scope": scopes,
+		"jti":   keyID.String(),
 	}
+
 	jwtauth.SetIssuedNow(claims)
-	jwtauth.SetExpiryIn(claims, time.Hour)
+	if expires != nil {
+		jwtauth.SetExpiry(claims, *expires)
+	}
 
 	a.Lock()
 	defer a.Unlock()
 	_, tokenString, err := a.jwt.Encode(claims)
-	if err != nil {
-		panic(err)
-	}
 
-	return tokenString
+	return tokenString, err
 }

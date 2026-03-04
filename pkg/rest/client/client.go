@@ -8,9 +8,11 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 
 	"dynatron.me/x/stillbox/internal/version"
+	"dynatron.me/x/stillbox/pkg/authn"
 )
 
 var (
@@ -18,13 +20,26 @@ var (
 )
 
 type Client interface {
+	BaseURL() *url.URL
+	HTTPClient() *http.Client
 	adminClient
+	Login(ctx context.Context, username, password string) (*JWT, error)
 }
 
 type client struct {
 	unixSocket *string
 	baseURL    *url.URL
 	hc         http.Client
+	headers    http.Header
+	debug      io.Writer
+}
+
+func (c *client) HTTPClient() *http.Client {
+	return &c.hc
+}
+
+func (c *client) BaseURL() *url.URL {
+	return c.baseURL
 }
 
 type ClientOption func(*client)
@@ -45,6 +60,67 @@ func BaseURL(u *url.URL) ClientOption {
 	return func(c *client) {
 		c.baseURL = u
 	}
+}
+
+func Debug(w io.Writer) ClientOption {
+	return func(c *client) {
+		c.debug = w
+	}
+}
+
+func WithCookieJar(jar http.CookieJar) ClientOption {
+	return func(c *client) {
+		c.hc.Jar = jar
+	}
+}
+
+func WithAuthBearer(token string) ClientOption {
+	return func(c *client) {
+		cj, err := cookiejar.New(nil)
+		if err != nil {
+			panic(err)
+		}
+
+		cj.SetCookies(c.baseURL, []*http.Cookie{
+			{
+				Name:  authn.CookieName,
+				Value: token,
+			},
+		})
+		c.hc.Jar = cj
+	}
+}
+
+type debugCloser struct {
+	io.Reader
+	cl io.ReadCloser
+}
+
+func (d *debugCloser) Close() error {
+	return d.cl.Close()
+}
+
+func (c *client) debugTee(resp *http.Response) {
+	if c.debug != nil {
+		cl := &debugCloser{
+			cl: resp.Body,
+		}
+		cl.Reader = io.TeeReader(resp.Body, c.debug)
+		resp.Body = cl
+	}
+}
+
+// do fills in headers and executes the request.
+func (c *client) do(req *http.Request) (*http.Response, error) {
+	if c.headers != nil {
+		for h, v := range c.headers {
+			for _, ve := range v {
+				req.Header.Add(h, ve)
+			}
+		}
+	}
+
+	return c.hc.Do(req)
 }
 
 func New(options ...ClientOption) (c *client, err error) {

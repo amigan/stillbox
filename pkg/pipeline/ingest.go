@@ -26,13 +26,12 @@ type pipe struct {
 	// protects ingest filters
 	sync.Mutex
 
-	sources     sources.Sources
-	sinks       sinks.Sinks
-	transcriber sinks.Transcriber
-	relayer     *sinks.RelayManager
-	metrics     pipeMetrics
-	filters     []ingestFilter
-	tgstore     tgstore.Store
+	sources sources.Sources
+	sinks   sinks.Sinks
+	relayer *sinks.RelayManager
+	metrics pipeMetrics
+	filters []ingestFilter
+	tgstore tgstore.Store
 }
 
 type pipeMetrics struct {
@@ -41,7 +40,6 @@ type pipeMetrics struct {
 }
 
 type Pipeline interface {
-	Transcriber() sinks.Transcriber
 	HUPCtx(context.Context, *config.Config)
 	PublicRoutes(chi.Router)
 	Shutdown()
@@ -63,19 +61,13 @@ func New(
 
 	sinkMgr := sinks.NewSinkManager()
 
-	transcriber, err := sinks.NewTranscriber(sinkMgr, authenticator, tgs, met, cfg.Transcription)
-	if err != nil {
-		return nil, err
-	}
 	p := &pipe{
-		sinks:       sinkMgr,
-		transcriber: transcriber,
-		tgstore:     tgs,
+		sinks:   sinkMgr,
+		tgstore: tgs,
 	}
 
 	p.sinks.Register(sinks.NewCallstoreSink(callStore, tgs), sinks.RequiredFlag)
 	p.sinks.Register(sinks.NewNexusSink(nex))
-	p.sinks.Register(p.transcriber)
 
 	if alerter.Enabled() {
 		p.sinks.Register(alerter)
@@ -163,16 +155,11 @@ func (p *pipe) Ingest(ctx context.Context, call *calls.Call) error {
 	return nil
 }
 
-func (p *pipe) Transcriber() sinks.Transcriber {
-	return p.transcriber
-}
-
 func (p *pipe) HUPCtx(ctx context.Context, cfg *config.Config) {
 	p.Lock()
 	defer p.Unlock()
 	ctx = entities.CtxWithServiceSubject(ctx, "pipeline")
 
-	p.transcriber.HUP(cfg)
 	p.relayer.HUP(cfg)
 
 	flt, err := buildIngestFilters(ctx, cfg.Ingest)

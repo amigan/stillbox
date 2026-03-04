@@ -21,7 +21,10 @@ CREATE TABLE IF NOT EXISTS api_keys(
 	created_at TIMESTAMP NOT NULL,
 	expires TIMESTAMP,
 	disabled BOOLEAN NOT NULL,
-	api_key TEXT UNIQUE NOT NULL,
+	kind INTEGER NOT NULL,
+	api_key TEXT UNIQUE,
+	jwt_id UUID UNIQUE,
+	scopes TEXT[],
 	UNIQUE (owner_id, name)
 );
 

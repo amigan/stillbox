@@ -28,7 +28,7 @@ type Config struct {
 	Notify        Notify         `yaml:"notify"`
 	CallStorage   CallStorage    `yaml:"callStorage"`
 	Relay         []Relay        `yaml:"relay"`
-	Transcription Transcription  `yaml:"transcription"`
+	Transcription Workers        `yaml:"transcription"`
 	Metrics       Metrics        `yaml:"metrics"`
 }
 
@@ -168,14 +168,9 @@ func (sd *StorageDisposition) UnmarshalText(s []byte) error {
 	return nil
 }
 
-type Transcription struct {
+type Workers struct {
 	Filter         ConfigMap `yaml:"filter,omitempty"`
 	AtLeastSeconds int       `yaml:"atLeastSeconds"`
-	Workers        []Worker  `yaml:"workers"`
-}
-type Worker struct {
-	Type   string    `yaml:"type"`
-	Config ConfigMap `yaml:"config,omitempty"`
 }
 
 func (rl *RateLimit) Verify() bool {

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -25,7 +26,7 @@ type Querier interface {
 	CreateShare(ctx context.Context, arg CreateShareParams) error
 	CreateSystem(ctx context.Context, iD int, name string, learned bool) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeleteAPIKey(ctx context.Context, apiKey string) error
+	DeleteAPIKey(ctx context.Context, apiKey *string) error
 	DeleteCall(ctx context.Context, id uuid.UUID) error
 	DeleteIncident(ctx context.Context, id uuid.UUID) error
 	DeleteSetting(ctx context.Context, name string) error
@@ -36,7 +37,7 @@ type Querier interface {
 	DetailedCountRefJournal(ctx context.Context) ([]DetailedCountRefJournalRow, error)
 	DisableUser(ctx context.Context, username string) error
 	DropRefJournal(ctx context.Context, id int64) error
-	GetAPIKey(ctx context.Context, apiKey string) (GetAPIKeyRow, error)
+	GetAPIKey(ctx context.Context, key *string, jwtID pgtype.UUID, kind int) (GetAPIKeyRow, error)
 	GetAllTalkgroupTags(ctx context.Context) ([]string, error)
 	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
 	GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)

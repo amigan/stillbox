@@ -2,6 +2,7 @@ package nexus
 
 import (
 	"context"
+	"time"
 
 	tgfilter "dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
@@ -36,9 +37,18 @@ func (c *client) HandleCommand(ctx context.Context, cmd *pb.Command) {
 	switch cc := cmd.Command.(type) {
 	case *pb.Command_LiveCommand:
 		err = c.Live(ctx, cc.LiveCommand)
+	case *pb.Command_RegisterCommand:
+		err = c.Register(ctx, cc.RegisterCommand)
 	case *pb.Command_SearchCommand:
 	case *pb.Command_TgCommand:
 		err = c.Talkgroup(ctx, cc.TgCommand)
+	case *pb.Command_SetTranscript:
+		err = c.nexus.transcriptWorkers.SetTranscript(ctx, cc.SetTranscript)
+		var elapsed time.Duration
+		if cc.SetTranscript.ElapsedMs != nil {
+			elapsed = time.Duration(*cc.SetTranscript.ElapsedMs) * time.Millisecond
+		}
+		log.Debug().Err(err).Str("call", cc.SetTranscript.Id).Str("worker", c.NetConn().RemoteAddr().String()).Str("elapsed", elapsed.String()).Msg("transcript set")
 	default:
 		log.Error().Msgf("unknown command %#v", cmd)
 	}
@@ -99,6 +109,21 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 			},
 		},
 	})
+
+	return nil
+}
+
+func (c *client) Register(ctx context.Context, cmd *pb.Register) error {
+	if !cmd.TranscriptWorker || c.nexus.transcriptWorkers == nil {
+		return nil
+	}
+
+	err := c.nexus.transcriptWorkers.Register(ctx, c, cmd)
+	if err != nil {
+		return err
+	}
+
+	c.isTranscriptWorker = true
 
 	return nil
 }

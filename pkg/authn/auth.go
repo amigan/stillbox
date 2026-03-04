@@ -16,6 +16,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
+	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
@@ -33,14 +34,14 @@ type Authn interface {
 	// PublicSubjectMiddleware allows a Public subject to be set.
 	PublicSubjectMiddleware() func(http.Handler) http.Handler
 
-	// NewCallToken creates a call-specific token for transcription use.
-	NewCallToken(callID string) string
-
 	// NewAccessToken generates a new access token.
 	NewAccessToken(username string) string
 
-	// APIKeyMiddleware requires a multipart/form-data API key be set.
-	APIKeyMiddleware(formKey string) func(http.Handler) http.Handler
+	// MultipartAPIKeyMiddleware requires a multipart/form-data API key be set.
+	MultipartAPIKeyMiddleware(formKey string) func(http.Handler) http.Handler
+
+	// NewAPIKeyToken generates a JWT for use as an API key with the provided expiry and scopes.
+	NewAPIKeyToken(username string, expires *time.Time, keyID uuid.UUID, scopes []string) (string, error)
 
 	// LocalAdminMiddleware is used for local Unix domain socket connections..
 	LocalAdminMiddleware() func(http.Handler) http.Handler
@@ -59,6 +60,9 @@ type Authn interface {
 
 	// ChangePassword changes a password. Privileged users can specify another username, and do not need to furnish an oldPassword; otherwise the user is grabbed from the context Subject.
 	ChangePassword(ctx context.Context, username, oldPassword *string, newPassword string) error
+
+	// CreateAPIKey creates and stores an API key according to rq.
+	CreateAPIKey(ctx context.Context, rq CreateAPIKeyRequest) (*users.APIKey, error)
 }
 
 type authn struct {

@@ -213,9 +213,6 @@ transcription:
 #     talkgroupTagsAny:
 #       - fire dispatch
 #       - law dispatch
-#   config:
-#     url: "http://transcriber:3053/"
-#     callbackBase: "http://stillboxinternal:3050/"
 
 metrics:
   # Enable prometheus metrics

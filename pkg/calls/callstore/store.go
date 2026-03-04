@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
@@ -101,6 +103,8 @@ type store struct {
 	now           NowFunc
 	metrics       storeMetrics
 
+	htmlSani *bluemonday.Policy
+
 	// this mutex ensures very high request volume calls like move and fsck only happen one at a time.
 	maintInProgress sync.Mutex
 }
@@ -120,8 +124,9 @@ func WithNow(nf NowFunc) StoreOption {
 
 func NewStore(ctx context.Context, db database.Store, tgc tgstore.FilterCache, met metrics.Metrics, callStorage config.CallStorage, partConfig config.Partition, opts ...StoreOption) (*store, error) {
 	st := &store{
-		db:  db,
-		now: time.Now,
+		db:       db,
+		now:      time.Now,
+		htmlSani: bluemonday.StrictPolicy(),
 	}
 
 	for _, opt := range opts {
@@ -654,6 +659,10 @@ func (s *store) CallStats(ctx context.Context, interval calls.StatsInterval, sta
 	return cs, nil
 }
 
+// entityReplacer turns quote entities back into quotes; there does not seem to be a way to make
+// bluemonday pass them through.
+var entityReplacer = strings.NewReplacer("&#39;", "'", "&#34;", `"`)
+
 func (s *store) UpdateTranscription(ctx context.Context, id uuid.UUID, text *string) (*calls.CallTranscription, error) {
 	c, err := s.getCallOwner(ctx, id)
 	if err != nil {
@@ -663,6 +672,16 @@ func (s *store) UpdateTranscription(ctx context.Context, id uuid.UUID, text *str
 	_, err = authz.Check(ctx, &c, authz.WithActions(entities.ActionTranscribe))
 	if err != nil {
 		return nil, err
+	}
+
+	if text != nil {
+		sani := s.htmlSani.Sanitize(*text)
+		xsc := strings.Trim(entityReplacer.Replace(sani), " \t")
+		if xsc == "" {
+			text = nil
+		} else {
+			text = &xsc
+		}
 	}
 
 	sts, err := database.FromCtx(ctx).SetCallTranscript(ctx, id, text)
