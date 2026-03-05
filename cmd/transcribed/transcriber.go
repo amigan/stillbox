@@ -176,7 +176,7 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		st.WriteRune(' ')
 	}
 
-	tx.Text = strings.TrimSpace(SpaceReplacer.Replace(st.String()))
+	tx.Text = strings.ToValidUTF8(strings.TrimSpace(SpaceReplacer.Replace(st.String())), "")
 
 	return tx, nil
 }
