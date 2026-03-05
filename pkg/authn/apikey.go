@@ -187,6 +187,8 @@ func (a *authn) CreateAPIKey(ctx context.Context, rq CreateAPIKeyRequest) (*user
 		ak.Key = key
 
 		return ak, nil
+	default:
+		return nil, users.ErrAPIKeyKindInvalid
 	}
 
 	return nil, nil
