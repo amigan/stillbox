@@ -31,7 +31,7 @@ const (
 
 var (
 	ErrAPIKeyKindInvalid = errors.New("invalid API key kind")
-	ErrAPIKeyExpired     = errors.New("API key expired")
+	ErrAPIKeyExpired     = errors.New("API key expired or disabled")
 )
 
 func (k *APIKeyKind) UnmarshalText(t []byte) error {

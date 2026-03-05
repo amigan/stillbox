@@ -208,6 +208,10 @@ func (s *postgresStore) GetAPIKey(ctx context.Context, keyKind APIKeyKind, b64ha
 		return database.GetAPIKeyRow{}, err
 	}
 
+	if k.Disabled {
+		return database.GetAPIKeyRow{}, ErrAPIKeyExpired
+	}
+
 	if k.Expires != nil && time.Now().After(*k.Expires) {
 		return database.GetAPIKeyRow{}, ErrAPIKeyExpired
 	}
