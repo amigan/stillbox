@@ -143,7 +143,20 @@ func (a *jwtAuthenticator) AuthenticateJWT(ctx context.Context, r *http.Request)
 	case "", RefreshRealm, AccessRealm:
 		return ust.GetUser(ctx, subjectString)
 	case APIKeyRealm:
-		user, err := ust.GetUser(ctx, subjectString)
+		jti, err := uuid.Parse(token.JwtID())
+		if err != nil {
+			log.Warn().Str("jti", token.JwtID()).Err(err).Msg("could not parse jti")
+			return nil, ErrUnauthorized
+		}
+		ak, err := ust.GetAPIKey(ctx, users.APIKeyKindAPIKey, nil, &jti)
+		if err != nil {
+			return nil, ErrUnauthorized
+		}
+		if ak.Username != subjectString {
+			log.Warn().Str("subject", subjectString).Str("apikeyUser", ak.Username).Str("jwtID", jti.String()).Msg("api key subject does not match username")
+			return nil, ErrUnauthorized
+		}
+		user, err := ust.GetUser(ctx, ak.Username)
 		if err != nil {
 			return nil, err
 		}
