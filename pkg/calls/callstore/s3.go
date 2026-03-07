@@ -16,6 +16,7 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
+	"golang.org/x/time/rate"
 
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/google/uuid"
@@ -33,16 +34,17 @@ const (
 )
 
 type s3Backend struct {
-	Bucket         string        `yaml:"bucket"`         // Bucket is the bucket name.
-	Secure         bool          `yaml:"secure"`         // Secure indicates scheme "https" when true.
-	Endpoint       string        `yaml:"endpoint"`       // Endpoint is the host[:port] of the S3 server.
-	ExternalHost   *string       `yaml:"externalHost"`   // ExternalHost is the host to use when signing presigned URLs for issuance to the client.
-	ExternalSecure bool          `yaml:"externalSecure"` // ExternalSecure is whether to use https scheme for presigned URLs.
-	Region         string        `yaml:"region"`         // Region is the S3 region.
-	KeyID          string        `yaml:"keyID"`          // KeyID is the access key ID.
-	SecretKey      string        `yaml:"secretKey"`      // SecretKey is the secret key.
-	Timeout        time.Duration `yaml:"timeout"`        // Timeout specifies a context timeout for object get and put operations.
-	Trace          bool          `yaml:"trace"`          // Trace enables minio client trace messages.
+	Bucket         string           `yaml:"bucket"`         // Bucket is the bucket name.
+	Secure         bool             `yaml:"secure"`         // Secure indicates scheme "https" when true.
+	Endpoint       string           `yaml:"endpoint"`       // Endpoint is the host[:port] of the S3 server.
+	ExternalHost   *string          `yaml:"externalHost"`   // ExternalHost is the host to use when signing presigned URLs for issuance to the client.
+	ExternalSecure bool             `yaml:"externalSecure"` // ExternalSecure is whether to use https scheme for presigned URLs.
+	Region         string           `yaml:"region"`         // Region is the S3 region.
+	KeyID          string           `yaml:"keyID"`          // KeyID is the access key ID.
+	SecretKey      string           `yaml:"secretKey"`      // SecretKey is the secret key.
+	RateLimit      config.RateLimit `yaml:"rate"`           // RateLimit is the rate limit *for move requests only*.
+	Timeout        time.Duration    `yaml:"timeout"`        // Timeout specifies a context timeout for object get and put operations.
+	Trace          bool             `yaml:"trace"`          // Trace enables minio client trace messages.
 
 	// LegacyPrefix puts <Prefix/> right under the <Rule>. If it is false, modern S3-style
 	// <Filter><Prefix/></Filter> is used. Some "S3 compatible" APIs require this.
@@ -52,6 +54,7 @@ type s3Backend struct {
 	IsB2 bool `yaml:"isB2"`
 
 	cli *minio.Client
+	lim *rate.Limiter
 	st  Store
 }
 
@@ -246,6 +249,11 @@ func (sb *s3Backend) commitRuleJob(ctx context.Context, rj *ruleJob) error {
 }
 
 func (sb *s3Backend) Store(ctx context.Context, call *calls.CallAudio) (AudioRef, error) {
+	err := sb.Wait(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	audioPath, audioRef := sb.st.BlobPath(call)
 
 	dctx, cancel := sb.ctxTimeout(ctx)
@@ -256,7 +264,7 @@ func (sb *s3Backend) Store(ctx context.Context, call *calls.CallAudio) (AudioRef
 		contentType = *call.AudioType
 	}
 
-	_, err := sb.cli.PutObject(dctx, sb.Bucket, audioPath, bytes.NewReader(call.AudioBlob), int64(len(call.AudioBlob)), minio.PutObjectOptions{ContentType: contentType})
+	_, err = sb.cli.PutObject(dctx, sb.Bucket, audioPath, bytes.NewReader(call.AudioBlob), int64(len(call.AudioBlob)), minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		return nil, err
 	}
@@ -267,6 +275,11 @@ func (sb *s3Backend) Store(ctx context.Context, call *calls.CallAudio) (AudioRef
 func (sb *s3Backend) getBlob(ctx context.Context, objKey string) ([]byte, error) {
 	dctx, cancel := sb.ctxTimeout(ctx)
 	defer cancel()
+
+	err := sb.Wait(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	b, err := sb.cli.GetObject(dctx, sb.Bucket, objKey, minio.GetObjectOptions{})
 	if err != nil {
@@ -304,6 +317,14 @@ func (sb *s3Backend) generateSignedURL(ctx context.Context, audioName *string, o
 	}
 
 	return ur, nil
+}
+
+func (sb *s3Backend) Wait(ctx context.Context) error {
+	if sb.lim != nil {
+		return sb.lim.Wait(ctx)
+	}
+
+	return nil
 }
 
 func (sb *s3Backend) Get(ctx context.Context, call *calls.CallAudio, ref AudioRef, opts *CallAudioOptions) (blob []byte, audioURL *url.URL, err error) {
@@ -508,6 +529,14 @@ func newS3backend(s Store, cfg config.ConfigMap) (AudioBackend, error) {
 	err = dec.Decode(cfg)
 	if err != nil {
 		return nil, err
+	}
+
+	if sb.RateLimit.Enable {
+		if !sb.RateLimit.Verify() {
+			return nil, errors.New("bad S3 rate limit")
+		}
+
+		sb.lim = rate.NewLimiter(rate.Every(sb.RateLimit.Over), sb.RateLimit.Requests)
 	}
 
 	var rt http.RoundTripper

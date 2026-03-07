@@ -58,6 +58,8 @@ Primary differences:
 
    Another thing that drove me to start this project. It's either Free Software, or it isn't, folks.
 
+ - [x] No restrictions on who can connect to the WebSocket API
+
  - [x] 3-clause BSD license
 
    But that doesn't mean I don't want your improvements so that I may incorporate them!

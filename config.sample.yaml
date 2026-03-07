@@ -192,6 +192,11 @@ callStorage:
         timeout: 10s
         # IsB2 creates an ExpireObjectDeleteMarker rule pair and sets NoncurrentVersionExpiration as required by B2.
         isB2: false
+        # rate describes rate limiting for this client.
+        rateLimit:
+          enable: true
+          requests: 500
+          over: 1s
         keyID: 'GK7894947fffaacacd83664923'
         secretKey: 'bacba7892843792347987293874923847293487239487234987234bababababa'
     - name: fs
