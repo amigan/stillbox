@@ -42,7 +42,7 @@ type s3Backend struct {
 	Region         string           `yaml:"region"`         // Region is the S3 region.
 	KeyID          string           `yaml:"keyID"`          // KeyID is the access key ID.
 	SecretKey      string           `yaml:"secretKey"`      // SecretKey is the secret key.
-	RateLimit      config.RateLimit `yaml:"rate"`           // RateLimit is the rate limit *for move requests only*.
+	RateLimit      config.RateLimit `yaml:"rate"`           // RateLimit is the rate limit *for store and get requests only*.
 	Timeout        time.Duration    `yaml:"timeout"`        // Timeout specifies a context timeout for object get and put operations.
 	Trace          bool             `yaml:"trace"`          // Trace enables minio client trace messages.
 

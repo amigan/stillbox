@@ -60,6 +60,8 @@ Primary differences:
 
  - [x] No restrictions on who can connect to the WebSocket API
 
+   Anyone may use it for whatever they want. Or not.
+
  - [x] 3-clause BSD license
 
    But that doesn't mean I don't want your improvements so that I may incorporate them!
