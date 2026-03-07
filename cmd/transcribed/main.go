@@ -26,6 +26,7 @@ func main() {
 	f := flag.NewFlagSet("config", flag.ExitOnError)
 	f.Float64P("threshold", "t", 0.1, "token threshold")
 	f.StringP("model", "m", "models/ggml-large-v3-turbo.bin", "model file")
+	f.BoolP("print-tokens", "p", false, "print token breakdown")
 	err := f.Parse(os.Args[1:])
 	if err != nil {
 		panic(err)
@@ -45,7 +46,7 @@ func main() {
 	}), nil); err != nil {
 		log.Fatal(err)
 	}
-	tx, err := NewTranscriber(k.String("model"), k.Float64("threshold"))
+	tx, err := NewTranscriber(k.String("model"), k.Float64("threshold"), k.Bool("print-tokens"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,9 +57,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-
-
 
 
 	ctx, cancel := context.WithCancel(context.Background())

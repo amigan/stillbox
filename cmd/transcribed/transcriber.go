@@ -30,6 +30,7 @@ var (
 type transcriber struct {
 	model      whisper.Model
 	ch         chan txRq
+	printTokens   bool
 	thresh     float64
 }
 
@@ -39,7 +40,7 @@ type Transcriber interface {
 	Close()
 }
 
-func NewTranscriber(modelName string, tokThresh float64) (*transcriber, error) {
+func NewTranscriber(modelName string, tokThresh float64, printTokens bool) (*transcriber, error) {
 	model, err := whisper.New(modelName)
 	if err != nil {
 		return nil, err
@@ -48,6 +49,7 @@ func NewTranscriber(modelName string, tokThresh float64) (*transcriber, error) {
 		model:      model,
 		ch:         make(chan txRq, 256),
 		thresh:     tokThresh,
+		printTokens: printTokens,
 	}
 
 	return t, nil
@@ -91,7 +93,11 @@ func (t *transcriber) Go(ctx context.Context, resCh chan *Transcription) {
 			elapsed := time.Since(begin)
 			transcription.ElapsedMS = int(elapsed.Milliseconds())
 
-			log.Printf("Call [Q%d] d:%s e:%s %s %d:%d %s", len(t.ch), sinceDispatch.Round(time.Millisecond).String(), elapsed.Round(time.Millisecond).String(), rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text)
+			var toks string
+			if t.printTokens {
+				toks = " " + strings.Join(transcription.tokens, "|")
+			}
+			log.Printf("Call [Q%d] d:%s e:%s %s %d:%d %s%s", len(t.ch), sinceDispatch.Round(time.Millisecond).String(), elapsed.Round(time.Millisecond).String(), rq.Call.Id, rq.Call.System, rq.Call.Talkgroup, transcription.Text, toks)
 			resCh <- transcription
 
 		}
@@ -102,6 +108,8 @@ type Transcription struct {
 	CallID string `json:"callID"`
 	Text string `json:"text"`
 	ElapsedMS int `json:"elapsedMS"`
+
+	tokens []string
 }
 
 var SpaceReplacer = strings.NewReplacer("    ", " ", "   ", " ", "  ", " ")
@@ -151,6 +159,11 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		return nil, err
 	}
 
+	var toks []string
+	if t.printTokens {
+		toks = make([]string, 0)
+	}
+
 	var st strings.Builder
 	for {
 		segment, err := ctx.NextSegment()
@@ -161,6 +174,10 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		}
 
 		for _, tok := range segment.Tokens {
+			if t.printTokens {
+				toks = append(toks, fmt.Sprintf("(%.2f)%s", tok.P, tok.Text))
+			}
+
 			if strings.HasPrefix(tok.Text, "[_") && strings.HasSuffix(tok.Text, "]") {
 				continue
 			}
@@ -177,6 +194,7 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 	}
 
 	tx.Text = strings.ToValidUTF8(strings.TrimSpace(SpaceReplacer.Replace(st.String())), "")
+	tx.tokens = toks
 
 	return tx, nil
 }
