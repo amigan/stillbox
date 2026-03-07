@@ -99,6 +99,7 @@ func (ps *progressSender[T]) Close(finalCompleted T) bool {
 	close(ps.progCh)
 	<-ps.progDone
 	ps.writeMsg(finalCompleted)
+	ps.closed.Store(true)
 
 	return true
 }
