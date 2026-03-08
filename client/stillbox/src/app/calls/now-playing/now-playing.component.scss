@@ -1,4 +1,6 @@
 a.playButton {
+  display: flex;
+  align-items: center;
   cursor: pointer;
 }
 
@@ -8,13 +10,13 @@ now-playing {
 
 div.nowPlaying {
   display: flex;
+  align-items: center;
   width: 100%;
   border: 1px solid rgb(100, 100, 100);
   background-color: #ffc400;
   color: #272727;
-  padding-top: 5px;
+  padding: 5px 1em 5px 1em;
   border-radius: 5px;
-  padding-left: 1em;
 }
 
 mat-icon {
@@ -22,14 +24,15 @@ mat-icon {
 }
 
 div.playButton {
+  display: flex;
+  align-items: center;
   width: 30px;
-  padding-top: 0.1em;
-  justify-content: flex-start;
+  flex-shrink: 0;
 }
 
 div.playingText {
   flex: 2 0 30px;
-  justify-content: flex-end;
-  align-content: center;
+  display: flex;
+  align-items: center;
   font-family: "Arcade", sans-serif;
 }

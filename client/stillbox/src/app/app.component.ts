@@ -31,6 +31,7 @@ import { MatMenuModule } from '@angular/material/menu';
     ErrorsComponent,
     AvatarComponent,
     MatMenuModule,
+    NowPlayingComponent,
     RouterModule,
     RouterLink,
   ],
