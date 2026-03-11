@@ -3,6 +3,11 @@ import { fromEvent, Observable, Subscription } from 'rxjs';
 import { CallRecord } from '../../calls';
 import { CallsService } from '../calls.service';
 import { ErrorsService } from '../../errors/errors.service';
+import { Params } from '@angular/router';
+
+export type QueueOrigin =
+  | { type: 'calls'; queryParams: Params }
+  | { type: 'incident'; id: string };
 
 interface IStack<T> {
   push(e: T[]): void;
@@ -40,6 +45,8 @@ export class PlayerService {
   playSub!: Subscription;
   public playing = signal<CallRecord | null>(null);
   public paused = signal<boolean>(false);
+  public queueOrigin = signal<QueueOrigin | null>(null);
+  private pendingOrigin: QueueOrigin | null = null;
   stack = new Stack<CallRecord>();
   private results = <CallRecord[]>[];
   private forward = false;
@@ -58,8 +65,11 @@ export class PlayerService {
     });
   }
 
-  setQueue(c: CallRecord[]) {
+  setQueue(c: CallRecord[], origin?: QueueOrigin) {
     this.results = c;
+    if (origin !== undefined) {
+      this.pendingOrigin = origin;
+    }
   }
 
   playNext() {
@@ -88,6 +98,7 @@ export class PlayerService {
     if (this.playing() != null) {
       this.stopAudio();
     }
+    this.queueOrigin.set(this.pendingOrigin);
     this.forward = forward;
     this.stack.cancel();
     let playq = this.forward

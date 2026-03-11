@@ -17,6 +17,7 @@ div.nowPlaying {
   color: #272727;
   padding: 5px 1em 5px 1em;
   border-radius: 5px;
+  position: relative;
 }
 
 mat-icon {
@@ -35,4 +36,14 @@ div.playingText {
   display: flex;
   align-items: center;
   font-family: "Arcade", sans-serif;
+}
+
+a.originLink {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  font-size: 0.75rem;
+  color: #272727;
+  text-decoration: underline;
+  white-space: nowrap;
 }

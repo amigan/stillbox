@@ -25,7 +25,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, skip } from 'rxjs/operators';
 import { ToolbarContextService } from '../navigation/toolbar-context.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatMenuModule } from '@angular/material/menu';
@@ -49,6 +49,8 @@ import {
 } from './calls-table/calls-table.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Params } from '@angular/router';
 
 const DEBOUNCE_INTERVAL = 300;
 
@@ -114,6 +116,8 @@ export class CallsComponent {
 
   subscriptions = new Subscription();
   pageWindow = 0;
+  /** When true, next queryParams emission is from us removing fromQueueOrigin – don't reset page/perPage */
+  skipNextQueryParamsSync = false;
   fetchCalls = new Subject<CallsListParams>();
 
   constructor(
@@ -123,8 +127,70 @@ export class CallsComponent {
     public tgSvc: TalkgroupService,
     public incSvc: IncidentsService,
     public playerSvc: PlayerService,
+    private route: ActivatedRoute,
+    private router: Router,
   ) {
     this.tcSvc.showFilterButton();
+  }
+
+  /** Build query params from current form for queue-origin link (e.g. now-playing). */
+  buildQueueOriginQueryParams(): Params {
+    const f = this.form.controls;
+    const q: Params = {};
+    const start = f['start'].value;
+    if (start) q['start'] = start;
+    const end = f['end'].value;
+    if (end) q['end'] = end;
+    const filter = f['filter'].value;
+    if (filter) q['filter'] = filter;
+    const sourceFilter = f['sourceFilter'].value;
+    if (sourceFilter) q['sourceFilter'] = sourceFilter;
+    const transcriptSearch = f['transcriptSearch'].value;
+    if (transcriptSearch) q['transcriptSearch'] = transcriptSearch;
+    const duration = f['duration'].value;
+    if (duration != null && duration > 0) q['duration'] = String(duration);
+    const tagsAny = f['tagsAny'].value;
+    if (tagsAny?.length) q['tagsAny'] = JSON.stringify(tagsAny);
+    const tagsNot = f['tagsNot'].value;
+    if (tagsNot?.length) q['tagsNot'] = JSON.stringify(tagsNot);
+    if (f['showTranscripts'].value) q['showTranscripts'] = 'true';
+    return q;
+  }
+
+  /** Patch form from URL query params (e.g. when opening link from now-playing). */
+  patchFormFromQueryParams(params: Params): void {
+    if (Object.keys(params).length === 0) return;
+    const f = this.form.controls;
+    if (params['start'] != null)
+      f['start'].setValue(params['start'], { emitEvent: false });
+    if (params['end'] != null)
+      f['end'].setValue(params['end'], { emitEvent: false });
+    if (params['filter'] != null)
+      f['filter'].setValue(params['filter'], { emitEvent: false });
+    if (params['sourceFilter'] != null)
+      f['sourceFilter'].setValue(params['sourceFilter'], { emitEvent: false });
+    if (params['transcriptSearch'] != null)
+      f['transcriptSearch'].setValue(params['transcriptSearch'], {
+        emitEvent: false,
+      });
+    if (params['duration'] != null) {
+      const n = Number(params['duration']);
+      if (!Number.isNaN(n)) f['duration'].setValue(n, { emitEvent: false });
+    }
+    if (params['tagsAny'] != null) {
+      try {
+        const a = JSON.parse(params['tagsAny']);
+        if (Array.isArray(a)) f['tagsAny'].setValue(a, { emitEvent: false });
+      } catch (_) {}
+    }
+    if (params['tagsNot'] != null) {
+      try {
+        const a = JSON.parse(params['tagsNot']);
+        if (Array.isArray(a)) f['tagsNot'].setValue(a, { emitEvent: false });
+      } catch (_) {}
+    }
+    if (params['showTranscripts'] === 'true')
+      f['showTranscripts'].setValue(true, { emitEvent: false });
   }
 
   txSearchSet(): boolean {
@@ -276,6 +342,11 @@ export class CallsComponent {
       .subscribe(() => {
         this.currentServerPage = 0;
         this.setPage(this.zeroPage(), true);
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: this.buildQueueOriginQueryParams(),
+          replaceUrl: true,
+        });
       });
 
     this.subscriptions.add(
@@ -316,17 +387,48 @@ export class CallsComponent {
           this.stopSpinBar();
           this.callsTable.count = calls.count;
           this.currentSet = calls.calls;
+          let sliceStart = this.pageWindow;
+          const fromQueueOrigin =
+            this.route.snapshot.queryParams['fromQueueOrigin'] === '1';
+          const playingId = this.playerSvc.playing()?.id;
+          if (
+            fromQueueOrigin &&
+            playingId &&
+            this.currentSet?.some((c) => c.id === playingId)
+          ) {
+            const playingIndex = this.currentSet.findIndex(
+              (c) => c.id === playingId,
+            );
+            const pageIndex = Math.floor(playingIndex / this.perPage);
+            this.curPage = {
+              pageIndex,
+              pageSize: this.perPage,
+              length: this.currentSet.length,
+            };
+            sliceStart = pageIndex * this.perPage;
+            this.pageWindow = sliceStart;
+          }
           if (this.callsTable) {
             this.callsTable.callsTable.nativeElement.scrollIntoView(true);
           }
           this.callsResult.next(
             this.currentSet
-              ? this.currentSet.slice(
-                  this.pageWindow,
-                  this.pageWindow + this.perPage,
-                )
+              ? this.currentSet.slice(sliceStart, sliceStart + this.perPage)
               : [],
           );
+          if (fromQueueOrigin && playingId) {
+            setTimeout(() => {
+              this.scrollToPlayingCall(playingId);
+              this.skipNextQueryParamsSync = true;
+              const q = { ...this.route.snapshot.queryParams };
+              delete q['fromQueueOrigin'];
+              this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: q,
+                replaceUrl: true,
+              });
+            }, 150);
+          }
         }),
     );
     this.subscriptions.add(
@@ -334,12 +436,35 @@ export class CallsComponent {
         if (this.callsTable != undefined) {
           this.callsSvc.curLen = cr.length;
         }
-        this.playerSvc.setQueue(cr);
+        this.playerSvc.setQueue(cr, {
+          type: 'calls',
+          queryParams: this.buildQueueOriginQueryParams(),
+        });
+      }),
+    );
+    this.patchFormFromQueryParams(this.route.snapshot.queryParams);
+    this.subscriptions.add(
+      this.route.queryParams.pipe(skip(1)).subscribe((params) => {
+        if (this.skipNextQueryParamsSync) {
+          this.skipNextQueryParamsSync = false;
+          return;
+        }
+        this.patchFormFromQueryParams(params);
+        this.currentServerPage = 0;
+        this.setPage(this.zeroPage(), true);
       }),
     );
     this.fetchCalls.next(
       this.buildParams(this.curPage, this.curPage.pageIndex),
     );
+  }
+
+  scrollToPlayingCall(callId: string): void {
+    const el = this.callsTable?.callsTable?.nativeElement as HTMLElement;
+    const row = el?.querySelector<HTMLElement>(
+      `tr[data-call-id="${CSS.escape(callId)}"]`,
+    );
+    row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   resetFilter() {

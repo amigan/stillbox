@@ -53,6 +53,7 @@
     #callsTable
     [searched]="false"
     [callsResult]="callsResult | async"
+    [playingCallId]="playerSvc.playing()?.id ?? null"
     [showTranscripts]="true"
     (setPage)="setPage($event)"
     [curPage]="curPage"

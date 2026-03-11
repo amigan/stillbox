@@ -5,11 +5,11 @@
 // source: stillbox.proto
 
 /* eslint-disable */
-import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import { Struct } from "./google/protobuf/struct";
-import { Timestamp } from "./google/protobuf/timestamp";
+import { BinaryReader, BinaryWriter } from '@bufbuild/protobuf/wire';
+import { Struct } from './google/protobuf/struct';
+import { Timestamp } from './google/protobuf/timestamp';
 
-export const protobufPackage = "stillbox";
+export const protobufPackage = 'stillbox';
 
 export enum LiveState {
   LS_STOPPED = 0,
@@ -21,16 +21,16 @@ export enum LiveState {
 export function liveStateFromJSON(object: any): LiveState {
   switch (object) {
     case 0:
-    case "LS_STOPPED":
+    case 'LS_STOPPED':
       return LiveState.LS_STOPPED;
     case 1:
-    case "LS_LIVE":
+    case 'LS_LIVE':
       return LiveState.LS_LIVE;
     case 2:
-    case "LS_PAUSED":
+    case 'LS_PAUSED':
       return LiveState.LS_PAUSED;
     case -1:
-    case "UNRECOGNIZED":
+    case 'UNRECOGNIZED':
     default:
       return LiveState.UNRECOGNIZED;
   }
@@ -39,14 +39,14 @@ export function liveStateFromJSON(object: any): LiveState {
 export function liveStateToJSON(object: LiveState): string {
   switch (object) {
     case LiveState.LS_STOPPED:
-      return "LS_STOPPED";
+      return 'LS_STOPPED';
     case LiveState.LS_LIVE:
-      return "LS_LIVE";
+      return 'LS_LIVE';
     case LiveState.LS_PAUSED:
-      return "LS_PAUSED";
+      return 'LS_PAUSED';
     case LiveState.UNRECOGNIZED:
     default:
-      return "UNRECOGNIZED";
+      return 'UNRECOGNIZED';
   }
 }
 
@@ -155,8 +155,7 @@ export interface Filter {
   all: boolean;
 }
 
-export interface Search {
-}
+export interface Search {}
 
 export interface ServerInfo {
   serverName: string;
@@ -185,7 +184,10 @@ function createBaseMessage(): Message {
 }
 
 export const Message: MessageFns<Message> = {
-  encode(message: Message, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Message,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.response !== undefined) {
       CommandResponse.encode(message.response, writer.uint32(10).fork()).join();
     }
@@ -193,10 +195,16 @@ export const Message: MessageFns<Message> = {
       Call.encode(message.call, writer.uint32(18).fork()).join();
     }
     if (message.transcription !== undefined) {
-      CallTranscription.encode(message.transcription, writer.uint32(26).fork()).join();
+      CallTranscription.encode(
+        message.transcription,
+        writer.uint32(26).fork(),
+      ).join();
     }
     if (message.notification !== undefined) {
-      Notification.encode(message.notification, writer.uint32(34).fork()).join();
+      Notification.encode(
+        message.notification,
+        writer.uint32(34).fork(),
+      ).join();
     }
     if (message.popup !== undefined) {
       UserPopup.encode(message.popup, writer.uint32(42).fork()).join();
@@ -211,7 +219,8 @@ export const Message: MessageFns<Message> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Message {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseMessage();
     while (reader.pos < end) {
@@ -238,7 +247,10 @@ export const Message: MessageFns<Message> = {
             break;
           }
 
-          message.transcription = CallTranscription.decode(reader, reader.uint32());
+          message.transcription = CallTranscription.decode(
+            reader,
+            reader.uint32(),
+          );
           continue;
         }
         case 4: {
@@ -284,10 +296,16 @@ export const Message: MessageFns<Message> = {
 
   fromJSON(object: any): Message {
     return {
-      response: isSet(object.response) ? CommandResponse.fromJSON(object.response) : undefined,
+      response: isSet(object.response)
+        ? CommandResponse.fromJSON(object.response)
+        : undefined,
       call: isSet(object.call) ? Call.fromJSON(object.call) : undefined,
-      transcription: isSet(object.transcription) ? CallTranscription.fromJSON(object.transcription) : undefined,
-      notification: isSet(object.notification) ? Notification.fromJSON(object.notification) : undefined,
+      transcription: isSet(object.transcription)
+        ? CallTranscription.fromJSON(object.transcription)
+        : undefined,
+      notification: isSet(object.notification)
+        ? Notification.fromJSON(object.notification)
+        : undefined,
       popup: isSet(object.popup) ? UserPopup.fromJSON(object.popup) : undefined,
       error: isSet(object.error) ? Error.fromJSON(object.error) : undefined,
       hello: isSet(object.hello) ? Hello.fromJSON(object.hello) : undefined,
@@ -325,21 +343,34 @@ export const Message: MessageFns<Message> = {
   },
   fromPartial<I extends Exact<DeepPartial<Message>, I>>(object: I): Message {
     const message = createBaseMessage();
-    message.response = (object.response !== undefined && object.response !== null)
-      ? CommandResponse.fromPartial(object.response)
-      : undefined;
-    message.call = (object.call !== undefined && object.call !== null) ? Call.fromPartial(object.call) : undefined;
-    message.transcription = (object.transcription !== undefined && object.transcription !== null)
-      ? CallTranscription.fromPartial(object.transcription)
-      : undefined;
-    message.notification = (object.notification !== undefined && object.notification !== null)
-      ? Notification.fromPartial(object.notification)
-      : undefined;
-    message.popup = (object.popup !== undefined && object.popup !== null)
-      ? UserPopup.fromPartial(object.popup)
-      : undefined;
-    message.error = (object.error !== undefined && object.error !== null) ? Error.fromPartial(object.error) : undefined;
-    message.hello = (object.hello !== undefined && object.hello !== null) ? Hello.fromPartial(object.hello) : undefined;
+    message.response =
+      object.response !== undefined && object.response !== null
+        ? CommandResponse.fromPartial(object.response)
+        : undefined;
+    message.call =
+      object.call !== undefined && object.call !== null
+        ? Call.fromPartial(object.call)
+        : undefined;
+    message.transcription =
+      object.transcription !== undefined && object.transcription !== null
+        ? CallTranscription.fromPartial(object.transcription)
+        : undefined;
+    message.notification =
+      object.notification !== undefined && object.notification !== null
+        ? Notification.fromPartial(object.notification)
+        : undefined;
+    message.popup =
+      object.popup !== undefined && object.popup !== null
+        ? UserPopup.fromPartial(object.popup)
+        : undefined;
+    message.error =
+      object.error !== undefined && object.error !== null
+        ? Error.fromPartial(object.error)
+        : undefined;
+    message.hello =
+      object.hello !== undefined && object.hello !== null
+        ? Hello.fromPartial(object.hello)
+        : undefined;
     return message;
   },
 };
@@ -349,7 +380,10 @@ function createBaseCommandResponse(): CommandResponse {
 }
 
 export const CommandResponse: MessageFns<CommandResponse> = {
-  encode(message: CommandResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: CommandResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.commandId !== undefined) {
       writer.uint32(8).int64(message.commandId);
     }
@@ -360,7 +394,8 @@ export const CommandResponse: MessageFns<CommandResponse> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): CommandResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseCommandResponse();
     while (reader.pos < end) {
@@ -396,13 +431,13 @@ export const CommandResponse: MessageFns<CommandResponse> = {
       commandId: isSet(object.commandId)
         ? globalThis.Number(object.commandId)
         : isSet(object.command_id)
-        ? globalThis.Number(object.command_id)
-        : undefined,
+          ? globalThis.Number(object.command_id)
+          : undefined,
       tgInfo: isSet(object.tgInfo)
         ? TalkgroupInfo.fromJSON(object.tgInfo)
         : isSet(object.tg_info)
-        ? TalkgroupInfo.fromJSON(object.tg_info)
-        : undefined,
+          ? TalkgroupInfo.fromJSON(object.tg_info)
+          : undefined,
     };
   },
 
@@ -417,24 +452,29 @@ export const CommandResponse: MessageFns<CommandResponse> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<CommandResponse>, I>>(base?: I): CommandResponse {
+  create<I extends Exact<DeepPartial<CommandResponse>, I>>(
+    base?: I,
+  ): CommandResponse {
     return CommandResponse.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<CommandResponse>, I>>(object: I): CommandResponse {
+  fromPartial<I extends Exact<DeepPartial<CommandResponse>, I>>(
+    object: I,
+  ): CommandResponse {
     const message = createBaseCommandResponse();
     message.commandId = object.commandId ?? undefined;
-    message.tgInfo = (object.tgInfo !== undefined && object.tgInfo !== null)
-      ? TalkgroupInfo.fromPartial(object.tgInfo)
-      : undefined;
+    message.tgInfo =
+      object.tgInfo !== undefined && object.tgInfo !== null
+        ? TalkgroupInfo.fromPartial(object.tgInfo)
+        : undefined;
     return message;
   },
 };
 
 function createBaseCall(): Call {
   return {
-    id: "",
-    audioName: "",
-    audioType: "",
+    id: '',
+    audioName: '',
+    audioType: '',
     dateTime: undefined,
     system: 0,
     talkgroup: 0,
@@ -449,18 +489,24 @@ function createBaseCall(): Call {
 }
 
 export const Call: MessageFns<Call> = {
-  encode(message: Call, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
+  encode(
+    message: Call,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
+    if (message.id !== '') {
       writer.uint32(10).string(message.id);
     }
-    if (message.audioName !== "") {
+    if (message.audioName !== '') {
       writer.uint32(18).string(message.audioName);
     }
-    if (message.audioType !== "") {
+    if (message.audioType !== '') {
       writer.uint32(26).string(message.audioType);
     }
     if (message.dateTime !== undefined) {
-      Timestamp.encode(toTimestamp(message.dateTime), writer.uint32(34).fork()).join();
+      Timestamp.encode(
+        toTimestamp(message.dateTime),
+        writer.uint32(34).fork(),
+      ).join();
     }
     if (message.system !== 0) {
       writer.uint32(40).int32(message.system);
@@ -497,7 +543,8 @@ export const Call: MessageFns<Call> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Call {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseCall();
     while (reader.pos < end) {
@@ -532,7 +579,9 @@ export const Call: MessageFns<Call> = {
             break;
           }
 
-          message.dateTime = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.dateTime = fromTimestamp(
+            Timestamp.decode(reader, reader.uint32()),
+          );
           continue;
         }
         case 5: {
@@ -638,41 +687,55 @@ export const Call: MessageFns<Call> = {
 
   fromJSON(object: any): Call {
     return {
-      id: isSet(object.id) ? globalThis.String(object.id) : "",
-      audioName: isSet(object.audioName) ? globalThis.String(object.audioName) : "",
-      audioType: isSet(object.audioType) ? globalThis.String(object.audioType) : "",
+      id: isSet(object.id) ? globalThis.String(object.id) : '',
+      audioName: isSet(object.audioName)
+        ? globalThis.String(object.audioName)
+        : '',
+      audioType: isSet(object.audioType)
+        ? globalThis.String(object.audioType)
+        : '',
       dateTime: isSet(object.dateTime)
         ? fromJsonTimestamp(object.dateTime)
         : isSet(object.date_time)
-        ? fromJsonTimestamp(object.date_time)
-        : undefined,
+          ? fromJsonTimestamp(object.date_time)
+          : undefined,
       system: isSet(object.system) ? globalThis.Number(object.system) : 0,
-      talkgroup: isSet(object.talkgroup) ? globalThis.Number(object.talkgroup) : 0,
+      talkgroup: isSet(object.talkgroup)
+        ? globalThis.Number(object.talkgroup)
+        : 0,
       talkerAlias: isSet(object.talkerAlias)
         ? globalThis.String(object.talkerAlias)
         : isSet(object.talker_alias)
-        ? globalThis.String(object.talker_alias)
-        : undefined,
+          ? globalThis.String(object.talker_alias)
+          : undefined,
       source: isSet(object.source) ? globalThis.Number(object.source) : 0,
-      frequency: isSet(object.frequency) ? globalThis.Number(object.frequency) : 0,
+      frequency: isSet(object.frequency)
+        ? globalThis.Number(object.frequency)
+        : 0,
       frequencies: globalThis.Array.isArray(object?.frequencies)
         ? object.frequencies.map((e: any) => globalThis.Number(e))
         : [],
-      patches: globalThis.Array.isArray(object?.patches) ? object.patches.map((e: any) => globalThis.Number(e)) : [],
-      duration: isSet(object.duration) ? globalThis.Number(object.duration) : undefined,
-      audio: isSet(object.audio) ? bytesFromBase64(object.audio) : new Uint8Array(0),
+      patches: globalThis.Array.isArray(object?.patches)
+        ? object.patches.map((e: any) => globalThis.Number(e))
+        : [],
+      duration: isSet(object.duration)
+        ? globalThis.Number(object.duration)
+        : undefined,
+      audio: isSet(object.audio)
+        ? bytesFromBase64(object.audio)
+        : new Uint8Array(0),
     };
   },
 
   toJSON(message: Call): unknown {
     const obj: any = {};
-    if (message.id !== "") {
+    if (message.id !== '') {
       obj.id = message.id;
     }
-    if (message.audioName !== "") {
+    if (message.audioName !== '') {
       obj.audioName = message.audioName;
     }
-    if (message.audioType !== "") {
+    if (message.audioType !== '') {
       obj.audioType = message.audioType;
     }
     if (message.dateTime !== undefined) {
@@ -713,9 +776,9 @@ export const Call: MessageFns<Call> = {
   },
   fromPartial<I extends Exact<DeepPartial<Call>, I>>(object: I): Call {
     const message = createBaseCall();
-    message.id = object.id ?? "";
-    message.audioName = object.audioName ?? "";
-    message.audioType = object.audioType ?? "";
+    message.id = object.id ?? '';
+    message.audioName = object.audioName ?? '';
+    message.audioType = object.audioType ?? '';
     message.dateTime = object.dateTime ?? undefined;
     message.system = object.system ?? 0;
     message.talkgroup = object.talkgroup ?? 0;
@@ -731,12 +794,15 @@ export const Call: MessageFns<Call> = {
 };
 
 function createBaseCallTranscription(): CallTranscription {
-  return { id: "", system: 0, talkgroup: 0, patches: [], transcript: "" };
+  return { id: '', system: 0, talkgroup: 0, patches: [], transcript: '' };
 }
 
 export const CallTranscription: MessageFns<CallTranscription> = {
-  encode(message: CallTranscription, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
+  encode(
+    message: CallTranscription,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
+    if (message.id !== '') {
       writer.uint32(10).string(message.id);
     }
     if (message.system !== 0) {
@@ -750,14 +816,15 @@ export const CallTranscription: MessageFns<CallTranscription> = {
       writer.int32(v);
     }
     writer.join();
-    if (message.transcript !== "") {
+    if (message.transcript !== '') {
       writer.uint32(42).string(message.transcript);
     }
     return writer;
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): CallTranscription {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseCallTranscription();
     while (reader.pos < end) {
@@ -824,17 +891,23 @@ export const CallTranscription: MessageFns<CallTranscription> = {
 
   fromJSON(object: any): CallTranscription {
     return {
-      id: isSet(object.id) ? globalThis.String(object.id) : "",
+      id: isSet(object.id) ? globalThis.String(object.id) : '',
       system: isSet(object.system) ? globalThis.Number(object.system) : 0,
-      talkgroup: isSet(object.talkgroup) ? globalThis.Number(object.talkgroup) : 0,
-      patches: globalThis.Array.isArray(object?.patches) ? object.patches.map((e: any) => globalThis.Number(e)) : [],
-      transcript: isSet(object.transcript) ? globalThis.String(object.transcript) : "",
+      talkgroup: isSet(object.talkgroup)
+        ? globalThis.Number(object.talkgroup)
+        : 0,
+      patches: globalThis.Array.isArray(object?.patches)
+        ? object.patches.map((e: any) => globalThis.Number(e))
+        : [],
+      transcript: isSet(object.transcript)
+        ? globalThis.String(object.transcript)
+        : '',
     };
   },
 
   toJSON(message: CallTranscription): unknown {
     const obj: any = {};
-    if (message.id !== "") {
+    if (message.id !== '') {
       obj.id = message.id;
     }
     if (message.system !== 0) {
@@ -846,22 +919,26 @@ export const CallTranscription: MessageFns<CallTranscription> = {
     if (message.patches?.length) {
       obj.patches = message.patches.map((e) => Math.round(e));
     }
-    if (message.transcript !== "") {
+    if (message.transcript !== '') {
       obj.transcript = message.transcript;
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<CallTranscription>, I>>(base?: I): CallTranscription {
+  create<I extends Exact<DeepPartial<CallTranscription>, I>>(
+    base?: I,
+  ): CallTranscription {
     return CallTranscription.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<CallTranscription>, I>>(object: I): CallTranscription {
+  fromPartial<I extends Exact<DeepPartial<CallTranscription>, I>>(
+    object: I,
+  ): CallTranscription {
     const message = createBaseCallTranscription();
-    message.id = object.id ?? "";
+    message.id = object.id ?? '';
     message.system = object.system ?? 0;
     message.talkgroup = object.talkgroup ?? 0;
     message.patches = object.patches?.map((e) => e) || [];
-    message.transcript = object.transcript ?? "";
+    message.transcript = object.transcript ?? '';
     return message;
   },
 };
@@ -871,7 +948,10 @@ function createBaseHello(): Hello {
 }
 
 export const Hello: MessageFns<Hello> = {
-  encode(message: Hello, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Hello,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.serverInfo !== undefined) {
       ServerInfo.encode(message.serverInfo, writer.uint32(10).fork()).join();
     }
@@ -879,7 +959,8 @@ export const Hello: MessageFns<Hello> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Hello {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseHello();
     while (reader.pos < end) {
@@ -907,8 +988,8 @@ export const Hello: MessageFns<Hello> = {
       serverInfo: isSet(object.serverInfo)
         ? ServerInfo.fromJSON(object.serverInfo)
         : isSet(object.server_info)
-        ? ServerInfo.fromJSON(object.server_info)
-        : undefined,
+          ? ServerInfo.fromJSON(object.server_info)
+          : undefined,
     };
   },
 
@@ -925,27 +1006,32 @@ export const Hello: MessageFns<Hello> = {
   },
   fromPartial<I extends Exact<DeepPartial<Hello>, I>>(object: I): Hello {
     const message = createBaseHello();
-    message.serverInfo = (object.serverInfo !== undefined && object.serverInfo !== null)
-      ? ServerInfo.fromPartial(object.serverInfo)
-      : undefined;
+    message.serverInfo =
+      object.serverInfo !== undefined && object.serverInfo !== null
+        ? ServerInfo.fromPartial(object.serverInfo)
+        : undefined;
     return message;
   },
 };
 
 function createBaseUserPopup(): UserPopup {
-  return { msg: "" };
+  return { msg: '' };
 }
 
 export const UserPopup: MessageFns<UserPopup> = {
-  encode(message: UserPopup, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.msg !== "") {
+  encode(
+    message: UserPopup,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
+    if (message.msg !== '') {
       writer.uint32(10).string(message.msg);
     }
     return writer;
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): UserPopup {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseUserPopup();
     while (reader.pos < end) {
@@ -969,12 +1055,12 @@ export const UserPopup: MessageFns<UserPopup> = {
   },
 
   fromJSON(object: any): UserPopup {
-    return { msg: isSet(object.msg) ? globalThis.String(object.msg) : "" };
+    return { msg: isSet(object.msg) ? globalThis.String(object.msg) : '' };
   },
 
   toJSON(message: UserPopup): unknown {
     const obj: any = {};
-    if (message.msg !== "") {
+    if (message.msg !== '') {
       obj.msg = message.msg;
     }
     return obj;
@@ -983,20 +1069,25 @@ export const UserPopup: MessageFns<UserPopup> = {
   create<I extends Exact<DeepPartial<UserPopup>, I>>(base?: I): UserPopup {
     return UserPopup.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<UserPopup>, I>>(object: I): UserPopup {
+  fromPartial<I extends Exact<DeepPartial<UserPopup>, I>>(
+    object: I,
+  ): UserPopup {
     const message = createBaseUserPopup();
-    message.msg = object.msg ?? "";
+    message.msg = object.msg ?? '';
     return message;
   },
 };
 
 function createBaseError(): Error {
-  return { error: "", command: undefined };
+  return { error: '', command: undefined };
 }
 
 export const Error: MessageFns<Error> = {
-  encode(message: Error, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.error !== "") {
+  encode(
+    message: Error,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
+    if (message.error !== '') {
       writer.uint32(10).string(message.error);
     }
     if (message.command !== undefined) {
@@ -1006,7 +1097,8 @@ export const Error: MessageFns<Error> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Error {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseError();
     while (reader.pos < end) {
@@ -1039,14 +1131,16 @@ export const Error: MessageFns<Error> = {
 
   fromJSON(object: any): Error {
     return {
-      error: isSet(object.error) ? globalThis.String(object.error) : "",
-      command: isSet(object.command) ? Command.fromJSON(object.command) : undefined,
+      error: isSet(object.error) ? globalThis.String(object.error) : '',
+      command: isSet(object.command)
+        ? Command.fromJSON(object.command)
+        : undefined,
     };
   },
 
   toJSON(message: Error): unknown {
     const obj: any = {};
-    if (message.error !== "") {
+    if (message.error !== '') {
       obj.error = message.error;
     }
     if (message.command !== undefined) {
@@ -1060,34 +1154,42 @@ export const Error: MessageFns<Error> = {
   },
   fromPartial<I extends Exact<DeepPartial<Error>, I>>(object: I): Error {
     const message = createBaseError();
-    message.error = object.error ?? "";
-    message.command = (object.command !== undefined && object.command !== null)
-      ? Command.fromPartial(object.command)
-      : undefined;
+    message.error = object.error ?? '';
+    message.command =
+      object.command !== undefined && object.command !== null
+        ? Command.fromPartial(object.command)
+        : undefined;
     return message;
   },
 };
 
 function createBaseNotification(): Notification {
-  return { dateTime: undefined, msg: "", actionUrl: "" };
+  return { dateTime: undefined, msg: '', actionUrl: '' };
 }
 
 export const Notification: MessageFns<Notification> = {
-  encode(message: Notification, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Notification,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.dateTime !== undefined) {
-      Timestamp.encode(toTimestamp(message.dateTime), writer.uint32(10).fork()).join();
+      Timestamp.encode(
+        toTimestamp(message.dateTime),
+        writer.uint32(10).fork(),
+      ).join();
     }
-    if (message.msg !== "") {
+    if (message.msg !== '') {
       writer.uint32(18).string(message.msg);
     }
-    if (message.actionUrl !== "") {
+    if (message.actionUrl !== '') {
       writer.uint32(26).string(message.actionUrl);
     }
     return writer;
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Notification {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseNotification();
     while (reader.pos < end) {
@@ -1098,7 +1200,9 @@ export const Notification: MessageFns<Notification> = {
             break;
           }
 
-          message.dateTime = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.dateTime = fromTimestamp(
+            Timestamp.decode(reader, reader.uint32()),
+          );
           continue;
         }
         case 2: {
@@ -1131,14 +1235,14 @@ export const Notification: MessageFns<Notification> = {
       dateTime: isSet(object.dateTime)
         ? fromJsonTimestamp(object.dateTime)
         : isSet(object.date_time)
-        ? fromJsonTimestamp(object.date_time)
-        : undefined,
-      msg: isSet(object.msg) ? globalThis.String(object.msg) : "",
+          ? fromJsonTimestamp(object.date_time)
+          : undefined,
+      msg: isSet(object.msg) ? globalThis.String(object.msg) : '',
       actionUrl: isSet(object.actionUrl)
         ? globalThis.String(object.actionUrl)
         : isSet(object.action_url)
-        ? globalThis.String(object.action_url)
-        : "",
+          ? globalThis.String(object.action_url)
+          : '',
     };
   },
 
@@ -1147,23 +1251,27 @@ export const Notification: MessageFns<Notification> = {
     if (message.dateTime !== undefined) {
       obj.dateTime = message.dateTime.toISOString();
     }
-    if (message.msg !== "") {
+    if (message.msg !== '') {
       obj.msg = message.msg;
     }
-    if (message.actionUrl !== "") {
+    if (message.actionUrl !== '') {
       obj.actionUrl = message.actionUrl;
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<Notification>, I>>(base?: I): Notification {
+  create<I extends Exact<DeepPartial<Notification>, I>>(
+    base?: I,
+  ): Notification {
     return Notification.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<Notification>, I>>(object: I): Notification {
+  fromPartial<I extends Exact<DeepPartial<Notification>, I>>(
+    object: I,
+  ): Notification {
     const message = createBaseNotification();
     message.dateTime = object.dateTime ?? undefined;
-    message.msg = object.msg ?? "";
-    message.actionUrl = object.actionUrl ?? "";
+    message.msg = object.msg ?? '';
+    message.actionUrl = object.actionUrl ?? '';
     return message;
   },
 };
@@ -1180,7 +1288,10 @@ function createBaseCommand(): Command {
 }
 
 export const Command: MessageFns<Command> = {
-  encode(message: Command, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Command,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.commandId !== undefined) {
       writer.uint32(8).int64(message.commandId);
     }
@@ -1197,13 +1308,17 @@ export const Command: MessageFns<Command> = {
       Register.encode(message.registerCommand, writer.uint32(42).fork()).join();
     }
     if (message.setTranscript !== undefined) {
-      SetTranscript.encode(message.setTranscript, writer.uint32(50).fork()).join();
+      SetTranscript.encode(
+        message.setTranscript,
+        writer.uint32(50).fork(),
+      ).join();
     }
     return writer;
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Command {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseCommand();
     while (reader.pos < end) {
@@ -1271,33 +1386,33 @@ export const Command: MessageFns<Command> = {
       commandId: isSet(object.commandId)
         ? globalThis.Number(object.commandId)
         : isSet(object.command_id)
-        ? globalThis.Number(object.command_id)
-        : undefined,
+          ? globalThis.Number(object.command_id)
+          : undefined,
       liveCommand: isSet(object.liveCommand)
         ? Live.fromJSON(object.liveCommand)
         : isSet(object.live_command)
-        ? Live.fromJSON(object.live_command)
-        : undefined,
+          ? Live.fromJSON(object.live_command)
+          : undefined,
       searchCommand: isSet(object.searchCommand)
         ? Search.fromJSON(object.searchCommand)
         : isSet(object.search_command)
-        ? Search.fromJSON(object.search_command)
-        : undefined,
+          ? Search.fromJSON(object.search_command)
+          : undefined,
       tgCommand: isSet(object.tgCommand)
         ? Talkgroup.fromJSON(object.tgCommand)
         : isSet(object.tg_command)
-        ? Talkgroup.fromJSON(object.tg_command)
-        : undefined,
+          ? Talkgroup.fromJSON(object.tg_command)
+          : undefined,
       registerCommand: isSet(object.registerCommand)
         ? Register.fromJSON(object.registerCommand)
         : isSet(object.register_command)
-        ? Register.fromJSON(object.register_command)
-        : undefined,
+          ? Register.fromJSON(object.register_command)
+          : undefined,
       setTranscript: isSet(object.setTranscript)
         ? SetTranscript.fromJSON(object.setTranscript)
         : isSet(object.set_transcript)
-        ? SetTranscript.fromJSON(object.set_transcript)
-        : undefined,
+          ? SetTranscript.fromJSON(object.set_transcript)
+          : undefined,
     };
   },
 
@@ -1330,21 +1445,26 @@ export const Command: MessageFns<Command> = {
   fromPartial<I extends Exact<DeepPartial<Command>, I>>(object: I): Command {
     const message = createBaseCommand();
     message.commandId = object.commandId ?? undefined;
-    message.liveCommand = (object.liveCommand !== undefined && object.liveCommand !== null)
-      ? Live.fromPartial(object.liveCommand)
-      : undefined;
-    message.searchCommand = (object.searchCommand !== undefined && object.searchCommand !== null)
-      ? Search.fromPartial(object.searchCommand)
-      : undefined;
-    message.tgCommand = (object.tgCommand !== undefined && object.tgCommand !== null)
-      ? Talkgroup.fromPartial(object.tgCommand)
-      : undefined;
-    message.registerCommand = (object.registerCommand !== undefined && object.registerCommand !== null)
-      ? Register.fromPartial(object.registerCommand)
-      : undefined;
-    message.setTranscript = (object.setTranscript !== undefined && object.setTranscript !== null)
-      ? SetTranscript.fromPartial(object.setTranscript)
-      : undefined;
+    message.liveCommand =
+      object.liveCommand !== undefined && object.liveCommand !== null
+        ? Live.fromPartial(object.liveCommand)
+        : undefined;
+    message.searchCommand =
+      object.searchCommand !== undefined && object.searchCommand !== null
+        ? Search.fromPartial(object.searchCommand)
+        : undefined;
+    message.tgCommand =
+      object.tgCommand !== undefined && object.tgCommand !== null
+        ? Talkgroup.fromPartial(object.tgCommand)
+        : undefined;
+    message.registerCommand =
+      object.registerCommand !== undefined && object.registerCommand !== null
+        ? Register.fromPartial(object.registerCommand)
+        : undefined;
+    message.setTranscript =
+      object.setTranscript !== undefined && object.setTranscript !== null
+        ? SetTranscript.fromPartial(object.setTranscript)
+        : undefined;
     return message;
   },
 };
@@ -1352,7 +1472,7 @@ export const Command: MessageFns<Command> = {
 function createBaseTalkgroupInfo(): TalkgroupInfo {
   return {
     tg: undefined,
-    systemName: "",
+    systemName: '',
     name: undefined,
     group: undefined,
     alphaTag: undefined,
@@ -1364,11 +1484,14 @@ function createBaseTalkgroupInfo(): TalkgroupInfo {
 }
 
 export const TalkgroupInfo: MessageFns<TalkgroupInfo> = {
-  encode(message: TalkgroupInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: TalkgroupInfo,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.tg !== undefined) {
       Talkgroup.encode(message.tg, writer.uint32(10).fork()).join();
     }
-    if (message.systemName !== "") {
+    if (message.systemName !== '') {
       writer.uint32(18).string(message.systemName);
     }
     if (message.name !== undefined) {
@@ -1387,7 +1510,10 @@ export const TalkgroupInfo: MessageFns<TalkgroupInfo> = {
       writer.uint32(58).string(v!);
     }
     if (message.metadata !== undefined) {
-      Struct.encode(Struct.wrap(message.metadata), writer.uint32(66).fork()).join();
+      Struct.encode(
+        Struct.wrap(message.metadata),
+        writer.uint32(66).fork(),
+      ).join();
     }
     if (message.learned !== false) {
       writer.uint32(72).bool(message.learned);
@@ -1396,7 +1522,8 @@ export const TalkgroupInfo: MessageFns<TalkgroupInfo> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): TalkgroupInfo {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseTalkgroupInfo();
     while (reader.pos < end) {
@@ -1463,7 +1590,9 @@ export const TalkgroupInfo: MessageFns<TalkgroupInfo> = {
             break;
           }
 
-          message.metadata = Struct.unwrap(Struct.decode(reader, reader.uint32()));
+          message.metadata = Struct.unwrap(
+            Struct.decode(reader, reader.uint32()),
+          );
           continue;
         }
         case 9: {
@@ -1489,21 +1618,25 @@ export const TalkgroupInfo: MessageFns<TalkgroupInfo> = {
       systemName: isSet(object.systemName)
         ? globalThis.String(object.systemName)
         : isSet(object.system_name)
-        ? globalThis.String(object.system_name)
-        : "",
+          ? globalThis.String(object.system_name)
+          : '',
       name: isSet(object.name) ? globalThis.String(object.name) : undefined,
       group: isSet(object.group) ? globalThis.String(object.group) : undefined,
       alphaTag: isSet(object.alphaTag)
         ? globalThis.String(object.alphaTag)
         : isSet(object.alpha_tag)
-        ? globalThis.String(object.alpha_tag)
+          ? globalThis.String(object.alpha_tag)
+          : undefined,
+      frequency: isSet(object.frequency)
+        ? globalThis.Number(object.frequency)
         : undefined,
-      frequency: isSet(object.frequency) ? globalThis.Number(object.frequency) : undefined,
       tags: globalThis.Array.isArray(object?.tags)
         ? object.tags.map((e: any) => globalThis.String(e))
         : [],
       metadata: isObject(object.metadata) ? object.metadata : undefined,
-      learned: isSet(object.learned) ? globalThis.Boolean(object.learned) : false,
+      learned: isSet(object.learned)
+        ? globalThis.Boolean(object.learned)
+        : false,
     };
   },
 
@@ -1512,7 +1645,7 @@ export const TalkgroupInfo: MessageFns<TalkgroupInfo> = {
     if (message.tg !== undefined) {
       obj.tg = Talkgroup.toJSON(message.tg);
     }
-    if (message.systemName !== "") {
+    if (message.systemName !== '') {
       obj.systemName = message.systemName;
     }
     if (message.name !== undefined) {
@@ -1539,13 +1672,20 @@ export const TalkgroupInfo: MessageFns<TalkgroupInfo> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<TalkgroupInfo>, I>>(base?: I): TalkgroupInfo {
+  create<I extends Exact<DeepPartial<TalkgroupInfo>, I>>(
+    base?: I,
+  ): TalkgroupInfo {
     return TalkgroupInfo.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<TalkgroupInfo>, I>>(object: I): TalkgroupInfo {
+  fromPartial<I extends Exact<DeepPartial<TalkgroupInfo>, I>>(
+    object: I,
+  ): TalkgroupInfo {
     const message = createBaseTalkgroupInfo();
-    message.tg = (object.tg !== undefined && object.tg !== null) ? Talkgroup.fromPartial(object.tg) : undefined;
-    message.systemName = object.systemName ?? "";
+    message.tg =
+      object.tg !== undefined && object.tg !== null
+        ? Talkgroup.fromPartial(object.tg)
+        : undefined;
+    message.systemName = object.systemName ?? '';
     message.name = object.name ?? undefined;
     message.group = object.group ?? undefined;
     message.alphaTag = object.alphaTag ?? undefined;
@@ -1558,11 +1698,19 @@ export const TalkgroupInfo: MessageFns<TalkgroupInfo> = {
 };
 
 function createBaseLive(): Live {
-  return { state: undefined, filter: undefined, calls: false, transcripts: false };
+  return {
+    state: undefined,
+    filter: undefined,
+    calls: false,
+    transcripts: false,
+  };
 }
 
 export const Live: MessageFns<Live> = {
-  encode(message: Live, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Live,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.state !== undefined) {
       writer.uint32(8).int32(message.state);
     }
@@ -1579,7 +1727,8 @@ export const Live: MessageFns<Live> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Live {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseLive();
     while (reader.pos < end) {
@@ -1631,7 +1780,9 @@ export const Live: MessageFns<Live> = {
       state: isSet(object.state) ? liveStateFromJSON(object.state) : undefined,
       filter: isSet(object.filter) ? Filter.fromJSON(object.filter) : undefined,
       calls: isSet(object.calls) ? globalThis.Boolean(object.calls) : false,
-      transcripts: isSet(object.transcripts) ? globalThis.Boolean(object.transcripts) : false,
+      transcripts: isSet(object.transcripts)
+        ? globalThis.Boolean(object.transcripts)
+        : false,
     };
   },
 
@@ -1658,9 +1809,10 @@ export const Live: MessageFns<Live> = {
   fromPartial<I extends Exact<DeepPartial<Live>, I>>(object: I): Live {
     const message = createBaseLive();
     message.state = object.state ?? undefined;
-    message.filter = (object.filter !== undefined && object.filter !== null)
-      ? Filter.fromPartial(object.filter)
-      : undefined;
+    message.filter =
+      object.filter !== undefined && object.filter !== null
+        ? Filter.fromPartial(object.filter)
+        : undefined;
     message.calls = object.calls ?? false;
     message.transcripts = object.transcripts ?? false;
     return message;
@@ -1668,22 +1820,26 @@ export const Live: MessageFns<Live> = {
 };
 
 function createBaseRegister(): Register {
-  return { transcriptWorker: false, workerKey: "" };
+  return { transcriptWorker: false, workerKey: '' };
 }
 
 export const Register: MessageFns<Register> = {
-  encode(message: Register, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Register,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.transcriptWorker !== false) {
       writer.uint32(8).bool(message.transcriptWorker);
     }
-    if (message.workerKey !== "") {
+    if (message.workerKey !== '') {
       writer.uint32(18).string(message.workerKey);
     }
     return writer;
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Register {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRegister();
     while (reader.pos < end) {
@@ -1719,13 +1875,13 @@ export const Register: MessageFns<Register> = {
       transcriptWorker: isSet(object.transcriptWorker)
         ? globalThis.Boolean(object.transcriptWorker)
         : isSet(object.transcript_worker)
-        ? globalThis.Boolean(object.transcript_worker)
-        : false,
+          ? globalThis.Boolean(object.transcript_worker)
+          : false,
       workerKey: isSet(object.workerKey)
         ? globalThis.String(object.workerKey)
         : isSet(object.worker_key)
-        ? globalThis.String(object.worker_key)
-        : "",
+          ? globalThis.String(object.worker_key)
+          : '',
     };
   },
 
@@ -1734,7 +1890,7 @@ export const Register: MessageFns<Register> = {
     if (message.transcriptWorker !== false) {
       obj.transcriptWorker = message.transcriptWorker;
     }
-    if (message.workerKey !== "") {
+    if (message.workerKey !== '') {
       obj.workerKey = message.workerKey;
     }
     return obj;
@@ -1746,7 +1902,7 @@ export const Register: MessageFns<Register> = {
   fromPartial<I extends Exact<DeepPartial<Register>, I>>(object: I): Register {
     const message = createBaseRegister();
     message.transcriptWorker = object.transcriptWorker ?? false;
-    message.workerKey = object.workerKey ?? "";
+    message.workerKey = object.workerKey ?? '';
     return message;
   },
 };
@@ -1756,7 +1912,10 @@ function createBaseTalkgroup(): Talkgroup {
 }
 
 export const Talkgroup: MessageFns<Talkgroup> = {
-  encode(message: Talkgroup, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Talkgroup,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.system !== 0) {
       writer.uint32(8).int32(message.system);
     }
@@ -1767,7 +1926,8 @@ export const Talkgroup: MessageFns<Talkgroup> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Talkgroup {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseTalkgroup();
     while (reader.pos < end) {
@@ -1801,7 +1961,9 @@ export const Talkgroup: MessageFns<Talkgroup> = {
   fromJSON(object: any): Talkgroup {
     return {
       system: isSet(object.system) ? globalThis.Number(object.system) : 0,
-      talkgroup: isSet(object.talkgroup) ? globalThis.Number(object.talkgroup) : 0,
+      talkgroup: isSet(object.talkgroup)
+        ? globalThis.Number(object.talkgroup)
+        : 0,
     };
   },
 
@@ -1819,7 +1981,9 @@ export const Talkgroup: MessageFns<Talkgroup> = {
   create<I extends Exact<DeepPartial<Talkgroup>, I>>(base?: I): Talkgroup {
     return Talkgroup.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<Talkgroup>, I>>(object: I): Talkgroup {
+  fromPartial<I extends Exact<DeepPartial<Talkgroup>, I>>(
+    object: I,
+  ): Talkgroup {
     const message = createBaseTalkgroup();
     message.system = object.system ?? 0;
     message.talkgroup = object.talkgroup ?? 0;
@@ -1839,7 +2003,10 @@ function createBaseFilter(): Filter {
 }
 
 export const Filter: MessageFns<Filter> = {
-  encode(message: Filter, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: Filter,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     for (const v of message.talkgroups) {
       Talkgroup.encode(v!, writer.uint32(10).fork()).join();
     }
@@ -1862,7 +2029,8 @@ export const Filter: MessageFns<Filter> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Filter {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseFilter();
     while (reader.pos < end) {
@@ -1933,23 +2101,23 @@ export const Filter: MessageFns<Filter> = {
       talkgroupsNot: globalThis.Array.isArray(object?.talkgroupsNot)
         ? object.talkgroupsNot.map((e: any) => Talkgroup.fromJSON(e))
         : globalThis.Array.isArray(object?.talkgroups_not)
-        ? object.talkgroups_not.map((e: any) => Talkgroup.fromJSON(e))
-        : [],
+          ? object.talkgroups_not.map((e: any) => Talkgroup.fromJSON(e))
+          : [],
       talkgroupTagsAll: globalThis.Array.isArray(object?.talkgroupTagsAll)
         ? object.talkgroupTagsAll.map((e: any) => globalThis.String(e))
         : globalThis.Array.isArray(object?.talkgroup_tags_all)
-        ? object.talkgroup_tags_all.map((e: any) => globalThis.String(e))
-        : [],
+          ? object.talkgroup_tags_all.map((e: any) => globalThis.String(e))
+          : [],
       talkgroupTagsAny: globalThis.Array.isArray(object?.talkgroupTagsAny)
         ? object.talkgroupTagsAny.map((e: any) => globalThis.String(e))
         : globalThis.Array.isArray(object?.talkgroup_tags_any)
-        ? object.talkgroup_tags_any.map((e: any) => globalThis.String(e))
-        : [],
+          ? object.talkgroup_tags_any.map((e: any) => globalThis.String(e))
+          : [],
       talkgroupTagsNot: globalThis.Array.isArray(object?.talkgroupTagsNot)
         ? object.talkgroupTagsNot.map((e: any) => globalThis.String(e))
         : globalThis.Array.isArray(object?.talkgroup_tags_not)
-        ? object.talkgroup_tags_not.map((e: any) => globalThis.String(e))
-        : [],
+          ? object.talkgroup_tags_not.map((e: any) => globalThis.String(e))
+          : [],
       all: isSet(object.all) ? globalThis.Boolean(object.all) : false,
     };
   },
@@ -1982,8 +2150,10 @@ export const Filter: MessageFns<Filter> = {
   },
   fromPartial<I extends Exact<DeepPartial<Filter>, I>>(object: I): Filter {
     const message = createBaseFilter();
-    message.talkgroups = object.talkgroups?.map((e) => Talkgroup.fromPartial(e)) || [];
-    message.talkgroupsNot = object.talkgroupsNot?.map((e) => Talkgroup.fromPartial(e)) || [];
+    message.talkgroups =
+      object.talkgroups?.map((e) => Talkgroup.fromPartial(e)) || [];
+    message.talkgroupsNot =
+      object.talkgroupsNot?.map((e) => Talkgroup.fromPartial(e)) || [];
     message.talkgroupTagsAll = object.talkgroupTagsAll?.map((e) => e) || [];
     message.talkgroupTagsAny = object.talkgroupTagsAny?.map((e) => e) || [];
     message.talkgroupTagsNot = object.talkgroupTagsNot?.map((e) => e) || [];
@@ -2002,7 +2172,8 @@ export const Search: MessageFns<Search> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): Search {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseSearch();
     while (reader.pos < end) {
@@ -2036,31 +2207,35 @@ export const Search: MessageFns<Search> = {
 };
 
 function createBaseServerInfo(): ServerInfo {
-  return { serverName: "", version: "", built: "", platform: "", dbSize: "" };
+  return { serverName: '', version: '', built: '', platform: '', dbSize: '' };
 }
 
 export const ServerInfo: MessageFns<ServerInfo> = {
-  encode(message: ServerInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.serverName !== "") {
+  encode(
+    message: ServerInfo,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
+    if (message.serverName !== '') {
       writer.uint32(10).string(message.serverName);
     }
-    if (message.version !== "") {
+    if (message.version !== '') {
       writer.uint32(18).string(message.version);
     }
-    if (message.built !== "") {
+    if (message.built !== '') {
       writer.uint32(26).string(message.built);
     }
-    if (message.platform !== "") {
+    if (message.platform !== '') {
       writer.uint32(34).string(message.platform);
     }
-    if (message.dbSize !== "") {
+    if (message.dbSize !== '') {
       writer.uint32(42).string(message.dbSize);
     }
     return writer;
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): ServerInfo {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseServerInfo();
     while (reader.pos < end) {
@@ -2120,34 +2295,36 @@ export const ServerInfo: MessageFns<ServerInfo> = {
       serverName: isSet(object.serverName)
         ? globalThis.String(object.serverName)
         : isSet(object.server_name)
-        ? globalThis.String(object.server_name)
-        : "",
-      version: isSet(object.version) ? globalThis.String(object.version) : "",
-      built: isSet(object.built) ? globalThis.String(object.built) : "",
-      platform: isSet(object.platform) ? globalThis.String(object.platform) : "",
+          ? globalThis.String(object.server_name)
+          : '',
+      version: isSet(object.version) ? globalThis.String(object.version) : '',
+      built: isSet(object.built) ? globalThis.String(object.built) : '',
+      platform: isSet(object.platform)
+        ? globalThis.String(object.platform)
+        : '',
       dbSize: isSet(object.dbSize)
         ? globalThis.String(object.dbSize)
         : isSet(object.db_size)
-        ? globalThis.String(object.db_size)
-        : "",
+          ? globalThis.String(object.db_size)
+          : '',
     };
   },
 
   toJSON(message: ServerInfo): unknown {
     const obj: any = {};
-    if (message.serverName !== "") {
+    if (message.serverName !== '') {
       obj.serverName = message.serverName;
     }
-    if (message.version !== "") {
+    if (message.version !== '') {
       obj.version = message.version;
     }
-    if (message.built !== "") {
+    if (message.built !== '') {
       obj.built = message.built;
     }
-    if (message.platform !== "") {
+    if (message.platform !== '') {
       obj.platform = message.platform;
     }
-    if (message.dbSize !== "") {
+    if (message.dbSize !== '') {
       obj.dbSize = message.dbSize;
     }
     return obj;
@@ -2156,27 +2333,32 @@ export const ServerInfo: MessageFns<ServerInfo> = {
   create<I extends Exact<DeepPartial<ServerInfo>, I>>(base?: I): ServerInfo {
     return ServerInfo.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<ServerInfo>, I>>(object: I): ServerInfo {
+  fromPartial<I extends Exact<DeepPartial<ServerInfo>, I>>(
+    object: I,
+  ): ServerInfo {
     const message = createBaseServerInfo();
-    message.serverName = object.serverName ?? "";
-    message.version = object.version ?? "";
-    message.built = object.built ?? "";
-    message.platform = object.platform ?? "";
-    message.dbSize = object.dbSize ?? "";
+    message.serverName = object.serverName ?? '';
+    message.version = object.version ?? '';
+    message.built = object.built ?? '';
+    message.platform = object.platform ?? '';
+    message.dbSize = object.dbSize ?? '';
     return message;
   },
 };
 
 function createBaseSetTranscript(): SetTranscript {
-  return { id: "", transcript: "", elapsedMs: undefined };
+  return { id: '', transcript: '', elapsedMs: undefined };
 }
 
 export const SetTranscript: MessageFns<SetTranscript> = {
-  encode(message: SetTranscript, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
+  encode(
+    message: SetTranscript,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
+    if (message.id !== '') {
       writer.uint32(10).string(message.id);
     }
-    if (message.transcript !== "") {
+    if (message.transcript !== '') {
       writer.uint32(18).string(message.transcript);
     }
     if (message.elapsedMs !== undefined) {
@@ -2186,7 +2368,8 @@ export const SetTranscript: MessageFns<SetTranscript> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): SetTranscript {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseSetTranscript();
     while (reader.pos < end) {
@@ -2227,22 +2410,24 @@ export const SetTranscript: MessageFns<SetTranscript> = {
 
   fromJSON(object: any): SetTranscript {
     return {
-      id: isSet(object.id) ? globalThis.String(object.id) : "",
-      transcript: isSet(object.transcript) ? globalThis.String(object.transcript) : "",
+      id: isSet(object.id) ? globalThis.String(object.id) : '',
+      transcript: isSet(object.transcript)
+        ? globalThis.String(object.transcript)
+        : '',
       elapsedMs: isSet(object.elapsedMs)
         ? globalThis.Number(object.elapsedMs)
         : isSet(object.elapsed_ms)
-        ? globalThis.Number(object.elapsed_ms)
-        : undefined,
+          ? globalThis.Number(object.elapsed_ms)
+          : undefined,
     };
   },
 
   toJSON(message: SetTranscript): unknown {
     const obj: any = {};
-    if (message.id !== "") {
+    if (message.id !== '') {
       obj.id = message.id;
     }
-    if (message.transcript !== "") {
+    if (message.transcript !== '') {
       obj.transcript = message.transcript;
     }
     if (message.elapsedMs !== undefined) {
@@ -2251,13 +2436,17 @@ export const SetTranscript: MessageFns<SetTranscript> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<SetTranscript>, I>>(base?: I): SetTranscript {
+  create<I extends Exact<DeepPartial<SetTranscript>, I>>(
+    base?: I,
+  ): SetTranscript {
     return SetTranscript.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<SetTranscript>, I>>(object: I): SetTranscript {
+  fromPartial<I extends Exact<DeepPartial<SetTranscript>, I>>(
+    object: I,
+  ): SetTranscript {
     const message = createBaseSetTranscript();
-    message.id = object.id ?? "";
-    message.transcript = object.transcript ?? "";
+    message.id = object.id ?? '';
+    message.transcript = object.transcript ?? '';
     message.elapsedMs = object.elapsedMs ?? undefined;
     return message;
   },
@@ -2265,7 +2454,7 @@ export const SetTranscript: MessageFns<SetTranscript> = {
 
 function bytesFromBase64(b64: string): Uint8Array {
   if ((globalThis as any).Buffer) {
-    return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
+    return Uint8Array.from(globalThis.Buffer.from(b64, 'base64'));
   } else {
     const bin = globalThis.atob(b64);
     const arr = new Uint8Array(bin.length);
@@ -2278,27 +2467,41 @@ function bytesFromBase64(b64: string): Uint8Array {
 
 function base64FromBytes(arr: Uint8Array): string {
   if ((globalThis as any).Buffer) {
-    return globalThis.Buffer.from(arr).toString("base64");
+    return globalThis.Buffer.from(arr).toString('base64');
   } else {
     const bin: string[] = [];
     arr.forEach((byte) => {
       bin.push(globalThis.String.fromCharCode(byte));
     });
-    return globalThis.btoa(bin.join(""));
+    return globalThis.btoa(bin.join(''));
   }
 }
 
-type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+type Builtin =
+  | Date
+  | Function
+  | Uint8Array
+  | string
+  | number
+  | boolean
+  | undefined;
 
-export type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+export type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 type KeysOfUnion<T> = T extends T ? keyof T : never;
-export type Exact<P, I extends P> = P extends Builtin ? P
-  : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & {
+      [K in Exclude<keyof I, KeysOfUnion<P>>]: never;
+    };
 
 function toTimestamp(date: Date): Timestamp {
   const seconds = Math.trunc(date.getTime() / 1_000);
@@ -2315,7 +2518,7 @@ function fromTimestamp(t: Timestamp): Date {
 function fromJsonTimestamp(o: any): Date {
   if (o instanceof globalThis.Date) {
     return o;
-  } else if (typeof o === "string") {
+  } else if (typeof o === 'string') {
     return new globalThis.Date(o);
   } else {
     return fromTimestamp(Timestamp.fromJSON(o));
@@ -2325,16 +2528,16 @@ function fromJsonTimestamp(o: any): Date {
 function longToNumber(int64: { toString(): string }): number {
   const num = globalThis.Number(int64.toString());
   if (num > globalThis.Number.MAX_SAFE_INTEGER) {
-    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+    throw new globalThis.Error('Value is larger than Number.MAX_SAFE_INTEGER');
   }
   if (num < globalThis.Number.MIN_SAFE_INTEGER) {
-    throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
+    throw new globalThis.Error('Value is smaller than Number.MIN_SAFE_INTEGER');
   }
   return num;
 }
 
 function isObject(value: any): boolean {
-  return typeof value === "object" && value !== null;
+  return typeof value === 'object' && value !== null;
 }
 
 function isSet(value: any): boolean {

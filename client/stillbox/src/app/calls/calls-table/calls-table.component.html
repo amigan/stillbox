@@ -136,9 +136,11 @@
     <tr
       mat-row
       *matRowDef="let row; columns: getColumns()"
+      [attr.data-call-id]="row.id"
       [ngClass]="{
         'in-incident': row.incidents > 0,
         'no-audio': row.missingAudio,
+        playing: playingCallId() === row.id,
       }"
     ></tr>
   </table>

@@ -1,4 +1,5 @@
 @let call = playSvc.playing();
+@let origin = playSvc.queueOrigin();
 @if (call) {
   <div class="nowPlaying">
     <div class="playButton">
@@ -9,5 +10,19 @@
     <div class="playingText">
       {{ call | talkgroup: "summary" | async }}
     </div>
+    @if (origin) {
+      <a
+        class="originLink"
+        [routerLink]="
+          origin.type === 'incident' ? ['/incidents', origin.id] : ['/calls']
+        "
+        [queryParams]="originLinkQueryParams()"
+        [attr.aria-label]="
+          origin.type === 'incident' ? 'Jump to incident' : 'Jump to calls'
+        "
+      >
+        <mat-icon class="material-symbols-outlined">jump_to_element</mat-icon>
+      </a>
+    }
   </div>
 }

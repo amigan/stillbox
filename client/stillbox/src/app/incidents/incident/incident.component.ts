@@ -9,7 +9,7 @@ import {
   FormControl,
   FormsModule,
 } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -193,11 +193,12 @@ export class IncidentComponent {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private incSvc: IncidentsService,
     private prefsSvc: PrefsService,
     private location: Location,
     private tgSvc: TalkgroupService,
-    private playerSvc: PlayerService,
+    public playerSvc: PlayerService,
     private errorsSvc: ErrorsService,
     private callsSvc: CallsService,
   ) {}
@@ -231,17 +232,47 @@ export class IncidentComponent {
         this.stopSpinBar();
         this.callsTable.count = calls.count;
         this.currentSet = calls.calls;
+        let sliceStart = this.pageWindow;
+        const fromQueueOrigin =
+          this.route.snapshot.queryParams['fromQueueOrigin'] === '1';
+        const playingId = this.playerSvc.playing()?.id;
+        if (
+          fromQueueOrigin &&
+          playingId &&
+          this.currentSet?.some((c) => c.id === playingId)
+        ) {
+          const playingIndex = this.currentSet.findIndex(
+            (c) => c.id === playingId,
+          );
+          const pageIndex = Math.floor(playingIndex / this.perPage);
+          this.curPage = {
+            pageIndex,
+            pageSize: this.perPage,
+            length: this.currentSet.length,
+          };
+          sliceStart = pageIndex * this.perPage;
+          this.pageWindow = sliceStart;
+        }
         if (this.callsTable) {
           this.callsTable.callsTable.nativeElement.scrollIntoView(true);
         }
         this.callsResult.next(
           this.currentSet
-            ? this.currentSet.slice(
-                this.pageWindow,
-                this.pageWindow + this.perPage,
-              )
+            ? this.currentSet.slice(sliceStart, sliceStart + this.perPage)
             : [],
         );
+        if (fromQueueOrigin && playingId) {
+          setTimeout(() => {
+            this.scrollToPlayingCall(playingId);
+            const q = { ...this.route.snapshot.queryParams };
+            delete q['fromQueueOrigin'];
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: q,
+              replaceUrl: true,
+            });
+          }, 150);
+        }
       });
     this.prefsSvc.get('callsPerPage').subscribe((cpp) => {
       if (this.perPage == 0) {
@@ -260,11 +291,19 @@ export class IncidentComponent {
       if (this.callsTable != undefined) {
         this.callsSvc.curLen = cr.length;
       }
-      this.playerSvc.setQueue(cr);
+      this.playerSvc.setQueue(cr, { type: 'incident', id: this.incID });
     });
     this.fetchCalls.next(
       this.buildParams(this.curPage, this.curPage.pageIndex),
     );
+  }
+
+  scrollToPlayingCall(callId: string): void {
+    const el = this.callsTable?.callsTable?.nativeElement as HTMLElement;
+    const row = el?.querySelector<HTMLElement>(
+      `tr[data-call-id="${CSS.escape(callId)}"]`,
+    );
+    row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   buildParams(p: PageEvent, serverPage: number): IncidentCallsParams {

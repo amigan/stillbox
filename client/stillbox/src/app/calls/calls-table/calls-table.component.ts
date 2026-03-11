@@ -90,6 +90,7 @@ export class CallsTableComponent {
   curPage = input<PageEvent>();
   showTranscripts = input<boolean | null>();
   searched = input<boolean>();
+  playingCallId = input<string | null>(null);
   @ViewChild('callsTable', { read: ElementRef }) callsTable!: ElementRef;
   page = 0;
   count = 0;

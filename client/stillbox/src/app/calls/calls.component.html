@@ -172,6 +172,7 @@
   #callsTable
   [searched]="true"
   [callsResult]="callsResult | async"
+  [playingCallId]="playerSvc.playing()?.id ?? null"
   (searchTGFilter)="searchTGFilter($event)"
   (searchSrcFilter)="searchSrcFilter($event)"
   (setPage)="setPage($event)"
