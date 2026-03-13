@@ -149,7 +149,6 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 		frs.Close()
 
 		f32le = f32w.Buffer()
-	case "audio/wav":
 	default:
 		return nil, fmt.Errorf("unknwon audio mime type %s", call.AudioType)
 	}
