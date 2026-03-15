@@ -12,23 +12,23 @@ Primary differences:
  - [x] Backend written as if Go is actually a typed language
 
    I never would have started this project if existing projects were this way, as modifying them would have been far easier.
-   
+
  - [x] Call transcription using whisper.cpp.
 
-   Just setup `transcribed` on a machine with a GPU (even the same machine) and point stillbox to it for call transcriptions.
+   Just setup `transcribed` on a machine with a GPU (even the same machine) and point it to stillbox for call transcriptions.
    Then, use full-text search on the transcriptions in the database!
 
  - [x] No directory watch source, for now
- 
+
    This is not a feature I need personally, but would be simple to implement as another [source](pkg/pipeline/sources/).
 
  - [x] Only supports Postgres DB right now. May add SQLite someday.
 
    Most all database access is abstracted using a repository architecture. The calls table is also partitioned, with configurable intervals and retention.
 
- - [x] Filter calls by duration in search
+ - [x] Filter calls by duration, source, or transcript text in search
 
-   This feature was a major impetus for even starting the project.
+   Enhanced search was a major impetus for even starting the project.
 
  - [x] Both REST and WebSocket APIs
 
