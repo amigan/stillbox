@@ -145,11 +145,12 @@ func UsersCommand(cfg *config.Configuration) *cli.Command {
 func addUserCommand(cfg *config.Config) *cli.Command {
 	c := &cli.Command{
 		Name:        "add",
-		Description: "adds a user",
+		Description: "Adds a user to the database using the provided options.",
 		UsageText:   "stillbox users add [-a] [-m email] [username]",
+		ArgsUsage:   "username",
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			if cmd.Args().Len() != 1 {
-				return errors.New(cmd.Usage)
+				return errors.New(cmd.UsageText)
 			}
 
 			db, err := database.NewClient(ctx, cfg.DB)
