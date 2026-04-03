@@ -1,28 +1,59 @@
-@let call = playSvc.playing();
+@let currentCall = playSvc.playing();
 @let origin = playSvc.queueOrigin();
-@if (call) {
-  <div class="nowPlaying">
-    <div class="playButton">
-      <a class="playButton" (click)="playPause($event)"
-        ><mat-icon> {{ playSvc.paused() ? "play_arrow" : "pause" }}</mat-icon>
-      </a>
-    </div>
-    <div class="playingText">
-      {{ call | talkgroup: "summary" | async }}
-    </div>
-    @if (origin) {
-      <a
-        class="originLink"
-        [routerLink]="
-          origin.type === 'incident' ? ['/incidents', origin.id] : ['/calls']
-        "
-        [queryParams]="originLinkQueryParams()"
-        [attr.aria-label]="
-          origin.type === 'incident' ? 'Jump to incident' : 'Jump to calls'
-        "
-      >
-        <mat-icon class="material-symbols-outlined">jump_to_element</mat-icon>
-      </a>
+@let shownCall = displayCall();
+@let grace = graceActive();
+
+<div class="nowPlaying" [class.idle]="!shownCall" [class.grace]="grace">
+  <div class="playButton">
+    <a
+      class="playButton"
+      (click)="playPause($event)"
+      [class.disabled]="!currentCall"
+      aria-label="Play/Pause"
+    >
+      <mat-icon>
+        {{
+          currentCall
+            ? playSvc.paused()
+              ? 'play_arrow'
+              : 'pause'
+            : 'play_arrow'
+        }}
+      </mat-icon>
+    </a>
+  </div>
+
+  <div class="playingText" [class.greyed]="grace">
+    @if (shownCall) {
+      {{ shownCall | talkgroup: "summary" | async }}
+    } @else {
+      Idle
     }
   </div>
-}
+
+  @if (origin && shownCall) {
+    <a
+      class="originLink"
+      [routerLink]="
+        origin.type === 'incident'
+          ? ['/incidents', origin.id]
+          : ['/calls']
+      "
+      [queryParams]="originLinkQueryParams()"
+      [attr.aria-label]="
+        origin.type === 'incident' ? 'Jump to incident' : 'Jump to calls'
+      "
+    >
+      <mat-icon class="material-symbols-outlined">jump_to_element</mat-icon>
+    </a>
+  }
+
+  <a
+    class="stopButton"
+    (click)="stop($event)"
+    [class.disabled]="!currentCall"
+    aria-label="Stop playback"
+  >
+    <mat-icon>stop</mat-icon>
+  </a>
+</div>

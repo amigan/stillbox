@@ -25,7 +25,7 @@ export class CallPlayerComponent {
 
   stopAudio(ev: Event) {
     if (this.playSvc.playing()) {
-      this.playSvc.stopAudio();
+      this.playSvc.stop();
     }
   }
 

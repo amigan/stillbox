@@ -6,9 +6,6 @@
       <div class="stillboxLogo">
         <a (click)="toggleNav()">Stillbox</a>
       </div>
-      <div class="centerNav">
-        <now-playing></now-playing>
-      </div>
       <div class="rightNav">
         @if (auth.isAuth()) {
           <mat-menu #userMenu="matMenu">
@@ -30,3 +27,4 @@
     <router-outlet />
   }
 </main>
+<now-playing></now-playing>

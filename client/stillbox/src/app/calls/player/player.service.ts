@@ -79,11 +79,19 @@ export class PlayerService {
         this.play(item);
       }
     } else {
-      this.stopAudio();
+      this.clearAudioState();
     }
   }
 
-  stopAudio() {
+  /** Stops playback, clears the play stack and origin. Keeps the queue (results) so playback can be restarted. */
+  stop() {
+    this.clearAudioState();
+    this.stack.cancel();
+    this.queueOrigin.set(null);
+    this.pendingOrigin = null;
+  }
+
+  private clearAudioState() {
     this.playing.set(null);
     this.paused.set(false);
     this.au.pause();
@@ -96,7 +104,7 @@ export class PlayerService {
 
   playAudio(call: CallRecord, index: number, forward: boolean) {
     if (this.playing() != null) {
-      this.stopAudio();
+      this.clearAudioState();
     }
     this.queueOrigin.set(this.pendingOrigin);
     this.forward = forward;
