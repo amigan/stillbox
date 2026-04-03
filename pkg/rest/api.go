@@ -213,7 +213,7 @@ var statusMapping = map[error]errResponder{
 	users.ErrDuplicateName:             badRequestErrText,
 	users.ErrAPIKeyKindInvalid:         badRequestErrText,
 	users.ErrNoSuchUser:                notFoundErrText,
-	authn.ErrBadPassword:               badRequestErrText,
+	users.ErrBadPassword:               badRequestErrText,
 	authn.ErrPasswordValidation:        badRequestErrText,
 	authn.ErrInvalidScopes:             badRequestErrText,
 }

@@ -216,6 +216,8 @@ const (
 	SweptCallsPK                       = "swept_calls_pkey"
 	TGConstraintName                   = "calls_system_talkgroup_fkey"
 	SysConstraintName                  = "talkgroups_system_id_fkey"
+	UsernameConstraintName             = "users_username_key"
+	EmailConstraintName                = "users_email_key"
 )
 
 var Constraints = map[string]constraint{
@@ -224,23 +226,34 @@ var Constraints = map[string]constraint{
 	SweptCallsPK:                       {"call already swept"},
 	TGConstraintName:                   {"talkgroup already exists in system"},
 	SysConstraintName:                  {"system already exists"},
+	UsernameConstraintName:             {"username already taken"},
+	EmailConstraintName:                {"an account with that email already exists"},
 }
 
-// IsConstraintViolation is a convenience function to test whether an error is a PgError
-// indicating constraint violation.
-func ConstraintViolation(e error, constraint string) error {
+func ErrIsConstraintViolation(e error) *string {
 	var err *pgconn.PgError
 	if errors.As(e, &err) && (err.Code == "23503" || err.Code == "23505") {
-		if c, has := Constraints[err.ConstraintName]; has {
+		return &err.ConstraintName
+	}
+
+	return nil
+}
+
+func ConstraintViolation(e error) error {
+	if cn := ErrIsConstraintViolation(e); cn != nil {
+		if c, has := Constraints[*cn]; has {
 			return errors.New(c.desc)
 		} else {
-			return fmt.Errorf("constraint %s violated", constraint)
+			return fmt.Errorf("constraint %s violated", *cn)
 		}
 	}
 
 	return nil
 }
 
+// IsConstraintViolation is a convenience function to test whether an error is a PgError
+// indicating constraint violation.
 func IsConstraintViolation(err error, constraint string) bool {
-	return ConstraintViolation(err, constraint) != nil
+	cn := ErrIsConstraintViolation(err)
+	return cn != nil && *cn == constraint
 }

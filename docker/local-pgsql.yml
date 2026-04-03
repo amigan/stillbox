@@ -1,0 +1,21 @@
+services:
+  stillbox-pgsql:
+    container_name: stillbox-pgsql
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stillbox
+    ports:
+      - "5432:5432"
+    volumes:
+      - stillboxpg-volume:/var/lib/postgresql/data
+    networks:
+      - stillboxpg-network
+
+volumes:
+  stillboxpg-volume:
+
+networks:
+  stillboxpg-network:
+

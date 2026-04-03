@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/cache"
@@ -12,15 +13,18 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/services"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/rs/zerolog/log"
 )
 
 var (
 	ErrNoSuchUser     = errors.New("no such user")
 	ErrNoUIDSpecified = errors.New("no user ID specified")
 	ErrDuplicateName  = errors.New("a key with that name already exists for that user")
+	ErrBadPassword    = errors.New("bad password")
 )
 
 type Store interface {
@@ -54,17 +58,23 @@ type Store interface {
 	// ChangePassword changes a user's password.
 	ChangePassword(ctx context.Context, username string, newPassword string) error
 
+	// AddUser adds a user to the store.
+	AddUser(ctx context.Context, user *User) (*User, error)
+
+	// ValidatePassword validates whether the provided password is correct.
+	ValidatePassword(ctx context.Context, username, password string) (*User, error)
+
 	// HUP invalidates the cache.
 	HUP(*config.Config)
 }
 
-type postgresStore struct {
+type store struct {
 	cache.Cache[string, *User]
 	db database.Store
 }
 
-func NewStore(db database.Store) *postgresStore {
-	return &postgresStore{
+func NewStore(db database.Store) *store {
+	return &store{
 		Cache: cache.New[string, *User](),
 		db:    db,
 	}
@@ -87,11 +97,11 @@ func FromCtx(ctx context.Context) Store {
 	return s
 }
 
-func (s *postgresStore) Invalidate() {
+func (s *store) Invalidate() {
 	s.Clear()
 }
 
-func (s *postgresStore) HUP(_ *config.Config) {
+func (s *store) HUP(_ *config.Config) {
 	s.Invalidate()
 }
 
@@ -101,7 +111,54 @@ type UserUpdate struct {
 	Roles    []string `json:"roles"`
 }
 
-func (s *postgresStore) UpdateUser(ctx context.Context, username string, input UserUpdate) error {
+func (s *store) AddUser(ctx context.Context, user *User) (*User, error) {
+	_, err := authz.Check(ctx, user, authz.WithActions(entities.ActionCreate))
+	if err != nil {
+		return nil, err
+	}
+
+	// trim spaces
+	user.Username = strings.TrimSpace(user.Username)
+	user.Password = strings.TrimSpace(user.Password)
+
+	// validate the record
+	// user.Password in this context is *unhashed*. Normally this is not the case.
+	switch {
+	case user.Password == "" || len(user.Password) < 5: // sanity check for length; callers may impose stricter requirements
+		return nil, errors.New("bad password")
+	case user.Username == "":
+		return nil, errors.New("invalid username")
+	}
+
+	hashPw, err := s.hashPassword(user.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	dbu, err := s.db.CreateUser(ctx, database.CreateUserParams{
+		Username: user.Username,
+		Password: string(hashPw),
+		Email:    user.Email,
+		RealName: user.RealName,
+		Roles:    user.Roles,
+	})
+	if err != nil {
+		cv := database.ConstraintViolation(err)
+		if cv != nil {
+			return nil, cv
+		}
+
+		return nil, err
+	}
+
+	newUser := FromDBUser(dbu)
+
+	s.Set(user.Username, newUser)
+
+	return newUser.Mask(), nil
+}
+
+func (s *store) UpdateUser(ctx context.Context, username string, input UserUpdate) error {
 	dbu, err := s.db.GetUserByUsername(ctx, username)
 	if err != nil {
 		return err
@@ -138,7 +195,7 @@ func userPrivMask(ctx context.Context, user *User) *User {
 	return user
 }
 
-func (s *postgresStore) GetUser(ctx context.Context, username string) (*User, error) {
+func (s *store) GetUser(ctx context.Context, username string) (*User, error) {
 	u, has := s.Get(username)
 	if has {
 		return u, nil
@@ -159,7 +216,7 @@ func (s *postgresStore) GetUser(ctx context.Context, username string) (*User, er
 	return u, nil
 }
 
-func (s *postgresStore) GetUserPrivCheck(ctx context.Context, username string) (*User, error) {
+func (s *store) GetUserPrivCheck(ctx context.Context, username string) (*User, error) {
 	u, err := s.GetUser(ctx, username)
 	if err != nil {
 		return nil, err
@@ -168,7 +225,7 @@ func (s *postgresStore) GetUserPrivCheck(ctx context.Context, username string) (
 	return userPrivMask(ctx, u), nil
 }
 
-func (s *postgresStore) UserPrefs(ctx context.Context, username string, appName string) ([]byte, error) {
+func (s *store) UserPrefs(ctx context.Context, username string, appName string) ([]byte, error) {
 	u, err := s.GetUser(ctx, username)
 	if err != nil {
 		return nil, err
@@ -182,7 +239,7 @@ func (s *postgresStore) UserPrefs(ctx context.Context, username string, appName 
 	return []byte(prefs), err
 }
 
-func (s *postgresStore) SetUserPrefs(ctx context.Context, username string, appName string, prefs []byte) error {
+func (s *store) SetUserPrefs(ctx context.Context, username string, appName string, prefs []byte) error {
 	u, err := s.GetUser(ctx, username)
 	if err != nil {
 		return err
@@ -191,7 +248,7 @@ func (s *postgresStore) SetUserPrefs(ctx context.Context, username string, appNa
 	return s.db.SetAppPrefs(ctx, appName, prefs, int(u.ID))
 }
 
-func (s *postgresStore) GetAPIKey(ctx context.Context, keyKind APIKeyKind, b64hash *string, jwtID *uuid.UUID) (database.GetAPIKeyRow, error) {
+func (s *store) GetAPIKey(ctx context.Context, keyKind APIKeyKind, b64hash *string, jwtID *uuid.UUID) (database.GetAPIKeyRow, error) {
 	if !keyKind.Valid() {
 		return database.GetAPIKeyRow{}, ErrAPIKeyKindInvalid
 	}
@@ -219,7 +276,7 @@ func (s *postgresStore) GetAPIKey(ctx context.Context, keyKind APIKeyKind, b64ha
 	return k, nil
 }
 
-func (s *postgresStore) RecordLogin(ctx context.Context, username, source string) error {
+func (s *store) RecordLogin(ctx context.Context, username, source string) error {
 	now := time.Now()
 	ip, err := common.RemoteAddr(source)
 	if err != nil {
@@ -229,7 +286,7 @@ func (s *postgresStore) RecordLogin(ctx context.Context, username, source string
 	return s.db.RecordUserLogin(ctx, username, &now, &ip)
 }
 
-func (s *postgresStore) CreateAPIKey(ctx context.Context, ak *APIKey) error {
+func (s *store) CreateAPIKey(ctx context.Context, ak *APIKey) error {
 	var jwtid pgtype.UUID
 	if ak.JWTID != nil {
 		jwtid = pgtype.UUID{
@@ -261,9 +318,40 @@ func (s *postgresStore) CreateAPIKey(ctx context.Context, ak *APIKey) error {
 	return nil
 }
 
-func (s *postgresStore) ChangePassword(ctx context.Context, username string, newPassword string) (err error) {
+func (s *store) ValidatePassword(ctx context.Context, username, password string) (*User, error) {
+	user, err := s.GetUser(ctx, username)
+	if err != nil || user == nil {
+		log.Error().Str("username", username).Err(err).Msg("getUsers failed")
+		_ = bcrypt.CompareHashAndPassword([]byte("thisPreventsTimingAttacks"), []byte(password))
+		return user, ErrBadPassword
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		return user, ErrBadPassword
+	}
+
+	return user, nil
+}
+
+func (s *store) hashPassword(pass string) (string, error) {
+	hashpw, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+
+	return string(hashpw), err
+}
+
+func (s *store) ChangePassword(ctx context.Context, username string, newPassword string) (err error) {
 	s.Cache.DeleteAndHoldLock(username, func() {
-		err = s.db.UpdatePassword(ctx, username, newPassword)
+		var pwHash string
+		pwHash, err = s.hashPassword(newPassword)
+		if err != nil {
+			return
+		}
+
+		err = s.db.UpdatePassword(ctx, username, pwHash)
 	})
 
 	return err

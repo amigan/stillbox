@@ -55,9 +55,6 @@ type Authn interface {
 	// AllowInsecureCookie returns whether the request is for a host where we can allow insecure.
 	AllowInsecureCookie(*http.Request) bool
 
-	// ValidatePassword does a time-constant validation of the password and returns the User.
-	ValidatePassword(ctx context.Context, ust users.Store, username, password string) (*users.User, error)
-
 	// ChangePassword changes a password. Privileged users can specify another username, and do not need to furnish an oldPassword; otherwise the user is grabbed from the context Subject.
 	ChangePassword(ctx context.Context, username, oldPassword *string, newPassword string) error
 

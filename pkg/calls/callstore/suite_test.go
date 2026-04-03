@@ -28,7 +28,7 @@ func (s *DBTestSuite) TearDownTest() {
 
 func NewDBTestSuite(ctx context.Context, t *testing.T, storeCfg config.CallStorage, partCfg testutil.PartConfig, stOpt ...testutil.DBOpt) (*DBTestSuite, context.Context) {
 	met := metrics.NewNoOp()
-	db := testutil.NewDB(partCfg, stOpt...)
+	db := testutil.NewDB(append(stOpt, testutil.WithPartConfig(partCfg))...)
 	t.Logf("schema %s", db.SchemaName)
 	tgc := tgstore.NewCache(db, met)
 	st, err := callstore.NewStore(ctx, db, tgc, met, storeCfg, db.PartConfig, callstore.WithNow(callstore.NowFunc(db.NowFunc())))

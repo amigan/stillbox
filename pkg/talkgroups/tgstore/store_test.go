@@ -53,7 +53,7 @@ func tids(ids ...string) []tgsp.ID {
 
 func SetupTest() *TestSuite {
 	suite := &TestSuite{
-		db: testutil.NewDB(testutil.DailyPartConfig()),
+		db: testutil.NewDB(testutil.WithPartConfig(testutil.DailyPartConfig())),
 	}
 
 	return suite

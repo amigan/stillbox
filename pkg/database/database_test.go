@@ -12,7 +12,7 @@ import (
 )
 
 func TestConstraints(t *testing.T) {
-	db := testutil.NewDB(testutil.DailyPartConfig())
+	db := testutil.NewDB()
 	defer db.Cleanup()
 
 	constraintNames := common.Keys(database.Constraints)
