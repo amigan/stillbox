@@ -17,6 +17,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/users"
 	"dynatron.me/x/stillbox/testdata"
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
@@ -87,8 +88,9 @@ func primeBlobs() {
 			"smallMP3": "!!binary \"" + base64.StdEncoding.EncodeToString(smallMP3) + "\"",
 		}
 		templateFuncs = template.FuncMap{
-			"uuid": uidList.getUUID,
-			"time": uidList.getTime,
+			"uuid":   uidList.getUUID,
+			"time":   uidList.getTime,
+			"pwhash": users.HashPassword,
 			"now": func() string {
 				return time.Now().Format(time.RFC3339Nano)
 			},

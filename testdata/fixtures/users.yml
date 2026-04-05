@@ -1,18 +1,18 @@
 - id: 1
   username: admin
-  password: nxpasswd
+  password: {{ pwhash "adminpw" }}
   email: test@example.com
   password_set_at: {{ now }}
   roles:
     - Admin
 - id: 2
   username: user
-  password: nxpasswd
+  password: {{ pwhash "nxpasswd" }}
   email: user@example.com
   password_set_at: {{ now }}
 - id: 3
   username: submitter
-  password: nxpasswd
+  password: {{ pwhash "nxpasswd2" }}
   email: submitter@example.com
   password_set_at: {{ now }}
   roles:

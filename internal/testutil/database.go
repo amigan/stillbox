@@ -52,12 +52,23 @@ func CustomPartConfig(cfg config.Partition) PartConfig {
 	}
 }
 
-type DBOpt func(*DB)
+type DBOpt func(*dbOpts)
 type NowFunc func() time.Time
 
+type dbOpts struct {
+	nowFunc NowFunc
+	pc      PartConfig
+}
+
 func WithNow(nf NowFunc) DBOpt {
-	return func(db *DB) {
+	return func(db *dbOpts) {
 		db.nowFunc = nf
+	}
+}
+
+func WithPartConfig(pc PartConfig) DBOpt {
+	return func(db *dbOpts) {
+		db.pc = pc
 	}
 }
 
@@ -65,7 +76,7 @@ func (db *DB) NowFunc() NowFunc {
 	return db.nowFunc
 }
 
-func NewDB(partCfg PartConfig, opts ...DBOpt) *DB {
+func NewDB(opts ...DBOpt) *DB {
 	primeBlobs()
 
 	_ = godotenv.Load(path.Join(testdata.Path, "../.env.test"))
@@ -93,7 +104,15 @@ func NewDB(partCfg PartConfig, opts ...DBOpt) *DB {
 		panic(err)
 	}
 
-	part := partCfg(schemaName)
+	var dbo dbOpts
+	for _, opt := range opts {
+		opt(&dbo)
+	}
+
+	var part config.Partition
+	if dbo.pc != nil {
+		part = dbo.pc(schemaName)
+	}
 
 	db, err := database.NewClient(ctx, config.DB{
 		Connect:    dbConnect + "&search_path=" + schemaName,
@@ -104,10 +123,17 @@ func NewDB(partCfg PartConfig, opts ...DBOpt) *DB {
 		panic(err)
 	}
 
+	if dbo.pc == nil {
+		_, err := db.Exec(ctx, "CREATE TABLE calls_default PARTITION OF calls DEFAULT;")
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	tdb := &DB{Postgres: db, SchemaName: schemaName, PartConfig: part, nowFunc: time.Now}
 
-	for _, opt := range opts {
-		opt(tdb)
+	if dbo.nowFunc != nil {
+		tdb.nowFunc = dbo.nowFunc
 	}
 
 	if part.Enabled {

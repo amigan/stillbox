@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
-
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/users"
@@ -18,10 +16,6 @@ import (
 	"github.com/go-chi/render"
 	"github.com/rs/zerolog/log"
 	"github.com/wagslane/go-password-validator"
-)
-
-var (
-	ErrBadPassword = errors.New("bad password")
 )
 
 const (
@@ -59,22 +53,6 @@ func (p PasswordValidationErr) Unwrap() error {
 	return ErrPasswordValidation
 }
 
-func (a *authn) ValidatePassword(ctx context.Context, ust users.Store, username, password string) (*users.User, error) {
-	user, err := ust.GetUser(ctx, username)
-	if err != nil || user == nil {
-		log.Error().Str("username", username).Err(err).Msg("getUsers failed")
-		_ = bcrypt.CompareHashAndPassword([]byte("thisPreventsTimingAttacks"), []byte(password))
-		return user, ErrBadPassword
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		return user, ErrBadPassword
-	}
-
-	return user, nil
-}
-
 func (a *authn) ChangePassword(ctx context.Context, username, oldPassword *string, newPassword string) error {
 	ust := users.FromCtx(ctx)
 
@@ -102,11 +80,11 @@ func (a *authn) ChangePassword(ctx context.Context, username, oldPassword *strin
 	oldPasswordRequired := !callerIsAdmin || (callerUN != nil && *username == *callerUN)
 
 	if oldPassword == nil && oldPasswordRequired {
-		return ErrBadPassword
+		return users.ErrBadPassword
 	}
 
 	if oldPasswordRequired {
-		_, err := a.ValidatePassword(ctx, ust, *username, *oldPassword)
+		_, err := ust.ValidatePassword(ctx, *username, *oldPassword)
 		if err != nil {
 			return err
 		}
@@ -119,20 +97,15 @@ func (a *authn) ChangePassword(ctx context.Context, username, oldPassword *strin
 		}
 	}
 
-	hashpw, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	return ust.ChangePassword(ctx, *username, string(hashpw))
+	return ust.ChangePassword(ctx, *username, newPassword)
 }
 
 func (a *authn) Login(ctx context.Context, username, password, source string) (token string, err error) {
 	ust := users.FromCtx(ctx)
 
-	user, err := a.ValidatePassword(ctx, ust, username, password)
+	user, err := ust.ValidatePassword(ctx, username, password)
 	if err != nil {
-		if errors.Is(err, ErrBadPassword) {
+		if errors.Is(err, users.ErrBadPassword) {
 			err = ErrLoginFailed
 		}
 

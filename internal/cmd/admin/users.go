@@ -4,13 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"strings"
 	"syscall"
 
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/database"
+	"dynatron.me/x/stillbox/pkg/users"
+	"github.com/mattn/go-isatty"
+	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v3"
-	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 )
 
@@ -24,33 +29,48 @@ var (
 	ErrInvalidArguments = errors.New("invalid arguments")
 )
 
-// AddUser adds a new user to the database. It asks for the password on the terminal.
+// AddUser adds a new user to the database. It asks for the password on the terminal, or reads from stdin if not a terminal.
 func AddUser(ctx context.Context, username, realName, email string, isAdmin bool) error {
 	if username == "" || email == "" {
 		return ErrInvalidArguments
 	}
 
-	db := database.FromCtx(ctx)
+	ust := users.FromCtx(ctx)
 
-	pw, err := readPassword(PromptPassword)
-	if err != nil {
-		return err
-	}
+	var err error
+	var pw string
 
-	pwAgain, err := readPassword(PromptAgain)
-	if err != nil {
-		return err
-	}
+	if isatty.IsTerminal(os.Stdin.Fd()) {
+		pw, err = readPassword(PromptPassword)
+		if err != nil {
+			return err
+		}
 
-	if pwAgain != pw {
-		return ErrDontMatch
+		pwAgain, err := readPassword(PromptAgain)
+		if err != nil {
+			return err
+		}
+
+		if pwAgain != pw {
+			return ErrDontMatch
+		}
+	} else {
+		pwb, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			return err
+		}
+
+		pw = string(pwb)
+		if nlIdx := strings.IndexRune(pw, '\n'); nlIdx > -1 {
+			pw = pw[:nlIdx]
+		}
 	}
 
 	if pw == "" {
 		return ErrInvalidArguments
 	}
 
-	hashpw, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	password, err := users.NewPlainPassword(pw)
 	if err != nil {
 		return err
 	}
@@ -65,15 +85,20 @@ func AddUser(ctx context.Context, username, realName, email string, isAdmin bool
 		roles = []string{entities.RoleAdmin}
 	}
 
-	_, err = db.CreateUser(ctx, database.CreateUserParams{
+	user, err := ust.AddUser(ctx, &users.User{
 		Username: username,
-		Password: string(hashpw),
+		Password: password,
 		RealName: realNameP,
 		Email:    email,
 		Roles:    roles,
 	})
+	if err != nil {
+		return err
+	}
 
-	return err
+	log.Info().Int("uid", user.ID.Int()).Str("username", user.Username).Msg("added user")
+
+	return nil
 }
 
 // Passwd changes a user's password. It asks for the password on the terminal.
@@ -83,6 +108,7 @@ func Passwd(ctx context.Context, username string) error {
 	}
 
 	db := database.FromCtx(ctx)
+	ust := users.FromCtx(ctx)
 
 	_, err := db.GetUserByUsername(ctx, username)
 	if err != nil && database.IsNoRows(err) {
@@ -111,12 +137,7 @@ func Passwd(ctx context.Context, username string) error {
 		return ErrInvalidArguments
 	}
 
-	hashpw, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	return db.UpdatePassword(ctx, username, string(hashpw))
+	return ust.ChangePassword(ctx, username, pw)
 }
 
 func readPassword(prompt string) (string, error) {
@@ -145,11 +166,12 @@ func UsersCommand(cfg *config.Configuration) *cli.Command {
 func addUserCommand(cfg *config.Config) *cli.Command {
 	c := &cli.Command{
 		Name:        "add",
-		Description: "adds a user",
+		Description: "Adds a user to the database using the provided options.",
 		UsageText:   "stillbox users add [-a] [-m email] [username]",
+		ArgsUsage:   "username",
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			if cmd.Args().Len() != 1 {
-				return errors.New(cmd.Usage)
+				return errors.New(cmd.UsageText)
 			}
 
 			db, err := database.NewClient(ctx, cfg.DB)
@@ -157,12 +179,15 @@ func addUserCommand(cfg *config.Config) *cli.Command {
 				return err
 			}
 
+			ctx = database.CtxWithDB(ctx, db)
+			ctx = users.CtxWithStore(ctx, users.NewStore(db))
+
 			username := cmd.Args().Get(0)
 			isAdmin := cmd.Bool("admin")
 			email := cmd.String("email")
 			realName := cmd.String("real-name")
 
-			return AddUser(database.CtxWithDB(ctx, db), username, realName, email, isAdmin)
+			return AddUser(ctx, username, realName, email, isAdmin)
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
