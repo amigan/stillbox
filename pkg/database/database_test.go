@@ -15,7 +15,7 @@ func TestConstraints(t *testing.T) {
 	db := testutil.NewDB()
 	defer db.Cleanup()
 
-	constraintNames := common.Keys(database.Constraints)
+	constraintNames := append(common.Keys(database.Constraints), database.TGConstraintName) // duplicated due to DEFAULT partition
 	constraints := make([]string, 0, len(database.Constraints))
 	rows, err := db.Query(t.Context(), "SELECT constraint_name FROM information_schema.table_constraints WHERE constraint_name = ANY($1) AND constraint_schema = $2 AND table_name NOT LIKE 'calls_p_%';", constraintNames, db.SchemaName)
 	require.NoError(t, err)
