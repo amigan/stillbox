@@ -70,6 +70,11 @@ func AddUser(ctx context.Context, username, realName, email string, isAdmin bool
 		return ErrInvalidArguments
 	}
 
+	password, err := users.NewPlainPassword(pw)
+	if err != nil {
+		return err
+	}
+
 	var realNameP *string
 	if realName != "" {
 		realNameP = &realName
@@ -82,7 +87,7 @@ func AddUser(ctx context.Context, username, realName, email string, isAdmin bool
 
 	user, err := ust.AddUser(ctx, &users.User{
 		Username: username,
-		Password: pw,
+		Password: password,
 		RealName: realNameP,
 		Email:    email,
 		Roles:    roles,

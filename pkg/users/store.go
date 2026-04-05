@@ -61,7 +61,7 @@ type Store interface {
 	// AddUser adds a user to the store.
 	AddUser(ctx context.Context, user *User) (*User, error)
 
-	// ValidatePassword validates whether the provided password is correct.
+	// ValidatePassword does a time-constant validation of the password and returns the User.
 	ValidatePassword(ctx context.Context, username, password string) (*User, error)
 
 	// HUP invalidates the cache.
@@ -119,18 +119,14 @@ func (s *store) AddUser(ctx context.Context, user *User) (*User, error) {
 
 	// trim spaces
 	user.Username = strings.TrimSpace(user.Username)
-	user.Password = strings.TrimSpace(user.Password)
 
 	// validate the record
 	// user.Password in this context is *unhashed*. Normally this is not the case.
-	switch {
-	case user.Password == "" || len(user.Password) < 5: // sanity check for length; callers may impose stricter requirements
-		return nil, errors.New("bad password")
-	case user.Username == "":
+	if user.Username == "" {
 		return nil, errors.New("invalid username")
 	}
 
-	hashPw, err := HashPassword(user.Password)
+	hashPw, err := user.Password.Hash()
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +322,12 @@ func (s *store) ValidatePassword(ctx context.Context, username, password string)
 		return user, ErrBadPassword
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	pwHash, err := user.Password.Hash()
+	if err != nil {
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(pwHash), []byte(password))
 	if err != nil {
 		return user, ErrBadPassword
 	}
@@ -345,8 +346,14 @@ func HashPassword(pass string) (string, error) {
 
 func (s *store) ChangePassword(ctx context.Context, username string, newPassword string) (err error) {
 	s.Cache.DeleteAndHoldLock(username, func() {
+		var pw Password
+		pw, err = NewPlainPassword(newPassword)
+		if err != nil {
+			return
+		}
+
 		var pwHash string
-		pwHash, err = HashPassword(newPassword)
+		pwHash, err = pw.Hash()
 		if err != nil {
 			return
 		}

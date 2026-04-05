@@ -73,6 +73,11 @@ func TestCreateUser(t *testing.T) {
 	s := SetupTest()
 	defer s.TearDownTest()
 
+	somePass, err := users.NewPlainPassword("somepass")
+	if err != nil {
+		require.NoError(t, err)
+	}
+
 	tests := []struct {
 		desc      string
 		usr       users.User
@@ -83,7 +88,7 @@ func TestCreateUser(t *testing.T) {
 			desc: "base",
 			usr: users.User{
 				Username: "user1",
-				Password: "somepass",
+				Password: somePass,
 				RealName: common.PtrTo("Joe User"),
 				Email:    "example@example.com",
 				Roles: []string{
@@ -96,7 +101,7 @@ func TestCreateUser(t *testing.T) {
 			desc: "dupe email",
 			usr: users.User{
 				Username: "user2",
-				Password: "somepass",
+				Password: somePass,
 				RealName: common.PtrTo("Joe User"),
 				Email:    "example@example.com",
 				Roles: []string{
@@ -110,7 +115,7 @@ func TestCreateUser(t *testing.T) {
 			desc: "dupe user",
 			usr: users.User{
 				Username: "user1",
-				Password: "somepass",
+				Password: somePass,
 				RealName: common.PtrTo("Joe User"),
 				Email:    "someone@example.com",
 				Roles: []string{
@@ -124,7 +129,7 @@ func TestCreateUser(t *testing.T) {
 			desc: "bad perms",
 			usr: users.User{
 				Username: "user3",
-				Password: "somepass",
+				Password: somePass,
 				RealName: common.PtrTo("Joe User"),
 				Email:    "someone2@example.com",
 				Roles: []string{
@@ -185,10 +190,16 @@ func TestGetUser(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.username, usr.Username)
 				if !tc.masked {
-					assert.True(t, strings.HasPrefix(usr.Password, "$"), "password hash '%s' does not start with $", usr.Password)
-					assert.Greater(t, len(usr.Password), 5, "hash length < 5")
+					hpwCon, isHashedPW := usr.Password.(users.HashedPassword)
+					assert.True(t, isHashedPW, "is not hashed password")
+
+					hp, err := usr.Password.Hash()
+					require.NoError(t, err)
+
+					assert.True(t, strings.HasPrefix(string(hpwCon), "$"), "password hash '%s' does not start with $", usr.Password)
+					assert.Greater(t, len(hp), 5, "hash length < 5")
 				} else {
-					assert.Empty(t, usr.Password)
+					assert.Nil(t, usr.Password)
 					assert.Empty(t, usr.Email)
 					assert.Empty(t, usr.PasswordSetAt)
 					assert.Nil(t, usr.Roles)
