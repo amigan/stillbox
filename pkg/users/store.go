@@ -130,7 +130,7 @@ func (s *store) AddUser(ctx context.Context, user *User) (*User, error) {
 		return nil, errors.New("invalid username")
 	}
 
-	hashPw, err := s.hashPassword(user.Password)
+	hashPw, err := HashPassword(user.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +334,7 @@ func (s *store) ValidatePassword(ctx context.Context, username, password string)
 	return user, nil
 }
 
-func (s *store) hashPassword(pass string) (string, error) {
+func HashPassword(pass string) (string, error) {
 	hashpw, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -346,7 +346,7 @@ func (s *store) hashPassword(pass string) (string, error) {
 func (s *store) ChangePassword(ctx context.Context, username string, newPassword string) (err error) {
 	s.Cache.DeleteAndHoldLock(username, func() {
 		var pwHash string
-		pwHash, err = s.hashPassword(newPassword)
+		pwHash, err = HashPassword(newPassword)
 		if err != nil {
 			return
 		}

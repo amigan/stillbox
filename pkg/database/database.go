@@ -206,8 +206,12 @@ func IsNoRows(err error) bool {
 	return errors.Is(err, pgx.ErrNoRows)
 }
 
-type constraint struct {
+type Constraint struct {
 	desc string
+}
+
+func (c Constraint) Error() error {
+	return errors.New(c.desc)
 }
 
 const (
@@ -220,7 +224,7 @@ const (
 	EmailConstraintName                = "users_email_key"
 )
 
-var Constraints = map[string]constraint{
+var Constraints = map[string]Constraint{
 	APIKeysOwnerIDNameKey:              {"API key with this name already exists"},
 	AudioRefJournalCallIDBackendRefKey: {"delete entry for call already exists"},
 	SweptCallsPK:                       {"call already swept"},
@@ -242,7 +246,7 @@ func ErrIsConstraintViolation(e error) *string {
 func ConstraintViolation(e error) error {
 	if cn := ErrIsConstraintViolation(e); cn != nil {
 		if c, has := Constraints[*cn]; has {
-			return errors.New(c.desc)
+			return c.Error()
 		} else {
 			return fmt.Errorf("constraint %s violated", *cn)
 		}
