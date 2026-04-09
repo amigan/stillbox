@@ -19,6 +19,10 @@ var (
 	ErrBadAppName = errors.New("bad app name")
 )
 
+const (
+	PrefsMaxBytes = 8192 // 8k
+)
+
 type prefsAPI struct {
 }
 
@@ -111,7 +115,7 @@ func (pa *prefsAPI) putPrefs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prefs, err := io.ReadAll(r.Body)
+	prefs, err := io.ReadAll(io.LimitReader(r.Body, PrefsMaxBytes))
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
