@@ -15,9 +15,9 @@
         {{
           currentCall
             ? playSvc.paused()
-              ? 'play_arrow'
-              : 'pause'
-            : 'play_arrow'
+              ? "play_arrow"
+              : "pause"
+            : "play_arrow"
         }}
       </mat-icon>
     </a>
@@ -35,9 +35,7 @@
     <a
       class="originLink"
       [routerLink]="
-        origin.type === 'incident'
-          ? ['/incidents', origin.id]
-          : ['/calls']
+        origin.type === 'incident' ? ['/incidents', origin.id] : ['/calls']
       "
       [queryParams]="originLinkQueryParams()"
       [attr.aria-label]="

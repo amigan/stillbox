@@ -10,7 +10,8 @@ table,
 }
 
 .pagFoot {
-  flex: 0 0 0;
+  flex: 0 0 auto;
+  min-height: var(--mat-mat-paginator-container-size, 56px);
 }
 
 .duration {

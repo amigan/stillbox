@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { IncidentCalls, IncidentRecord } from '../incidents';
 import { Observable } from 'rxjs';
@@ -42,6 +42,23 @@ export class IncidentsService {
     p: IncidentCallsParams,
   ): Observable<IncidentCalls> {
     return this.http.post<IncidentCalls>('/api/incident/' + id + '/calls', p);
+  }
+
+  /** Public share link: GET with query params (backend reads these via urlencoded form parse). */
+  getSharedIncidentCalls(
+    shareId: string,
+    p: IncidentCallsParams,
+  ): Observable<IncidentCalls> {
+    const params = new HttpParams()
+      .set('page', String(p.page))
+      .set('perPage', String(p.perPage));
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded',
+    });
+    return this.http.get<IncidentCalls>(`/share/${shareId}/calls`, {
+      params,
+      headers,
+    });
   }
 
   createIncident(inp: IncidentRecord): Observable<IncidentRecord> {

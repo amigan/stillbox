@@ -27,6 +27,17 @@
 .mat-sidenav-content {
   display: flex;
   flex-direction: column;
+
+  router-outlet {
+    flex: 0 0 0;
+    min-height: 0;
+  }
+
+  router-outlet + * {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+  }
 }
 
 .mat-toolbar.mat-primary {

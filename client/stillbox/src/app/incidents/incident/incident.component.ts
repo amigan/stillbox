@@ -36,7 +36,6 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { FmtDatePipe } from '../incidents.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { Share } from '../../shares';
-import { ShareService } from '../../share/share.service';
 import { TalkgroupService } from '../../talkgroups/talkgroups.service';
 import {
   CallsTableComponent,
@@ -225,7 +224,9 @@ export class IncidentComponent {
     this.fetchCalls
       .pipe(
         switchMap((params) => {
-          return this.incSvc.getIncidentCalls(this.incID, params);
+          return this.share
+            ? this.incSvc.getSharedIncidentCalls(this.share.id, params)
+            : this.incSvc.getIncidentCalls(this.incID, params);
         }),
       )
       .subscribe((calls) => {

@@ -1,3 +1,11 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
 .timeFilterBox {
   flex: 0 0 240px;
 }
@@ -16,14 +24,14 @@ table,
 }
 
 .tabContainer {
-  max-height: calc(
-    (
-        100vh - var(--mat-mat-maginator-container-size, 56px) - 2 *
-          (var(--mat-toolbar-standard-height, 64px))
-      ) +
-      7px
-  );
+  flex: 1 1 0;
+  min-height: 0;
   overflow: auto;
+}
+
+.pagFoot {
+  flex: 0 0 auto;
+  min-height: var(--mat-mat-paginator-container-size, 56px);
 }
 
 .toolbarButtons button,

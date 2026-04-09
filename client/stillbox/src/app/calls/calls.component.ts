@@ -116,7 +116,7 @@ export class CallsComponent {
 
   subscriptions = new Subscription();
   pageWindow = 0;
-  /** When true, next queryParams emission is from us removing fromQueueOrigin – don't reset page/perPage */
+  /** When true, next queryParams emission is from us removing fromQueueOrigin - don't reset page/perPage */
   skipNextQueryParamsSync = false;
   fetchCalls = new Subject<CallsListParams>();
 
