@@ -51,6 +51,7 @@ html {
 /* You can add global styles to this file, and also import other style files */
 
 :root {
+  --now-playing-min-height: 56px;
   --color-dark-fg: #dcdcdc;
   --color-dark-bg: #000000;
   --color-dark-header-bg: #000;
@@ -173,7 +174,10 @@ header.topHeader {
 }
 
 now-playing {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .centerNav {
@@ -227,7 +231,10 @@ button.sbButton {
 }
 
 main {
-  flex-grow: 1;
+  /* Take remaining space between header and now-playing; allow shrinking so
+     the shell does not exceed 100vh (avoids body-level vertical scrollbars). */
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -274,6 +281,8 @@ app-root {
   flex-grow: 1;
   height: 100vh;
   min-height: 100vh;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 a > avatar {
