@@ -48,6 +48,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DomSanitizer } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { IncidentCall } from '../../incidents';
+import { Share } from '../../shares';
 
 export const PER_PAGE_DEFAULT = 25;
 
@@ -86,6 +87,7 @@ export class CallsTableComponent {
   @Output() searchTGFilter: EventEmitter<string | null> = new EventEmitter();
   @Output() searchSrcFilter: EventEmitter<string | null> = new EventEmitter();
   @Output() setPage: EventEmitter<PageEvent> = new EventEmitter();
+  @Input() share: Share | undefined;
   @Input() forward: boolean = false;
   curPage = input<PageEvent>();
   showTranscripts = input<boolean | null>();

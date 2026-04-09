@@ -4,6 +4,7 @@ import { CallRecord } from '../../../calls';
 import { MatIconModule } from '@angular/material/icon';
 import { fromEvent, Observable, Subscription } from 'rxjs';
 import { PlayerService } from '../player.service';
+import { Share } from '../../../shares';
 
 @Component({
   selector: 'call-player',
@@ -15,6 +16,7 @@ export class CallPlayerComponent {
   @Input() forward: boolean = false;
   @Input() call!: CallRecord;
   @Input() index!: number;
+  @Input() share: Share | undefined;
   download = input<boolean>();
 
   constructor(public playSvc: PlayerService) {}
@@ -30,6 +32,6 @@ export class CallPlayerComponent {
   }
 
   playAudio(ev: Event) {
-    this.playSvc.playAudio(this.call, this.index, this.forward);
+    this.playSvc.playAudio(this.call, this.share, this.index, this.forward);
   }
 }

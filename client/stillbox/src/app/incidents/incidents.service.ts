@@ -49,16 +49,7 @@ export class IncidentsService {
     shareId: string,
     p: IncidentCallsParams,
   ): Observable<IncidentCalls> {
-    const params = new HttpParams()
-      .set('page', String(p.page))
-      .set('perPage', String(p.perPage));
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/x-www-form-urlencoded',
-    });
-    return this.http.get<IncidentCalls>(`/share/${shareId}/calls`, {
-      params,
-      headers,
-    });
+    return this.http.post<IncidentCalls>(`/share/${shareId}/calls`, p);
   }
 
   createIncident(inp: IncidentRecord): Observable<IncidentRecord> {

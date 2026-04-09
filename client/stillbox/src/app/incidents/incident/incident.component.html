@@ -51,6 +51,7 @@
   ></mat-progress-bar>
   <calls-table
     #callsTable
+    [share]="this.share"
     [searched]="false"
     [callsResult]="callsResult | async"
     [playingCallId]="playerSvc.playing()?.id ?? null"
