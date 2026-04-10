@@ -47,10 +47,11 @@ export class FmtDatePipe implements PipeTransform {
       timestamp = new Date(ts);
     }
     return (
-      timestamp.getMonth() +
-      1 +
-      '/' +
-      timestamp.getDate() +
+      timestamp.toLocaleString(navigator.language, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }) +
       ' ' +
       timestamp.toLocaleTimeString(navigator.language, {
         hour: '2-digit',

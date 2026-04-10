@@ -15,7 +15,9 @@ table,
   width: 100%;
 }
 
-.callCount {
+.callCount,
+.mat-column-startTime,
+.mat-column-endTime {
   text-align: right;
 }
 
