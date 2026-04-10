@@ -336,7 +336,7 @@ SELECT
 	i.location,
 	i.metadata,
 	u.username owner,
-	COUNT(ic.incident_id) calls_count
+	COUNT(ic.incident_id) AS calls_count
 FROM incidents i
 LEFT JOIN incidents_calls ic ON i.id = ic.incident_id
 JOIN users u ON i.owner_id = u.id
@@ -351,19 +351,22 @@ CASE WHEN $2::TIMESTAMPTZ IS NOT NULL THEN
 	) ELSE TRUE END)
 GROUP BY i.id, u.username
 ORDER BY
-CASE WHEN $4::TEXT = 'asc' THEN i.start_time END ASC,
-CASE WHEN $4::TEXT = 'desc' THEN i.start_time END DESC
+CASE WHEN $4::TEXT = 'start_asc' THEN start_time END ASC,
+CASE WHEN $4::TEXT = 'start_desc' THEN start_time END DESC,
+CASE WHEN $4::TEXT = 'numcalls_asc' THEN COUNT(ic.incident_id) END ASC,
+CASE WHEN $4::TEXT = 'numcalls_desc' THEN COUNT(ic.incident_id) END DESC,
+	u.username, i.name
 OFFSET $5 ROWS
 FETCH NEXT $6 ROWS ONLY
 `
 
 type ListIncidentsPParams struct {
-	Start     *time.Time `db:"start" json:"start"`
-	End       *time.Time `db:"end" json:"end"`
-	Filter    *string    `db:"filter" json:"filter"`
-	Direction string     `db:"direction" json:"direction"`
-	Offset    int32      `db:"offset" json:"offset"`
-	PerPage   int32      `db:"per_page" json:"perPage"`
+	Start   *time.Time `db:"start" json:"start"`
+	End     *time.Time `db:"end" json:"end"`
+	Filter  *string    `db:"filter" json:"filter"`
+	OrderBy string     `db:"order_by" json:"orderBy"`
+	Offset  int32      `db:"offset" json:"offset"`
+	PerPage int32      `db:"per_page" json:"perPage"`
 }
 
 type ListIncidentsPRow struct {
@@ -385,7 +388,7 @@ func (q *Queries) ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) 
 		arg.Start,
 		arg.End,
 		arg.Filter,
-		arg.Direction,
+		arg.OrderBy,
 		arg.Offset,
 		arg.PerPage,
 	)

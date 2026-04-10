@@ -27,13 +27,10 @@ import (
 type tgMap map[tgsp.ID]*tgsp.Talkgroup
 
 var (
-	ErrNotFound       = errors.New("talkgroup not found")
-	ErrNoSuchSystem   = errors.New("no such system")
-	ErrInvalidOrderBy = errors.New("invalid pagination orderBy value")
-	ErrReference      = errors.New("item is still referenced, cannot delete")
-	ErrBadOrder       = errors.New("invalid order")
-	ErrBadDirection   = errors.New("invalid direction")
-
+	ErrNotFound              = errors.New("talkgroup not found")
+	ErrNoSuchSystem          = errors.New("no such system")
+	ErrInvalidOrderBy        = errors.New("invalid pagination orderBy value")
+	ErrReference             = errors.New("item is still referenced, cannot delete")
 	ErrSystemAndTGsSpecified = errors.New("system filter and individual talkgroups specified")
 )
 
@@ -141,7 +138,7 @@ func (p *Pagination) SortDir() (string, error) {
 	if p != nil {
 		if p.OrderBy != nil {
 			if !p.OrderBy.IsValid() {
-				return "", ErrBadOrder
+				return "", common.ErrBadOrder
 			}
 
 			order = *p.OrderBy
@@ -149,7 +146,7 @@ func (p *Pagination) SortDir() (string, error) {
 
 		if p.Direction != nil {
 			if !p.Direction.IsValid() {
-				return "", ErrBadDirection
+				return "", common.ErrBadDirection
 			}
 
 			dir = *p.Direction

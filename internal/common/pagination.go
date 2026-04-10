@@ -4,6 +4,8 @@ import "errors"
 
 var (
 	ErrPageOutOfRange = errors.New("requested page out of range")
+	ErrBadOrder       = errors.New("invalid order")
+	ErrBadDirection   = errors.New("invalid direction")
 )
 
 // Pagination describes a request for a particular page and records per page.
