@@ -25,26 +25,30 @@
 
   <div class="playingText" [class.greyed]="grace">
     @if (shownCall) {
-      {{ shownCall | talkgroup: "summary" | async }}
+      @if (origin) {
+        <a
+          class="playingTextLink"
+          [routerLink]="originLinkCommands()"
+          [queryParams]="originLinkQueryParams()"
+          [state]="originLinkState()"
+          (click)="jumpToOrigin($event)"
+          [attr.aria-label]="
+            origin.type === 'incident'
+              ? 'Jump to call in incident'
+              : origin.type === 'share'
+                ? 'Jump to call in shared incident'
+              : 'Jump to call in calls'
+          "
+        >
+          {{ shownCall | talkgroup: "summary" | async }}
+        </a>
+      } @else {
+        {{ shownCall | talkgroup: "summary" | async }}
+      }
     } @else {
       Idle
     }
   </div>
-
-  @if (origin && shownCall) {
-    <a
-      class="originLink"
-      [routerLink]="
-        origin.type === 'incident' ? ['/incidents', origin.id] : ['/calls']
-      "
-      [queryParams]="originLinkQueryParams()"
-      [attr.aria-label]="
-        origin.type === 'incident' ? 'Jump to incident' : 'Jump to calls'
-      "
-    >
-      <mat-icon class="material-symbols-outlined">jump_to_element</mat-icon>
-    </a>
-  }
 
   <a
     class="stopButton"

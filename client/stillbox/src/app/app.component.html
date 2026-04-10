@@ -27,6 +27,6 @@
     <router-outlet />
   }
 </main>
-@if (auth.isAuth()) {
+@if (!isLoginPage) {
   <now-playing></now-playing>
 }

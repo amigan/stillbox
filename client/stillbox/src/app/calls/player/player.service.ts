@@ -8,7 +8,8 @@ import { Share } from '../../shares';
 
 export type QueueOrigin =
   | { type: 'calls'; queryParams: Params }
-  | { type: 'incident'; id: string };
+  | { type: 'incident'; id: string }
+  | { type: 'share'; id: string };
 
 interface IStack<T> {
   push(e: T[]): void;

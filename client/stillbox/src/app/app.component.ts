@@ -44,6 +44,7 @@ export class AppComponent {
   opened!: boolean;
   toggleNavSubject: Subject<void> = new Subject<void>();
   titleSub!: Subscription;
+  isLoginPage = false;
 
   constructor(
     private router: Router,
@@ -55,10 +56,12 @@ export class AppComponent {
   }
 
   ngOnInit() {
+    this.isLoginPage = this.router.url.startsWith('/login');
     this.titleSub = this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),
         map(() => {
+          this.isLoginPage = this.router.url.startsWith('/login');
           let route: ActivatedRoute = this.router.routerState.root;
           let routeTitle = '';
           while (route!.firstChild) {

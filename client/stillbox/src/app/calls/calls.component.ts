@@ -116,9 +116,8 @@ export class CallsComponent {
 
   subscriptions = new Subscription();
   pageWindow = 0;
-  /** When true, next queryParams emission is from us removing fromQueueOrigin - don't reset page/perPage */
-  skipNextQueryParamsSync = false;
   fetchCalls = new Subject<CallsListParams>();
+  private fromQueueOriginNav = false;
 
   constructor(
     private callsSvc: CallsService,
@@ -131,6 +130,13 @@ export class CallsComponent {
     private router: Router,
   ) {
     this.tcSvc.showFilterButton();
+    this.fromQueueOriginNav =
+      this.router.getCurrentNavigation()?.extras?.state?.['fromQueueOrigin'] ===
+      true;
+  }
+
+  private isFromQueueOrigin(): boolean {
+    return this.fromQueueOriginNav;
   }
 
   /** Build query params from current form for queue-origin link (e.g. now-playing). */
@@ -388,8 +394,7 @@ export class CallsComponent {
           this.callsTable.count = calls.count;
           this.currentSet = calls.calls;
           let sliceStart = this.pageWindow;
-          const fromQueueOrigin =
-            this.route.snapshot.queryParams['fromQueueOrigin'] === '1';
+          const fromQueueOrigin = this.isFromQueueOrigin();
           const playingId = this.playerSvc.playing()?.id;
           if (
             fromQueueOrigin &&
@@ -419,14 +424,7 @@ export class CallsComponent {
           if (fromQueueOrigin && playingId) {
             setTimeout(() => {
               this.scrollToPlayingCall(playingId);
-              this.skipNextQueryParamsSync = true;
-              const q = { ...this.route.snapshot.queryParams };
-              delete q['fromQueueOrigin'];
-              this.router.navigate([], {
-                relativeTo: this.route,
-                queryParams: q,
-                replaceUrl: true,
-              });
+              this.fromQueueOriginNav = false;
             }, 150);
           }
         }),
@@ -445,10 +443,6 @@ export class CallsComponent {
     this.patchFormFromQueryParams(this.route.snapshot.queryParams);
     this.subscriptions.add(
       this.route.queryParams.pipe(skip(1)).subscribe((params) => {
-        if (this.skipNextQueryParamsSync) {
-          this.skipNextQueryParamsSync = false;
-          return;
-        }
         this.patchFormFromQueryParams(params);
         this.currentServerPage = 0;
         this.setPage(this.zeroPage(), true);

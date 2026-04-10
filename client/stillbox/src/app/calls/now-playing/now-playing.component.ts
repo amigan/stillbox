@@ -1,5 +1,5 @@
 import { Component, effect, signal } from '@angular/core';
-import { Params, RouterLink } from '@angular/router';
+import { Params, Router, RouterLink } from '@angular/router';
 import { PlayerService } from '../player/player.service';
 import { TalkgroupPipe } from '../calls.service';
 import { AsyncPipe } from '@angular/common';
@@ -19,7 +19,10 @@ export class NowPlayingComponent {
   private lastCall: CallRecord | null = null;
   private graceTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(public playSvc: PlayerService) {
+  constructor(
+    public playSvc: PlayerService,
+    private router: Router,
+  ) {
     // When playback stops/ends, keep showing the last call for a short
     // "fade out" period before clearing it into idle.
     effect(() => {
@@ -57,12 +60,50 @@ export class NowPlayingComponent {
     });
   }
 
-  /** Query params for the origin link (includes fromQueueOrigin so target can scroll to playing). */
+  /** Query params for the origin link destination (never includes internal jump flags). */
   originLinkQueryParams(): Params {
     const o = this.playSvc.queueOrigin();
     if (!o) return {};
-    if (o.type === 'calls') return { ...o.queryParams, fromQueueOrigin: '1' };
-    return { fromQueueOrigin: '1' };
+    if (o.type === 'calls') return { ...o.queryParams };
+    return {};
+  }
+
+  /** Navigation state marker used by destination screens to scroll to the playing row. */
+  originLinkState(): { fromQueueOrigin: true } {
+    return { fromQueueOrigin: true };
+  }
+
+  /** RouterLink commands for the origin link target. */
+  originLinkCommands(): string[] {
+    const o = this.playSvc.queueOrigin();
+    if (!o) return ['/calls'];
+    if (o.type === 'incident') return ['/incidents', o.id];
+    if (o.type === 'share') return ['/s', o.id];
+    return ['/calls'];
+  }
+
+  /**
+   * If we're already at the exact origin URL, routerLink won't re-navigate.
+   * In that case, perform an immediate in-page scroll to the playing call row.
+   */
+  jumpToOrigin(ev: Event): void {
+    const target = this.router.serializeUrl(
+      this.router.createUrlTree(this.originLinkCommands(), {
+        queryParams: this.originLinkQueryParams(),
+      }),
+    );
+    const current = this.router.serializeUrl(this.router.parseUrl(this.router.url));
+    if (target !== current) return;
+
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    const callId = this.playSvc.playing()?.id ?? this.displayCall()?.id;
+    if (!callId) return;
+    const row = document.querySelector<HTMLElement>(
+      `tr[data-call-id="${CSS.escape(callId)}"]`,
+    );
+    row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   playPause(ev: Event) {

@@ -77,18 +77,19 @@ div.playingText {
   overflow: hidden;
 }
 
-a.originLink {
-  position: absolute;
-  top: 2px;
-  right: 36px;
-  font-size: 0.75rem;
-  color: #272727;
+a.playingTextLink {
+  color: inherit;
   text-decoration: underline;
+  text-underline-offset: 2px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 100%;
 }
 
-div.nowPlaying.idle a.originLink {
-  color: rgba(255, 255, 255, 0.45);
+a.playingTextLink:hover {
+  opacity: 0.85;
 }
 
 a.stopButton {

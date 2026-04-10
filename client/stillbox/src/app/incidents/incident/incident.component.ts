@@ -189,6 +189,7 @@ export class IncidentComponent {
   pageWindow = 0;
   fetchCalls = new Subject<IncidentCallsParams>();
   currentSet!: IncidentCall[];
+  private fromQueueOriginNav = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -200,7 +201,15 @@ export class IncidentComponent {
     public playerSvc: PlayerService,
     private errorsSvc: ErrorsService,
     private callsSvc: CallsService,
-  ) {}
+  ) {
+    this.fromQueueOriginNav =
+      this.router.getCurrentNavigation()?.extras?.state?.['fromQueueOrigin'] ===
+      true;
+  }
+
+  private isFromQueueOrigin(): boolean {
+    return this.fromQueueOriginNav;
+  }
 
   saveIncName(ev: Event) {}
 
@@ -234,8 +243,7 @@ export class IncidentComponent {
         this.callsTable.count = calls.count;
         this.currentSet = calls.calls;
         let sliceStart = this.pageWindow;
-        const fromQueueOrigin =
-          this.route.snapshot.queryParams['fromQueueOrigin'] === '1';
+        const fromQueueOrigin = this.isFromQueueOrigin();
         const playingId = this.playerSvc.playing()?.id;
         if (
           fromQueueOrigin &&
@@ -265,13 +273,7 @@ export class IncidentComponent {
         if (fromQueueOrigin && playingId) {
           setTimeout(() => {
             this.scrollToPlayingCall(playingId);
-            const q = { ...this.route.snapshot.queryParams };
-            delete q['fromQueueOrigin'];
-            this.router.navigate([], {
-              relativeTo: this.route,
-              queryParams: q,
-              replaceUrl: true,
-            });
+            this.fromQueueOriginNav = false;
           }, 150);
         }
       });
@@ -292,7 +294,12 @@ export class IncidentComponent {
       if (this.callsTable != undefined) {
         this.callsSvc.curLen = cr.length;
       }
-      this.playerSvc.setQueue(cr, { type: 'incident', id: this.incID });
+      this.playerSvc.setQueue(
+        cr,
+        this.share
+          ? { type: 'share', id: this.share.id }
+          : { type: 'incident', id: this.incID },
+      );
     });
     this.fetchCalls.next(
       this.buildParams(this.curPage, this.curPage.pageIndex),
