@@ -37,7 +37,7 @@
               ? 'Jump to call in incident'
               : origin.type === 'share'
                 ? 'Jump to call in shared incident'
-              : 'Jump to call in calls'
+                : 'Jump to call in calls'
           "
         >
           {{ shownCall | talkgroup: "summary" | async }}

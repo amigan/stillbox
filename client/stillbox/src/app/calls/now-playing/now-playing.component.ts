@@ -92,7 +92,9 @@ export class NowPlayingComponent {
         queryParams: this.originLinkQueryParams(),
       }),
     );
-    const current = this.router.serializeUrl(this.router.parseUrl(this.router.url));
+    const current = this.router.serializeUrl(
+      this.router.parseUrl(this.router.url),
+    );
     if (target !== current) return;
 
     ev.preventDefault();

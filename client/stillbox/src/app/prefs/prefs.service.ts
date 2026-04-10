@@ -1,14 +1,14 @@
-import { Injectable } from '@angular/core';
+import { effect, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
-  map,
-  merge,
   Observable,
+  of,
   ReplaySubject,
   shareReplay,
   Subscription,
   switchMap,
 } from 'rxjs';
+import { AuthService } from '../login/auth.service';
 
 export interface UserSysPreferences {
   userPrefs: Preferences;
@@ -33,37 +33,55 @@ export class PrefsService {
   private readonly _getPref = new Map<string, ReplaySubject<any>>();
   prefs$: Observable<UserSysPreferences>;
   last!: UserSysPreferences;
-  subscriptions = new Subscription();
+  private prefsSub?: Subscription;
 
-  constructor(private http: HttpClient) {
-    this.prefs$ = this.fetch().pipe(shareReplay(1));
-    this.fillPrefs();
+  private createEmptyPrefs(): UserSysPreferences {
+    return {
+      userPrefs: {},
+      sysPrefs: {},
+    };
+  }
+
+  constructor(
+    private http: HttpClient,
+    private authSvc: AuthService,
+  ) {
+    this.last = this.createEmptyPrefs();
+    this.prefs$ = of(this.createEmptyPrefs()).pipe(shareReplay(1));
+
+    effect(() => {
+      if (this.authSvc.isAuth()) {
+        this.prefs$ = this.fetch().pipe(shareReplay(1));
+        this.fillPrefs();
+      } else {
+        this.last = this.createEmptyPrefs();
+      }
+    });
   }
 
   ngOnDestroy() {
-    this.subscriptions.unsubscribe();
+    this.prefsSub?.unsubscribe();
   }
 
   fillPrefs() {
-    this.subscriptions.add(
-      this.prefs$.subscribe((prefs) => {
-        if (prefs) {
-          this.last = prefs;
-          Object.entries(prefs).forEach((pref) => {
-            const rs = this._getPref.get(pref[0]);
-            if (rs) {
-              (rs as ReplaySubject<any>).next(pref[1]);
-            } else {
-              const bs = new ReplaySubject<any>(1);
-              bs.next(pref[1]);
-              this._getPref.set(pref[0], bs);
-            }
-          });
-        } else {
-          this.last = <UserSysPreferences>{};
-        }
-      }),
-    );
+    this.prefsSub?.unsubscribe();
+    this.prefsSub = this.prefs$.subscribe((prefs) => {
+      if (prefs) {
+        this.last = prefs;
+        Object.entries(prefs).forEach((pref) => {
+          const rs = this._getPref.get(pref[0]);
+          if (rs) {
+            (rs as ReplaySubject<any>).next(pref[1]);
+          } else {
+            const bs = new ReplaySubject<any>(1);
+            bs.next(pref[1]);
+            this._getPref.set(pref[0], bs);
+          }
+        });
+      } else {
+        this.last = <UserSysPreferences>{};
+      }
+    });
   }
 
   fetch(): Observable<UserSysPreferences> {
@@ -99,6 +117,9 @@ export class PrefsService {
       ex = new ReplaySubject<any>(1);
       this._getPref.set(pref, ex);
       ex.next(value);
+    }
+    if (!this.authSvc.isAuth()) {
+      return;
     }
     this.http
       .put<Preferences>('/api/prefs/stillbox', this.last.userPrefs)
