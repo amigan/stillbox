@@ -27,4 +27,6 @@
     <router-outlet />
   }
 </main>
-<now-playing></now-playing>
+@if (auth.isAuth()) {
+  <now-playing></now-playing>
+}
