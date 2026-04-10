@@ -368,6 +368,10 @@ func (s *postgresStore) Incident(ctx context.Context, id uuid.UUID, opts ...Inci
 		}
 
 		r = fromDBIncident(id, inc.Incident)
+
+		// fill in start/end from the GetIncidentRow
+		r.StartTime = (*jsontypes.Time)(inc.StartTime)
+		r.EndTime = (*jsontypes.Time)(inc.EndTime)
 		r.Owner = inc.Owner
 
 		if !options.withoutCalls {

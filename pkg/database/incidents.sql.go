@@ -130,15 +130,21 @@ func (q *Queries) DeleteIncident(ctx context.Context, id uuid.UUID) error {
 const getIncident = `-- name: GetIncident :one
 SELECT
 	incidents.id, incidents.name, incidents.owner_id, incidents.description, incidents.created_at, incidents.start_time, incidents.end_time, incidents.location, incidents.metadata,
+	COALESCE(incidents.start_time, MIN(ic.call_date)) start_time,
+	COALESCE(incidents.end_time, MAX(ic.call_date)) end_time,
 	users.username owner
 FROM incidents
+LEFT JOIN incidents_calls ic ON incidents.id = ic.incident_id
 JOIN users ON incidents.owner_id = users.id
 WHERE incidents.id = $1
+GROUP BY incidents.id, users.username
 `
 
 type GetIncidentRow struct {
-	Incident Incident `db:"incident" json:"incident"`
-	Owner    string   `db:"owner" json:"owner"`
+	Incident  Incident   `db:"incident" json:"incident"`
+	StartTime *time.Time `db:"start_time" json:"startTime"`
+	EndTime   *time.Time `db:"end_time" json:"endTime"`
+	Owner     string     `db:"owner" json:"owner"`
 }
 
 func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow, error) {
@@ -154,6 +160,8 @@ func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow
 		&i.Incident.EndTime,
 		&i.Incident.Location,
 		&i.Incident.Metadata,
+		&i.StartTime,
+		&i.EndTime,
 		&i.Owner,
 	)
 	return i, err
@@ -323,8 +331,8 @@ SELECT
 	i.owner_id,
 	i.description,
 	i.created_at,
-	i.start_time,
-	i.end_time,
+	COALESCE(i.start_time, MIN(ic.call_date)) start_time,
+	COALESCE(i.end_time, MAX(ic.call_date)) end_time,
 	i.location,
 	i.metadata,
 	u.username owner,

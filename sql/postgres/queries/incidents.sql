@@ -69,8 +69,8 @@ SELECT
 	i.owner_id,
 	i.description,
 	i.created_at,
-	i.start_time,
-	i.end_time,
+	COALESCE(i.start_time, MIN(ic.call_date)) start_time,
+	COALESCE(i.end_time, MAX(ic.call_date)) end_time,
 	i.location,
 	i.metadata,
 	u.username owner,
@@ -173,10 +173,14 @@ FETCH NEXT sqlc.narg('per_page') ROWS ONLY
 -- name: GetIncident :one
 SELECT
 	sqlc.embed(incidents),
+	COALESCE(incidents.start_time, MIN(ic.call_date)) start_time,
+	COALESCE(incidents.end_time, MAX(ic.call_date)) end_time,
 	users.username owner
 FROM incidents
+LEFT JOIN incidents_calls ic ON incidents.id = ic.incident_id
 JOIN users ON incidents.owner_id = users.id
-WHERE incidents.id = @id;
+WHERE incidents.id = @id
+GROUP BY incidents.id, users.username;
 
 -- name: UpdateIncident :one
 UPDATE incidents
