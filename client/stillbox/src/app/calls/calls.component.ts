@@ -12,7 +12,7 @@ import { PrefsService } from '../prefs/prefs.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { CallsListParams, CallsService } from './calls.service';
 import { CallRecord } from '../calls';
 
@@ -39,7 +39,12 @@ import {
   IncidentsService,
 } from '../incidents/incidents.service';
 import { IncidentRecord } from '../incidents';
-import { SelectIncidentDialogComponent } from '../incidents/select-incident-dialog/select-incident-dialog.component';
+import {
+  SelectIncidentDialogComponent,
+  SelectIncidentDialogData,
+} from '../incidents/select-incident-dialog/select-incident-dialog.component';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ErrorsService } from '../errors/errors.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PlayerService } from './player/player.service';
@@ -76,6 +81,7 @@ const reqPageSize = 200;
     MatSelectModule,
     MatMenuModule,
     MatTooltipModule,
+    MatSnackBarModule,
     CallsTableComponent,
   ],
   templateUrl: './calls.component.html',
@@ -85,6 +91,16 @@ export class CallsComponent {
   @ViewChild('callsTable') callsTable!: CallsTableComponent;
   callsResult = new Subject<Array<CallRecord>>();
   dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+  private errorsSvc = inject(ErrorsService);
+  private route = inject(ActivatedRoute);
+  /** When set (e.g. from incident "Add calls…"), target incident is pre-selected in the picker. */
+  addToIncidentId = toSignal(
+    this.route.queryParams.pipe(
+      map((p) => (p['addToIncident'] as string | undefined) ?? null),
+    ),
+    { initialValue: this.route.snapshot.queryParams['addToIncident'] ?? null },
+  );
   showTranscripts!: Observable<boolean>;
   currentSet!: CallRecord[];
 
@@ -126,7 +142,6 @@ export class CallsComponent {
     public tgSvc: TalkgroupService,
     public incSvc: IncidentsService,
     public playerSvc: PlayerService,
-    private route: ActivatedRoute,
     private router: Router,
   ) {
     this.tcSvc.showFilterButton();
@@ -467,50 +482,98 @@ export class CallsComponent {
     this.form.controls['duration'].setValue(0);
   }
 
-  addToNewInc(ev: Event) {
+  private getSelectedCallIds(): string[] {
+    return this.callsTable.selection.selected.map((s) => s.id);
+  }
+
+  private clearAddToIncidentQueryParam(): void {
+    const qp = { ...this.route.snapshot.queryParams };
+    if (qp['addToIncident'] == null) {
+      return;
+    }
+    delete qp['addToIncident'];
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: qp,
+      replaceUrl: true,
+    });
+  }
+
+  private showCallsAttachedSnackbar(incidentId: string, count: number): void {
+    const msg =
+      count === 1
+        ? 'Added 1 call to the incident'
+        : `Added ${count} calls to the incident`;
+    this.snackBar
+      .open(msg, 'View', { duration: 8000 })
+      .onAction()
+      .subscribe(() => {
+        void this.router.navigate(['/incidents', incidentId]);
+      });
+  }
+
+  private attachSelectionToIncident(incidentId: string): void {
+    const ids = this.getSelectedCallIds();
+    if (!incidentId || ids.length === 0) {
+      return;
+    }
+    this.incSvc
+      .addRemoveCalls(incidentId, <CallIncidentParams>{
+        add: ids,
+        notes: null,
+        remove: null,
+      })
+      .subscribe({
+        next: () => {
+          this.callsTable.selection.clear();
+          this.clearAddToIncidentQueryParam();
+          this.showCallsAttachedSnackbar(incidentId, ids.length);
+        },
+        error: (err: unknown) => {
+          this.errorsSvc.show(String(err));
+        },
+      });
+  }
+
+  addToNewInc(_ev: Event) {
+    const ids = this.getSelectedCallIds();
+    if (ids.length === 0) {
+      return;
+    }
     const dialogRef = this.dialog.open(IncidentEditDialogComponent, {
       data: <EditDialogData>{
         incID: '',
         new: true,
       },
     });
-    dialogRef.afterClosed().subscribe((res: IncidentRecord) => {
-      this.incSvc
-        .addRemoveCalls(res.id, <CallIncidentParams>{
-          add: this.callsTable.selection.selected.map((s) => s.id),
-        })
-        .subscribe({
-          next: () => {
-            this.callsTable.selection.clear();
-          },
-          error: (err) => {
-            alert(err);
-          },
-        });
+    dialogRef.afterClosed().subscribe((res: IncidentRecord | undefined) => {
+      if (!res?.id) {
+        return;
+      }
+      this.attachSelectionToIncident(res.id);
     });
   }
 
-  addToExistingInc(ev: Event) {
-    const dialogRef = this.dialog.open(SelectIncidentDialogComponent);
-    dialogRef.afterClosed().subscribe((res: string) => {
+  addToExistingInc(_ev: Event) {
+    const ids = this.getSelectedCallIds();
+    if (ids.length === 0) {
+      return;
+    }
+    const pre = this.route.snapshot.queryParams['addToIncident'];
+    const dialogRef = this.dialog.open(SelectIncidentDialogComponent, {
+      ...(pre
+        ? {
+            data: <SelectIncidentDialogData>{
+              preselectedIncidentId: pre,
+            },
+          }
+        : {}),
+    });
+    dialogRef.afterClosed().subscribe((res: string | null | undefined) => {
       if (!res) {
         return;
       }
-      this.incSvc
-        .addRemoveCalls(res, <CallIncidentParams>{
-          add: this.callsTable.selection.selected.map((s, i, a) => {
-            s.incidents++;
-            return s.id;
-          }),
-        })
-        .subscribe({
-          next: () => {
-            this.callsTable.selection.clear();
-          },
-          error: (err) => {
-            alert(err);
-          },
-        });
+      this.attachSelectionToIncident(res);
     });
   }
 }

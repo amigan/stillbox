@@ -1,6 +1,7 @@
-<h2 mat-dialog-title>Select Incident</h2>
+<h2 mat-dialog-title>Select incident</h2>
 <mat-dialog-content>
-  <mat-form-field>
+  <mat-form-field class="searchField" subscriptSizing="dynamic">
+    <mat-label>Filter</mat-label>
     <input
       #searchBox
       matInput
@@ -9,15 +10,57 @@
     />
   </mat-form-field>
   <div class="selList">
-    <mat-selection-list #incs [(ngModel)]="sel" multiple="false">
-      @let incidents = incs$ | async;
-      @for (inc of incidents; track inc) {
-        <mat-list-option [value]="inc.id">{{ inc.name }}</mat-list-option>
-      }
-    </mat-selection-list>
+    @if (loading && accumulated.length === 0) {
+      <div class="spinnerWrap">
+        <mat-spinner diameter="36" />
+      </div>
+    } @else {
+      <mat-selection-list [(ngModel)]="sel" [multiple]="false">
+        @for (inc of accumulated; track inc.id) {
+          <mat-list-option
+            [value]="inc.id"
+            (dblclick)="pickAndClose(inc.id)"
+          >
+            <div class="optTitle">{{ inc.name }}</div>
+            <div class="optMeta">
+              @if (inc.startTime) {
+                {{ inc.startTime | fmtDate }}
+              } @else {
+                —
+              }
+              <span class="dot">·</span>
+              {{ inc.callCount ?? 0 }} calls
+            </div>
+          </mat-list-option>
+        }
+      </mat-selection-list>
+    }
   </div>
+  @if (accumulated.length > 0 && accumulated.length < totalCount) {
+    <div class="loadMoreRow">
+      <button
+        mat-button
+        type="button"
+        [disabled]="!canLoadMore()"
+        (click)="loadMore()"
+      >
+        Load more
+      </button>
+      <span class="hint"
+        >Showing {{ accumulated.length }} of {{ totalCount }}</span
+      >
+    </div>
+  }
 </mat-dialog-content>
-<mat-dialog-actions>
+<mat-dialog-actions align="end">
   <button mat-button type="button" (click)="cancel()">Cancel</button>
-  <button mat-button (click)="save()" cdkFocusInitial>Select</button>
+  <button
+    mat-button
+    type="button"
+    (click)="save()"
+    [disabled]="!sel"
+    cdkFocusInitial
+  >
+    Select
+  </button>
 </mat-dialog-actions>

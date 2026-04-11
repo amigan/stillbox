@@ -334,6 +334,12 @@ export class IncidentComponent {
     dialogRef.afterClosed().subscribe(this.incPrime);
   }
 
+  goAddCalls() {
+    void this.router.navigate(['/calls'], {
+      queryParams: { addToIncident: this.incID },
+    });
+  }
+
   deleteIncident(incID: string) {
     if (confirm('Are you sure you want to delete this incident?')) {
       this.incSvc.deleteIncident(incID).subscribe({

@@ -20,6 +20,9 @@
         <mat-icon>more_vert</mat-icon>
       </button>
       <mat-menu #moreMenu="matMenu">
+        <button mat-menu-item type="button" (click)="goAddCalls()">
+          Add calls…
+        </button>
         <button
           [ngClass]="{ hidden: !callsTable.selection.hasValue() }"
           mat-menu-item

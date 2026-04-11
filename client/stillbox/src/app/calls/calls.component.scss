@@ -4,6 +4,13 @@
   flex: 1 0 auto;
 }
 
+.addToIncidentHint {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
 .timeFilterBox {
   flex: 0 0 240px;
 }
