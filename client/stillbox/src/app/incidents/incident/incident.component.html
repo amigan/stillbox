@@ -20,6 +20,9 @@
         <mat-icon>more_vert</mat-icon>
       </button>
       <mat-menu #moreMenu="matMenu">
+        <button mat-menu-item type="button" (click)="goAddCalls()">
+          Add calls…
+        </button>
         <button
           [ngClass]="{ hidden: !callsTable.selection.hasValue() }"
           mat-menu-item
@@ -51,8 +54,10 @@
   ></mat-progress-bar>
   <calls-table
     #callsTable
+    [share]="this.share"
     [searched]="false"
     [callsResult]="callsResult | async"
+    [playingCallId]="playerSvc.playing()?.id ?? null"
     [showTranscripts]="true"
     (setPage)="setPage($event)"
     [curPage]="curPage"

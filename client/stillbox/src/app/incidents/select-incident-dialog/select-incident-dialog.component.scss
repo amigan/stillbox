@@ -1,5 +1,43 @@
+.searchField {
+  width: 100%;
+}
+
 .selList {
-  overflow: scroll;
+  overflow: auto;
   width: 480px;
+  max-height: 360px;
   min-height: 200px;
+}
+
+.spinnerWrap {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.optTitle {
+  font-weight: 500;
+}
+
+.optMeta {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  margin-top: 0.15rem;
+}
+
+.dot {
+  margin: 0 0.25rem;
+}
+
+.loadMoreRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hint {
+  font-size: 0.8rem;
+  opacity: 0.7;
 }

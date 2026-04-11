@@ -32,6 +32,7 @@
       <td mat-cell *matCellDef="let call; let i = index">
         <call-player
           [download]="downloadMode()"
+          [share]="share"
           [ngClass]="{ 'no-audio': call.missingAudio }"
           [index]="i"
           [call]="call"
@@ -136,9 +137,11 @@
     <tr
       mat-row
       *matRowDef="let row; columns: getColumns()"
+      [attr.data-call-id]="row.id"
       [ngClass]="{
         'in-incident': row.incidents > 0,
         'no-audio': row.missingAudio,
+        playing: playingCallId() === row.id,
       }"
     ></tr>
   </table>

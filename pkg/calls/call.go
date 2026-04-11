@@ -126,8 +126,8 @@ type Call struct {
 	TalkgroupGroup *string       `json:"talkgroupGroup,omitempty" relayOut:"talkgroupGroup,omitempty"`
 	TalkgroupLabel *string       `json:"talkgroupLabel,omitempty" relayOut:"talkgroupLabel,omitempty"`
 	TGAlphaTag     *string       `json:"tgAlphaTag,omitempty" relayOut:"talkgroupTag,omitempty"`
-	Transcript     *string       `json:"transcript" relayOut:"transcript,omitempty"`
-	MissingAudio   *bool         `json:"missingAudio" relayOut:"missingAudio,omitempty"`
+	Transcript     *string       `json:"transcript,omitempty" relayOut:"transcript,omitempty"`
+	MissingAudio   *bool         `json:"missingAudio,omitempty" relayOut:"missingAudio,omitempty"`
 
 	shouldStore bool `json:"-"`
 }

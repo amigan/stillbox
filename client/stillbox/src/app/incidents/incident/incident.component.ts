@@ -9,7 +9,7 @@ import {
   FormControl,
   FormsModule,
 } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -36,7 +36,6 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { FmtDatePipe } from '../incidents.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { Share } from '../../shares';
-import { ShareService } from '../../share/share.service';
 import { TalkgroupService } from '../../talkgroups/talkgroups.service';
 import {
   CallsTableComponent,
@@ -190,17 +189,27 @@ export class IncidentComponent {
   pageWindow = 0;
   fetchCalls = new Subject<IncidentCallsParams>();
   currentSet!: IncidentCall[];
+  private fromQueueOriginNav = false;
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private incSvc: IncidentsService,
     private prefsSvc: PrefsService,
     private location: Location,
     private tgSvc: TalkgroupService,
-    private playerSvc: PlayerService,
+    public playerSvc: PlayerService,
     private errorsSvc: ErrorsService,
     private callsSvc: CallsService,
-  ) {}
+  ) {
+    this.fromQueueOriginNav =
+      this.router.getCurrentNavigation()?.extras?.state?.['fromQueueOrigin'] ===
+      true;
+  }
+
+  private isFromQueueOrigin(): boolean {
+    return this.fromQueueOriginNav;
+  }
 
   saveIncName(ev: Event) {}
 
@@ -224,24 +233,49 @@ export class IncidentComponent {
     this.fetchCalls
       .pipe(
         switchMap((params) => {
-          return this.incSvc.getIncidentCalls(this.incID, params);
+          return this.share
+            ? this.incSvc.getSharedIncidentCalls(this.share.id, params)
+            : this.incSvc.getIncidentCalls(this.incID, params);
         }),
       )
       .subscribe((calls) => {
         this.stopSpinBar();
         this.callsTable.count = calls.count;
         this.currentSet = calls.calls;
+        let sliceStart = this.pageWindow;
+        const fromQueueOrigin = this.isFromQueueOrigin();
+        const playingId = this.playerSvc.playing()?.id;
+        if (
+          fromQueueOrigin &&
+          playingId &&
+          this.currentSet?.some((c) => c.id === playingId)
+        ) {
+          const playingIndex = this.currentSet.findIndex(
+            (c) => c.id === playingId,
+          );
+          const pageIndex = Math.floor(playingIndex / this.perPage);
+          this.curPage = {
+            pageIndex,
+            pageSize: this.perPage,
+            length: this.currentSet.length,
+          };
+          sliceStart = pageIndex * this.perPage;
+          this.pageWindow = sliceStart;
+        }
         if (this.callsTable) {
           this.callsTable.callsTable.nativeElement.scrollIntoView(true);
         }
         this.callsResult.next(
           this.currentSet
-            ? this.currentSet.slice(
-                this.pageWindow,
-                this.pageWindow + this.perPage,
-              )
+            ? this.currentSet.slice(sliceStart, sliceStart + this.perPage)
             : [],
         );
+        if (fromQueueOrigin && playingId) {
+          setTimeout(() => {
+            this.scrollToPlayingCall(playingId);
+            this.fromQueueOriginNav = false;
+          }, 150);
+        }
       });
     this.prefsSvc.get('callsPerPage').subscribe((cpp) => {
       if (this.perPage == 0) {
@@ -260,11 +294,24 @@ export class IncidentComponent {
       if (this.callsTable != undefined) {
         this.callsSvc.curLen = cr.length;
       }
-      this.playerSvc.setQueue(cr);
+      this.playerSvc.setQueue(
+        cr,
+        this.share
+          ? { type: 'share', id: this.share.id }
+          : { type: 'incident', id: this.incID },
+      );
     });
     this.fetchCalls.next(
       this.buildParams(this.curPage, this.curPage.pageIndex),
     );
+  }
+
+  scrollToPlayingCall(callId: string): void {
+    const el = this.callsTable?.callsTable?.nativeElement as HTMLElement;
+    const row = el?.querySelector<HTMLElement>(
+      `tr[data-call-id="${CSS.escape(callId)}"]`,
+    );
+    row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   buildParams(p: PageEvent, serverPage: number): IncidentCallsParams {
@@ -285,6 +332,12 @@ export class IncidentComponent {
     });
 
     dialogRef.afterClosed().subscribe(this.incPrime);
+  }
+
+  goAddCalls() {
+    void this.router.navigate(['/calls'], {
+      queryParams: { addToIncident: this.incID },
+    });
   }
 
   deleteIncident(incID: string) {

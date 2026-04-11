@@ -1,35 +1,103 @@
 a.playButton {
+  display: flex;
+  align-items: center;
   cursor: pointer;
 }
 
-now-playing {
+:host {
+  display: block;
+  flex-shrink: 0;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 div.nowPlaying {
   display: flex;
+  align-items: center;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  min-height: var(--now-playing-min-height);
   border: 1px solid rgb(100, 100, 100);
+  border-left: none;
+  border-right: none;
   background-color: #ffc400;
   color: #272727;
-  padding-top: 5px;
-  border-radius: 5px;
-  padding-left: 1em;
+  padding: 5px 1em calc(5px + env(safe-area-inset-bottom)) 1em;
+  border-radius: 0;
+  position: relative;
 }
 
-mat-icon {
+div.nowPlaying.idle {
+  /* Dimmed "LCD backlight" vibe when there's nothing playing. */
+  background-color: rgba(35, 35, 35, 0.95);
+  border-color: rgb(70, 70, 70);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+div.nowPlaying.grace {
+  /* Keep bar readable but fade the text. */
+  opacity: 0.98;
+}
+
+div.playingText.greyed {
+  color: rgba(39, 39, 39, 0.55);
+}
+
+div.nowPlaying.idle mat-icon {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+a.disabled {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.55;
+}
+
+div.nowPlaying:not(.idle) mat-icon {
   color: #272727 !important;
 }
 
 div.playButton {
+  display: flex;
+  align-items: center;
   width: 30px;
-  padding-top: 0.1em;
-  justify-content: flex-start;
+  flex-shrink: 0;
 }
 
 div.playingText {
-  flex: 2 0 30px;
-  justify-content: flex-end;
-  align-content: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
   font-family: "Arcade", sans-serif;
+  overflow: hidden;
+}
+
+a.playingTextLink {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 100%;
+}
+
+a.playingTextLink:hover {
+  opacity: 0.85;
+}
+
+a.stopButton {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }

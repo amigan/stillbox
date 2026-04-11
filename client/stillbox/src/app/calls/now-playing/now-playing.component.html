@@ -1,13 +1,61 @@
-@let call = playSvc.playing();
-@if (call) {
-  <div class="nowPlaying">
-    <div class="playButton">
-      <a class="playButton" (click)="playPause($event)"
-        ><mat-icon> {{ playSvc.paused() ? "play_arrow" : "pause" }}</mat-icon>
-      </a>
-    </div>
-    <div class="playingText">
-      {{ call | talkgroup: "summary" | async }}
-    </div>
+@let currentCall = playSvc.playing();
+@let origin = playSvc.queueOrigin();
+@let shownCall = displayCall();
+@let grace = graceActive();
+
+<div class="nowPlaying" [class.idle]="!shownCall" [class.grace]="grace">
+  <div class="playButton">
+    <a
+      class="playButton"
+      (click)="playPause($event)"
+      [class.disabled]="!currentCall"
+      aria-label="Play/Pause"
+    >
+      <mat-icon>
+        {{
+          currentCall
+            ? playSvc.paused()
+              ? "play_arrow"
+              : "pause"
+            : "play_arrow"
+        }}
+      </mat-icon>
+    </a>
   </div>
-}
+
+  <div class="playingText" [class.greyed]="grace">
+    @if (shownCall) {
+      @if (origin) {
+        <a
+          class="playingTextLink"
+          [routerLink]="originLinkCommands()"
+          [queryParams]="originLinkQueryParams()"
+          [state]="originLinkState()"
+          (click)="jumpToOrigin($event)"
+          [attr.aria-label]="
+            origin.type === 'incident'
+              ? 'Jump to call in incident'
+              : origin.type === 'share'
+                ? 'Jump to call in shared incident'
+                : 'Jump to call in calls'
+          "
+        >
+          {{ shownCall | talkgroup: "summary" | async }}
+        </a>
+      } @else {
+        {{ shownCall | talkgroup: "summary" | async }}
+      }
+    } @else {
+      Idle
+    }
+  </div>
+
+  <a
+    class="stopButton"
+    (click)="stop($event)"
+    [class.disabled]="!currentCall"
+    aria-label="Stop playback"
+  >
+    <mat-icon>stop</mat-icon>
+  </a>
+</div>

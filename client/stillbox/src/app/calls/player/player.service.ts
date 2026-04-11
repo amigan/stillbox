@@ -3,6 +3,13 @@ import { fromEvent, Observable, Subscription } from 'rxjs';
 import { CallRecord } from '../../calls';
 import { CallsService } from '../calls.service';
 import { ErrorsService } from '../../errors/errors.service';
+import { Params } from '@angular/router';
+import { Share } from '../../shares';
+
+export type QueueOrigin =
+  | { type: 'calls'; queryParams: Params }
+  | { type: 'incident'; id: string }
+  | { type: 'share'; id: string };
 
 interface IStack<T> {
   push(e: T[]): void;
@@ -39,7 +46,10 @@ class Stack<T> implements IStack<T> {
 export class PlayerService {
   playSub!: Subscription;
   public playing = signal<CallRecord | null>(null);
+  public playingShare: Share | undefined;
   public paused = signal<boolean>(false);
+  public queueOrigin = signal<QueueOrigin | null>(null);
+  private pendingOrigin: QueueOrigin | null = null;
   stack = new Stack<CallRecord>();
   private results = <CallRecord[]>[];
   private forward = false;
@@ -54,26 +64,37 @@ export class PlayerService {
 
   createMedia() {
     this.playSub = fromEvent(this.au, 'ended').subscribe((ev) => {
-      this.playNext();
+      this.playNext(this.playingShare);
     });
   }
 
-  setQueue(c: CallRecord[]) {
+  setQueue(c: CallRecord[], origin?: QueueOrigin) {
     this.results = c;
-  }
-
-  playNext() {
-    if (this.stack.size() > 0) {
-      let item = this.forward ? this.stack.shift() : this.stack.pop();
-      if (item) {
-        this.play(item);
-      }
-    } else {
-      this.stopAudio();
+    if (origin !== undefined) {
+      this.pendingOrigin = origin;
     }
   }
 
-  stopAudio() {
+  playNext(share: Share | undefined) {
+    if (this.stack.size() > 0) {
+      let item = this.forward ? this.stack.shift() : this.stack.pop();
+      if (item) {
+        this.play(item, share);
+      }
+    } else {
+      this.clearAudioState();
+    }
+  }
+
+  /** Stops playback, clears the play stack and origin. Keeps the queue (results) so playback can be restarted. */
+  stop() {
+    this.clearAudioState();
+    this.stack.cancel();
+    this.queueOrigin.set(null);
+    this.pendingOrigin = null;
+  }
+
+  private clearAudioState() {
     this.playing.set(null);
     this.paused.set(false);
     this.au.pause();
@@ -84,17 +105,24 @@ export class PlayerService {
     this.paused.set(true);
   }
 
-  playAudio(call: CallRecord, index: number, forward: boolean) {
+  playAudio(
+    call: CallRecord,
+    share: Share | undefined,
+    index: number,
+    forward: boolean,
+  ) {
     if (this.playing() != null) {
-      this.stopAudio();
+      this.clearAudioState();
     }
+    this.playingShare = share;
+    this.queueOrigin.set(this.pendingOrigin);
     this.forward = forward;
     this.stack.cancel();
     let playq = this.forward
       ? this.results.slice(index)
       : this.results.slice(0, index + 1);
     this.stack.push(playq);
-    this.playNext();
+    this.playNext(share);
   }
 
   resume() {
@@ -102,12 +130,13 @@ export class PlayerService {
     this.paused.set(false);
   }
 
-  play(call: CallRecord) {
+  play(call: CallRecord, share: Share | undefined) {
+    this.playingShare = share;
     this.paused.set(false);
     if (call.audioURL != null) {
       this.au.src = call.audioURL;
     } else {
-      this.au.src = this.callsSvc.callAudioURL(call.id);
+      this.au.src = this.callsSvc.callAudioURL(call.id, share);
     }
     this.au.load();
     this.au

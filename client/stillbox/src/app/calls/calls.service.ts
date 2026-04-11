@@ -222,7 +222,10 @@ export class CallsService {
     return this.http.post<CallsPaginated>('/api/call/', p);
   }
 
-  callAudioURL(id: string): string {
+  callAudioURL(id: string, share: Share | undefined): string {
+    if (share) {
+      return environment.baseUrl + `/share/${share.id}/call/${id}`;
+    }
     return environment.baseUrl + '/api/call/' + id;
   }
 

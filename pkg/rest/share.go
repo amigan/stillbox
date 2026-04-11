@@ -132,6 +132,7 @@ func (sa *shareAPI) RootRouter() http.Handler {
 
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}", sa.routeShare)
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}", sa.routeShare)
+	r.Post("/{shareId:[A-Za-z0-9_-]{20,}}/{type:calls}", sa.routeShare)
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}.{type}", sa.routeShare)
 	r.Get("/{shareId:[A-Za-z0-9_-]{20,}}/{type}/{subID}", sa.routeShare)
 	return r
@@ -213,6 +214,21 @@ func (sa *shareAPI) routeShare(w http.ResponseWriter, r *http.Request) {
 
 	if params.Type != nil {
 		rType = ShareRequestType(*params.Type)
+		enforceReq := func(t ...ShareRequestType) error {
+			for _, e := range t {
+				if rType == e {
+					return nil
+				}
+			}
+			return ErrBadShare
+		}
+		switch sh.Type {
+		case shares.EntityCall:
+			if err := enforceReq(ShareRequestCallInfo, ShareRequestCallDL); err != nil {
+				wErr(w, r, autoError(err))
+				return
+			}
+		}
 	} else {
 		switch sh.Type {
 		case shares.EntityCall:

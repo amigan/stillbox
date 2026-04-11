@@ -69,12 +69,12 @@ SELECT
 	i.owner_id,
 	i.description,
 	i.created_at,
-	i.start_time,
-	i.end_time,
+	COALESCE(i.start_time, MIN(ic.call_date)) start_time,
+	COALESCE(i.end_time, MAX(ic.call_date)) end_time,
 	i.location,
 	i.metadata,
 	u.username owner,
-	COUNT(ic.incident_id) calls_count
+	COUNT(ic.incident_id) AS calls_count
 FROM incidents i
 LEFT JOIN incidents_calls ic ON i.id = ic.incident_id
 JOIN users u ON i.owner_id = u.id
@@ -89,8 +89,11 @@ CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 	) ELSE TRUE END)
 GROUP BY i.id, u.username
 ORDER BY
-CASE WHEN @direction::TEXT = 'asc' THEN i.start_time END ASC,
-CASE WHEN @direction::TEXT = 'desc' THEN i.start_time END DESC
+CASE WHEN @order_by::TEXT = 'start_asc' THEN COALESCE(i.start_time, MIN(ic.call_date)) END ASC,
+CASE WHEN @order_by::TEXT = 'start_desc' THEN COALESCE(i.start_time, MIN(ic.call_date)) END DESC,
+CASE WHEN @order_by::TEXT = 'numcalls_asc' THEN COUNT(ic.incident_id) END ASC,
+CASE WHEN @order_by::TEXT = 'numcalls_desc' THEN COUNT(ic.incident_id) END DESC,
+	u.username, i.name
 OFFSET sqlc.arg('offset') ROWS
 FETCH NEXT sqlc.arg('per_page') ROWS ONLY
 ;
@@ -173,10 +176,14 @@ FETCH NEXT sqlc.narg('per_page') ROWS ONLY
 -- name: GetIncident :one
 SELECT
 	sqlc.embed(incidents),
+	COALESCE(incidents.start_time, MIN(ic.call_date)) start_time,
+	COALESCE(incidents.end_time, MAX(ic.call_date)) end_time,
 	users.username owner
 FROM incidents
+LEFT JOIN incidents_calls ic ON incidents.id = ic.incident_id
 JOIN users ON incidents.owner_id = users.id
-WHERE incidents.id = @id;
+WHERE incidents.id = @id
+GROUP BY incidents.id, users.username;
 
 -- name: UpdateIncident :one
 UPDATE incidents

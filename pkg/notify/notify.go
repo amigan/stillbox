@@ -59,7 +59,7 @@ const (
 	defaultBodyTemplStr = `{{ range . -}}
 {{ .TGName }}{{ if (and .Talkgroup .Talkgroup.AlphaTag) }} ({{ .Talkgroup.StringTag false -}}){{ end }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
 {{- range .Context }}
-{{ .Date | fmtTime "03:04:05" }} {{ .Transcript }}
+{{ .Date | fmtTime "15:04:05" }} {{ .Transcript }}
 {{- end }}
 
 {{ end -}}`

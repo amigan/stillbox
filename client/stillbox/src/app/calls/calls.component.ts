@@ -12,7 +12,7 @@ import { PrefsService } from '../prefs/prefs.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { CallsListParams, CallsService } from './calls.service';
 import { CallRecord } from '../calls';
 
@@ -25,7 +25,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, skip } from 'rxjs/operators';
 import { ToolbarContextService } from '../navigation/toolbar-context.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatMenuModule } from '@angular/material/menu';
@@ -39,7 +39,12 @@ import {
   IncidentsService,
 } from '../incidents/incidents.service';
 import { IncidentRecord } from '../incidents';
-import { SelectIncidentDialogComponent } from '../incidents/select-incident-dialog/select-incident-dialog.component';
+import {
+  SelectIncidentDialogComponent,
+  SelectIncidentDialogData,
+} from '../incidents/select-incident-dialog/select-incident-dialog.component';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ErrorsService } from '../errors/errors.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PlayerService } from './player/player.service';
@@ -49,6 +54,8 @@ import {
 } from './calls-table/calls-table.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Params } from '@angular/router';
 
 const DEBOUNCE_INTERVAL = 300;
 
@@ -74,6 +81,7 @@ const reqPageSize = 200;
     MatSelectModule,
     MatMenuModule,
     MatTooltipModule,
+    MatSnackBarModule,
     CallsTableComponent,
   ],
   templateUrl: './calls.component.html',
@@ -83,6 +91,16 @@ export class CallsComponent {
   @ViewChild('callsTable') callsTable!: CallsTableComponent;
   callsResult = new Subject<Array<CallRecord>>();
   dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+  private errorsSvc = inject(ErrorsService);
+  private route = inject(ActivatedRoute);
+  /** When set (e.g. from incident "Add calls…"), target incident is pre-selected in the picker. */
+  addToIncidentId = toSignal(
+    this.route.queryParams.pipe(
+      map((p) => (p['addToIncident'] as string | undefined) ?? null),
+    ),
+    { initialValue: this.route.snapshot.queryParams['addToIncident'] ?? null },
+  );
   showTranscripts!: Observable<boolean>;
   currentSet!: CallRecord[];
 
@@ -115,6 +133,7 @@ export class CallsComponent {
   subscriptions = new Subscription();
   pageWindow = 0;
   fetchCalls = new Subject<CallsListParams>();
+  private fromQueueOriginNav = false;
 
   constructor(
     private callsSvc: CallsService,
@@ -123,8 +142,76 @@ export class CallsComponent {
     public tgSvc: TalkgroupService,
     public incSvc: IncidentsService,
     public playerSvc: PlayerService,
+    private router: Router,
   ) {
     this.tcSvc.showFilterButton();
+    this.fromQueueOriginNav =
+      this.router.getCurrentNavigation()?.extras?.state?.['fromQueueOrigin'] ===
+      true;
+  }
+
+  private isFromQueueOrigin(): boolean {
+    return this.fromQueueOriginNav;
+  }
+
+  /** Build query params from current form for queue-origin link (e.g. now-playing). */
+  buildQueueOriginQueryParams(): Params {
+    const f = this.form.controls;
+    const q: Params = {};
+    const start = f['start'].value;
+    if (start) q['start'] = start;
+    const end = f['end'].value;
+    if (end) q['end'] = end;
+    const filter = f['filter'].value;
+    if (filter) q['filter'] = filter;
+    const sourceFilter = f['sourceFilter'].value;
+    if (sourceFilter) q['sourceFilter'] = sourceFilter;
+    const transcriptSearch = f['transcriptSearch'].value;
+    if (transcriptSearch) q['transcriptSearch'] = transcriptSearch;
+    const duration = f['duration'].value;
+    if (duration != null && duration > 0) q['duration'] = String(duration);
+    const tagsAny = f['tagsAny'].value;
+    if (tagsAny?.length) q['tagsAny'] = JSON.stringify(tagsAny);
+    const tagsNot = f['tagsNot'].value;
+    if (tagsNot?.length) q['tagsNot'] = JSON.stringify(tagsNot);
+    if (f['showTranscripts'].value) q['showTranscripts'] = 'true';
+    return q;
+  }
+
+  /** Patch form from URL query params (e.g. when opening link from now-playing). */
+  patchFormFromQueryParams(params: Params): void {
+    if (Object.keys(params).length === 0) return;
+    const f = this.form.controls;
+    if (params['start'] != null)
+      f['start'].setValue(params['start'], { emitEvent: false });
+    if (params['end'] != null)
+      f['end'].setValue(params['end'], { emitEvent: false });
+    if (params['filter'] != null)
+      f['filter'].setValue(params['filter'], { emitEvent: false });
+    if (params['sourceFilter'] != null)
+      f['sourceFilter'].setValue(params['sourceFilter'], { emitEvent: false });
+    if (params['transcriptSearch'] != null)
+      f['transcriptSearch'].setValue(params['transcriptSearch'], {
+        emitEvent: false,
+      });
+    if (params['duration'] != null) {
+      const n = Number(params['duration']);
+      if (!Number.isNaN(n)) f['duration'].setValue(n, { emitEvent: false });
+    }
+    if (params['tagsAny'] != null) {
+      try {
+        const a = JSON.parse(params['tagsAny']);
+        if (Array.isArray(a)) f['tagsAny'].setValue(a, { emitEvent: false });
+      } catch (_) {}
+    }
+    if (params['tagsNot'] != null) {
+      try {
+        const a = JSON.parse(params['tagsNot']);
+        if (Array.isArray(a)) f['tagsNot'].setValue(a, { emitEvent: false });
+      } catch (_) {}
+    }
+    if (params['showTranscripts'] === 'true')
+      f['showTranscripts'].setValue(true, { emitEvent: false });
   }
 
   txSearchSet(): boolean {
@@ -276,6 +363,11 @@ export class CallsComponent {
       .subscribe(() => {
         this.currentServerPage = 0;
         this.setPage(this.zeroPage(), true);
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: this.buildQueueOriginQueryParams(),
+          replaceUrl: true,
+        });
       });
 
     this.subscriptions.add(
@@ -316,17 +408,40 @@ export class CallsComponent {
           this.stopSpinBar();
           this.callsTable.count = calls.count;
           this.currentSet = calls.calls;
+          let sliceStart = this.pageWindow;
+          const fromQueueOrigin = this.isFromQueueOrigin();
+          const playingId = this.playerSvc.playing()?.id;
+          if (
+            fromQueueOrigin &&
+            playingId &&
+            this.currentSet?.some((c) => c.id === playingId)
+          ) {
+            const playingIndex = this.currentSet.findIndex(
+              (c) => c.id === playingId,
+            );
+            const pageIndex = Math.floor(playingIndex / this.perPage);
+            this.curPage = {
+              pageIndex,
+              pageSize: this.perPage,
+              length: this.currentSet.length,
+            };
+            sliceStart = pageIndex * this.perPage;
+            this.pageWindow = sliceStart;
+          }
           if (this.callsTable) {
             this.callsTable.callsTable.nativeElement.scrollIntoView(true);
           }
           this.callsResult.next(
             this.currentSet
-              ? this.currentSet.slice(
-                  this.pageWindow,
-                  this.pageWindow + this.perPage,
-                )
+              ? this.currentSet.slice(sliceStart, sliceStart + this.perPage)
               : [],
           );
+          if (fromQueueOrigin && playingId) {
+            setTimeout(() => {
+              this.scrollToPlayingCall(playingId);
+              this.fromQueueOriginNav = false;
+            }, 150);
+          }
         }),
     );
     this.subscriptions.add(
@@ -334,12 +449,31 @@ export class CallsComponent {
         if (this.callsTable != undefined) {
           this.callsSvc.curLen = cr.length;
         }
-        this.playerSvc.setQueue(cr);
+        this.playerSvc.setQueue(cr, {
+          type: 'calls',
+          queryParams: this.buildQueueOriginQueryParams(),
+        });
+      }),
+    );
+    this.patchFormFromQueryParams(this.route.snapshot.queryParams);
+    this.subscriptions.add(
+      this.route.queryParams.pipe(skip(1)).subscribe((params) => {
+        this.patchFormFromQueryParams(params);
+        this.currentServerPage = 0;
+        this.setPage(this.zeroPage(), true);
       }),
     );
     this.fetchCalls.next(
       this.buildParams(this.curPage, this.curPage.pageIndex),
     );
+  }
+
+  scrollToPlayingCall(callId: string): void {
+    const el = this.callsTable?.callsTable?.nativeElement as HTMLElement;
+    const row = el?.querySelector<HTMLElement>(
+      `tr[data-call-id="${CSS.escape(callId)}"]`,
+    );
+    row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   resetFilter() {
@@ -348,50 +482,98 @@ export class CallsComponent {
     this.form.controls['duration'].setValue(0);
   }
 
-  addToNewInc(ev: Event) {
+  private getSelectedCallIds(): string[] {
+    return this.callsTable.selection.selected.map((s) => s.id);
+  }
+
+  private clearAddToIncidentQueryParam(): void {
+    const qp = { ...this.route.snapshot.queryParams };
+    if (qp['addToIncident'] == null) {
+      return;
+    }
+    delete qp['addToIncident'];
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: qp,
+      replaceUrl: true,
+    });
+  }
+
+  private showCallsAttachedSnackbar(incidentId: string, count: number): void {
+    const msg =
+      count === 1
+        ? 'Added 1 call to the incident'
+        : `Added ${count} calls to the incident`;
+    this.snackBar
+      .open(msg, 'View', { duration: 8000 })
+      .onAction()
+      .subscribe(() => {
+        void this.router.navigate(['/incidents', incidentId]);
+      });
+  }
+
+  private attachSelectionToIncident(incidentId: string): void {
+    const ids = this.getSelectedCallIds();
+    if (!incidentId || ids.length === 0) {
+      return;
+    }
+    this.incSvc
+      .addRemoveCalls(incidentId, <CallIncidentParams>{
+        add: ids,
+        notes: null,
+        remove: null,
+      })
+      .subscribe({
+        next: () => {
+          this.callsTable.selection.clear();
+          this.clearAddToIncidentQueryParam();
+          this.showCallsAttachedSnackbar(incidentId, ids.length);
+        },
+        error: (err: unknown) => {
+          this.errorsSvc.show(String(err));
+        },
+      });
+  }
+
+  addToNewInc(_ev: Event) {
+    const ids = this.getSelectedCallIds();
+    if (ids.length === 0) {
+      return;
+    }
     const dialogRef = this.dialog.open(IncidentEditDialogComponent, {
       data: <EditDialogData>{
         incID: '',
         new: true,
       },
     });
-    dialogRef.afterClosed().subscribe((res: IncidentRecord) => {
-      this.incSvc
-        .addRemoveCalls(res.id, <CallIncidentParams>{
-          add: this.callsTable.selection.selected.map((s) => s.id),
-        })
-        .subscribe({
-          next: () => {
-            this.callsTable.selection.clear();
-          },
-          error: (err) => {
-            alert(err);
-          },
-        });
+    dialogRef.afterClosed().subscribe((res: IncidentRecord | undefined) => {
+      if (!res?.id) {
+        return;
+      }
+      this.attachSelectionToIncident(res.id);
     });
   }
 
-  addToExistingInc(ev: Event) {
-    const dialogRef = this.dialog.open(SelectIncidentDialogComponent);
-    dialogRef.afterClosed().subscribe((res: string) => {
+  addToExistingInc(_ev: Event) {
+    const ids = this.getSelectedCallIds();
+    if (ids.length === 0) {
+      return;
+    }
+    const pre = this.route.snapshot.queryParams['addToIncident'];
+    const dialogRef = this.dialog.open(SelectIncidentDialogComponent, {
+      ...(pre
+        ? {
+            data: <SelectIncidentDialogData>{
+              preselectedIncidentId: pre,
+            },
+          }
+        : {}),
+    });
+    dialogRef.afterClosed().subscribe((res: string | null | undefined) => {
       if (!res) {
         return;
       }
-      this.incSvc
-        .addRemoveCalls(res, <CallIncidentParams>{
-          add: this.callsTable.selection.selected.map((s, i, a) => {
-            s.incidents++;
-            return s.id;
-          }),
-        })
-        .subscribe({
-          next: () => {
-            this.callsTable.selection.clear();
-          },
-          error: (err) => {
-            alert(err);
-          },
-        });
+      this.attachSelectionToIncident(res);
     });
   }
 }

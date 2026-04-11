@@ -1,13 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Signal } from '@angular/core';
-import {
-  BehaviorSubject,
-  Observable,
-  of,
-  ReplaySubject,
-  share,
-  tap,
-} from 'rxjs';
+import { Observable, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface User {
@@ -26,13 +19,17 @@ export interface User {
 })
 export class UserService {
   private cache = new Map<string, Observable<User>>();
+  private readonly self$: Observable<User>;
   public selfUser: Signal<User | undefined>;
   constructor(private http: HttpClient) {
-    this.selfUser = toSignal(this.getSelf());
+    this.self$ = this.http
+      .get<User>('/api/user/')
+      .pipe(shareReplay({ bufferSize: 1, refCount: false }));
+    this.selfUser = toSignal(this.self$);
   }
 
   getSelf(): Observable<User> {
-    return this.http.get<User>('/api/user/');
+    return this.self$;
   }
 
   changePassword(oldPassword: string, newPassword: string): Observable<void> {
@@ -73,7 +70,10 @@ export class UserService {
       return existing;
     }
 
-    this.setCacheUser(username, fallback.pipe(share()));
+    this.setCacheUser(
+      username,
+      fallback.pipe(shareReplay({ bufferSize: 1, refCount: false })),
+    );
     return this.getCacheUser(username)!;
   }
 }

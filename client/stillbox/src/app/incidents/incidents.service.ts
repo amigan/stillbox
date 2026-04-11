@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { IncidentCalls, IncidentRecord } from '../incidents';
 import { Observable } from 'rxjs';
@@ -7,7 +7,8 @@ export interface IncidentsListParams {
   start: Date | null;
   end: Date | null;
   filter: string | null;
-  dir: string;
+  dir: 'asc' | 'desc';
+  orderBy: 'start' | 'numcalls';
   page: number;
   perPage: number;
 }
@@ -42,6 +43,14 @@ export class IncidentsService {
     p: IncidentCallsParams,
   ): Observable<IncidentCalls> {
     return this.http.post<IncidentCalls>('/api/incident/' + id + '/calls', p);
+  }
+
+  /** Public share link: GET with query params (backend reads these via urlencoded form parse). */
+  getSharedIncidentCalls(
+    shareId: string,
+    p: IncidentCallsParams,
+  ): Observable<IncidentCalls> {
+    return this.http.post<IncidentCalls>(`/share/${shareId}/calls`, p);
   }
 
   createIncident(inp: IncidentRecord): Observable<IncidentRecord> {

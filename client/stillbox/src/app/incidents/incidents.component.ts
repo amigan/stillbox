@@ -8,6 +8,7 @@ import {
   MatPaginatorModule,
   PageEvent,
 } from '@angular/material/paginator';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { PrefsService } from '../prefs/prefs.service';
 import { MatIconModule } from '@angular/material/icon';
 import { SelectionModel } from '@angular/cdk/collections';
@@ -47,10 +48,11 @@ export class FmtDatePipe implements PipeTransform {
       timestamp = new Date(ts);
     }
     return (
-      timestamp.getMonth() +
-      1 +
-      '/' +
-      timestamp.getDate() +
+      timestamp.toLocaleString(navigator.language, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }) +
       ' ' +
       timestamp.toLocaleTimeString(navigator.language, {
         hour: '2-digit',
@@ -78,6 +80,7 @@ export class FmtDatePipe implements PipeTransform {
     CommonModule,
     MatProgressSpinnerModule,
     AvatarComponent,
+    MatSortModule,
   ],
   templateUrl: './incidents.component.html',
   styleUrl: './incidents.component.scss',
@@ -112,6 +115,10 @@ export class IncidentsComponent {
   });
 
   subscriptions = new Subscription();
+  /** Mat-sort-header ids; must match server `orderBy`: start | numcalls */
+  sortActive: 'start' | 'numcalls' = 'start';
+  sortDirection: 'asc' | 'desc' = 'desc';
+
   fetchIncidents = new BehaviorSubject<IncidentsListParams>(
     this.buildParams(this.curPage),
   );
@@ -143,7 +150,8 @@ export class IncidentsComponent {
         this.form.controls['end'].value != null
           ? new Date(this.form.controls['end'].value!)
           : null,
-      dir: 'desc',
+      dir: this.sortDirection,
+      orderBy: this.sortActive,
       filter:
         this.form.controls['filter'].value != ''
           ? this.form.controls['filter'].value
@@ -151,6 +159,13 @@ export class IncidentsComponent {
     };
 
     return par;
+  }
+
+  onSortChange(sort: Sort): void {
+    if (sort.direction === '') return;
+    this.sortActive = sort.active as 'start' | 'numcalls';
+    this.sortDirection = sort.direction as 'asc' | 'desc';
+    this.setPage(this.zeroPage(), true);
   }
 
   masterToggle() {

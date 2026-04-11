@@ -17,15 +17,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type IncidentsParams struct {
-	common.Pagination
-	Direction *common.SortDirection `json:"dir"`
-	Filter    *string               `json:"filter"`
-
-	Start *jsontypes.Time `json:"start"`
-	End   *jsontypes.Time `json:"end"`
-}
-
 type Store interface {
 	// CreateIncident creates an incident.
 	CreateIncident(ctx context.Context, inc incidents.Incident) (*incidents.Incident, error)
@@ -85,6 +76,62 @@ func FromCtx(ctx context.Context) Store {
 
 func NewStore(db database.Store) Store {
 	return &postgresStore{db: db}
+}
+
+type Order string
+
+const (
+	OrderStart    Order = "start"
+	OrderNumCalls Order = "numcalls"
+)
+
+type IncidentsParams struct {
+	common.Pagination
+	OrderBy   *Order                `json:"orderBy"`
+	Direction *common.SortDirection `json:"dir"`
+	Filter    *string               `json:"filter"`
+
+	Start *jsontypes.Time `json:"start"`
+	End   *jsontypes.Time `json:"end"`
+}
+
+func (t *Order) IsValid() bool {
+	if t == nil {
+		return true
+	}
+
+	switch *t {
+	case OrderStart, OrderNumCalls:
+		return true
+	}
+
+	return false
+}
+
+// SortDir computes the sortField_order string used by the ListIncidentsP SQL query.
+func (p *IncidentsParams) SortDir() (string, error) {
+	order := OrderStart
+	dir := common.DirAsc
+
+	if p != nil {
+		if p.OrderBy != nil {
+			if !p.OrderBy.IsValid() {
+				return "", common.ErrBadOrder
+			}
+
+			order = *p.OrderBy
+		}
+
+		if p.Direction != nil {
+			if !p.Direction.IsValid() {
+				return "", common.ErrBadDirection
+			}
+
+			dir = *p.Direction
+		}
+	}
+
+	return string(order) + "_" + string(dir), nil
 }
 
 func (s *postgresStore) CreateIncident(ctx context.Context, inc incidents.Incident) (*incidents.Incident, error) {
@@ -189,14 +236,19 @@ func (s *postgresStore) Incidents(ctx context.Context, p IncidentsParams) (incs 
 		return nil, 0, err
 	}
 
+	orderBy, err := p.SortDir()
+	if err != nil {
+		return nil, 0, err
+	}
+
 	offset, perPage := p.Pagination.OffsetPerPage(100)
 	dbParam := database.ListIncidentsPParams{
-		Start:     (*time.Time)(p.Start),
-		End:       (*time.Time)(p.End),
-		Filter:    p.Filter,
-		Direction: p.Direction.DirString(common.DirAsc),
-		Offset:    offset,
-		PerPage:   perPage,
+		Start:   (*time.Time)(p.Start),
+		End:     (*time.Time)(p.End),
+		Filter:  p.Filter,
+		OrderBy: orderBy,
+		Offset:  offset,
+		PerPage: perPage,
 	}
 
 	var count int64
@@ -368,6 +420,10 @@ func (s *postgresStore) Incident(ctx context.Context, id uuid.UUID, opts ...Inci
 		}
 
 		r = fromDBIncident(id, inc.Incident)
+
+		// fill in start/end from the GetIncidentRow
+		r.StartTime = (*jsontypes.Time)(inc.StartTime)
+		r.EndTime = (*jsontypes.Time)(inc.EndTime)
 		r.Owner = inc.Owner
 
 		if !options.withoutCalls {
