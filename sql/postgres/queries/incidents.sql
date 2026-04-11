@@ -89,8 +89,8 @@ CASE WHEN sqlc.narg('end')::TIMESTAMPTZ IS NOT NULL THEN
 	) ELSE TRUE END)
 GROUP BY i.id, u.username
 ORDER BY
-CASE WHEN @order_by::TEXT = 'start_asc' THEN start_time END ASC,
-CASE WHEN @order_by::TEXT = 'start_desc' THEN start_time END DESC,
+CASE WHEN @order_by::TEXT = 'start_asc' THEN COALESCE(i.start_time, MIN(ic.call_date)) END ASC,
+CASE WHEN @order_by::TEXT = 'start_desc' THEN COALESCE(i.start_time, MIN(ic.call_date)) END DESC,
 CASE WHEN @order_by::TEXT = 'numcalls_asc' THEN COUNT(ic.incident_id) END ASC,
 CASE WHEN @order_by::TEXT = 'numcalls_desc' THEN COUNT(ic.incident_id) END DESC,
 	u.username, i.name
