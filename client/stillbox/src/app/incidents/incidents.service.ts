@@ -7,7 +7,8 @@ export interface IncidentsListParams {
   start: Date | null;
   end: Date | null;
   filter: string | null;
-  dir: string;
+  dir: 'asc' | 'desc';
+  orderBy: 'start' | 'numcalls';
   page: number;
   perPage: number;
 }

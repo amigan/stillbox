@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Signal } from '@angular/core';
-import { Observable, share, shareReplay } from 'rxjs';
+import { Observable, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface User {
@@ -70,7 +70,10 @@ export class UserService {
       return existing;
     }
 
-    this.setCacheUser(username, fallback.pipe(share()));
+    this.setCacheUser(
+      username,
+      fallback.pipe(shareReplay({ bufferSize: 1, refCount: false })),
+    );
     return this.getCacheUser(username)!;
   }
 }

@@ -39,4 +39,17 @@ describe('UserService', () => {
     expect(httpSpy.get).toHaveBeenCalledTimes(1);
     expect(httpSpy.get).toHaveBeenCalledWith('/api/user/');
   });
+
+  it('should request a given username only once even after subscribers unsubscribe', () => {
+    const s1 = service.getUser('alice').subscribe();
+    const s2 = service.getUser('alice').subscribe();
+    s1.unsubscribe();
+    s2.unsubscribe();
+    service.getUser('alice').subscribe();
+
+    const userCalls = httpSpy.get.calls
+      .all()
+      .filter((c) => c.args[0] === '/api/user/alice');
+    expect(userCalls.length).toBe(1);
+  });
 });

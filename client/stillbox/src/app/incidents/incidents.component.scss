@@ -21,6 +21,29 @@ table,
   text-align: right;
 }
 
+.mat-column-startTime.mat-mdc-header-cell,
+.mat-column-endTime.mat-mdc-header-cell {
+  text-align: right;
+}
+
+/*
+ * Sort header inner markup comes from MatSortHeader; emulated encapsulation blocks
+ * unscoped descendants. ::ng-deep + th.text-align + inline-flex positions the control right.
+ */
+:host ::ng-deep th.mat-column-startTime.mat-sort-header {
+  text-align: right;
+}
+
+:host
+  ::ng-deep
+  th.mat-column-startTime.mat-sort-header
+  .mat-sort-header-container {
+  display: inline-flex;
+  justify-content: flex-end;
+  width: auto;
+  max-width: 100%;
+}
+
 .mat-column-numCalls {
   width: 50px;
 }
@@ -71,4 +94,9 @@ form {
 
 .filterBox {
   flex: 1 1 300px;
+}
+
+a.incidentNameLink {
+  color: inherit;
+  text-decoration: none;
 }
