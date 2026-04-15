@@ -8,8 +8,11 @@ import (
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/internal/trending"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
+	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type TxCtx struct {
@@ -27,6 +30,26 @@ type Alert struct {
 	Weight     float32
 	Suppressed bool
 	Context    []TxCtx
+}
+
+func (a *Alert) ToAddAlertParams() database.AddAlertParams {
+	f32score := float32(a.Score.Score)
+	f32origscore := float32(a.OrigScore)
+
+	var origScore *float32
+	if a.Score.Score != a.OrigScore {
+		origScore = &f32origscore
+	}
+
+	return database.AddAlertParams{
+		Time:      pgtype.Timestamptz{Time: a.Timestamp, Valid: true},
+		SystemID:  int(a.Score.ID.System),
+		TGID:      int(a.Score.ID.Talkgroup),
+		Weight:    &a.Weight,
+		Score:     &f32score,
+		OrigScore: origScore,
+		Notified:  !a.Suppressed,
+	}
 }
 
 func (a *Alert) FillTranscriptContext(ctx context.Context, count uint, threshold, lookback jsontypes.Duration) error {

@@ -58,6 +58,18 @@ func (ns NullAudioMIME) Value() (driver.Value, error) {
 	return string(ns.AudioMIME), nil
 }
 
+type Alert struct {
+	ID        int       `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	Time      time.Time `db:"time" json:"time,omitempty" yaml:"time,omitempty"`
+	TGID      int       `db:"tgid" json:"tgid,omitempty" yaml:"tgid,omitempty"`
+	SystemID  int       `db:"system_id" json:"systemId,omitempty" yaml:"system_id,omitempty"`
+	Weight    *float32  `db:"weight" json:"weight,omitempty" yaml:"weight,omitempty"`
+	Score     *float32  `db:"score" json:"score,omitempty" yaml:"score,omitempty"`
+	OrigScore *float32  `db:"orig_score" json:"origScore,omitempty" yaml:"orig_score,omitempty"`
+	Notified  bool      `db:"notified" json:"notified,omitempty" yaml:"notified,omitempty"`
+	Metadata  []byte    `db:"metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
+}
+
 type ApiKey struct {
 	ID        int         `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
 	OwnerID   int         `db:"owner_id" json:"ownerId,omitempty" yaml:"owner_id,omitempty"`

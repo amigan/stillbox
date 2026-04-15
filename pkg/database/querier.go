@@ -14,6 +14,7 @@ import (
 )
 
 type Querier interface {
+	AddAlert(ctx context.Context, arg AddAlertParams) error
 	AddCall(ctx context.Context, arg AddCallParams) error
 	AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error)
 	AddRefJournal(ctx context.Context, arg AddRefJournalParams) (int64, error)

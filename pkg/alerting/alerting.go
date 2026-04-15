@@ -204,6 +204,8 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 	as.Lock()
 	defer as.Unlock()
 
+	db := database.FromCtx(ctx)
+
 	var notifications []alert.Alert
 	for _, s := range as.scores {
 		if as.ignoreList[s.ID] > IgnoreFailureCountThreshold {
@@ -241,8 +243,15 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 
 				as.alertCache[s.ID] = a
 
-				if !testMode && as.aMetrics.AlertCount != nil {
-					as.aMetrics.AlertCount.Add(1)
+				if !testMode {
+					err = db.AddAlert(ctx, a.ToAddAlertParams())
+					if err != nil {
+						return nil, fmt.Errorf("addAlert: %w", err)
+					}
+
+					if as.aMetrics.AlertCount != nil {
+						as.aMetrics.AlertCount.Add(1)
+					}
 				}
 
 				if !a.Suppressed {
