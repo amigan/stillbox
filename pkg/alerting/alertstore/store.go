@@ -2,6 +2,7 @@ package alertstore
 
 import (
 	"context"
+	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/alerting/alert"
@@ -18,6 +19,9 @@ type Store interface {
 
 	// GetAlert gets an alert from the database based on the provided URL tag.
 	GetAlert(ctx context.Context, urlTag string) (*alert.Base, error)
+
+	// PruneAlerts prunes alerts older than before.
+	PruneAlerts(ctx context.Context, before time.Time) (count int64, err error)
 }
 
 type store struct {
@@ -70,6 +74,15 @@ func (s *store) AddAlert(ctx context.Context, a *alert.Alert) error {
 	ap := toAddAlertParams(a)
 
 	return s.db.AddAlert(ctx, ap)
+}
+
+func (s *store) PruneAlerts(ctx context.Context, before time.Time) (cout int64, err error) {
+	_, err = authz.Check(ctx, authz.UseResource(entities.ResourceAlert), authz.WithActions(entities.ActionDelete))
+	if err != nil {
+		return 0, err
+	}
+
+	return s.db.PruneAlerts(ctx, before)
 }
 
 func dbToBaseAlert(d database.Alert) *alert.Base {

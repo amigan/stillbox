@@ -94,11 +94,14 @@ func (q *Queries) GetAlertByURLTag(ctx context.Context, urlTag *string) (Alert, 
 	return i, err
 }
 
-const pruneAlerts = `-- name: PruneAlerts :exec
+const pruneAlerts = `-- name: PruneAlerts :execrows
 DELETE FROM alerts WHERE time < $1
 `
 
-func (q *Queries) PruneAlerts(ctx context.Context, before time.Time) error {
-	_, err := q.db.Exec(ctx, pruneAlerts, before)
-	return err
+func (q *Queries) PruneAlerts(ctx context.Context, before time.Time) (int64, error) {
+	result, err := q.db.Exec(ctx, pruneAlerts, before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }

@@ -104,6 +104,7 @@ type Alerting struct {
 	MaxContext          uint                `yaml:"maxContext" form:"maxContext"`
 	CallLengthThreshold jsontypes.Duration  `yaml:"callLengthThreshold" form:"callLengthThreshold" default:"4s"`
 	ContextLookback     jsontypes.Duration  `yaml:"contextLookback" form:"contextLookback" default:"10m"`
+	PruneIntervalDays   uint                `yaml:"pruneIntervalDays" form:"pruneIntervalDays"`
 }
 
 type Relay struct {

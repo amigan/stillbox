@@ -40,6 +40,7 @@ const (
 	NotificationSubject = "Stillbox Alert"
 	DefaultRenotify     = 30 * time.Minute
 	alerterTickInterval = time.Minute
+	pruneTickInterval   = time.Hour * 24
 )
 
 type Alerter interface {
@@ -159,6 +160,27 @@ func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerte
 	return as
 }
 
+func (as *alerter) pruneInterval() time.Duration {
+	if as.cfg.PruneIntervalDays > 0 {
+		return time.Duration(as.cfg.PruneIntervalDays) * time.Hour * 24
+	}
+
+	return 7 * time.Hour * 24
+}
+
+func (as *alerter) doAlertPrune(ctx context.Context) error {
+	count, err := as.alertStore.PruneAlerts(ctx, time.Now().Add(-1*as.pruneInterval()))
+	if err != nil {
+		return err
+	}
+
+	if count > 0 {
+		log.Info().Int64("alerts", count).Msg("alerts pruned")
+	}
+
+	return nil
+}
+
 func (as *alerter) reload() {
 	if as.cfg.Renotify != nil {
 		as.renotify = as.cfg.Renotify.Duration()
@@ -183,20 +205,31 @@ func (as *alerter) Go(ctx context.Context) {
 		log.Error().Err(err).Msg("backfill")
 	}
 
+	err = as.doAlertPrune(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("alert prune")
+	}
+
 	as.score(time.Now())
-	ticker := time.NewTicker(alerterTickInterval)
+	alertTicker := time.NewTicker(alerterTickInterval)
+	pruneTicker := time.NewTicker(pruneTickInterval)
 
 	for {
 		select {
-		case now := <-ticker.C:
+		case now := <-alertTicker.C:
 			as.score(now)
 			err := as.notify(ctx)
 			if err != nil {
 				log.Error().Err(err).Msg("notify")
 			}
 			as.cleanCache()
+		case <-pruneTicker.C:
+			err := as.doAlertPrune(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("alert prune")
+			}
 		case <-ctx.Done():
-			ticker.Stop()
+			alertTicker.Stop()
 			return
 		}
 	}

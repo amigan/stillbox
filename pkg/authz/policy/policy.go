@@ -161,6 +161,7 @@ var Policy = &restrict.PolicyDefinition{
 				entities.ResourceAlert: {
 					&restrict.Permission{Action: entities.ActionRead},
 					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionDelete},
 					&restrict.Permission{Action: entities.ActionSimulate},
 					&restrict.Permission{Action: entities.ActionTestNotify},
 				},

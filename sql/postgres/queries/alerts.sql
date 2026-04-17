@@ -31,5 +31,5 @@ FROM alerts
 WHERE url_tag = @url_tag
 ;
 
--- name: PruneAlerts :exec
+-- name: PruneAlerts :execrows
 DELETE FROM alerts WHERE time < @before;

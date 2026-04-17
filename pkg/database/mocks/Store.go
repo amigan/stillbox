@@ -5526,20 +5526,29 @@ func (_c *Store_PoolTx_Call) RunAndReturn(run func(ctx context.Context, opts pgx
 }
 
 // PruneAlerts provides a mock function for the type Store
-func (_mock *Store) PruneAlerts(ctx context.Context, before time.Time) error {
+func (_mock *Store) PruneAlerts(ctx context.Context, before time.Time) (int64, error) {
 	ret := _mock.Called(ctx, before)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PruneAlerts")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) error); ok {
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) (int64, error)); ok {
+		return returnFunc(ctx, before)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) int64); ok {
 		r0 = returnFunc(ctx, before)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(int64)
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time) error); ok {
+		r1 = returnFunc(ctx, before)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
 // Store_PruneAlerts_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PruneAlerts'
@@ -5572,12 +5581,12 @@ func (_c *Store_PruneAlerts_Call) Run(run func(ctx context.Context, before time.
 	return _c
 }
 
-func (_c *Store_PruneAlerts_Call) Return(err error) *Store_PruneAlerts_Call {
-	_c.Call.Return(err)
+func (_c *Store_PruneAlerts_Call) Return(n int64, err error) *Store_PruneAlerts_Call {
+	_c.Call.Return(n, err)
 	return _c
 }
 
-func (_c *Store_PruneAlerts_Call) RunAndReturn(run func(ctx context.Context, before time.Time) error) *Store_PruneAlerts_Call {
+func (_c *Store_PruneAlerts_Call) RunAndReturn(run func(ctx context.Context, before time.Time) (int64, error)) *Store_PruneAlerts_Call {
 	_c.Call.Return(run)
 	return _c
 }

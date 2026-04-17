@@ -97,6 +97,8 @@ alerting:
   callLengthThreshold: 4s
   # contextLookback specifies how far back to look for transcripts
   contextLookback: 20m
+  # pruneInterval specifies how often to prune alerts
+  pruneIntervalDays: 7
 
 notify:
 #   subjectTemplate: "Stillbox Alert ({{ highest . }})"

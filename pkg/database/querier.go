@@ -81,7 +81,7 @@ type Querier interface {
 	ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error)
 	ListIncidentsCount(ctx context.Context, start *time.Time, end *time.Time, filter *string) (int64, error)
 	ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) ([]ListIncidentsPRow, error)
-	PruneAlerts(ctx context.Context, before time.Time) error
+	PruneAlerts(ctx context.Context, before time.Time) (int64, error)
 	PruneShares(ctx context.Context) error
 	RecordUserLogin(ctx context.Context, username string, lastLoginAt *time.Time, lastLoginFrom *netip.Addr) error
 	RemoveFromIncident(ctx context.Context, iD uuid.UUID, callIds []uuid.UUID) error
