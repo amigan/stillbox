@@ -17,7 +17,7 @@ server:
   # if adminSocket is set/not null, it specifies a path where stillbox will
   # open a unix domain socket for local daemon control use
   adminSocket: /var/run/stillbox/stillbox.sock
-  # profileACL must be set for pprof builds to present profiling endpoints
+# profileACL must be set for pprof builds to present profiling endpoints
 # profileACL:
 #   allow:
 #     - 192.168.1.1/24
@@ -101,15 +101,15 @@ alerting:
   pruneIntervalDays: 7
 
 notify:
-#   subjectTemplate: "Stillbox Alert ({{ highest . }})"
-#   bodyTemplate: |
-#     {{ range . -}}
-#     {{ .TGName }}{{ if (and .Talkgroup .Talkgroup.AlphaTag) }} ({{ .Talkgroup.StringTag false -}}){{ end }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
-#     {{- range .Context }}
-#     {{ .Date | fmtTime "03:04:05" }} {{ .Transcript }}
-#     {{- end }}
-#
-#     {{ end -}}
+# subjectTemplate: "Stillbox Alert ({{ highest . }})"
+# bodyTemplate: |
+#   {{ range . -}}
+#   {{ .TGName }}{{ if (and .Talkgroup .Talkgroup.AlphaTag) }} ({{ .Talkgroup.StringTag false -}}){{ end }} is active with a score of {{ f .Score.Score 4 }}! ({{ f .Score.RecentCount 0 }}/{{ .Score.Count }} recent calls)
+#   {{- range .Context }}
+#   {{ .Date | fmtTime "03:04:05" }} {{ .Transcript }}
+#   {{- end }}
+
+    {{ end -}}
   backends:
     - provider: slackwebhook
       config:
