@@ -2229,6 +2229,72 @@ func (_c *Store_GetAPIKey_Call) RunAndReturn(run func(ctx context.Context, key *
 	return _c
 }
 
+// GetAlertByURLTag provides a mock function for the type Store
+func (_mock *Store) GetAlertByURLTag(ctx context.Context, urlTag *string) (database.Alert, error) {
+	ret := _mock.Called(ctx, urlTag)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAlertByURLTag")
+	}
+
+	var r0 database.Alert
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) (database.Alert, error)); ok {
+		return returnFunc(ctx, urlTag)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *string) database.Alert); ok {
+		r0 = returnFunc(ctx, urlTag)
+	} else {
+		r0 = ret.Get(0).(database.Alert)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *string) error); ok {
+		r1 = returnFunc(ctx, urlTag)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetAlertByURLTag_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAlertByURLTag'
+type Store_GetAlertByURLTag_Call struct {
+	*mock.Call
+}
+
+// GetAlertByURLTag is a helper method to define mock.On call
+//   - ctx context.Context
+//   - urlTag *string
+func (_e *Store_Expecter) GetAlertByURLTag(ctx interface{}, urlTag interface{}) *Store_GetAlertByURLTag_Call {
+	return &Store_GetAlertByURLTag_Call{Call: _e.mock.On("GetAlertByURLTag", ctx, urlTag)}
+}
+
+func (_c *Store_GetAlertByURLTag_Call) Run(run func(ctx context.Context, urlTag *string)) *Store_GetAlertByURLTag_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *string
+		if args[1] != nil {
+			arg1 = args[1].(*string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetAlertByURLTag_Call) Return(alert database.Alert, err error) *Store_GetAlertByURLTag_Call {
+	_c.Call.Return(alert, err)
+	return _c
+}
+
+func (_c *Store_GetAlertByURLTag_Call) RunAndReturn(run func(ctx context.Context, urlTag *string) (database.Alert, error)) *Store_GetAlertByURLTag_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetAllTalkgroupTags provides a mock function for the type Store
 func (_mock *Store) GetAllTalkgroupTags(ctx context.Context) ([]string, error) {
 	ret := _mock.Called(ctx)
@@ -5455,6 +5521,63 @@ func (_c *Store_PoolTx_Call) Return(dbtx *database.Postgres, tx pgx.Tx, err erro
 }
 
 func (_c *Store_PoolTx_Call) RunAndReturn(run func(ctx context.Context, opts pgx.TxOptions) (*database.Postgres, pgx.Tx, error)) *Store_PoolTx_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// PruneAlerts provides a mock function for the type Store
+func (_mock *Store) PruneAlerts(ctx context.Context, before time.Time) error {
+	ret := _mock.Called(ctx, before)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PruneAlerts")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) error); ok {
+		r0 = returnFunc(ctx, before)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_PruneAlerts_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PruneAlerts'
+type Store_PruneAlerts_Call struct {
+	*mock.Call
+}
+
+// PruneAlerts is a helper method to define mock.On call
+//   - ctx context.Context
+//   - before time.Time
+func (_e *Store_Expecter) PruneAlerts(ctx interface{}, before interface{}) *Store_PruneAlerts_Call {
+	return &Store_PruneAlerts_Call{Call: _e.mock.On("PruneAlerts", ctx, before)}
+}
+
+func (_c *Store_PruneAlerts_Call) Run(run func(ctx context.Context, before time.Time)) *Store_PruneAlerts_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 time.Time
+		if args[1] != nil {
+			arg1 = args[1].(time.Time)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_PruneAlerts_Call) Return(err error) *Store_PruneAlerts_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_PruneAlerts_Call) RunAndReturn(run func(ctx context.Context, before time.Time) error) *Store_PruneAlerts_Call {
 	_c.Call.Return(run)
 	return _c
 }

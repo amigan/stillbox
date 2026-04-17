@@ -68,6 +68,9 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Preset: PresetDeleteOwn},
 					&restrict.Permission{Preset: PresetReadOwn},
 				},
+				entities.ResourceAlert: {
+					&restrict.Permission{Action: entities.ActionRead},
+				},
 				entities.ResourceNexus: {
 					&restrict.Permission{Action: entities.ActionConnect},
 				},
@@ -157,6 +160,7 @@ var Policy = &restrict.PolicyDefinition{
 				},
 				entities.ResourceAlert: {
 					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Action: entities.ActionSimulate},
 					&restrict.Permission{Action: entities.ActionTestNotify},
 				},

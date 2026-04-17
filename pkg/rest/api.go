@@ -46,6 +46,7 @@ type api struct {
 	incidents *incidentsAPI
 	prefs     *prefsAPI
 	admin     *adminAPI
+	alerts    *alertsAPI
 }
 
 func (a *api) ShareRouter() http.Handler {
@@ -63,6 +64,7 @@ func New(baseURL url.URL, nex nexus.Nexus, auth authn.Authn) *api {
 		apiKeys:   newAPIKeyAPI(auth),
 		prefs:     new(prefsAPI),
 		admin:     new(adminAPI),
+		alerts:    new(alertsAPI),
 	}
 	s.shares = newShareAPI(&baseURL, s.shareHandlers())
 	return s
@@ -79,6 +81,7 @@ func (a *api) Subrouter() http.Handler {
 	r.Mount("/prefs", a.prefs.Subrouter())
 	r.Mount("/keys", a.apiKeys.Subrouter())
 	r.Mount("/admin", a.admin.Subrouter())
+	r.Mount("/alert", a.alerts.Subrouter())
 
 	return r
 }

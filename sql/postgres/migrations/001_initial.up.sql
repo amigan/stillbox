@@ -88,7 +88,9 @@ CREATE TABLE IF NOT EXISTS alerts(
 	score REAL,
 	orig_score REAL,
 	notified BOOLEAN NOT NULL DEFAULT 'false',
-	metadata JSONB
+	metadata JSONB,
+	context_window TSTZRANGE,
+	url_tag TEXT UNIQUE
 );
 
 CREATE TYPE audio_mime AS ENUM ('audio/mpeg', 'audio/wav');

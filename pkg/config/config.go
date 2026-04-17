@@ -112,13 +112,15 @@ type Relay struct {
 	Required bool   `yaml:"required"`
 }
 
-type Notify []NotifyService
+type Notify struct {
+	SubjectTemplate *string         `yaml:"subjectTemplate" json:"subjectTemplate"`
+	BodyTemplate    *string         `yaml:"bodyTemplate" json:"bodyTemplate"`
+	Backends        []NotifyService `yaml:"backends" json:"backends"`
+}
 
 type NotifyService struct {
-	Provider        string    `yaml:"provider" json:"provider"`
-	SubjectTemplate *string   `yaml:"subjectTemplate" json:"subjectTemplate"`
-	BodyTemplate    *string   `yaml:"bodyTemplate" json:"bodyTemplate"`
-	Config          ConfigMap `yaml:"config" json:"config"`
+	Provider string    `yaml:"provider" json:"provider"`
+	Config   ConfigMap `yaml:"config" json:"config"`
 }
 
 type IngestFilter struct {

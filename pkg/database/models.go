@@ -59,15 +59,17 @@ func (ns NullAudioMIME) Value() (driver.Value, error) {
 }
 
 type Alert struct {
-	ID        int       `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
-	Time      time.Time `db:"time" json:"time,omitempty" yaml:"time,omitempty"`
-	TGID      int       `db:"tgid" json:"tgid,omitempty" yaml:"tgid,omitempty"`
-	SystemID  int       `db:"system_id" json:"systemId,omitempty" yaml:"system_id,omitempty"`
-	Weight    *float32  `db:"weight" json:"weight,omitempty" yaml:"weight,omitempty"`
-	Score     *float32  `db:"score" json:"score,omitempty" yaml:"score,omitempty"`
-	OrigScore *float32  `db:"orig_score" json:"origScore,omitempty" yaml:"orig_score,omitempty"`
-	Notified  bool      `db:"notified" json:"notified,omitempty" yaml:"notified,omitempty"`
-	Metadata  []byte    `db:"metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	ID            int                              `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	Time          time.Time                        `db:"time" json:"time,omitempty" yaml:"time,omitempty"`
+	TGID          int                              `db:"tgid" json:"tgid,omitempty" yaml:"tgid,omitempty"`
+	SystemID      int                              `db:"system_id" json:"systemId,omitempty" yaml:"system_id,omitempty"`
+	Weight        *float32                         `db:"weight" json:"weight,omitempty" yaml:"weight,omitempty"`
+	Score         *float32                         `db:"score" json:"score,omitempty" yaml:"score,omitempty"`
+	OrigScore     *float32                         `db:"orig_score" json:"origScore,omitempty" yaml:"orig_score,omitempty"`
+	Notified      bool                             `db:"notified" json:"notified,omitempty" yaml:"notified,omitempty"`
+	Metadata      []byte                           `db:"metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	ContextWindow pgtype.Range[pgtype.Timestamptz] `db:"context_window" json:"contextWindow,omitempty" yaml:"context_window,omitempty"`
+	URLTag        *string                          `db:"url_tag" json:"urlTag,omitempty" yaml:"url_tag,omitempty"`
 }
 
 type ApiKey struct {

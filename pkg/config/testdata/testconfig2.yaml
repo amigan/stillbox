@@ -28,6 +28,7 @@ alerting:
   renotify: 30m
   contextLookback: 30m
 notify:
+  backends:
   - provider: slackwebhook
     config:
       webhookURL: "https://hook"

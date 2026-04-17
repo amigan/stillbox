@@ -59,9 +59,30 @@ var _ encoding.TextUnmarshaler = (*ID)(nil)
 
 var ErrBadTG = errors.New("bad talkgroup format")
 
+func (tid *ID) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%d:%d"`, tid.System, tid.Talkgroup)), nil
+}
+
 func (tid *ID) UnmarshalJSON(j []byte) error {
-	// this is a dirty hack since we cannot implement both TextUnmarshaler
+	// this is all a dirty hack since we cannot implement both TextUnmarshaler
 	// and json.Unmarshaler at the same time. sigh.
+
+	// at least quote, numeral, quote at the bare minimum
+	if len(j) < 3 {
+		return ErrBadTG
+	}
+
+	// check if it's a string
+	if j[0] == '"' && j[len(j)-1] == '"' {
+		var str string
+		err := json.Unmarshal(j, &str)
+		if err != nil {
+			return err
+		}
+
+		return tid.UnmarshalText([]byte(str))
+	}
+
 	v := &struct {
 		System    uint32 `json:"sys"`
 		Talkgroup uint32 `json:"tg"`
@@ -77,6 +98,7 @@ func (tid *ID) UnmarshalJSON(j []byte) error {
 	}
 
 	tid.System, tid.Talkgroup = v.System, v.Talkgroup
+
 	return nil
 }
 

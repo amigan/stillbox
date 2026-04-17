@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/alerting/alert"
+	"dynatron.me/x/stillbox/pkg/alerting/alertstore"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls"
@@ -63,6 +64,7 @@ type alerter struct {
 	renotify   time.Duration
 	notifier   notify.Notifier
 	tgCache    tgstore.Store
+	alertStore alertstore.Store
 	ignoreList map[talkgroups.ID]int
 	metrics    metrics.Metrics
 	aMetrics   alertMetrics
@@ -110,6 +112,12 @@ func WithNotifier(n notify.Notifier) AlertOption {
 func WithMetrics(met metrics.Metrics) AlertOption {
 	return func(as *alerter) {
 		as.metrics = met
+	}
+}
+
+func WithAlertStore(st alertstore.Store) AlertOption {
+	return func(a *alerter) {
+		a.alertStore = st
 	}
 }
 
@@ -204,8 +212,6 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 	as.Lock()
 	defer as.Unlock()
 
-	db := database.FromCtx(ctx)
-
 	var notifications []alert.Alert
 	for _, s := range as.scores {
 		if as.ignoreList[s.ID] > IgnoreFailureCountThreshold {
@@ -243,8 +249,18 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 
 				as.alertCache[s.ID] = a
 
+				if a.Suppressed {
+					continue
+				}
+				if as.cfg.MaxContext > 0 {
+					err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, as.cfg.CallLengthThreshold, as.cfg.ContextLookback)
+					if err != nil {
+						log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("fill transcript context")
+					}
+				}
+
 				if !testMode {
-					err = db.AddAlert(ctx, a.ToAddAlertParams())
+					err = as.alertStore.AddAlert(ctx, &a)
 					if err != nil {
 						return nil, fmt.Errorf("addAlert: %w", err)
 					}
@@ -254,16 +270,7 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 					}
 				}
 
-				if !a.Suppressed {
-					if as.cfg.MaxContext > 0 {
-						err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, as.cfg.CallLengthThreshold, as.cfg.ContextLookback)
-						if err != nil {
-							log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("fill transcript context")
-						}
-					}
-
-					notifications = append(notifications, a)
-				}
+				notifications = append(notifications, a)
 			}
 		}
 	}

@@ -14,7 +14,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/google/uuid"
-	"github.com/matoous/go-nanoid"
 )
 
 const (
@@ -120,13 +119,8 @@ func (s *service) NewShare(ctx context.Context, sh CreateShareParams) (*Share, e
 		return nil, err
 	}
 
-	id, err := gonanoid.ID(SlugLength)
-	if err != nil {
-		return nil, err
-	}
-
 	share := &Share{
-		ID:       id,
+		ID:       common.NanoID(SlugLength),
 		Type:     sh.Type,
 		Date:     (*jsontypes.Time)(entTime),
 		OwnerID:  u.ID,

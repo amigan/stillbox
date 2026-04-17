@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"runtime/debug"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/alerting"
+	"dynatron.me/x/stillbox/pkg/alerting/alertstore"
 	"dynatron.me/x/stillbox/pkg/authn"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/policy"
@@ -58,6 +60,7 @@ type Server struct {
 	share      shares.Service
 	rbac       authz.RBAC
 	stats      stats.Stats
+	alerts     alertstore.Store
 	settings   settings.Store
 	metrics    metrics.Metrics
 	pipeline   pipeline.Pipeline
@@ -95,7 +98,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
-	notifier, err := notify.New(cfg.Notify)
+	notifier, err := notify.New(cfg.Notify, (*url.URL)(&cfg.Server.BaseURL))
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +122,9 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
-	alerter := alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier), alerting.WithMetrics(met))
+	alertStore := alertstore.New(db)
+
+	alerter := alerting.New(cfg.Alerting, tgCache, alerting.WithNotifier(notifier), alerting.WithMetrics(met), alerting.WithAlertStore(alertStore))
 
 	srv := &Server{
 		auth:      authenticator,
@@ -138,6 +143,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		incidents: incstore.NewStore(db),
 		rbac:      rbacSvc,
 		stats:     statsSvc,
+		alerts:    alertStore,
 		settings:  settings.New(settings.ConfigDefaults),
 	}
 
@@ -197,6 +203,7 @@ func (s *Server) fillCtx(ctx context.Context) context.Context {
 	ctx = authz.CtxWithRBAC(ctx, s.rbac)
 	ctx = stats.CtxWithStats(ctx, s.stats)
 	ctx = settings.CtxWithStore(ctx, s.settings)
+	ctx = alertstore.CtxWithStore(ctx, s.alerts)
 
 	return ctx
 }
