@@ -23,13 +23,14 @@ export class PushService {
   subscribePush() {
     this.getVapidKey()
       .pipe(
-        switchMap((key) =>
-          this.swPush
+        switchMap((key) => {
+          console.log(key);
+          return this.swPush
             .requestSubscription({
               serverPublicKey: key,
             })
-            .then((sub) => this.postPushSubscriber(sub).subscribe()),
-        ),
+            .then((sub) => this.postPushSubscriber(sub).subscribe())}
+          ),
       )
       .subscribe();
   }
