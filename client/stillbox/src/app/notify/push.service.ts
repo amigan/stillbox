@@ -24,7 +24,6 @@ export class PushService {
     this.getVapidKey()
       .pipe(
         switchMap((key) => {
-          console.log(key);
           return this.swPush
             .requestSubscription({
               serverPublicKey: key,
