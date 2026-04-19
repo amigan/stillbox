@@ -17,10 +17,7 @@
     } @else {
       <mat-selection-list [(ngModel)]="sel" [multiple]="false">
         @for (inc of accumulated; track inc.id) {
-          <mat-list-option
-            [value]="inc.id"
-            (dblclick)="pickAndClose(inc.id)"
-          >
+          <mat-list-option [value]="inc.id" (dblclick)="pickAndClose(inc.id)">
             <div class="optTitle">{{ inc.name }}</div>
             <div class="optMeta">
               @if (inc.startTime) {
