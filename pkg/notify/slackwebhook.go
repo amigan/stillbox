@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/alerting/alert"
 	"dynatron.me/x/stillbox/pkg/config"
 	"github.com/go-viper/mapstructure/v2"
 )
@@ -30,7 +31,7 @@ type slackWebhookBackend struct {
 	client *http.Client
 }
 
-func NewSlackWebhookBackend(cfg config.ConfigMap) (notifierBackend, error) {
+func NewSlackWebhookBackend(cfg config.ConfigMap) (NotifierBackend, error) {
 	swc := &slackWebhookBackend{
 		Icon:   "🚨",
 		client: http.DefaultClient,
@@ -43,7 +44,7 @@ func NewSlackWebhookBackend(cfg config.ConfigMap) (notifierBackend, error) {
 	return swc, nil
 }
 
-func (be *slackWebhookBackend) Dispatch(ctx context.Context, ras *renderedAlertBatch) error {
+func (be *slackWebhookBackend) Dispatch(ctx context.Context, ras *alert.RenderedAlertBatch) error {
 	type Attachment struct {
 		Title     string `json:"title"`
 		Text      string `json:"text"`
@@ -63,21 +64,21 @@ func (be *slackWebhookBackend) Dispatch(ctx context.Context, ras *renderedAlertB
 
 	now := time.Now().Unix()
 	if be.ConcatAlerts {
-		top := ras.top()
+		top := ras.Top()
 		if top == nil { // should not happen
 			return errors.New("bad top index")
 		}
 
 		var body strings.Builder
-		for i, ra := range ras.alerts {
-			body.WriteString(ra.body)
-			if len(ras.alerts) > 1 {
-				if i != ras.topIdx {
+		for i, ra := range ras.Alerts {
+			body.WriteString(ra.Body)
+			if len(ras.Alerts) > 1 {
+				if i != ras.TopIdx {
 					// only need URL if not in title
 					body.WriteRune('\n')
-					body.WriteString(ra.url)
+					body.WriteString(ra.URL)
 				}
-				if i < len(ras.alerts)-1 {
+				if i < len(ras.Alerts)-1 {
 					body.WriteRune('\n')
 					body.WriteRune('\n')
 				}
@@ -85,19 +86,19 @@ func (be *slackWebhookBackend) Dispatch(ctx context.Context, ras *renderedAlertB
 		}
 		m.Attachments = []Attachment{
 			{
-				Title:     top.subject,
+				Title:     top.Subject,
 				Text:      body.String(),
-				TitleLink: top.url,
+				TitleLink: top.URL,
 				Timestamp: now,
 			},
 		}
 	} else {
-		m.Attachments = make([]Attachment, 0, len(ras.alerts))
-		for _, ra := range ras.alerts {
+		m.Attachments = make([]Attachment, 0, len(ras.Alerts))
+		for _, ra := range ras.Alerts {
 			m.Attachments = append(m.Attachments, Attachment{
-				Title:     ra.subject,
-				Text:      ra.body,
-				TitleLink: ra.url,
+				Title:     ra.Subject,
+				Text:      ra.Body,
+				TitleLink: ra.URL,
 				Timestamp: now,
 			})
 		}

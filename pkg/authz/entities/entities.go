@@ -29,6 +29,7 @@ const (
 	ResourceSetting   = "Setting"
 	ResourceUser      = "User"
 	ResourceNexus     = "Nexus"
+	ResourcePushSub   = "PushSubscription"
 
 	ActionRead             = "read"
 	ActionReadPrivileged   = "readPrivileged"

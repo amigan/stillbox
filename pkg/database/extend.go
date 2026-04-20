@@ -52,15 +52,78 @@ func (ns *NullAudioMIME) UnmarshalText(b []byte) error {
 	return ns.Scan(b)
 }
 
+func (c *WebpushSubscription) UnmarshalYAML(n *yaml.Node) error {
+	return unmarshalWebpushYaml(c, n)
+}
+
+func unmarshalWebpushYaml(dst any, n *yaml.Node) error {
+	var m map[string]yaml.Node
+
+	err := n.Decode(&m)
+	if err != nil {
+		return fmt.Errorf("unmarshal into yaml node: %w", err)
+	}
+
+	outMap := make(map[string]any, len(m))
+
+	for k, v := range m {
+		switch k {
+		case "created_at", "updated_":
+			t, err := time.Parse(time.RFC3339Nano, v.Value)
+			if err != nil {
+				return err
+			}
+			outMap[k] = t
+		case "subscription":
+			b, err := base64.StdEncoding.DecodeString(v.Value)
+			if err != nil {
+				return err
+			}
+
+			outMap[k] = b
+		default:
+			var a any
+
+			err := v.Decode(&a)
+			if err != nil {
+				return err
+			}
+
+			outMap[k] = a
+		}
+	}
+
+	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Metadata:         nil,
+		Result:           dst,
+		TagName:          "yaml",
+		WeaklyTypedInput: true,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.TextUnmarshallerHookFunc(),
+		),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = dec.Decode(outMap)
+	if err != nil {
+		return fmt.Errorf("mapstructure decode: %w", err)
+	}
+
+	return nil
+}
+
 func (c *Call) UnmarshalYAML(n *yaml.Node) error {
-	return unmarshalYaml(c, n)
+	return unmarshalCallYaml(c, n)
 }
 
 func (c *IncidentsCall) UnmarshalYAML(n *yaml.Node) error {
-	return unmarshalYaml(c, n)
+	return unmarshalCallYaml(c, n)
 }
 
-func unmarshalYaml(dst any, n *yaml.Node) error {
+func unmarshalCallYaml(dst any, n *yaml.Node) error {
 	var m map[string]yaml.Node
 
 	err := n.Decode(&m)

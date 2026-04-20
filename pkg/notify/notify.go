@@ -13,16 +13,19 @@ import (
 	"dynatron.me/x/stillbox/pkg/config"
 )
 
+// A Notiifer is the notification controller.
 type Notifier interface {
 	Send(ctx context.Context, alerts []alert.Alert) error
 }
 
-type notifierBackend interface {
-	Dispatch(ctx context.Context, renderedAlerts *renderedAlertBatch) error
+// A NotifierBackend actually dispatches the notiication to the recipients.
+type NotifierBackend interface {
+	// Dispatch sends the rendered alerts out to recipients.
+	Dispatch(ctx context.Context, renderedAlerts *alert.RenderedAlertBatch) error
 }
 
 type notifier struct {
-	backends []notifierBackend
+	backends []NotifierBackend
 	subject  *template.Template
 	alert    *template.Template
 
@@ -63,26 +66,6 @@ func init() {
 	}
 }
 
-type renderedAlertBatch struct {
-	alerts   []renderedAlert
-	topIdx   int
-	topScore float64
-}
-
-func (r *renderedAlertBatch) top() *renderedAlert {
-	if r.topIdx > len(r.alerts)-1 {
-		return nil
-	}
-
-	return &r.alerts[r.topIdx]
-}
-
-type renderedAlert struct {
-	subject string
-	body    string
-	url     string
-}
-
 func (n *notifier) makeAlertURL(al *alert.Alert) string {
 	if al.URLTag == nil {
 		return ""
@@ -91,7 +74,7 @@ func (n *notifier) makeAlertURL(al *alert.Alert) string {
 	return n.baseURL.JoinPath("alert", *al.URLTag).String()
 }
 
-type beRegFunc func(config.ConfigMap) (notifierBackend, error)
+type beRegFunc func(config.ConfigMap) (NotifierBackend, error)
 
 var backendRegistry map[string]beRegFunc
 
@@ -101,6 +84,10 @@ func registerBackend(name string, fn beRegFunc) {
 	}
 
 	backendRegistry[name] = fn
+}
+
+func (n *notifier) addBackend(be NotifierBackend) {
+	n.backends = append(n.backends, be)
 }
 
 func (n *notifier) addService(cfg config.NotifyService) (err error) {
@@ -114,14 +101,14 @@ func (n *notifier) addService(cfg config.NotifyService) (err error) {
 		return err
 	}
 
-	n.backends = append(n.backends, be)
+	n.addBackend(be)
 
 	return nil
 }
 
 func (n *notifier) Send(ctx context.Context, alerts []alert.Alert) error {
-	rab := &renderedAlertBatch{}
-	rab.alerts = make([]renderedAlert, 0, len(alerts))
+	rab := &alert.RenderedAlertBatch{}
+	rab.Alerts = make([]alert.RenderedAlert, 0, len(alerts))
 
 	for i, al := range alerts {
 		var subject, body bytes.Buffer
@@ -135,15 +122,16 @@ func (n *notifier) Send(ctx context.Context, alerts []alert.Alert) error {
 			return err
 		}
 
-		rab.alerts = append(rab.alerts, renderedAlert{
-			subject: subject.String(),
-			body:    body.String(),
-			url:     n.makeAlertURL(&al),
+		rab.Alerts = append(rab.Alerts, alert.RenderedAlert{
+			Alert:   &alerts[i],
+			Subject: subject.String(),
+			Body:    body.String(),
+			URL:     n.makeAlertURL(&al),
 		})
 
-		if al.Score.Score > rab.topScore {
-			rab.topScore = al.Score.Score
-			rab.topIdx = i
+		if al.Score.Score > rab.TopScore {
+			rab.TopScore = al.Score.Score
+			rab.TopIdx = i
 		}
 	}
 
@@ -157,9 +145,10 @@ func (n *notifier) Send(ctx context.Context, alerts []alert.Alert) error {
 	return nil
 }
 
-func New(cfg config.Notify, baseURL *url.URL) (*notifier, error) {
+func New(cfg config.Notify, baseURL *url.URL, pushSvc NotifierBackend) (*notifier, error) {
 	n := &notifier{
-		baseURL: baseURL,
+		baseURL:  baseURL,
+		backends: make([]NotifierBackend, 0, len(cfg.Backends)+1),
 	}
 
 	var err error
@@ -188,6 +177,8 @@ func New(cfg config.Notify, baseURL *url.URL) (*notifier, error) {
 			return nil, err
 		}
 	}
+
+	n.addBackend(pushSvc)
 
 	for _, s := range cfg.Backends {
 		err := n.addService(s)

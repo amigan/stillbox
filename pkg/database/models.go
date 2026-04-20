@@ -183,6 +183,11 @@ type System struct {
 	Learned bool   `db:"learned" json:"learned,omitempty" yaml:"learned,omitempty"`
 }
 
+type SystemNotificationSubscription struct {
+	UserID   int `db:"user_id" json:"userId,omitempty" yaml:"user_id,omitempty"`
+	SystemID int `db:"system_id" json:"systemId,omitempty" yaml:"system_id,omitempty"`
+}
+
 type Talkgroup struct {
 	ID         int                `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
 	SystemID   int32              `db:"system_id" json:"systemId,omitempty" yaml:"system_id,omitempty"`
@@ -198,6 +203,12 @@ type Talkgroup struct {
 	Weight     float32            `db:"weight" json:"weight,omitempty" yaml:"weight,omitempty"`
 	Learned    bool               `db:"learned" json:"learned,omitempty" yaml:"learned,omitempty"`
 	Ignored    bool               `db:"ignored" json:"ignored,omitempty" yaml:"ignored,omitempty"`
+}
+
+type TalkgroupNotificationSubscription struct {
+	UserID   int   `db:"user_id" json:"userId,omitempty" yaml:"user_id,omitempty"`
+	SystemID int32 `db:"system_id" json:"systemId,omitempty" yaml:"system_id,omitempty"`
+	TGID     int32 `db:"tgid" json:"tgid,omitempty" yaml:"tgid,omitempty"`
 }
 
 type TalkgroupVersion struct {
@@ -232,4 +243,13 @@ type User struct {
 	LastLoginFrom *netip.Addr `db:"last_login_from" json:"lastLoginFrom,omitempty" yaml:"last_login_from,omitempty"`
 	PasswordSetAt time.Time   `db:"password_set_at" json:"passwordSetAt,omitempty" yaml:"password_set_at,omitempty"`
 	Prefs         []byte      `db:"prefs" json:"prefs,omitempty" yaml:"prefs,omitempty"`
+}
+
+type WebpushSubscription struct {
+	ID           int64      `db:"id" json:"id,omitempty" yaml:"id,omitempty"`
+	UserID       int        `db:"user_id" json:"userId,omitempty" yaml:"user_id,omitempty"`
+	CreatedAt    time.Time  `db:"created_at" json:"createdAt,omitempty" yaml:"created_at,omitempty"`
+	UpdatedAt    time.Time  `db:"updated_at" json:"updatedAt,omitempty" yaml:"updated_at,omitempty"`
+	Expiration   *time.Time `db:"expiration" json:"expiration,omitempty" yaml:"expiration,omitempty"`
+	Subscription []byte     `db:"subscription" json:"subscription,omitempty" yaml:"subscription,omitempty"`
 }

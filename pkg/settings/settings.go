@@ -30,6 +30,10 @@ type Store interface {
 	// Set sets a setting.
 	Set(ctx context.Context, name string, val Setting) error
 
+	// GetInto gets a setting and unmarshals it directly into into.
+	// It does *not* use the cache, and does *not* support defaults.
+	GetInto(ctx context.Context, name string, into any) error
+
 	// Delete removes a setting.
 	Delete(ctx context.Context, name string) error
 }
@@ -37,6 +41,7 @@ type Store interface {
 type Setting any
 
 type postgresStore struct {
+	db       database.Store
 	c        cache.Cache[string, Setting]
 	defaults Defaults
 }
@@ -58,8 +63,9 @@ func FromCtx(ctx context.Context) Store {
 	return s
 }
 
-func New(defaults Defaults) *postgresStore {
+func New(db database.Store, defaults Defaults) *postgresStore {
 	s := &postgresStore{
+		db:       db,
 		c:        cache.New[string, Setting](),
 		defaults: defaults,
 	}
@@ -73,9 +79,7 @@ func (s *postgresStore) defaultPrefs(appName string) (json.RawMessage, bool) {
 }
 
 func (s *postgresStore) getJSONB(ctx context.Context, name string) (json.RawMessage, error) {
-	db := database.FromCtx(ctx)
-
-	sRes, err := db.GetSetting(ctx, name)
+	sRes, err := s.db.GetSetting(ctx, name)
 	if err != nil && database.IsNoRows(err) {
 		return nil, ErrNoSetting
 	}
@@ -85,6 +89,20 @@ func (s *postgresStore) getJSONB(ctx context.Context, name string) (json.RawMess
 
 func prefsName(appName string) string {
 	return "prefs." + appName
+}
+
+func (s *postgresStore) GetInto(ctx context.Context, name string, into any) error {
+	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceSetting), authz.WithActions(entities.ActionRead))
+	if err != nil {
+		return err
+	}
+
+	sRes, err := s.getJSONB(ctx, name)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(sRes, into)
 }
 
 func (s *postgresStore) Get(ctx context.Context, name string) (Setting, error) {
@@ -97,6 +115,7 @@ func (s *postgresStore) Get(ctx context.Context, name string) (Setting, error) {
 	if has {
 		return ci, nil
 	}
+
 	sRes, err := s.getJSONB(ctx, name)
 	if err != nil && errors.Is(err, ErrNoSetting) {
 		def, hasDefault := s.defaults[name]
@@ -177,9 +196,7 @@ func (s *postgresStore) Set(ctx context.Context, name string, val Setting) error
 		return authz.ErrBadSubject
 	}
 
-	db := database.FromCtx(ctx)
-
-	err = db.SetSetting(ctx, name, uid, b)
+	err = s.db.SetSetting(ctx, name, uid, b)
 	if err != nil {
 		return err
 	}

@@ -25,6 +25,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
+	"dynatron.me/x/stillbox/pkg/notify/webpush"
 	"dynatron.me/x/stillbox/pkg/pipeline"
 	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/services"
@@ -98,11 +99,6 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
-	notifier, err := notify.New(cfg.Notify, (*url.URL)(&cfg.Server.BaseURL))
-	if err != nil {
-		return nil, err
-	}
-
 	tgCache := tgstore.NewCache(db, met)
 
 	rbacSvc, err := authz.New(policy.Policy)
@@ -115,9 +111,23 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
+	settingsStore := settings.New(db, settings.ConfigDefaults)
+
 	statsSvc := stats.NewStats(callStore, stats.DefaultExpiration)
 
 	nex, err := nexus.New(cfg.Transcription, tgCache, met)
+	if err != nil {
+		return nil, err
+	}
+
+	baseURL := (*url.URL)(&cfg.Server.BaseURL)
+
+	pushSvc, err := webpush.NewPushNotifier(ctx, baseURL.String(), db, rbacSvc, settingsStore)
+	if err != nil {
+		return nil, err
+	}
+
+	notifier, err := notify.New(cfg.Notify, baseURL, pushSvc)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +154,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		rbac:      rbacSvc,
 		stats:     statsSvc,
 		alerts:    alertStore,
-		settings:  settings.New(settings.ConfigDefaults),
+		settings:  settingsStore,
 	}
 
 	srv.metrics.Register("http", &srv.srvMetrics)
@@ -156,7 +166,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
-	srv.rest = rest.New(cfg.Server.BaseURL.URL(), nex, srv.auth)
+	srv.rest = rest.New(cfg.Server.BaseURL.URL(), nex, srv.auth, pushSvc)
 
 	r.Use(middleware.RequestID)
 

@@ -74,6 +74,10 @@ var Policy = &restrict.PolicyDefinition{
 				entities.ResourceNexus: {
 					&restrict.Permission{Action: entities.ActionConnect},
 				},
+				entities.ResourcePushSub: {
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Preset: PresetDeleteOwn},
+				},
 			},
 		},
 		entities.RoleSubmitter: {
@@ -176,6 +180,10 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Action: entities.ActionUpdate},
 					&restrict.Permission{Action: entities.ActionDelete},
+				},
+				entities.ResourcePushSub: {
+					&restrict.Permission{Action: entities.ActionDelete},
+					&restrict.Permission{Action: entities.ActionRead},
 				},
 			},
 		},

@@ -84,6 +84,28 @@ func (a *Alert) FillTranscriptContext(ctx context.Context, count uint, threshold
 	return nil
 }
 
+type RenderedAlertBatch struct {
+	Alerts   []RenderedAlert
+	TopIdx   int
+	TopScore float64
+}
+
+func (r *RenderedAlertBatch) Top() *RenderedAlert {
+	if r.TopIdx > len(r.Alerts)-1 {
+		return nil
+	}
+
+	return &r.Alerts[r.TopIdx]
+}
+
+type RenderedAlert struct {
+	*Alert
+
+	Subject string
+	Body    string
+	URL     string
+}
+
 const URLTagLength = 8
 
 // Make creates an alert for later rendering or storage.

@@ -12,6 +12,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/nexus"
+	"dynatron.me/x/stillbox/pkg/notify/webpush"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
@@ -47,13 +48,14 @@ type api struct {
 	prefs     *prefsAPI
 	admin     *adminAPI
 	alerts    *alertsAPI
+	push      *pushAPI
 }
 
 func (a *api) ShareRouter() http.Handler {
 	return a.shares.RootRouter()
 }
 
-func New(baseURL url.URL, nex nexus.Nexus, auth authn.Authn) *api {
+func New(baseURL url.URL, nex nexus.Nexus, auth authn.Authn, push webpush.PushNotifier) *api {
 	s := &api{
 		baseURL:   &baseURL,
 		nex:       nex,
@@ -65,6 +67,7 @@ func New(baseURL url.URL, nex nexus.Nexus, auth authn.Authn) *api {
 		prefs:     new(prefsAPI),
 		admin:     new(adminAPI),
 		alerts:    new(alertsAPI),
+		push:      newPushAPI(push),
 	}
 	s.shares = newShareAPI(&baseURL, s.shareHandlers())
 	return s
@@ -82,6 +85,7 @@ func (a *api) Subrouter() http.Handler {
 	r.Mount("/keys", a.apiKeys.Subrouter())
 	r.Mount("/admin", a.admin.Subrouter())
 	r.Mount("/alert", a.alerts.Subrouter())
+	r.Mount("/push", a.push.Subrouter())
 
 	return r
 }

@@ -24,12 +24,16 @@ type Querier interface {
 	CountRefJournal(ctx context.Context, missing *bool, since *time.Time, until *time.Time) (int64, error)
 	CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error)
+	CreatePushSubscription(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error
 	CreateShare(ctx context.Context, arg CreateShareParams) error
 	CreateSystem(ctx context.Context, iD int, name string, learned bool) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteAPIKey(ctx context.Context, apiKey *string) error
 	DeleteCall(ctx context.Context, id uuid.UUID) error
+	DeleteExpiredPushSubscriptions(ctx context.Context) (int64, error)
 	DeleteIncident(ctx context.Context, id uuid.UUID) error
+	DeletePushSubscriptionByID(ctx context.Context, id int64) error
+	DeletePushSubscriptionBySub(ctx context.Context, subscription []byte) error
 	DeleteSetting(ctx context.Context, name string) error
 	DeleteShare(ctx context.Context, id string) error
 	DeleteSystem(ctx context.Context, id int) error
@@ -57,11 +61,13 @@ type Querier interface {
 	GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error)
 	GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error)
 	GetPrunableAudioRefs(ctx context.Context, partitionStart time.Time, partitionEnd time.Time) ([]GetPrunableAudioRefsRow, error)
+	GetPushSubscriptions(ctx context.Context) ([]GetPushSubscriptionsRow, error)
 	GetRefJournal(ctx context.Context, arg GetRefJournalParams) ([]AudioRefJournal, error)
 	GetSetting(ctx context.Context, name string) ([]byte, error)
 	GetShare(ctx context.Context, id string) (Share, error)
 	GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSharesPRow, error)
 	GetSharesPCount(ctx context.Context, ownerID *int32) (int64, error)
+	GetSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([][]byte, error)
 	GetSweptCallsWithRef(ctx context.Context) ([]GetSweptCallsWithRefRow, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
 	GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error)
@@ -101,6 +107,7 @@ type Querier interface {
 	UpdateCallIncidentNotes(ctx context.Context, notes []byte, incidentID uuid.UUID, callID uuid.UUID) error
 	UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error)
 	UpdatePassword(ctx context.Context, username string, password string) error
+	UpdatePushSubscription(ctx context.Context, newSubscription []byte, userID int, oldSubscription []byte) (int64, error)
 	UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpsertTalkgroup(ctx context.Context, arg []UpsertTalkgroupParams) *UpsertTalkgroupBatchResults
