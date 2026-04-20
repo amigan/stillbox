@@ -130,6 +130,47 @@ func (q *Queries) GetSubscriptionsSubscribed(ctx context.Context, systemID int32
 	return items, nil
 }
 
+const subscribeSystem = `-- name: SubscribeSystem :exec
+INSERT INTO system_notification_subscriptions (user_id, system_id) VALUES ($1, $2)
+ON CONFLICT DO NOTHING
+`
+
+func (q *Queries) SubscribeSystem(ctx context.Context, userID int, systemID int) error {
+	_, err := q.db.Exec(ctx, subscribeSystem, userID, systemID)
+	return err
+}
+
+const subscribeTalkgroups = `-- name: SubscribeTalkgroups :exec
+INSERT INTO talkgroup_notification_subscriptions (user_id, system_id, tgid) VALUES (
+	$1, UNNEST($2::INT4[]), UNNEST(tgids::INT4[])
+) ON CONFLICT DO NOTHING
+`
+
+func (q *Queries) SubscribeTalkgroups(ctx context.Context, userID int, systemIds []int32) error {
+	_, err := q.db.Exec(ctx, subscribeTalkgroups, userID, systemIds)
+	return err
+}
+
+const unsubscribeSystem = `-- name: UnsubscribeSystem :exec
+DELETE FROM system_notification_subscriptions WHERE user_id = $1
+`
+
+func (q *Queries) UnsubscribeSystem(ctx context.Context, userID int) error {
+	_, err := q.db.Exec(ctx, unsubscribeSystem, userID)
+	return err
+}
+
+const unsubscribeTalkgroups = `-- name: UnsubscribeTalkgroups :exec
+
+DELETE FROM talkgroup_notification_subscriptions WHERE user_id = $1
+`
+
+// DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id AND (system_id, tgid) = ANY(@tgs);
+func (q *Queries) UnsubscribeTalkgroups(ctx context.Context, userID int) error {
+	_, err := q.db.Exec(ctx, unsubscribeTalkgroups, userID)
+	return err
+}
+
 const updatePushSubscription = `-- name: UpdatePushSubscription :execrows
 UPDATE webpush_subscriptions
 SET

@@ -122,7 +122,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	baseURL := (*url.URL)(&cfg.Server.BaseURL)
 
-	pushSvc, err := webpush.NewPushNotifier(ctx, baseURL.String(), db, rbacSvc, settingsStore)
+	pushSvc, err := webpush.NewPushNotifier(ctx, baseURL, db, rbacSvc, settingsStore)
 	if err != nil {
 		return nil, err
 	}

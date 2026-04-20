@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/alerting/alert"
 	"dynatron.me/x/stillbox/pkg/database"
@@ -45,20 +46,22 @@ type WebNotification struct {
 	Notification Notification `json:"notification"`
 }
 
-func ralToNotification(a *alert.RenderedAlert) WebNotification {
+func (wps *webpushSender) ralToNotification(a *alert.RenderedAlert) WebNotification {
 	return WebNotification{
 		Notification: Notification{
 			Title:     a.Subject,
 			Body:      &a.Body,
 			Timestamp: (*jsontypes.Time)(&a.Timestamp),
 			Navigate:  &a.URL,
+			Badge:     common.PtrTo(wps.pn.baseURL.JoinPath("icons", "icon-96x96.png").String()),
+			Icon:      common.PtrTo(wps.pn.baseURL.JoinPath("icons", "icon-128x128.png").String()),
 		},
 	}
 }
 
 func (wps *webpushSender) Send(ctx context.Context, subs []database.GetSubscriptionsSubscribedRow, al *alert.RenderedAlert) error {
 	var me error
-	rendAlert, err := json.Marshal(ralToNotification(al))
+	rendAlert, err := json.Marshal(wps.ralToNotification(al))
 	if err != nil {
 		return err
 	}

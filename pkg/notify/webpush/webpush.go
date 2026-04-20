@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net/url"
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/alerting/alert"
@@ -67,6 +68,7 @@ type pushNotifier struct {
 	db       database.Store
 	keys     vapidKeys
 	sender   Sender
+	baseURL  *url.URL
 }
 
 type pushNotifierOption func(*pushNotifier)
@@ -115,13 +117,13 @@ func (pn *pushNotifier) DeleteSubscription(ctx context.Context, sub json.RawMess
 	return pn.db.DeletePushSubscriptionBySub(ctx, sub)
 }
 
-func NewPushNotifier(ctx context.Context, subject string, db database.Store, rbacSvc authz.RBAC, setStore settings.Store, opts ...pushNotifierOption) (*pushNotifier, error) {
+func NewPushNotifier(ctx context.Context, baseURL *url.URL, db database.Store, rbacSvc authz.RBAC, setStore settings.Store, opts ...pushNotifierOption) (*pushNotifier, error) {
 	ctx = authz.CtxWithRBAC(ctx, rbacSvc)
 	ctx = entities.CtxWithServiceSubject(ctx, "pushNotifier")
 	pn := &pushNotifier{
 		db:       db,
 		settings: setStore,
-		subject:  subject,
+		baseURL:  baseURL,
 	}
 
 	for _, opt := range opts {

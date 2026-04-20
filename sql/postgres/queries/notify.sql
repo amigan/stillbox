@@ -48,3 +48,21 @@ LEFT OUTER JOIN system_notification_subscriptions sns ON (wps.user_id = sns.user
 WHERE
 	(tgns.system_id = @system_id AND tgns.tgid = @tgid) OR
 	(sns.system_id = @system_id);
+
+-- name: SubscribeTalkgroups :exec
+INSERT INTO talkgroup_notification_subscriptions (user_id, system_id, tgid) VALUES (
+	@user_id, UNNEST(@system_ids::INT4[]), UNNEST(tgids::INT4[])
+) ON CONFLICT DO NOTHING;
+
+-- name: SubscribeSystem :exec
+INSERT INTO system_notification_subscriptions (user_id, system_id) VALUES (@user_id, @system_id)
+ON CONFLICT DO NOTHING;
+
+-- name: UnsubscribeTalkgroups :exec
+-- DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id AND (system_id, tgid) = ANY(@tgs);
+
+-- name: UnsubscribeAllTalkgroups :exec
+DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id;
+
+-- name: UnsubscribeSystem :exec
+DELETE FROM system_notification_subscriptions WHERE user_id = @user_id;

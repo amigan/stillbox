@@ -63,8 +63,9 @@ message Error {
 
 message Notification {
   google.protobuf.Timestamp date_time = 1;
-  string msg = 2;
-  string action_url = 3;
+  string title = 2;
+  string msg = 3;
+  string action_url = 4;
 }
 
 message Command {

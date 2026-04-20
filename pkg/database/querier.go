@@ -102,8 +102,13 @@ type Querier interface {
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error
 	StoreDeletedTGVersion(ctx context.Context, systemID *int32, tGID *int32, submitter *int32) error
 	StoreTGVersion(ctx context.Context, arg []StoreTGVersionParams) *StoreTGVersionBatchResults
+	SubscribeSystem(ctx context.Context, userID int, systemID int) error
+	SubscribeTalkgroups(ctx context.Context, userID int, systemIds []int32) error
 	// This is used to sweep calls that are part of an incident prior to pruning a partition.
 	SweepCalls(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error)
+	UnsubscribeSystem(ctx context.Context, userID int) error
+	// DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id AND (system_id, tgid) = ANY(@tgs);
+	UnsubscribeTalkgroups(ctx context.Context, userID int) error
 	UpdateCallIncidentNotes(ctx context.Context, notes []byte, incidentID uuid.UUID, callID uuid.UUID) error
 	UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error)
 	UpdatePassword(ctx context.Context, username string, password string) error
