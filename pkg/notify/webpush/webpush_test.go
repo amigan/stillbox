@@ -14,6 +14,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/authz/policy"
+	"dynatron.me/x/stillbox/pkg/database"
 	"dynatron.me/x/stillbox/pkg/notify/webpush"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
@@ -46,9 +47,9 @@ func newTestSender(t *testing.T) *testSender {
 	return &testSender{t: t, m: make(map[string]int)}
 }
 
-func (ts *testSender) Send(ctx context.Context, subs [][]byte, _ *alert.RenderedAlert) error {
+func (ts *testSender) Send(ctx context.Context, subs []database.GetSubscriptionsSubscribedRow, _ *alert.RenderedAlert) error {
 	for _, rawSub := range subs {
-		sub, err := webpush.ReadSubscription(bytes.NewReader(rawSub))
+		sub, err := webpush.ReadSubscription(bytes.NewReader(rawSub.Subscription))
 		require.NoError(ts.t, err)
 
 		u, err := url.Parse(sub.Endpoint)

@@ -67,7 +67,7 @@ type Querier interface {
 	GetShare(ctx context.Context, id string) (Share, error)
 	GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSharesPRow, error)
 	GetSharesPCount(ctx context.Context, ownerID *int32) (int64, error)
-	GetSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([][]byte, error)
+	GetSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]GetSubscriptionsSubscribedRow, error)
 	GetSweptCallsWithRef(ctx context.Context) ([]GetSweptCallsWithRefRow, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
 	GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error)

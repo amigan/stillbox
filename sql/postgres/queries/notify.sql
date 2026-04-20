@@ -25,16 +25,6 @@ WHERE
 	-- name: DeletePushSubscription :execrows
 DELETE FROM webpush_subscriptions WHERE user_id = @user_id AND subscription = @subscription;
 
--- name: GetSubscriptionsSubscribed :many
-SELECT DISTINCT
-	wps.subscription
-FROM webpush_subscriptions wps
-LEFT OUTER JOIN talkgroup_notification_subscriptions tgns ON (wps.user_id = tgns.user_id)
-LEFT OUTER JOIN system_notification_subscriptions sns ON (wps.user_id = sns.user_id)
-WHERE
-	(tgns.system_id = @system_id AND tgns.tgid = @tgid) OR
-	(sns.system_id = @system_id);
-
 -- name: GetPushSubscriptions :many
 SELECT id, user_id, subscription FROM webpush_subscriptions
 WHERE
@@ -48,3 +38,13 @@ DELETE FROM webpush_subscriptions WHERE subscription = @subscription;
 
 -- name: DeleteExpiredPushSubscriptions :execrows
 DELETE FROM webpush_subscriptions WHERE expiration IS NOT NULL AND expiration < NOW();
+
+-- name: GetSubscriptionsSubscribed :many
+SELECT DISTINCT
+	wps.id, wps.user_id, wps.subscription
+FROM webpush_subscriptions wps
+LEFT OUTER JOIN talkgroup_notification_subscriptions tgns ON (wps.user_id = tgns.user_id)
+LEFT OUTER JOIN system_notification_subscriptions sns ON (wps.user_id = sns.user_id)
+WHERE
+	(tgns.system_id = @system_id AND tgns.tgid = @tgid) OR
+	(sns.system_id = @system_id);

@@ -4241,23 +4241,23 @@ func (_c *Store_GetSharesPCount_Call) RunAndReturn(run func(ctx context.Context,
 }
 
 // GetSubscriptionsSubscribed provides a mock function for the type Store
-func (_mock *Store) GetSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([][]byte, error) {
+func (_mock *Store) GetSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]database.GetSubscriptionsSubscribedRow, error) {
 	ret := _mock.Called(ctx, systemID, tGID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSubscriptionsSubscribed")
 	}
 
-	var r0 [][]byte
+	var r0 []database.GetSubscriptionsSubscribedRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, int32) ([][]byte, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, int32) ([]database.GetSubscriptionsSubscribedRow, error)); ok {
 		return returnFunc(ctx, systemID, tGID)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, int32) [][]byte); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, int32) []database.GetSubscriptionsSubscribedRow); ok {
 		r0 = returnFunc(ctx, systemID, tGID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([][]byte)
+			r0 = ret.Get(0).([]database.GetSubscriptionsSubscribedRow)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, int32, int32) error); ok {
@@ -4304,12 +4304,12 @@ func (_c *Store_GetSubscriptionsSubscribed_Call) Run(run func(ctx context.Contex
 	return _c
 }
 
-func (_c *Store_GetSubscriptionsSubscribed_Call) Return(bytess [][]byte, err error) *Store_GetSubscriptionsSubscribed_Call {
-	_c.Call.Return(bytess, err)
+func (_c *Store_GetSubscriptionsSubscribed_Call) Return(getSubscriptionsSubscribedRows []database.GetSubscriptionsSubscribedRow, err error) *Store_GetSubscriptionsSubscribed_Call {
+	_c.Call.Return(getSubscriptionsSubscribedRows, err)
 	return _c
 }
 
-func (_c *Store_GetSubscriptionsSubscribed_Call) RunAndReturn(run func(ctx context.Context, systemID int32, tGID int32) ([][]byte, error)) *Store_GetSubscriptionsSubscribed_Call {
+func (_c *Store_GetSubscriptionsSubscribed_Call) RunAndReturn(run func(ctx context.Context, systemID int32, tGID int32) ([]database.GetSubscriptionsSubscribedRow, error)) *Store_GetSubscriptionsSubscribed_Call {
 	_c.Call.Return(run)
 	return _c
 }

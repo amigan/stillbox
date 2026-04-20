@@ -4,35 +4,74 @@ import (
 	"context"
 	"encoding/json"
 
+	"dynatron.me/x/stillbox/internal/jsontypes"
 	"dynatron.me/x/stillbox/pkg/alerting/alert"
+	"dynatron.me/x/stillbox/pkg/database"
 	webpush "github.com/SherClockHolmes/webpush-go"
 	"github.com/hashicorp/go-multierror"
 )
 
 type Sender interface {
-	Send(ctx context.Context, subs [][]byte, al *alert.RenderedAlert) error
+	Send(ctx context.Context, subs []database.GetSubscriptionsSubscribedRow, al *alert.RenderedAlert) error
 }
 
 type webpushSender struct {
 	pn *pushNotifier
 }
 
-func (wps *webpushSender) Send(ctx context.Context, subs [][]byte, al *alert.RenderedAlert) error {
+type NotificationAction struct {
+}
+
+type Notification struct {
+	Actions            []NotificationAction `json:"actions,omitempty"`
+	Badge              *string              `json:"badge,omitempty"`
+	Body               *string              `json:"body,omitempty"`
+	Data               any                  `json:"data,omitempty"`
+	Direction          *string              `json:"dir,omitempty"`
+	Icon               *string              `json:"icon,omitempty"`
+	Image              *string              `json:"image,omitempty"`
+	Language           *string              `json:"lang,omitempty"`
+	Navigate           *string              `json:"navigate,omitempty"`
+	Renotify           *bool                `json:"renotify,omitempty"`
+	RequireInteraction *bool                `json:"requireInteraction,omitempty"`
+	Silent             *bool                `json:"silent,omitempty"`
+	Tag                *string              `json:"tag,omitempty"`
+	Timestamp          *jsontypes.Time      `json:"timestamp,omitempty"`
+	Title              string               `json:"title"` // required
+	Vibrate            []int                `json:"vibrate,omitempty"`
+}
+
+type WebNotification struct {
+	Notification Notification `json:"notification"`
+}
+
+func ralToNotification(a *alert.RenderedAlert) WebNotification {
+	return WebNotification{
+		Notification: Notification{
+			Title:     a.Subject,
+			Body:      &a.Body,
+			Timestamp: (*jsontypes.Time)(&a.Timestamp),
+			Navigate:  &a.URL,
+		},
+	}
+}
+
+func (wps *webpushSender) Send(ctx context.Context, subs []database.GetSubscriptionsSubscribedRow, al *alert.RenderedAlert) error {
 	var me error
-	rendAlert, err := json.Marshal(al)
+	rendAlert, err := json.Marshal(ralToNotification(al))
 	if err != nil {
 		return err
 	}
 
-	for _, subRaw := range subs {
-		var sub webpush.Subscription
-		err := json.Unmarshal(subRaw, &sub)
+	for _, sub := range subs {
+		var wpSub webpush.Subscription
+		err := json.Unmarshal(sub.Subscription, &wpSub)
 		if err != nil {
 			me = multierror.Append(me, err)
 			continue
 		}
 
-		resp, err := webpush.SendNotificationWithContext(ctx, rendAlert, &sub, &webpush.Options{
+		resp, err := webpush.SendNotificationWithContext(ctx, rendAlert, &wpSub, &webpush.Options{
 			Subscriber:      wps.pn.subject, // this is poorly named
 			VAPIDPublicKey:  wps.pn.keys.Public,
 			VAPIDPrivateKey: wps.pn.keys.Private,
@@ -43,7 +82,7 @@ func (wps *webpushSender) Send(ctx context.Context, subs [][]byte, al *alert.Ren
 			continue
 		}
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			err := wps.pn.DeleteSubscription(ctx, subRaw)
+			err := wps.pn.db.DeletePushSubscriptionByID(ctx, sub.ID)
 			if err != nil {
 				me = multierror.Append(me, err)
 			}

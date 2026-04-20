@@ -95,7 +95,7 @@ func (q *Queries) GetPushSubscriptions(ctx context.Context) ([]GetPushSubscripti
 
 const getSubscriptionsSubscribed = `-- name: GetSubscriptionsSubscribed :many
 SELECT DISTINCT
-	wps.subscription
+	wps.id, wps.user_id, wps.subscription
 FROM webpush_subscriptions wps
 LEFT OUTER JOIN talkgroup_notification_subscriptions tgns ON (wps.user_id = tgns.user_id)
 LEFT OUTER JOIN system_notification_subscriptions sns ON (wps.user_id = sns.user_id)
@@ -104,19 +104,25 @@ WHERE
 	(sns.system_id = $1)
 `
 
-func (q *Queries) GetSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([][]byte, error) {
+type GetSubscriptionsSubscribedRow struct {
+	ID           int64  `db:"id" json:"id"`
+	UserID       int    `db:"user_id" json:"userId"`
+	Subscription []byte `db:"subscription" json:"subscription"`
+}
+
+func (q *Queries) GetSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]GetSubscriptionsSubscribedRow, error) {
 	rows, err := q.db.Query(ctx, getSubscriptionsSubscribed, systemID, tGID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items [][]byte
+	var items []GetSubscriptionsSubscribedRow
 	for rows.Next() {
-		var subscription []byte
-		if err := rows.Scan(&subscription); err != nil {
+		var i GetSubscriptionsSubscribedRow
+		if err := rows.Scan(&i.ID, &i.UserID, &i.Subscription); err != nil {
 			return nil, err
 		}
-		items = append(items, subscription)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
