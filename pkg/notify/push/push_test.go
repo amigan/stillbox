@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/internal/testutil"
 	"dynatron.me/x/stillbox/pkg/alerting/alert"
 	"dynatron.me/x/stillbox/pkg/authz"
@@ -198,6 +199,14 @@ func TestSubscribe(t *testing.T) {
 			expectSubs: &push.SubscriptionSet{
 				Talkgroups: tgids("407:2", "407:3"),
 			},
+		},
+		{
+			desc: "unsub all",
+			uid:  1,
+			unsubs: &push.SubscriptionSet{
+				UnsubscribeAll: common.PtrTo(true),
+			},
+			expectSubs: &push.SubscriptionSet{},
 		},
 	}
 

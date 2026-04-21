@@ -49,6 +49,9 @@ type PushNotifier interface {
 type SubscriptionSet struct {
 	Talkgroups talkgroups.IDs `json:"talkgroups,omitempty"`
 	Systems    []int32        `json:"systems,omitempty"`
+
+	// UnsubscribeAll is only valid for unsubscribing. It is a no-op otherwise.
+	UnsubscribeAll *bool `json:"unsubscribeAll,omitempty"`
 }
 
 func (pn *pushNotifier) Unsubscribe(ctx context.Context, sub *SubscriptionSet) error {
@@ -58,6 +61,15 @@ func (pn *pushNotifier) Unsubscribe(ctx context.Context, sub *SubscriptionSet) e
 	}
 
 	err = pn.db.InTx(ctx, func(s database.Store) error {
+		if sub.UnsubscribeAll != nil && *sub.UnsubscribeAll {
+			_, err := s.UnsubscribeAllSystems(ctx, u.ID.Int())
+			if err != nil {
+				return err
+			}
+
+			_, err = s.UnsubscribeAllTalkgroups(ctx, u.ID.Int())
+			return err
+		}
 		tgs := tgstore.TGsToDBTGs(sub.Talkgroups)
 		if sub.Talkgroups != nil {
 			_, err := s.UnsubscribeTalkgroups(ctx, u.ID.Int(), tgs)
@@ -122,12 +134,14 @@ func (pn *pushNotifier) Subscriptions(ctx context.Context) (*SubscriptionSet, er
 			return err
 		}
 
-		subSet.Talkgroups = make(talkgroups.IDs, 0, len(tgSubs))
-		for _, tg := range tgSubs {
-			subSet.Talkgroups = append(subSet.Talkgroups, talkgroups.ID{
-				System:    uint32(tg.SystemID),
-				Talkgroup: uint32(tg.TGID),
-			})
+		if tgSubs != nil { // preserve nil
+			subSet.Talkgroups = make(talkgroups.IDs, 0, len(tgSubs))
+			for _, tg := range tgSubs {
+				subSet.Talkgroups = append(subSet.Talkgroups, talkgroups.ID{
+					System:    uint32(tg.SystemID),
+					Talkgroup: uint32(tg.TGID),
+				})
+			}
 		}
 
 		subSet.Systems, err = db.GetSystemSubscriptions(ctx, u.ID.Int())

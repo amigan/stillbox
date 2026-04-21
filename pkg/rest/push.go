@@ -18,8 +18,67 @@ func (pa *pushAPI) Subrouter() http.Handler {
 
 	r.Get("/vapid", pa.getVAPIDPubkey)
 	r.Post("/subscribe", pa.subscribeWebPush)
+	r.Get("/subscriptions", pa.getSubscriptions)
+	r.Delete("/subscriptions", pa.unsubscribe)
+	r.Post("/subscriptions", pa.addSubscribe)
 
 	return r
+}
+
+func (pa *pushAPI) addSubscribe(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var subSet push.SubscriptionSet
+	err := forms.Unmarshal(r, &subSet, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty())
+	if err != nil {
+		wErr(w, r, badRequestErrText(err))
+		return
+	}
+
+	err = pa.push.Subscribe(ctx, &subSet)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+
+}
+
+func (pa *pushAPI) unsubscribe(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var subSet push.SubscriptionSet
+	var isEmpty bool
+	err := forms.Unmarshal(r, &subSet, forms.WithTag("json"), forms.WithAcceptBlank(), forms.WithOmitEmpty(), forms.WithAcceptEmptyBodyResult(&isEmpty))
+	if err != nil {
+		wErr(w, r, badRequestErrText(err))
+		return
+	}
+
+	if isEmpty {
+		subSet.UnsubscribeAll = &isEmpty // it's already true
+	}
+
+	err = pa.push.Unsubscribe(ctx, &subSet)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (pa *pushAPI) getSubscriptions(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	subs, err := pa.push.Subscriptions(ctx)
+	if err != nil {
+		wErr(w, r, autoError(err))
+		return
+	}
+
+	respond(w, r, subs)
 }
 
 func (pa *pushAPI) getVAPIDPubkey(w http.ResponseWriter, r *http.Request) {
