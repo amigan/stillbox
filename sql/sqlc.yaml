@@ -38,6 +38,9 @@ sql:
               type: "Time"
               pointer: true
             nullable: true
+          - db_type: "talkgroup_tuple"
+            go_type:
+              type: "TGID"
           - db_type: "timestamptz"
             go_type:
               import: "time"

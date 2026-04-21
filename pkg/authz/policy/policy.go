@@ -76,7 +76,12 @@ var Policy = &restrict.PolicyDefinition{
 				},
 				entities.ResourcePushSub: {
 					&restrict.Permission{Action: entities.ActionCreate},
-					&restrict.Permission{Preset: PresetDeleteOwn},
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionDelete}, // all queries limited to subject user ID
+				},
+				entities.ResourceWebPushSub: {
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionDelete}, // all queries limited to subject user ID
 				},
 			},
 		},

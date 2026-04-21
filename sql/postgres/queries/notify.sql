@@ -1,4 +1,4 @@
--- name: CreatePushSubscription :exec
+-- name: CreateWebPushSubscription :exec
 INSERT INTO webpush_subscriptions(
 	user_id,
 	created_at,
@@ -39,7 +39,7 @@ DELETE FROM webpush_subscriptions WHERE subscription = @subscription;
 -- name: DeleteExpiredPushSubscriptions :execrows
 DELETE FROM webpush_subscriptions WHERE expiration IS NOT NULL AND expiration < NOW();
 
--- name: GetSubscriptionsSubscribed :many
+-- name: GetWebPushSubscriptionsSubscribed :many
 SELECT DISTINCT
 	wps.id, wps.user_id, wps.subscription
 FROM webpush_subscriptions wps
@@ -51,18 +51,27 @@ WHERE
 
 -- name: SubscribeTalkgroups :exec
 INSERT INTO talkgroup_notification_subscriptions (user_id, system_id, tgid) VALUES (
-	@user_id, UNNEST(@system_ids::INT4[]), UNNEST(tgids::INT4[])
+	@user_id, UNNEST(@system_ids::INT4[]), UNNEST(@tgids::INT4[])
 ) ON CONFLICT DO NOTHING;
 
--- name: SubscribeSystem :exec
-INSERT INTO system_notification_subscriptions (user_id, system_id) VALUES (@user_id, @system_id)
+-- name: SubscribeSystems :exec
+INSERT INTO system_notification_subscriptions (user_id, system_id) VALUES (@user_id, UNNEST(@system_ids::INT4[]))
 ON CONFLICT DO NOTHING;
 
--- name: UnsubscribeTalkgroups :exec
--- DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id AND (system_id, tgid) = ANY(@tgs);
+-- name: UnsubscribeTalkgroups :execrows
+DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id AND (system_id, tgid) = ANY(@tgs::talkgroup_tuple[]);
 
--- name: UnsubscribeAllTalkgroups :exec
+-- name: UnsubscribeAllTalkgroups :execrows
 DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id;
 
--- name: UnsubscribeSystem :exec
+-- name: UnsubscribeAllSystems :execrows
 DELETE FROM system_notification_subscriptions WHERE user_id = @user_id;
+
+-- name: UnsubscribeSystems :execrows
+DELETE FROM system_notification_subscriptions WHERE user_id = @user_id AND system_id = ANY(@system_ids::INT4[]);
+
+-- name: GetTalkgroupSubscriptions :many
+SELECT system_id, tgid FROM talkgroup_notification_subscriptions WHERE user_id = @user_id;
+
+-- name: GetSystemSubscriptions :many
+SELECT system_id::INT4 FROM system_notification_subscriptions WHERE user_id = @user_id;

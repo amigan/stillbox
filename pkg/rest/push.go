@@ -37,13 +37,13 @@ func (pa *pushAPI) subscribeWebPush(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sub, err := push.ReadSubscription(r.Body)
+	sub, err := push.ReadWebPushSubscription(r.Body)
 	if err != nil {
 		wErr(w, r, badRequestErrText(err))
 		return
 	}
 
-	err = pa.push.Subscribe(ctx, sub)
+	err = pa.push.WebPushSubscribe(ctx, sub)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return

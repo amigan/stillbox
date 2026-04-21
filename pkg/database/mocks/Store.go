@@ -360,7 +360,7 @@ func (_c *Store_AddToIncident_Call) RunAndReturn(run func(ctx context.Context, i
 }
 
 // BulkSetTalkgroupTags provides a mock function for the type Store
-func (_mock *Store) BulkSetTalkgroupTags(ctx context.Context, tgs database.TGTuples, tags []string) error {
+func (_mock *Store) BulkSetTalkgroupTags(ctx context.Context, tgs database.TGTuplesU, tags []string) error {
 	ret := _mock.Called(ctx, tgs, tags)
 
 	if len(ret) == 0 {
@@ -368,7 +368,7 @@ func (_mock *Store) BulkSetTalkgroupTags(ctx context.Context, tgs database.TGTup
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.TGTuples, []string) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.TGTuplesU, []string) error); ok {
 		r0 = returnFunc(ctx, tgs, tags)
 	} else {
 		r0 = ret.Error(0)
@@ -383,21 +383,21 @@ type Store_BulkSetTalkgroupTags_Call struct {
 
 // BulkSetTalkgroupTags is a helper method to define mock.On call
 //   - ctx context.Context
-//   - tgs database.TGTuples
+//   - tgs database.TGTuplesU
 //   - tags []string
 func (_e *Store_Expecter) BulkSetTalkgroupTags(ctx interface{}, tgs interface{}, tags interface{}) *Store_BulkSetTalkgroupTags_Call {
 	return &Store_BulkSetTalkgroupTags_Call{Call: _e.mock.On("BulkSetTalkgroupTags", ctx, tgs, tags)}
 }
 
-func (_c *Store_BulkSetTalkgroupTags_Call) Run(run func(ctx context.Context, tgs database.TGTuples, tags []string)) *Store_BulkSetTalkgroupTags_Call {
+func (_c *Store_BulkSetTalkgroupTags_Call) Run(run func(ctx context.Context, tgs database.TGTuplesU, tags []string)) *Store_BulkSetTalkgroupTags_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 database.TGTuples
+		var arg1 database.TGTuplesU
 		if args[1] != nil {
-			arg1 = args[1].(database.TGTuples)
+			arg1 = args[1].(database.TGTuplesU)
 		}
 		var arg2 []string
 		if args[2] != nil {
@@ -417,7 +417,7 @@ func (_c *Store_BulkSetTalkgroupTags_Call) Return(err error) *Store_BulkSetTalkg
 	return _c
 }
 
-func (_c *Store_BulkSetTalkgroupTags_Call) RunAndReturn(run func(ctx context.Context, tgs database.TGTuples, tags []string) error) *Store_BulkSetTalkgroupTags_Call {
+func (_c *Store_BulkSetTalkgroupTags_Call) RunAndReturn(run func(ctx context.Context, tgs database.TGTuplesU, tags []string) error) *Store_BulkSetTalkgroupTags_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -980,75 +980,6 @@ func (_c *Store_CreatePartition_Call) RunAndReturn(run func(ctx context.Context,
 	return _c
 }
 
-// CreatePushSubscription provides a mock function for the type Store
-func (_mock *Store) CreatePushSubscription(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error {
-	ret := _mock.Called(ctx, userID, expiration, subscription)
-
-	if len(ret) == 0 {
-		panic("no return value specified for CreatePushSubscription")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int, *time.Time, []byte) error); ok {
-		r0 = returnFunc(ctx, userID, expiration, subscription)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// Store_CreatePushSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreatePushSubscription'
-type Store_CreatePushSubscription_Call struct {
-	*mock.Call
-}
-
-// CreatePushSubscription is a helper method to define mock.On call
-//   - ctx context.Context
-//   - userID int
-//   - expiration *time.Time
-//   - subscription []byte
-func (_e *Store_Expecter) CreatePushSubscription(ctx interface{}, userID interface{}, expiration interface{}, subscription interface{}) *Store_CreatePushSubscription_Call {
-	return &Store_CreatePushSubscription_Call{Call: _e.mock.On("CreatePushSubscription", ctx, userID, expiration, subscription)}
-}
-
-func (_c *Store_CreatePushSubscription_Call) Run(run func(ctx context.Context, userID int, expiration *time.Time, subscription []byte)) *Store_CreatePushSubscription_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 int
-		if args[1] != nil {
-			arg1 = args[1].(int)
-		}
-		var arg2 *time.Time
-		if args[2] != nil {
-			arg2 = args[2].(*time.Time)
-		}
-		var arg3 []byte
-		if args[3] != nil {
-			arg3 = args[3].([]byte)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-			arg3,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_CreatePushSubscription_Call) Return(err error) *Store_CreatePushSubscription_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *Store_CreatePushSubscription_Call) RunAndReturn(run func(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error) *Store_CreatePushSubscription_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // CreateShare provides a mock function for the type Store
 func (_mock *Store) CreateShare(ctx context.Context, arg database.CreateShareParams) error {
 	ret := _mock.Called(ctx, arg)
@@ -1237,6 +1168,75 @@ func (_c *Store_CreateUser_Call) Return(user database.User, err error) *Store_Cr
 }
 
 func (_c *Store_CreateUser_Call) RunAndReturn(run func(ctx context.Context, arg database.CreateUserParams) (database.User, error)) *Store_CreateUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateWebPushSubscription provides a mock function for the type Store
+func (_mock *Store) CreateWebPushSubscription(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error {
+	ret := _mock.Called(ctx, userID, expiration, subscription)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateWebPushSubscription")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, *time.Time, []byte) error); ok {
+		r0 = returnFunc(ctx, userID, expiration, subscription)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_CreateWebPushSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateWebPushSubscription'
+type Store_CreateWebPushSubscription_Call struct {
+	*mock.Call
+}
+
+// CreateWebPushSubscription is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int
+//   - expiration *time.Time
+//   - subscription []byte
+func (_e *Store_Expecter) CreateWebPushSubscription(ctx interface{}, userID interface{}, expiration interface{}, subscription interface{}) *Store_CreateWebPushSubscription_Call {
+	return &Store_CreateWebPushSubscription_Call{Call: _e.mock.On("CreateWebPushSubscription", ctx, userID, expiration, subscription)}
+}
+
+func (_c *Store_CreateWebPushSubscription_Call) Run(run func(ctx context.Context, userID int, expiration *time.Time, subscription []byte)) *Store_CreateWebPushSubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		var arg2 *time.Time
+		if args[2] != nil {
+			arg2 = args[2].(*time.Time)
+		}
+		var arg3 []byte
+		if args[3] != nil {
+			arg3 = args[3].([]byte)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_CreateWebPushSubscription_Call) Return(err error) *Store_CreateWebPushSubscription_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_CreateWebPushSubscription_Call) RunAndReturn(run func(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error) *Store_CreateWebPushSubscription_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -4240,80 +4240,6 @@ func (_c *Store_GetSharesPCount_Call) RunAndReturn(run func(ctx context.Context,
 	return _c
 }
 
-// GetSubscriptionsSubscribed provides a mock function for the type Store
-func (_mock *Store) GetSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]database.GetSubscriptionsSubscribedRow, error) {
-	ret := _mock.Called(ctx, systemID, tGID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetSubscriptionsSubscribed")
-	}
-
-	var r0 []database.GetSubscriptionsSubscribedRow
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, int32) ([]database.GetSubscriptionsSubscribedRow, error)); ok {
-		return returnFunc(ctx, systemID, tGID)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, int32) []database.GetSubscriptionsSubscribedRow); ok {
-		r0 = returnFunc(ctx, systemID, tGID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]database.GetSubscriptionsSubscribedRow)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int32, int32) error); ok {
-		r1 = returnFunc(ctx, systemID, tGID)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Store_GetSubscriptionsSubscribed_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSubscriptionsSubscribed'
-type Store_GetSubscriptionsSubscribed_Call struct {
-	*mock.Call
-}
-
-// GetSubscriptionsSubscribed is a helper method to define mock.On call
-//   - ctx context.Context
-//   - systemID int32
-//   - tGID int32
-func (_e *Store_Expecter) GetSubscriptionsSubscribed(ctx interface{}, systemID interface{}, tGID interface{}) *Store_GetSubscriptionsSubscribed_Call {
-	return &Store_GetSubscriptionsSubscribed_Call{Call: _e.mock.On("GetSubscriptionsSubscribed", ctx, systemID, tGID)}
-}
-
-func (_c *Store_GetSubscriptionsSubscribed_Call) Run(run func(ctx context.Context, systemID int32, tGID int32)) *Store_GetSubscriptionsSubscribed_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 int32
-		if args[1] != nil {
-			arg1 = args[1].(int32)
-		}
-		var arg2 int32
-		if args[2] != nil {
-			arg2 = args[2].(int32)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_GetSubscriptionsSubscribed_Call) Return(getSubscriptionsSubscribedRows []database.GetSubscriptionsSubscribedRow, err error) *Store_GetSubscriptionsSubscribed_Call {
-	_c.Call.Return(getSubscriptionsSubscribedRows, err)
-	return _c
-}
-
-func (_c *Store_GetSubscriptionsSubscribed_Call) RunAndReturn(run func(ctx context.Context, systemID int32, tGID int32) ([]database.GetSubscriptionsSubscribedRow, error)) *Store_GetSubscriptionsSubscribed_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // GetSweptCallsWithRef provides a mock function for the type Store
 func (_mock *Store) GetSweptCallsWithRef(ctx context.Context) ([]database.GetSweptCallsWithRefRow, error) {
 	ret := _mock.Called(ctx)
@@ -4438,6 +4364,74 @@ func (_c *Store_GetSystemName_Call) Return(s string, err error) *Store_GetSystem
 }
 
 func (_c *Store_GetSystemName_Call) RunAndReturn(run func(ctx context.Context, systemID int) (string, error)) *Store_GetSystemName_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetSystemSubscriptions provides a mock function for the type Store
+func (_mock *Store) GetSystemSubscriptions(ctx context.Context, userID int) ([]int32, error) {
+	ret := _mock.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSystemSubscriptions")
+	}
+
+	var r0 []int32
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) ([]int32, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) []int32); ok {
+		r0 = returnFunc(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]int32)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetSystemSubscriptions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSystemSubscriptions'
+type Store_GetSystemSubscriptions_Call struct {
+	*mock.Call
+}
+
+// GetSystemSubscriptions is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int
+func (_e *Store_Expecter) GetSystemSubscriptions(ctx interface{}, userID interface{}) *Store_GetSystemSubscriptions_Call {
+	return &Store_GetSystemSubscriptions_Call{Call: _e.mock.On("GetSystemSubscriptions", ctx, userID)}
+}
+
+func (_c *Store_GetSystemSubscriptions_Call) Run(run func(ctx context.Context, userID int)) *Store_GetSystemSubscriptions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetSystemSubscriptions_Call) Return(int32s []int32, err error) *Store_GetSystemSubscriptions_Call {
+	_c.Call.Return(int32s, err)
+	return _c
+}
+
+func (_c *Store_GetSystemSubscriptions_Call) RunAndReturn(run func(ctx context.Context, userID int) ([]int32, error)) *Store_GetSystemSubscriptions_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -4668,6 +4662,74 @@ func (_c *Store_GetTalkgroupIDsByTags_Call) RunAndReturn(run func(ctx context.Co
 	return _c
 }
 
+// GetTalkgroupSubscriptions provides a mock function for the type Store
+func (_mock *Store) GetTalkgroupSubscriptions(ctx context.Context, userID int) ([]database.GetTalkgroupSubscriptionsRow, error) {
+	ret := _mock.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTalkgroupSubscriptions")
+	}
+
+	var r0 []database.GetTalkgroupSubscriptionsRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) ([]database.GetTalkgroupSubscriptionsRow, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) []database.GetTalkgroupSubscriptionsRow); ok {
+		r0 = returnFunc(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetTalkgroupSubscriptionsRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetTalkgroupSubscriptions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTalkgroupSubscriptions'
+type Store_GetTalkgroupSubscriptions_Call struct {
+	*mock.Call
+}
+
+// GetTalkgroupSubscriptions is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int
+func (_e *Store_Expecter) GetTalkgroupSubscriptions(ctx interface{}, userID interface{}) *Store_GetTalkgroupSubscriptions_Call {
+	return &Store_GetTalkgroupSubscriptions_Call{Call: _e.mock.On("GetTalkgroupSubscriptions", ctx, userID)}
+}
+
+func (_c *Store_GetTalkgroupSubscriptions_Call) Run(run func(ctx context.Context, userID int)) *Store_GetTalkgroupSubscriptions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetTalkgroupSubscriptions_Call) Return(getTalkgroupSubscriptionsRows []database.GetTalkgroupSubscriptionsRow, err error) *Store_GetTalkgroupSubscriptions_Call {
+	_c.Call.Return(getTalkgroupSubscriptionsRows, err)
+	return _c
+}
+
+func (_c *Store_GetTalkgroupSubscriptions_Call) RunAndReturn(run func(ctx context.Context, userID int) ([]database.GetTalkgroupSubscriptionsRow, error)) *Store_GetTalkgroupSubscriptions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetTalkgroupTags provides a mock function for the type Store
 func (_mock *Store) GetTalkgroupTags(ctx context.Context, systemID int32, tGID int32) ([]string, error) {
 	ret := _mock.Called(ctx, systemID, tGID)
@@ -4823,7 +4885,7 @@ func (_c *Store_GetTalkgroups_Call) RunAndReturn(run func(ctx context.Context, s
 }
 
 // GetTalkgroupsBySysTGID provides a mock function for the type Store
-func (_mock *Store) GetTalkgroupsBySysTGID(ctx context.Context, ids database.TGTuples) ([]database.GetTalkgroupsRow, error) {
+func (_mock *Store) GetTalkgroupsBySysTGID(ctx context.Context, ids database.TGTuplesU) ([]database.GetTalkgroupsRow, error) {
 	ret := _mock.Called(ctx, ids)
 
 	if len(ret) == 0 {
@@ -4832,17 +4894,17 @@ func (_mock *Store) GetTalkgroupsBySysTGID(ctx context.Context, ids database.TGT
 
 	var r0 []database.GetTalkgroupsRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.TGTuples) ([]database.GetTalkgroupsRow, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.TGTuplesU) ([]database.GetTalkgroupsRow, error)); ok {
 		return returnFunc(ctx, ids)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.TGTuples) []database.GetTalkgroupsRow); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.TGTuplesU) []database.GetTalkgroupsRow); ok {
 		r0 = returnFunc(ctx, ids)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]database.GetTalkgroupsRow)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, database.TGTuples) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, database.TGTuplesU) error); ok {
 		r1 = returnFunc(ctx, ids)
 	} else {
 		r1 = ret.Error(1)
@@ -4857,20 +4919,20 @@ type Store_GetTalkgroupsBySysTGID_Call struct {
 
 // GetTalkgroupsBySysTGID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - ids database.TGTuples
+//   - ids database.TGTuplesU
 func (_e *Store_Expecter) GetTalkgroupsBySysTGID(ctx interface{}, ids interface{}) *Store_GetTalkgroupsBySysTGID_Call {
 	return &Store_GetTalkgroupsBySysTGID_Call{Call: _e.mock.On("GetTalkgroupsBySysTGID", ctx, ids)}
 }
 
-func (_c *Store_GetTalkgroupsBySysTGID_Call) Run(run func(ctx context.Context, ids database.TGTuples)) *Store_GetTalkgroupsBySysTGID_Call {
+func (_c *Store_GetTalkgroupsBySysTGID_Call) Run(run func(ctx context.Context, ids database.TGTuplesU)) *Store_GetTalkgroupsBySysTGID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 database.TGTuples
+		var arg1 database.TGTuplesU
 		if args[1] != nil {
-			arg1 = args[1].(database.TGTuples)
+			arg1 = args[1].(database.TGTuplesU)
 		}
 		run(
 			arg0,
@@ -4885,7 +4947,7 @@ func (_c *Store_GetTalkgroupsBySysTGID_Call) Return(getTalkgroupsRows []database
 	return _c
 }
 
-func (_c *Store_GetTalkgroupsBySysTGID_Call) RunAndReturn(run func(ctx context.Context, ids database.TGTuples) ([]database.GetTalkgroupsRow, error)) *Store_GetTalkgroupsBySysTGID_Call {
+func (_c *Store_GetTalkgroupsBySysTGID_Call) RunAndReturn(run func(ctx context.Context, ids database.TGTuplesU) ([]database.GetTalkgroupsRow, error)) *Store_GetTalkgroupsBySysTGID_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -5430,6 +5492,80 @@ func (_c *Store_GetUsers_Call) Return(users []database.User, err error) *Store_G
 }
 
 func (_c *Store_GetUsers_Call) RunAndReturn(run func(ctx context.Context) ([]database.User, error)) *Store_GetUsers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetWebPushSubscriptionsSubscribed provides a mock function for the type Store
+func (_mock *Store) GetWebPushSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]database.GetWebPushSubscriptionsSubscribedRow, error) {
+	ret := _mock.Called(ctx, systemID, tGID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetWebPushSubscriptionsSubscribed")
+	}
+
+	var r0 []database.GetWebPushSubscriptionsSubscribedRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, int32) ([]database.GetWebPushSubscriptionsSubscribedRow, error)); ok {
+		return returnFunc(ctx, systemID, tGID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int32, int32) []database.GetWebPushSubscriptionsSubscribedRow); ok {
+		r0 = returnFunc(ctx, systemID, tGID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]database.GetWebPushSubscriptionsSubscribedRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int32, int32) error); ok {
+		r1 = returnFunc(ctx, systemID, tGID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_GetWebPushSubscriptionsSubscribed_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetWebPushSubscriptionsSubscribed'
+type Store_GetWebPushSubscriptionsSubscribed_Call struct {
+	*mock.Call
+}
+
+// GetWebPushSubscriptionsSubscribed is a helper method to define mock.On call
+//   - ctx context.Context
+//   - systemID int32
+//   - tGID int32
+func (_e *Store_Expecter) GetWebPushSubscriptionsSubscribed(ctx interface{}, systemID interface{}, tGID interface{}) *Store_GetWebPushSubscriptionsSubscribed_Call {
+	return &Store_GetWebPushSubscriptionsSubscribed_Call{Call: _e.mock.On("GetWebPushSubscriptionsSubscribed", ctx, systemID, tGID)}
+}
+
+func (_c *Store_GetWebPushSubscriptionsSubscribed_Call) Run(run func(ctx context.Context, systemID int32, tGID int32)) *Store_GetWebPushSubscriptionsSubscribed_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int32
+		if args[1] != nil {
+			arg1 = args[1].(int32)
+		}
+		var arg2 int32
+		if args[2] != nil {
+			arg2 = args[2].(int32)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_GetWebPushSubscriptionsSubscribed_Call) Return(getWebPushSubscriptionsSubscribedRows []database.GetWebPushSubscriptionsSubscribedRow, err error) *Store_GetWebPushSubscriptionsSubscribed_Call {
+	_c.Call.Return(getWebPushSubscriptionsSubscribedRows, err)
+	return _c
+}
+
+func (_c *Store_GetWebPushSubscriptionsSubscribed_Call) RunAndReturn(run func(ctx context.Context, systemID int32, tGID int32) ([]database.GetWebPushSubscriptionsSubscribedRow, error)) *Store_GetWebPushSubscriptionsSubscribed_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -6890,75 +7026,12 @@ func (_c *Store_StoreTGVersion_Call) RunAndReturn(run func(ctx context.Context, 
 	return _c
 }
 
-// SubscribeSystem provides a mock function for the type Store
-func (_mock *Store) SubscribeSystem(ctx context.Context, userID int, systemID int) error {
-	ret := _mock.Called(ctx, userID, systemID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SubscribeSystem")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
-		r0 = returnFunc(ctx, userID, systemID)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// Store_SubscribeSystem_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SubscribeSystem'
-type Store_SubscribeSystem_Call struct {
-	*mock.Call
-}
-
-// SubscribeSystem is a helper method to define mock.On call
-//   - ctx context.Context
-//   - userID int
-//   - systemID int
-func (_e *Store_Expecter) SubscribeSystem(ctx interface{}, userID interface{}, systemID interface{}) *Store_SubscribeSystem_Call {
-	return &Store_SubscribeSystem_Call{Call: _e.mock.On("SubscribeSystem", ctx, userID, systemID)}
-}
-
-func (_c *Store_SubscribeSystem_Call) Run(run func(ctx context.Context, userID int, systemID int)) *Store_SubscribeSystem_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 int
-		if args[1] != nil {
-			arg1 = args[1].(int)
-		}
-		var arg2 int
-		if args[2] != nil {
-			arg2 = args[2].(int)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
-	})
-	return _c
-}
-
-func (_c *Store_SubscribeSystem_Call) Return(err error) *Store_SubscribeSystem_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *Store_SubscribeSystem_Call) RunAndReturn(run func(ctx context.Context, userID int, systemID int) error) *Store_SubscribeSystem_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// SubscribeTalkgroups provides a mock function for the type Store
-func (_mock *Store) SubscribeTalkgroups(ctx context.Context, userID int, systemIds []int32) error {
+// SubscribeSystems provides a mock function for the type Store
+func (_mock *Store) SubscribeSystems(ctx context.Context, userID int, systemIds []int32) error {
 	ret := _mock.Called(ctx, userID, systemIds)
 
 	if len(ret) == 0 {
-		panic("no return value specified for SubscribeTalkgroups")
+		panic("no return value specified for SubscribeSystems")
 	}
 
 	var r0 error
@@ -6970,20 +7043,20 @@ func (_mock *Store) SubscribeTalkgroups(ctx context.Context, userID int, systemI
 	return r0
 }
 
-// Store_SubscribeTalkgroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SubscribeTalkgroups'
-type Store_SubscribeTalkgroups_Call struct {
+// Store_SubscribeSystems_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SubscribeSystems'
+type Store_SubscribeSystems_Call struct {
 	*mock.Call
 }
 
-// SubscribeTalkgroups is a helper method to define mock.On call
+// SubscribeSystems is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID int
 //   - systemIds []int32
-func (_e *Store_Expecter) SubscribeTalkgroups(ctx interface{}, userID interface{}, systemIds interface{}) *Store_SubscribeTalkgroups_Call {
-	return &Store_SubscribeTalkgroups_Call{Call: _e.mock.On("SubscribeTalkgroups", ctx, userID, systemIds)}
+func (_e *Store_Expecter) SubscribeSystems(ctx interface{}, userID interface{}, systemIds interface{}) *Store_SubscribeSystems_Call {
+	return &Store_SubscribeSystems_Call{Call: _e.mock.On("SubscribeSystems", ctx, userID, systemIds)}
 }
 
-func (_c *Store_SubscribeTalkgroups_Call) Run(run func(ctx context.Context, userID int, systemIds []int32)) *Store_SubscribeTalkgroups_Call {
+func (_c *Store_SubscribeSystems_Call) Run(run func(ctx context.Context, userID int, systemIds []int32)) *Store_SubscribeSystems_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -7006,12 +7079,81 @@ func (_c *Store_SubscribeTalkgroups_Call) Run(run func(ctx context.Context, user
 	return _c
 }
 
+func (_c *Store_SubscribeSystems_Call) Return(err error) *Store_SubscribeSystems_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Store_SubscribeSystems_Call) RunAndReturn(run func(ctx context.Context, userID int, systemIds []int32) error) *Store_SubscribeSystems_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SubscribeTalkgroups provides a mock function for the type Store
+func (_mock *Store) SubscribeTalkgroups(ctx context.Context, userID int, systemIds []int32, tgids []int32) error {
+	ret := _mock.Called(ctx, userID, systemIds, tgids)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SubscribeTalkgroups")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, []int32, []int32) error); ok {
+		r0 = returnFunc(ctx, userID, systemIds, tgids)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Store_SubscribeTalkgroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SubscribeTalkgroups'
+type Store_SubscribeTalkgroups_Call struct {
+	*mock.Call
+}
+
+// SubscribeTalkgroups is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int
+//   - systemIds []int32
+//   - tgids []int32
+func (_e *Store_Expecter) SubscribeTalkgroups(ctx interface{}, userID interface{}, systemIds interface{}, tgids interface{}) *Store_SubscribeTalkgroups_Call {
+	return &Store_SubscribeTalkgroups_Call{Call: _e.mock.On("SubscribeTalkgroups", ctx, userID, systemIds, tgids)}
+}
+
+func (_c *Store_SubscribeTalkgroups_Call) Run(run func(ctx context.Context, userID int, systemIds []int32, tgids []int32)) *Store_SubscribeTalkgroups_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		var arg2 []int32
+		if args[2] != nil {
+			arg2 = args[2].([]int32)
+		}
+		var arg3 []int32
+		if args[3] != nil {
+			arg3 = args[3].([]int32)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
 func (_c *Store_SubscribeTalkgroups_Call) Return(err error) *Store_SubscribeTalkgroups_Call {
 	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *Store_SubscribeTalkgroups_Call) RunAndReturn(run func(ctx context.Context, userID int, systemIds []int32) error) *Store_SubscribeTalkgroups_Call {
+func (_c *Store_SubscribeTalkgroups_Call) RunAndReturn(run func(ctx context.Context, userID int, systemIds []int32, tgids []int32) error) *Store_SubscribeTalkgroups_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -7088,36 +7230,45 @@ func (_c *Store_SweepCalls_Call) RunAndReturn(run func(ctx context.Context, rang
 	return _c
 }
 
-// UnsubscribeSystem provides a mock function for the type Store
-func (_mock *Store) UnsubscribeSystem(ctx context.Context, userID int) error {
+// UnsubscribeAllSystems provides a mock function for the type Store
+func (_mock *Store) UnsubscribeAllSystems(ctx context.Context, userID int) (int64, error) {
 	ret := _mock.Called(ctx, userID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UnsubscribeSystem")
+		panic("no return value specified for UnsubscribeAllSystems")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int) error); ok {
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) (int64, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) int64); ok {
 		r0 = returnFunc(ctx, userID)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(int64)
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
-// Store_UnsubscribeSystem_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UnsubscribeSystem'
-type Store_UnsubscribeSystem_Call struct {
+// Store_UnsubscribeAllSystems_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UnsubscribeAllSystems'
+type Store_UnsubscribeAllSystems_Call struct {
 	*mock.Call
 }
 
-// UnsubscribeSystem is a helper method to define mock.On call
+// UnsubscribeAllSystems is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID int
-func (_e *Store_Expecter) UnsubscribeSystem(ctx interface{}, userID interface{}) *Store_UnsubscribeSystem_Call {
-	return &Store_UnsubscribeSystem_Call{Call: _e.mock.On("UnsubscribeSystem", ctx, userID)}
+func (_e *Store_Expecter) UnsubscribeAllSystems(ctx interface{}, userID interface{}) *Store_UnsubscribeAllSystems_Call {
+	return &Store_UnsubscribeAllSystems_Call{Call: _e.mock.On("UnsubscribeAllSystems", ctx, userID)}
 }
 
-func (_c *Store_UnsubscribeSystem_Call) Run(run func(ctx context.Context, userID int)) *Store_UnsubscribeSystem_Call {
+func (_c *Store_UnsubscribeAllSystems_Call) Run(run func(ctx context.Context, userID int)) *Store_UnsubscribeAllSystems_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -7135,31 +7286,178 @@ func (_c *Store_UnsubscribeSystem_Call) Run(run func(ctx context.Context, userID
 	return _c
 }
 
-func (_c *Store_UnsubscribeSystem_Call) Return(err error) *Store_UnsubscribeSystem_Call {
-	_c.Call.Return(err)
+func (_c *Store_UnsubscribeAllSystems_Call) Return(n int64, err error) *Store_UnsubscribeAllSystems_Call {
+	_c.Call.Return(n, err)
 	return _c
 }
 
-func (_c *Store_UnsubscribeSystem_Call) RunAndReturn(run func(ctx context.Context, userID int) error) *Store_UnsubscribeSystem_Call {
+func (_c *Store_UnsubscribeAllSystems_Call) RunAndReturn(run func(ctx context.Context, userID int) (int64, error)) *Store_UnsubscribeAllSystems_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UnsubscribeAllTalkgroups provides a mock function for the type Store
+func (_mock *Store) UnsubscribeAllTalkgroups(ctx context.Context, userID int) (int64, error) {
+	ret := _mock.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UnsubscribeAllTalkgroups")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) (int64, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) int64); ok {
+		r0 = returnFunc(ctx, userID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_UnsubscribeAllTalkgroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UnsubscribeAllTalkgroups'
+type Store_UnsubscribeAllTalkgroups_Call struct {
+	*mock.Call
+}
+
+// UnsubscribeAllTalkgroups is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int
+func (_e *Store_Expecter) UnsubscribeAllTalkgroups(ctx interface{}, userID interface{}) *Store_UnsubscribeAllTalkgroups_Call {
+	return &Store_UnsubscribeAllTalkgroups_Call{Call: _e.mock.On("UnsubscribeAllTalkgroups", ctx, userID)}
+}
+
+func (_c *Store_UnsubscribeAllTalkgroups_Call) Run(run func(ctx context.Context, userID int)) *Store_UnsubscribeAllTalkgroups_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_UnsubscribeAllTalkgroups_Call) Return(n int64, err error) *Store_UnsubscribeAllTalkgroups_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *Store_UnsubscribeAllTalkgroups_Call) RunAndReturn(run func(ctx context.Context, userID int) (int64, error)) *Store_UnsubscribeAllTalkgroups_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UnsubscribeSystems provides a mock function for the type Store
+func (_mock *Store) UnsubscribeSystems(ctx context.Context, userID int, systemIds []int32) (int64, error) {
+	ret := _mock.Called(ctx, userID, systemIds)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UnsubscribeSystems")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, []int32) (int64, error)); ok {
+		return returnFunc(ctx, userID, systemIds)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, []int32) int64); ok {
+		r0 = returnFunc(ctx, userID, systemIds)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int, []int32) error); ok {
+		r1 = returnFunc(ctx, userID, systemIds)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Store_UnsubscribeSystems_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UnsubscribeSystems'
+type Store_UnsubscribeSystems_Call struct {
+	*mock.Call
+}
+
+// UnsubscribeSystems is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int
+//   - systemIds []int32
+func (_e *Store_Expecter) UnsubscribeSystems(ctx interface{}, userID interface{}, systemIds interface{}) *Store_UnsubscribeSystems_Call {
+	return &Store_UnsubscribeSystems_Call{Call: _e.mock.On("UnsubscribeSystems", ctx, userID, systemIds)}
+}
+
+func (_c *Store_UnsubscribeSystems_Call) Run(run func(ctx context.Context, userID int, systemIds []int32)) *Store_UnsubscribeSystems_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		var arg2 []int32
+		if args[2] != nil {
+			arg2 = args[2].([]int32)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Store_UnsubscribeSystems_Call) Return(n int64, err error) *Store_UnsubscribeSystems_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *Store_UnsubscribeSystems_Call) RunAndReturn(run func(ctx context.Context, userID int, systemIds []int32) (int64, error)) *Store_UnsubscribeSystems_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // UnsubscribeTalkgroups provides a mock function for the type Store
-func (_mock *Store) UnsubscribeTalkgroups(ctx context.Context, userID int) error {
-	ret := _mock.Called(ctx, userID)
+func (_mock *Store) UnsubscribeTalkgroups(ctx context.Context, userID int, tgs []database.TGID) (int64, error) {
+	ret := _mock.Called(ctx, userID, tgs)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UnsubscribeTalkgroups")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int) error); ok {
-		r0 = returnFunc(ctx, userID)
-	} else {
-		r0 = ret.Error(0)
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, []database.TGID) (int64, error)); ok {
+		return returnFunc(ctx, userID, tgs)
 	}
-	return r0
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, []database.TGID) int64); ok {
+		r0 = returnFunc(ctx, userID, tgs)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int, []database.TGID) error); ok {
+		r1 = returnFunc(ctx, userID, tgs)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
 // Store_UnsubscribeTalkgroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UnsubscribeTalkgroups'
@@ -7170,11 +7468,12 @@ type Store_UnsubscribeTalkgroups_Call struct {
 // UnsubscribeTalkgroups is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID int
-func (_e *Store_Expecter) UnsubscribeTalkgroups(ctx interface{}, userID interface{}) *Store_UnsubscribeTalkgroups_Call {
-	return &Store_UnsubscribeTalkgroups_Call{Call: _e.mock.On("UnsubscribeTalkgroups", ctx, userID)}
+//   - tgs []database.TGID
+func (_e *Store_Expecter) UnsubscribeTalkgroups(ctx interface{}, userID interface{}, tgs interface{}) *Store_UnsubscribeTalkgroups_Call {
+	return &Store_UnsubscribeTalkgroups_Call{Call: _e.mock.On("UnsubscribeTalkgroups", ctx, userID, tgs)}
 }
 
-func (_c *Store_UnsubscribeTalkgroups_Call) Run(run func(ctx context.Context, userID int)) *Store_UnsubscribeTalkgroups_Call {
+func (_c *Store_UnsubscribeTalkgroups_Call) Run(run func(ctx context.Context, userID int, tgs []database.TGID)) *Store_UnsubscribeTalkgroups_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -7184,20 +7483,25 @@ func (_c *Store_UnsubscribeTalkgroups_Call) Run(run func(ctx context.Context, us
 		if args[1] != nil {
 			arg1 = args[1].(int)
 		}
+		var arg2 []database.TGID
+		if args[2] != nil {
+			arg2 = args[2].([]database.TGID)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
 }
 
-func (_c *Store_UnsubscribeTalkgroups_Call) Return(err error) *Store_UnsubscribeTalkgroups_Call {
-	_c.Call.Return(err)
+func (_c *Store_UnsubscribeTalkgroups_Call) Return(n int64, err error) *Store_UnsubscribeTalkgroups_Call {
+	_c.Call.Return(n, err)
 	return _c
 }
 
-func (_c *Store_UnsubscribeTalkgroups_Call) RunAndReturn(run func(ctx context.Context, userID int) error) *Store_UnsubscribeTalkgroups_Call {
+func (_c *Store_UnsubscribeTalkgroups_Call) RunAndReturn(run func(ctx context.Context, userID int, tgs []database.TGID) (int64, error)) *Store_UnsubscribeTalkgroups_Call {
 	_c.Call.Return(run)
 	return _c
 }

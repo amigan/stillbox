@@ -482,7 +482,7 @@ func (_c *Store_LearnTG_Call) RunAndReturn(run func(ctx context.Context, call *c
 }
 
 // Load provides a mock function for the type Store
-func (_mock *Store) Load(ctx context.Context, tgs database.TGTuples) error {
+func (_mock *Store) Load(ctx context.Context, tgs database.TGTuplesU) error {
 	ret := _mock.Called(ctx, tgs)
 
 	if len(ret) == 0 {
@@ -490,7 +490,7 @@ func (_mock *Store) Load(ctx context.Context, tgs database.TGTuples) error {
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, database.TGTuples) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.TGTuplesU) error); ok {
 		r0 = returnFunc(ctx, tgs)
 	} else {
 		r0 = ret.Error(0)
@@ -505,20 +505,20 @@ type Store_Load_Call struct {
 
 // Load is a helper method to define mock.On call
 //   - ctx context.Context
-//   - tgs database.TGTuples
+//   - tgs database.TGTuplesU
 func (_e *Store_Expecter) Load(ctx interface{}, tgs interface{}) *Store_Load_Call {
 	return &Store_Load_Call{Call: _e.mock.On("Load", ctx, tgs)}
 }
 
-func (_c *Store_Load_Call) Run(run func(ctx context.Context, tgs database.TGTuples)) *Store_Load_Call {
+func (_c *Store_Load_Call) Run(run func(ctx context.Context, tgs database.TGTuplesU)) *Store_Load_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 database.TGTuples
+		var arg1 database.TGTuplesU
 		if args[1] != nil {
-			arg1 = args[1].(database.TGTuples)
+			arg1 = args[1].(database.TGTuplesU)
 		}
 		run(
 			arg0,
@@ -533,7 +533,7 @@ func (_c *Store_Load_Call) Return(err error) *Store_Load_Call {
 	return _c
 }
 
-func (_c *Store_Load_Call) RunAndReturn(run func(ctx context.Context, tgs database.TGTuples) error) *Store_Load_Call {
+func (_c *Store_Load_Call) RunAndReturn(run func(ctx context.Context, tgs database.TGTuplesU) error) *Store_Load_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -18,6 +18,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/notify/push"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
+	"dynatron.me/x/stillbox/pkg/users"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -47,9 +48,9 @@ func newTestSender(t *testing.T) *testSender {
 	return &testSender{t: t, m: make(map[string]int)}
 }
 
-func (ts *testSender) Send(ctx context.Context, subs []database.GetSubscriptionsSubscribedRow, _ *alert.RenderedAlert) error {
+func (ts *testSender) Send(ctx context.Context, subs []database.GetWebPushSubscriptionsSubscribedRow, _ *alert.RenderedAlert) error {
 	for _, rawSub := range subs {
-		sub, err := push.ReadSubscription(bytes.NewReader(rawSub.Subscription))
+		sub, err := push.ReadWebPushSubscription(bytes.NewReader(rawSub.Subscription))
 		require.NoError(ts.t, err)
 
 		u, err := url.Parse(sub.Endpoint)
@@ -67,9 +68,10 @@ func (suite *TestSuite) makePushNotifier(t *testing.T, sender *testSender) (push
 
 	setStore := settings.New(suite.db, settings.ConfigDefaults)
 
-	ctx = entities.CtxWithServiceSubject(ctx, "notifiertest")
+	ctx = authz.CtxWithRBAC(ctx, rbac)
+	svcCtx := entities.CtxWithServiceSubject(ctx, "notifiertest")
 
-	n, err := push.NewPushNotifier(ctx, &url.URL{Host: "asdfg", Scheme: "https"}, suite.db, rbac, setStore, push.WithSender(sender))
+	n, err := push.NewPushNotifier(svcCtx, &url.URL{Host: "asdfg", Scheme: "https"}, suite.db, rbac, setStore, push.WithSender(sender))
 	require.NoError(t, err)
 
 	return n, ctx
@@ -132,6 +134,7 @@ func TestSubscriptions(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			sender := newTestSender(t)
 			st, ctx := s.makePushNotifier(t, sender)
+			ctx = entities.CtxWithServiceSubject(ctx, "notifiertest")
 			err := st.Dispatch(ctx, makeRA(strings.Split(tc.tgs, ",")))
 			if tc.expectErr != nil {
 				assert.Contains(t, err.Error(), tc.expectErr.Error())
@@ -139,6 +142,89 @@ func TestSubscriptions(t *testing.T) {
 				assert.NoError(t, err)
 			}
 			assert.Equal(t, tc.counts, sender.m)
+		})
+	}
+}
+
+func tgids(s ...string) talkgroups.IDs {
+	return talkgroups.TGIDs(s...)
+}
+
+func TestSubscribe(t *testing.T) {
+	s := SetupTest()
+	defer s.TearDownTest()
+
+	sender := newTestSender(t)
+	st, ctx := s.makePushNotifier(t, sender)
+
+	tests := []struct {
+		desc           string
+		uid            int
+		subs           *push.SubscriptionSet
+		unsubs         *push.SubscriptionSet
+		expectSubs     *push.SubscriptionSet
+		expectSubErr   error
+		expectUnsubErr error
+	}{
+		{
+			desc: "base",
+			uid:  1,
+			subs: &push.SubscriptionSet{
+				Talkgroups: tgids("407:168"),
+				Systems:    []int32{3348},
+			},
+			expectSubs: &push.SubscriptionSet{
+				Talkgroups: tgids("407:2", "407:3", "407:168"),
+				Systems:    []int32{3348},
+			},
+		},
+		{
+			desc: "unsub",
+			uid:  1,
+			unsubs: &push.SubscriptionSet{
+				Talkgroups: tgids("407:168"),
+			},
+			expectSubs: &push.SubscriptionSet{
+				Talkgroups: tgids("407:2", "407:3"),
+				Systems:    []int32{3348},
+			},
+		},
+		{
+			desc: "unsub sys",
+			uid:  1,
+			unsubs: &push.SubscriptionSet{
+				Systems: []int32{3348},
+			},
+			expectSubs: &push.SubscriptionSet{
+				Talkgroups: tgids("407:2", "407:3"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx := entities.CtxWithSubject(ctx, &users.User{ID: users.UserID(tc.uid)})
+			if tc.subs != nil {
+				err := st.Subscribe(ctx, tc.subs)
+				if tc.expectSubErr != nil {
+					assert.Contains(t, err.Error(), tc.expectSubErr.Error())
+				} else {
+					assert.NoError(t, err)
+				}
+			}
+
+			if tc.unsubs != nil {
+				err := st.Unsubscribe(ctx, tc.unsubs)
+				if tc.expectUnsubErr != nil {
+					assert.Contains(t, err.Error(), tc.expectUnsubErr.Error())
+				} else {
+					assert.NoError(t, err)
+				}
+			}
+
+			finalSubs, err := st.Subscriptions(ctx)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectSubs, finalSubs)
 		})
 	}
 }

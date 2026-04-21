@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const createPushSubscription = `-- name: CreatePushSubscription :exec
+const createWebPushSubscription = `-- name: CreateWebPushSubscription :exec
 INSERT INTO webpush_subscriptions(
 	user_id,
 	created_at,
@@ -26,8 +26,8 @@ INSERT INTO webpush_subscriptions(
 )
 `
 
-func (q *Queries) CreatePushSubscription(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error {
-	_, err := q.db.Exec(ctx, createPushSubscription, userID, expiration, subscription)
+func (q *Queries) CreateWebPushSubscription(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error {
+	_, err := q.db.Exec(ctx, createWebPushSubscription, userID, expiration, subscription)
 	return err
 }
 
@@ -93,7 +93,60 @@ func (q *Queries) GetPushSubscriptions(ctx context.Context) ([]GetPushSubscripti
 	return items, nil
 }
 
-const getSubscriptionsSubscribed = `-- name: GetSubscriptionsSubscribed :many
+const getSystemSubscriptions = `-- name: GetSystemSubscriptions :many
+SELECT system_id::INT4 FROM system_notification_subscriptions WHERE user_id = $1
+`
+
+func (q *Queries) GetSystemSubscriptions(ctx context.Context, userID int) ([]int32, error) {
+	rows, err := q.db.Query(ctx, getSystemSubscriptions, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var system_id int32
+		if err := rows.Scan(&system_id); err != nil {
+			return nil, err
+		}
+		items = append(items, system_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTalkgroupSubscriptions = `-- name: GetTalkgroupSubscriptions :many
+SELECT system_id, tgid FROM talkgroup_notification_subscriptions WHERE user_id = $1
+`
+
+type GetTalkgroupSubscriptionsRow struct {
+	SystemID int32 `db:"system_id" json:"systemId"`
+	TGID     int32 `db:"tgid" json:"tgid"`
+}
+
+func (q *Queries) GetTalkgroupSubscriptions(ctx context.Context, userID int) ([]GetTalkgroupSubscriptionsRow, error) {
+	rows, err := q.db.Query(ctx, getTalkgroupSubscriptions, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTalkgroupSubscriptionsRow
+	for rows.Next() {
+		var i GetTalkgroupSubscriptionsRow
+		if err := rows.Scan(&i.SystemID, &i.TGID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getWebPushSubscriptionsSubscribed = `-- name: GetWebPushSubscriptionsSubscribed :many
 SELECT DISTINCT
 	wps.id, wps.user_id, wps.subscription
 FROM webpush_subscriptions wps
@@ -104,21 +157,21 @@ WHERE
 	(sns.system_id = $1)
 `
 
-type GetSubscriptionsSubscribedRow struct {
+type GetWebPushSubscriptionsSubscribedRow struct {
 	ID           int64  `db:"id" json:"id"`
 	UserID       int    `db:"user_id" json:"userId"`
 	Subscription []byte `db:"subscription" json:"subscription"`
 }
 
-func (q *Queries) GetSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]GetSubscriptionsSubscribedRow, error) {
-	rows, err := q.db.Query(ctx, getSubscriptionsSubscribed, systemID, tGID)
+func (q *Queries) GetWebPushSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]GetWebPushSubscriptionsSubscribedRow, error) {
+	rows, err := q.db.Query(ctx, getWebPushSubscriptionsSubscribed, systemID, tGID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetSubscriptionsSubscribedRow
+	var items []GetWebPushSubscriptionsSubscribedRow
 	for rows.Next() {
-		var i GetSubscriptionsSubscribedRow
+		var i GetWebPushSubscriptionsSubscribedRow
 		if err := rows.Scan(&i.ID, &i.UserID, &i.Subscription); err != nil {
 			return nil, err
 		}
@@ -130,45 +183,73 @@ func (q *Queries) GetSubscriptionsSubscribed(ctx context.Context, systemID int32
 	return items, nil
 }
 
-const subscribeSystem = `-- name: SubscribeSystem :exec
-INSERT INTO system_notification_subscriptions (user_id, system_id) VALUES ($1, $2)
+const subscribeSystems = `-- name: SubscribeSystems :exec
+INSERT INTO system_notification_subscriptions (user_id, system_id) VALUES ($1, UNNEST($2::INT4[]))
 ON CONFLICT DO NOTHING
 `
 
-func (q *Queries) SubscribeSystem(ctx context.Context, userID int, systemID int) error {
-	_, err := q.db.Exec(ctx, subscribeSystem, userID, systemID)
+func (q *Queries) SubscribeSystems(ctx context.Context, userID int, systemIds []int32) error {
+	_, err := q.db.Exec(ctx, subscribeSystems, userID, systemIds)
 	return err
 }
 
 const subscribeTalkgroups = `-- name: SubscribeTalkgroups :exec
 INSERT INTO talkgroup_notification_subscriptions (user_id, system_id, tgid) VALUES (
-	$1, UNNEST($2::INT4[]), UNNEST(tgids::INT4[])
+	$1, UNNEST($2::INT4[]), UNNEST($3::INT4[])
 ) ON CONFLICT DO NOTHING
 `
 
-func (q *Queries) SubscribeTalkgroups(ctx context.Context, userID int, systemIds []int32) error {
-	_, err := q.db.Exec(ctx, subscribeTalkgroups, userID, systemIds)
+func (q *Queries) SubscribeTalkgroups(ctx context.Context, userID int, systemIds []int32, tgids []int32) error {
+	_, err := q.db.Exec(ctx, subscribeTalkgroups, userID, systemIds, tgids)
 	return err
 }
 
-const unsubscribeSystem = `-- name: UnsubscribeSystem :exec
+const unsubscribeAllSystems = `-- name: UnsubscribeAllSystems :execrows
 DELETE FROM system_notification_subscriptions WHERE user_id = $1
 `
 
-func (q *Queries) UnsubscribeSystem(ctx context.Context, userID int) error {
-	_, err := q.db.Exec(ctx, unsubscribeSystem, userID)
-	return err
+func (q *Queries) UnsubscribeAllSystems(ctx context.Context, userID int) (int64, error) {
+	result, err := q.db.Exec(ctx, unsubscribeAllSystems, userID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
-const unsubscribeTalkgroups = `-- name: UnsubscribeTalkgroups :exec
-
+const unsubscribeAllTalkgroups = `-- name: UnsubscribeAllTalkgroups :execrows
 DELETE FROM talkgroup_notification_subscriptions WHERE user_id = $1
 `
 
-// DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id AND (system_id, tgid) = ANY(@tgs);
-func (q *Queries) UnsubscribeTalkgroups(ctx context.Context, userID int) error {
-	_, err := q.db.Exec(ctx, unsubscribeTalkgroups, userID)
-	return err
+func (q *Queries) UnsubscribeAllTalkgroups(ctx context.Context, userID int) (int64, error) {
+	result, err := q.db.Exec(ctx, unsubscribeAllTalkgroups, userID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const unsubscribeSystems = `-- name: UnsubscribeSystems :execrows
+DELETE FROM system_notification_subscriptions WHERE user_id = $1 AND system_id = ANY($2::INT4[])
+`
+
+func (q *Queries) UnsubscribeSystems(ctx context.Context, userID int, systemIds []int32) (int64, error) {
+	result, err := q.db.Exec(ctx, unsubscribeSystems, userID, systemIds)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const unsubscribeTalkgroups = `-- name: UnsubscribeTalkgroups :execrows
+DELETE FROM talkgroup_notification_subscriptions WHERE user_id = $1 AND (system_id, tgid) = ANY($2::talkgroup_tuple[])
+`
+
+func (q *Queries) UnsubscribeTalkgroups(ctx context.Context, userID int, tgs []TGID) (int64, error) {
+	result, err := q.db.Exec(ctx, unsubscribeTalkgroups, userID, tgs)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const updatePushSubscription = `-- name: UpdatePushSubscription :execrows

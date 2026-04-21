@@ -391,7 +391,7 @@ func (as *alerter) scoredTGs() []talkgroups.ID {
 }
 
 // packedScoredTGs gets a list of TGID tuples.
-func (as *alerter) scoredTGsTuple() (tgs database.TGTuples) {
+func (as *alerter) scoredTGsTuple() (tgs database.TGTuplesU) {
 	tgs = database.MakeTGTuples(len(as.scores))
 	for _, s := range as.scores {
 		tgs.Append(s.ID.System, s.ID.Talkgroup)

@@ -24,10 +24,10 @@ type Querier interface {
 	CountRefJournal(ctx context.Context, missing *bool, since *time.Time, until *time.Time) (int64, error)
 	CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error)
-	CreatePushSubscription(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error
 	CreateShare(ctx context.Context, arg CreateShareParams) error
 	CreateSystem(ctx context.Context, iD int, name string, learned bool) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	CreateWebPushSubscription(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error
 	DeleteAPIKey(ctx context.Context, apiKey *string) error
 	DeleteCall(ctx context.Context, id uuid.UUID) error
 	DeleteExpiredPushSubscriptions(ctx context.Context) (int64, error)
@@ -67,11 +67,12 @@ type Querier interface {
 	GetShare(ctx context.Context, id string) (Share, error)
 	GetSharesP(ctx context.Context, arg GetSharesPParams) ([]GetSharesPRow, error)
 	GetSharesPCount(ctx context.Context, ownerID *int32) (int64, error)
-	GetSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]GetSubscriptionsSubscribedRow, error)
 	GetSweptCallsWithRef(ctx context.Context) ([]GetSweptCallsWithRefRow, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
+	GetSystemSubscriptions(ctx context.Context, userID int) ([]int32, error)
 	GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error)
 	GetTalkgroupIDsByTags(ctx context.Context, allTags []string, anyTags []string, notAnyTags []string) ([]GetTalkgroupIDsByTagsRow, error)
+	GetTalkgroupSubscriptions(ctx context.Context, userID int) ([]GetTalkgroupSubscriptionsRow, error)
 	GetTalkgroupTags(ctx context.Context, systemID int32, tGID int32) ([]string, error)
 	GetTalkgroups(ctx context.Context, system *int32, withIgnored bool, filter *string) ([]GetTalkgroupsRow, error)
 	GetTalkgroupsCount(ctx context.Context, system *int32, withIgnored bool, filter *string) (int64, error)
@@ -82,6 +83,7 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id int) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUsers(ctx context.Context) ([]User, error)
+	GetWebPushSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]GetWebPushSubscriptionsSubscribedRow, error)
 	IncrementRefJournal(ctx context.Context, id int64) error
 	ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error)
 	ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error)
@@ -102,13 +104,14 @@ type Querier interface {
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error
 	StoreDeletedTGVersion(ctx context.Context, systemID *int32, tGID *int32, submitter *int32) error
 	StoreTGVersion(ctx context.Context, arg []StoreTGVersionParams) *StoreTGVersionBatchResults
-	SubscribeSystem(ctx context.Context, userID int, systemID int) error
-	SubscribeTalkgroups(ctx context.Context, userID int, systemIds []int32) error
+	SubscribeSystems(ctx context.Context, userID int, systemIds []int32) error
+	SubscribeTalkgroups(ctx context.Context, userID int, systemIds []int32, tgids []int32) error
 	// This is used to sweep calls that are part of an incident prior to pruning a partition.
 	SweepCalls(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error)
-	UnsubscribeSystem(ctx context.Context, userID int) error
-	// DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id AND (system_id, tgid) = ANY(@tgs);
-	UnsubscribeTalkgroups(ctx context.Context, userID int) error
+	UnsubscribeAllSystems(ctx context.Context, userID int) (int64, error)
+	UnsubscribeAllTalkgroups(ctx context.Context, userID int) (int64, error)
+	UnsubscribeSystems(ctx context.Context, userID int, systemIds []int32) (int64, error)
+	UnsubscribeTalkgroups(ctx context.Context, userID int, tgs []TGID) (int64, error)
 	UpdateCallIncidentNotes(ctx context.Context, notes []byte, incidentID uuid.UUID, callID uuid.UUID) error
 	UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error)
 	UpdatePassword(ctx context.Context, username string, password string) error

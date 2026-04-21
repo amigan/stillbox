@@ -44,10 +44,10 @@ func (f *Filter) TGs(ctx context.Context) (tgsp.IDs, error) {
 	return r, nil
 }
 
-func (f *Filter) Tuples(ctx context.Context) (database.TGTuples, error) {
+func (f *Filter) Tuples(ctx context.Context) (database.TGTuplesU, error) {
 	err := f.ensureCompiled(ctx)
 	if err != nil {
-		return database.TGTuples{}, err
+		return database.TGTuplesU{}, err
 	}
 
 	f.RLock()
@@ -61,7 +61,7 @@ func (f *Filter) Tuples(ctx context.Context) (database.TGTuples, error) {
 		tgs[i] = tg.Talkgroup
 	}
 
-	return database.TGTuples{sys, tgs}, nil
+	return database.TGTuplesU{sys, tgs}, nil
 }
 
 func (f *Filter) ensureCompiled(ctx context.Context) error {

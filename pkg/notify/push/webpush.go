@@ -3,6 +3,7 @@ package push
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"time"
 
 	"dynatron.me/x/stillbox/internal/jsontypes"
@@ -39,6 +40,23 @@ type Notification struct {
 	Vibrate            []int                `json:"vibrate,omitempty"`
 }
 
+func ReadWebPushSubscription(r io.Reader) (*WebPushSubscription, error) {
+	raw, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	sub := new(WebPushSubscription)
+	err = json.Unmarshal(raw, sub)
+	if err != nil {
+		return nil, err
+	}
+
+	sub.raw = raw
+
+	return sub, nil
+}
+
 type WebNotification struct {
 	Notification Notification `json:"notification"`
 }
@@ -61,14 +79,14 @@ func (vk *vapidKeys) generate() (err error) {
 	return err
 }
 
-type Subscription struct {
+type WebPushSubscription struct {
 	webpush.Subscription
 	Expiration *time.Time `json:"expirationTime,omitempty"`
 
 	raw json.RawMessage `json:"-"`
 }
 
-func (wps *webpushSender) Send(ctx context.Context, subs []database.GetSubscriptionsSubscribedRow, al *alert.RenderedAlert) error {
+func (wps *webpushSender) Send(ctx context.Context, subs []database.GetWebPushSubscriptionsSubscribedRow, al *alert.RenderedAlert) error {
 	var me error
 	rendAlert, err := json.Marshal(wps.ralToNotification(al))
 	if err != nil {

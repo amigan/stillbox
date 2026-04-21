@@ -53,6 +53,11 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	UNIQUE (system_id, tgid)
 );
 
+CREATE TYPE talkgroup_tuple AS (
+	system INT4,
+	tg INT4
+);
+
 CREATE INDEX talkgroups_system_tgid_idx ON talkgroups (system_id, tgid);
 
 CREATE INDEX IF NOT EXISTS talkgroup_id_tags ON talkgroups USING GIN (tags);
