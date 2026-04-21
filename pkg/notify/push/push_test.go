@@ -1,6 +1,6 @@
 //go:build integration
 
-package webpush_test
+package push_test
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/authz/policy"
 	"dynatron.me/x/stillbox/pkg/database"
-	"dynatron.me/x/stillbox/pkg/notify/webpush"
+	"dynatron.me/x/stillbox/pkg/notify/push"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"github.com/stretchr/testify/assert"
@@ -49,7 +49,7 @@ func newTestSender(t *testing.T) *testSender {
 
 func (ts *testSender) Send(ctx context.Context, subs []database.GetSubscriptionsSubscribedRow, _ *alert.RenderedAlert) error {
 	for _, rawSub := range subs {
-		sub, err := webpush.ReadSubscription(bytes.NewReader(rawSub.Subscription))
+		sub, err := push.ReadSubscription(bytes.NewReader(rawSub.Subscription))
 		require.NoError(ts.t, err)
 
 		u, err := url.Parse(sub.Endpoint)
@@ -60,7 +60,7 @@ func (ts *testSender) Send(ctx context.Context, subs []database.GetSubscriptions
 	return nil
 }
 
-func (suite *TestSuite) makeWebPush(t *testing.T, sender *testSender) (webpush.PushNotifier, context.Context) {
+func (suite *TestSuite) makePushNotifier(t *testing.T, sender *testSender) (push.PushNotifier, context.Context) {
 	ctx := t.Context()
 	rbac, err := authz.New(policy.Policy)
 	require.NoError(t, err)
@@ -69,7 +69,7 @@ func (suite *TestSuite) makeWebPush(t *testing.T, sender *testSender) (webpush.P
 
 	ctx = entities.CtxWithServiceSubject(ctx, "notifiertest")
 
-	n, err := webpush.NewPushNotifier(ctx, "test@test.com", suite.db, rbac, setStore, webpush.WithSender(sender))
+	n, err := push.NewPushNotifier(ctx, &url.URL{Host: "asdfg", Scheme: "https"}, suite.db, rbac, setStore, push.WithSender(sender))
 	require.NoError(t, err)
 
 	return n, ctx
@@ -131,7 +131,7 @@ func TestSubscriptions(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
 			sender := newTestSender(t)
-			st, ctx := s.makeWebPush(t, sender)
+			st, ctx := s.makePushNotifier(t, sender)
 			err := st.Dispatch(ctx, makeRA(strings.Split(tc.tgs, ",")))
 			if tc.expectErr != nil {
 				assert.Contains(t, err.Error(), tc.expectErr.Error())

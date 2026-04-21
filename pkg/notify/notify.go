@@ -45,7 +45,7 @@ const (
 {{- range .Context }}
 {{ .Date | fmtTime "15:04:05" }} {{ .Transcript }}
 {{- end }}`
-	defaultSubjectTemplStr = `({{ .TGName }})`
+	defaultSubjectTemplStr = `{{ .TGName }}`
 )
 
 var (

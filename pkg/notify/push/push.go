@@ -1,4 +1,4 @@
-package webpush
+package push
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"net/url"
-	"time"
 
 	"dynatron.me/x/stillbox/pkg/alerting/alert"
 	"dynatron.me/x/stillbox/pkg/authz"
@@ -15,20 +14,12 @@ import (
 	"dynatron.me/x/stillbox/pkg/notify"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/users"
-	webpush "github.com/SherClockHolmes/webpush-go"
 	"github.com/rs/zerolog/log"
 )
 
 const (
 	VAPIDSettingsKey = "vapid.stillbox"
 )
-
-type Subscription struct {
-	webpush.Subscription
-	Expiration *time.Time `json:"expirationTime,omitempty"`
-
-	raw json.RawMessage `json:"-"`
-}
 
 type vapidKeys struct {
 	Public  string `json:"pubKey"`
@@ -63,29 +54,29 @@ func ReadSubscription(r io.Reader) (*Subscription, error) {
 }
 
 type pushNotifier struct {
-	subject  string
 	settings settings.Store
 	db       database.Store
 	keys     vapidKeys
-	sender   Sender
+	webPush  Sender
 	baseURL  *url.URL
+}
+
+type Sender interface {
+	Send(ctx context.Context, subs []database.GetSubscriptionsSubscribedRow, al *alert.RenderedAlert) error
 }
 
 type pushNotifierOption func(*pushNotifier)
 
+// WithSender configures a non-default Sender for the push notifier.
+// This is for testing.
 func WithSender(s Sender) pushNotifierOption {
 	return func(pn *pushNotifier) {
-		pn.sender = s
+		pn.webPush = s
 	}
 }
 
 func (pn *pushNotifier) VAPIDPublicKey() string {
 	return pn.keys.Public
-}
-
-func (vk *vapidKeys) generate() (err error) {
-	vk.Private, vk.Public, err = webpush.GenerateVAPIDKeys()
-	return err
 }
 
 func (pn *pushNotifier) Dispatch(ctx context.Context, renderedAlerts *alert.RenderedAlertBatch) error {
@@ -96,7 +87,7 @@ func (pn *pushNotifier) Dispatch(ctx context.Context, renderedAlerts *alert.Rend
 			log.Error().Err(err).Int32("sys", al.Talkgroup.SystemID).Int32("tgid", al.Talkgroup.TGID).Msg("getSubscriptionsSubscribed")
 			continue
 		}
-		err = pn.sender.Send(ctx, notifySubs, &al)
+		err = pn.webPush.Send(ctx, notifySubs, &al)
 		if err != nil {
 			log.Error().Err(err).Int32("sys", al.Talkgroup.SystemID).Int32("tgid", al.Talkgroup.TGID).Msg("send")
 		}
@@ -130,8 +121,8 @@ func NewPushNotifier(ctx context.Context, baseURL *url.URL, db database.Store, r
 		opt(pn)
 	}
 
-	if pn.sender == nil {
-		pn.sender = newWebpushSender(pn)
+	if pn.webPush == nil {
+		pn.webPush = newWebpushSender(pn)
 	}
 
 	err := setStore.GetInto(ctx, VAPIDSettingsKey, &pn.keys)

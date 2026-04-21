@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"dynatron.me/x/stillbox/internal/forms"
-	"dynatron.me/x/stillbox/pkg/notify/webpush"
+	"dynatron.me/x/stillbox/pkg/notify/push"
 	"github.com/go-chi/chi/v5"
 )
 
 type pushAPI struct {
-	push webpush.PushNotifier
+	push push.PushNotifier
 }
 
 func (pa *pushAPI) Subrouter() http.Handler {
@@ -37,7 +37,7 @@ func (pa *pushAPI) subscribeWebPush(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sub, err := webpush.ReadSubscription(r.Body)
+	sub, err := push.ReadSubscription(r.Body)
 	if err != nil {
 		wErr(w, r, badRequestErrText(err))
 		return
@@ -52,6 +52,6 @@ func (pa *pushAPI) subscribeWebPush(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func newPushAPI(pn webpush.PushNotifier) *pushAPI {
+func newPushAPI(pn push.PushNotifier) *pushAPI {
 	return &pushAPI{pn}
 }

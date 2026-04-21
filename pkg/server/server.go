@@ -25,7 +25,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/nexus"
 	"dynatron.me/x/stillbox/pkg/notify"
-	"dynatron.me/x/stillbox/pkg/notify/webpush"
+	"dynatron.me/x/stillbox/pkg/notify/push"
 	"dynatron.me/x/stillbox/pkg/pipeline"
 	"dynatron.me/x/stillbox/pkg/rest"
 	"dynatron.me/x/stillbox/pkg/services"
@@ -122,7 +122,7 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 
 	baseURL := (*url.URL)(&cfg.Server.BaseURL)
 
-	pushSvc, err := webpush.NewPushNotifier(ctx, baseURL, db, rbacSvc, settingsStore)
+	pushSvc, err := push.NewPushNotifier(ctx, baseURL, db, rbacSvc, settingsStore)
 	if err != nil {
 		return nil, err
 	}

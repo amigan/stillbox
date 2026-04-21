@@ -12,7 +12,7 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/nexus"
-	"dynatron.me/x/stillbox/pkg/notify/webpush"
+	"dynatron.me/x/stillbox/pkg/notify/push"
 	"dynatron.me/x/stillbox/pkg/settings"
 	"dynatron.me/x/stillbox/pkg/shares"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
@@ -55,7 +55,7 @@ func (a *api) ShareRouter() http.Handler {
 	return a.shares.RootRouter()
 }
 
-func New(baseURL url.URL, nex nexus.Nexus, auth authn.Authn, push webpush.PushNotifier) *api {
+func New(baseURL url.URL, nex nexus.Nexus, auth authn.Authn, push push.PushNotifier) *api {
 	s := &api{
 		baseURL:   &baseURL,
 		nex:       nex,
