@@ -36,10 +36,10 @@ type PushNotifier interface {
 	// Subscribe stores a user's subscription.
 	WebPushSubscribe(ctx context.Context, sub *WebPushSubscription) error
 
-	// Subscribestores a new subscription set for the user.
+	// Subscribe stores a new subscription set for the user.
 	Subscribe(ctx context.Context, sub *SubscriptionSet) error
 
-	// Unsubscribeunsubscribes a subscription set for the user.
+	// Unsubscribe unsubscribes a subscription set for the user.
 	Unsubscribe(ctx context.Context, sub *SubscriptionSet) error
 
 	// Subscriptions lists all subscriptions for the user.

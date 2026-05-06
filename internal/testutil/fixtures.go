@@ -81,7 +81,7 @@ func SmallMP3() []byte {
 	return smallMP3
 }
 
-func wpsub(s string) string {
+func webpushSubscription(s string) string {
 	d := struct {
 		Endpoint string `json:"endpoint"`
 	}{
@@ -106,7 +106,7 @@ func primeBlobs() {
 			"uuid":   uidList.getUUID,
 			"time":   uidList.getTime,
 			"pwhash": users.HashPassword,
-			"wpsub":  wpsub,
+			"webpush_sub":  webpushSubscription,
 			"now": func() string {
 				return time.Now().Format(time.RFC3339Nano)
 			},
