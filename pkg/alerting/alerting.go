@@ -230,6 +230,7 @@ func (as *alerter) Go(ctx context.Context) {
 			}
 		case <-ctx.Done():
 			alertTicker.Stop()
+			pruneTicker.Stop()
 			return
 		}
 	}
