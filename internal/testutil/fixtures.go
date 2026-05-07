@@ -103,10 +103,10 @@ func primeBlobs() {
 			"smallMP3": "!!binary \"" + base64.StdEncoding.EncodeToString(smallMP3) + "\"",
 		}
 		templateFuncs = template.FuncMap{
-			"uuid":   uidList.getUUID,
-			"time":   uidList.getTime,
-			"pwhash": users.HashPassword,
-			"webpush_sub":  webpushSubscription,
+			"uuid":        uidList.getUUID,
+			"time":        uidList.getTime,
+			"pwhash":      users.HashPassword,
+			"webpush_sub": webpushSubscription,
 			"now": func() string {
 				return time.Now().Format(time.RFC3339Nano)
 			},

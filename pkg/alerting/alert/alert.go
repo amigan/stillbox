@@ -36,7 +36,7 @@ func (a *Alert) ComputeContextRange() {
 		// Contexts should be sorted in timestamp descending order from FillTranscriptContext,
 		// but this should be cheap.
 		slices.SortFunc(a.Context, func(a, b TxCtx) int {
-			if a.Date.After(b.Date) {
+			if a.Date.Before(b.Date) {
 				return -1
 			}
 
