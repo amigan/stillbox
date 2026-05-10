@@ -51,6 +51,8 @@ type SubscriptionSet struct {
 	Systems    []int32        `json:"systems,omitempty"`
 
 	// UnsubscribeAll is only valid for unsubscribing. It is a no-op otherwise.
+	// If Systems is nil, it unsubscribes everything.
+	// If Systems is not null, it unsubscribes those systems *AND* and talkgroups under them.
 	UnsubscribeAll *bool `json:"unsubscribeAll,omitempty"`
 }
 
@@ -62,16 +64,26 @@ func (pn *pushNotifier) Unsubscribe(ctx context.Context, sub *SubscriptionSet) e
 
 	err = pn.db.InTx(ctx, func(s database.Store) error {
 		if sub.UnsubscribeAll != nil && *sub.UnsubscribeAll {
-			_, err := s.UnsubscribeAllSystems(ctx, u.ID.Int())
-			if err != nil {
+			if sub.Systems == nil {
+				_, err := s.UnsubscribeAllSystems(ctx, u.ID.Int())
+				if err != nil {
+					return err
+				}
+
+				_, err = s.UnsubscribeAllTalkgroups(ctx, u.ID.Int())
 				return err
 			}
 
-			_, err = s.UnsubscribeAllTalkgroups(ctx, u.ID.Int())
-			return err
+			_, err := s.UnsubscribeTGsInSystems(ctx, u.ID.Int(), sub.Systems)
+			if err != nil {
+					return err
+			}
+
+			// fallthrough, the rest applies here
 		}
-		tgs := tgstore.TGsToDBTGs(sub.Talkgroups)
+
 		if sub.Talkgroups != nil {
+			tgs := tgstore.TGsToDBTGs(sub.Talkgroups)
 			_, err := s.UnsubscribeTalkgroups(ctx, u.ID.Int(), tgs)
 			if err != nil {
 				return err

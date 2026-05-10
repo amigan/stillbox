@@ -75,3 +75,6 @@ SELECT system_id, tgid FROM talkgroup_notification_subscriptions WHERE user_id =
 
 -- name: GetSystemSubscriptions :many
 SELECT system_id::INT4 FROM system_notification_subscriptions WHERE user_id = @user_id;
+
+-- name: UnsubscribeTGsInSystems :execrows
+DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id AND system_id = ANY(@system_ids::INT4[]);

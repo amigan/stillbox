@@ -111,6 +111,7 @@ type Querier interface {
 	UnsubscribeAllSystems(ctx context.Context, userID int) (int64, error)
 	UnsubscribeAllTalkgroups(ctx context.Context, userID int) (int64, error)
 	UnsubscribeSystems(ctx context.Context, userID int, systemIds []int32) (int64, error)
+	UnsubscribeTGsInSystems(ctx context.Context, userID int, systemIds []int32) (int64, error)
 	UnsubscribeTalkgroups(ctx context.Context, userID int, tgs []TGID) (int64, error)
 	UpdateCallIncidentNotes(ctx context.Context, notes []byte, incidentID uuid.UUID, callID uuid.UUID) error
 	UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error)

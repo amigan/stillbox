@@ -240,6 +240,18 @@ func (q *Queries) UnsubscribeSystems(ctx context.Context, userID int, systemIds 
 	return result.RowsAffected(), nil
 }
 
+const unsubscribeTGsInSystems = `-- name: UnsubscribeTGsInSystems :execrows
+DELETE FROM talkgroup_notification_subscriptions WHERE user_id = $1 AND system_id = ANY($2::INT4[])
+`
+
+func (q *Queries) UnsubscribeTGsInSystems(ctx context.Context, userID int, systemIds []int32) (int64, error) {
+	result, err := q.db.Exec(ctx, unsubscribeTGsInSystems, userID, systemIds)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const unsubscribeTalkgroups = `-- name: UnsubscribeTalkgroups :execrows
 DELETE FROM talkgroup_notification_subscriptions WHERE user_id = $1 AND (system_id, tgid) = ANY($2::talkgroup_tuple[])
 `
