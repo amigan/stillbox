@@ -51,6 +51,13 @@ div.nowPlaying.idle mat-icon {
   color: rgba(255, 255, 255, 0.45) !important;
 }
 
+@media screen and (max-width: 768px) {
+  /* On mobile, fully hide once grace period ends and bar is idle. */
+  div.nowPlaying.idle {
+    display: none;
+  }
+}
+
 a.disabled {
   pointer-events: none;
   cursor: default;

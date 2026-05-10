@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { TalkgroupService, TalkgroupsPaginated } from './talkgroups.service';
 import { ActivatedRoute } from '@angular/router';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -8,7 +8,7 @@ import { TalkgroupTableComponent } from './talkgroup-table/talkgroup-table.compo
 import { PageEvent } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { PrefsService } from '../prefs/prefs.service';
-import { BehaviorSubject, ReplaySubject, Subject, Subscription } from 'rxjs';
+import { ReplaySubject, Subject, Subscription } from 'rxjs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -28,12 +28,13 @@ import { MatIconModule } from '@angular/material/icon';
     FormsModule,
     MatProgressSpinnerModule,
     MatIconModule,
-  ],
+],
   templateUrl: './talkgroups.component.html',
   styleUrl: './talkgroups.component.scss',
   providers: [],
 })
 export class TalkgroupsComponent {
+  @ViewChild('talkgroupTable') talkgroupTable!: TalkgroupTableComponent;
   selectedSys: number = 0;
   selectedId: number = 0;
   tgs!: TalkgroupsPaginated;

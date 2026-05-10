@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
+import { PushSubscribeComponent } from "../notify/subscribe/subscribe.component";
 
 @Component({
   selector: 'app-alerts',
-  imports: [],
+  imports: [PushSubscribeComponent],
   templateUrl: './alerts.component.html',
   styleUrl: './alerts.component.scss',
 })

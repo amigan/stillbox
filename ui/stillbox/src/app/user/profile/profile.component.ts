@@ -6,7 +6,7 @@ import { PushSubscribeComponent } from '../../notify/subscribe/subscribe.compone
 
 @Component({
   selector: 'app-profile',
-  imports: [PasswdComponent, PushSubscribeComponent],
+  imports: [PasswdComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })

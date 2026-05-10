@@ -1,0 +1,173 @@
+.subHeader {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.filterSticky {
+  margin-bottom: 1rem;
+}
+
+.filterWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--grey-light, #cccccc);
+  border-radius: 0.5rem;
+}
+
+.filterWrap input {
+  border: none;
+  background: transparent;
+  min-width: 16rem;
+  color: inherit;
+}
+
+.filterWrap input:focus {
+  outline: none;
+}
+
+.systemList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.systemCard {
+  border: 1px solid var(--grey-light, #cccccc);
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+}
+
+.systemHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.titleBlock h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.titleBlock p {
+  margin: 0.2rem 0 0;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+.tgList {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.5rem;
+}
+
+.tgBtn {
+  border: 1px solid var(--grey-light, #555353);
+  background: #2d2d2d;
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.tgBtn small {
+  opacity: 0.8;
+}
+
+.directSub {
+  border-color: var(--accent, #3f51b5);
+  background: rgba(63, 81, 181, 0.2);
+}
+
+.inheritedSub {
+  border-style: dashed;
+  opacity: 0.9;
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.notSub {
+  background: #6a6363;
+}
+
+.warn {
+  border-color: #a33;
+}
+
+.partial,
+.empty,
+.error {
+  margin: 0.6rem 0 0;
+  font-size: 0.9rem;
+}
+
+.error {
+  color: #a33;
+}
+
+@media (max-width: 768px) {
+  .subHeader {
+    position: static;
+    background: transparent;
+    padding: 0;
+    margin-bottom: 0.5rem;
+    border-bottom: none;
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .subHeader .sbButton {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .filterSticky {
+    position: fixed;
+    top: var(--mobile-sticky-top, 56px);
+    left: 0;
+    right: 0;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 30;
+    background: var(--page-bg, #1f1f1f);
+    padding: 0.35rem 0.5rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--grey-light, #3f3f3f);
+  }
+
+  .filterWrap {
+    width: 100%;
+    display: flex;
+    box-sizing: border-box;
+    border-radius: 0.5rem;
+    padding: 0.45rem 0.55rem;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .filterWrap input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .systemList {
+    padding-top: 0;
+  }
+
+}
