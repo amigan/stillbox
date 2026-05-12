@@ -221,6 +221,7 @@ CREATE TABLE IF NOT EXISTS webpush_subscriptions(
 	updated_at TIMESTAMPTZ NOT NULL,
 	expiration TIMESTAMPTZ,
 	subscription JSONB NOT NULL,
+	client TEXT,
 	UNIQUE(subscription)
 );
 

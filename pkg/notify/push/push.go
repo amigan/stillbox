@@ -76,7 +76,7 @@ func (pn *pushNotifier) Unsubscribe(ctx context.Context, sub *SubscriptionSet) e
 
 			_, err := s.UnsubscribeTGsInSystems(ctx, u.ID.Int(), sub.Systems)
 			if err != nil {
-					return err
+				return err
 			}
 
 			// fallthrough, the rest applies here
@@ -210,7 +210,12 @@ func (pn *pushNotifier) WebPushSubscribe(ctx context.Context, sub *WebPushSubscr
 		return err
 	}
 
-	return pn.db.CreateWebPushSubscription(ctx, user.ID.Int(), sub.Expiration, sub.raw)
+	return pn.db.CreateWebPushSubscription(ctx, database.CreateWebPushSubscriptionParams{
+		UserID:       user.ID.Int(),
+		Expiration:   sub.Expiration,
+		Subscription: sub.raw,
+		Client:       sub.Client,
+	})
 }
 
 func (pn *pushNotifier) DeleteSubscription(ctx context.Context, sub json.RawMessage) error {

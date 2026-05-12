@@ -16,18 +16,32 @@ INSERT INTO webpush_subscriptions(
 	created_at,
 	updated_at,
 	expiration,
-	subscription
+	subscription,
+	client
 ) VALUES (
 	$1,
 	NOW(),
 	NOW(),
 	$2,
-	$3
+	$3,
+	$4
 )
 `
 
-func (q *Queries) CreateWebPushSubscription(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error {
-	_, err := q.db.Exec(ctx, createWebPushSubscription, userID, expiration, subscription)
+type CreateWebPushSubscriptionParams struct {
+	UserID       int        `db:"user_id" json:"userId"`
+	Expiration   *time.Time `db:"expiration" json:"expiration"`
+	Subscription []byte     `db:"subscription" json:"subscription"`
+	Client       *string    `db:"client" json:"client"`
+}
+
+func (q *Queries) CreateWebPushSubscription(ctx context.Context, arg CreateWebPushSubscriptionParams) error {
+	_, err := q.db.Exec(ctx, createWebPushSubscription,
+		arg.UserID,
+		arg.Expiration,
+		arg.Subscription,
+		arg.Client,
+	)
 	return err
 }
 
@@ -62,15 +76,16 @@ func (q *Queries) DeletePushSubscriptionBySub(ctx context.Context, subscription 
 }
 
 const getPushSubscriptions = `-- name: GetPushSubscriptions :many
-SELECT id, user_id, subscription FROM webpush_subscriptions
+SELECT id, user_id, client, subscription FROM webpush_subscriptions
 WHERE
 	expiration IS NULL OR expiration > NOW()
 `
 
 type GetPushSubscriptionsRow struct {
-	ID           int64  `db:"id" json:"id"`
-	UserID       int    `db:"user_id" json:"userId"`
-	Subscription []byte `db:"subscription" json:"subscription"`
+	ID           int64   `db:"id" json:"id"`
+	UserID       int     `db:"user_id" json:"userId"`
+	Client       *string `db:"client" json:"client"`
+	Subscription []byte  `db:"subscription" json:"subscription"`
 }
 
 func (q *Queries) GetPushSubscriptions(ctx context.Context) ([]GetPushSubscriptionsRow, error) {
@@ -82,7 +97,12 @@ func (q *Queries) GetPushSubscriptions(ctx context.Context) ([]GetPushSubscripti
 	var items []GetPushSubscriptionsRow
 	for rows.Next() {
 		var i GetPushSubscriptionsRow
-		if err := rows.Scan(&i.ID, &i.UserID, &i.Subscription); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Client,
+			&i.Subscription,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -148,7 +168,7 @@ func (q *Queries) GetTalkgroupSubscriptions(ctx context.Context, userID int) ([]
 
 const getWebPushSubscriptionsSubscribed = `-- name: GetWebPushSubscriptionsSubscribed :many
 SELECT DISTINCT
-	wps.id, wps.user_id, wps.subscription
+	wps.id, wps.user_id, wps.subscription, wps.client
 FROM webpush_subscriptions wps
 LEFT OUTER JOIN talkgroup_notification_subscriptions tgns ON (wps.user_id = tgns.user_id)
 LEFT OUTER JOIN system_notification_subscriptions sns ON (wps.user_id = sns.user_id)
@@ -158,9 +178,10 @@ WHERE
 `
 
 type GetWebPushSubscriptionsSubscribedRow struct {
-	ID           int64  `db:"id" json:"id"`
-	UserID       int    `db:"user_id" json:"userId"`
-	Subscription []byte `db:"subscription" json:"subscription"`
+	ID           int64   `db:"id" json:"id"`
+	UserID       int     `db:"user_id" json:"userId"`
+	Subscription []byte  `db:"subscription" json:"subscription"`
+	Client       *string `db:"client" json:"client"`
 }
 
 func (q *Queries) GetWebPushSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]GetWebPushSubscriptionsSubscribedRow, error) {
@@ -172,7 +193,12 @@ func (q *Queries) GetWebPushSubscriptionsSubscribed(ctx context.Context, systemI
 	var items []GetWebPushSubscriptionsSubscribedRow
 	for rows.Next() {
 		var i GetWebPushSubscriptionsSubscribedRow
-		if err := rows.Scan(&i.ID, &i.UserID, &i.Subscription); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Subscription,
+			&i.Client,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

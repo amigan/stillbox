@@ -252,4 +252,5 @@ type WebpushSubscription struct {
 	UpdatedAt    time.Time  `db:"updated_at" json:"updatedAt,omitempty" yaml:"updated_at,omitempty"`
 	Expiration   *time.Time `db:"expiration" json:"expiration,omitempty" yaml:"expiration,omitempty"`
 	Subscription []byte     `db:"subscription" json:"subscription,omitempty" yaml:"subscription,omitempty"`
+	Client       *string    `db:"client" json:"client,omitempty" yaml:"client,omitempty"`
 }

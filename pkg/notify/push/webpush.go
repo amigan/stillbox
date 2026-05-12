@@ -19,6 +19,8 @@ type webpushSender struct {
 }
 
 type NotificationAction struct {
+	Action string `json:"action,omitzero"`
+	Title  string `json:"title,omitzero"`
 }
 
 type Notification struct {
@@ -61,7 +63,33 @@ type WebNotification struct {
 	Notification Notification `json:"notification"`
 }
 
-func (wps *webpushSender) ralToNotification(a *alert.RenderedAlert) WebNotification {
+const (
+	ClientStillbox = "stillbox"
+)
+
+func (wps *webpushSender) ralToNotification(a *alert.RenderedAlert, client *string) WebNotification {
+	var rend notificationRenderer
+	if client != nil {
+		switch *client {
+		case ClientStillbox:
+			fallthrough
+		default:
+			rend = &stillboxNotificationRenderer{}
+		}
+	} else {
+		rend = &stillboxNotificationRenderer{}
+	}
+
+	return rend.Render(wps, a)
+}
+
+type notificationRenderer interface {
+	Render(*webpushSender, *alert.RenderedAlert) WebNotification
+}
+
+type stillboxNotificationRenderer struct{}
+
+func (*stillboxNotificationRenderer) Render(wps *webpushSender, a *alert.RenderedAlert) WebNotification {
 	return WebNotification{
 		Notification: Notification{
 			Title:     a.Subject,
@@ -70,6 +98,14 @@ func (wps *webpushSender) ralToNotification(a *alert.RenderedAlert) WebNotificat
 			Navigate:  &a.URL,
 			Badge:     &wps.badgeURL,
 			Icon:      &wps.iconURL,
+			Data: map[string]any{
+				"onActionClick": map[string]any{
+					"default": map[string]any{
+						"operation": "focusLastFocusedOrOpen",
+						"url":       a.URL,
+					},
+				},
+			},
 		},
 	}
 }
@@ -82,20 +118,23 @@ func (vk *vapidKeys) generate() (err error) {
 type WebPushSubscription struct {
 	webpush.Subscription
 	Expiration *time.Time `json:"expirationTime,omitempty"`
+	Client     *string    `json:"client,omitempty"`
 
 	raw json.RawMessage `json:"-"`
 }
 
 func (wps *webpushSender) Send(ctx context.Context, subs []database.GetWebPushSubscriptionsSubscribedRow, al *alert.RenderedAlert) error {
 	var me error
-	rendAlert, err := json.Marshal(wps.ralToNotification(al))
-	if err != nil {
-		return err
-	}
 
 	for _, sub := range subs {
+		rendAlert, err := json.Marshal(wps.ralToNotification(al, sub.Client))
+		if err != nil {
+			me = multierror.Append(me, err)
+			continue
+		}
+
 		var wpSub webpush.Subscription
-		err := json.Unmarshal(sub.Subscription, &wpSub)
+		err = json.Unmarshal(sub.Subscription, &wpSub)
 		if err != nil {
 			me = multierror.Append(me, err)
 			continue

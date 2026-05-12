@@ -4,13 +4,15 @@ INSERT INTO webpush_subscriptions(
 	created_at,
 	updated_at,
 	expiration,
-	subscription
+	subscription,
+	client
 ) VALUES (
 	@user_id,
 	NOW(),
 	NOW(),
 	sqlc.narg('expiration'),
-	@subscription
+	@subscription,
+	@client
 );
 
 -- name: UpdatePushSubscription :execrows
@@ -26,7 +28,7 @@ WHERE
 DELETE FROM webpush_subscriptions WHERE user_id = @user_id AND subscription = @subscription;
 
 -- name: GetPushSubscriptions :many
-SELECT id, user_id, subscription FROM webpush_subscriptions
+SELECT id, user_id, client, subscription FROM webpush_subscriptions
 WHERE
 	expiration IS NULL OR expiration > NOW();
 
@@ -41,7 +43,7 @@ DELETE FROM webpush_subscriptions WHERE expiration IS NOT NULL AND expiration < 
 
 -- name: GetWebPushSubscriptionsSubscribed :many
 SELECT DISTINCT
-	wps.id, wps.user_id, wps.subscription
+	wps.id, wps.user_id, wps.subscription, wps.client
 FROM webpush_subscriptions wps
 LEFT OUTER JOIN talkgroup_notification_subscriptions tgns ON (wps.user_id = tgns.user_id)
 LEFT OUTER JOIN system_notification_subscriptions sns ON (wps.user_id = sns.user_id)

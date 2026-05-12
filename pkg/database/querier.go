@@ -27,7 +27,7 @@ type Querier interface {
 	CreateShare(ctx context.Context, arg CreateShareParams) error
 	CreateSystem(ctx context.Context, iD int, name string, learned bool) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	CreateWebPushSubscription(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error
+	CreateWebPushSubscription(ctx context.Context, arg CreateWebPushSubscriptionParams) error
 	DeleteAPIKey(ctx context.Context, apiKey *string) error
 	DeleteCall(ctx context.Context, id uuid.UUID) error
 	DeleteExpiredPushSubscriptions(ctx context.Context) (int64, error)

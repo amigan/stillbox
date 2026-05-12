@@ -1173,16 +1173,16 @@ func (_c *Store_CreateUser_Call) RunAndReturn(run func(ctx context.Context, arg 
 }
 
 // CreateWebPushSubscription provides a mock function for the type Store
-func (_mock *Store) CreateWebPushSubscription(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error {
-	ret := _mock.Called(ctx, userID, expiration, subscription)
+func (_mock *Store) CreateWebPushSubscription(ctx context.Context, arg database.CreateWebPushSubscriptionParams) error {
+	ret := _mock.Called(ctx, arg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateWebPushSubscription")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int, *time.Time, []byte) error); ok {
-		r0 = returnFunc(ctx, userID, expiration, subscription)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, database.CreateWebPushSubscriptionParams) error); ok {
+		r0 = returnFunc(ctx, arg)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1196,36 +1196,24 @@ type Store_CreateWebPushSubscription_Call struct {
 
 // CreateWebPushSubscription is a helper method to define mock.On call
 //   - ctx context.Context
-//   - userID int
-//   - expiration *time.Time
-//   - subscription []byte
-func (_e *Store_Expecter) CreateWebPushSubscription(ctx interface{}, userID interface{}, expiration interface{}, subscription interface{}) *Store_CreateWebPushSubscription_Call {
-	return &Store_CreateWebPushSubscription_Call{Call: _e.mock.On("CreateWebPushSubscription", ctx, userID, expiration, subscription)}
+//   - arg database.CreateWebPushSubscriptionParams
+func (_e *Store_Expecter) CreateWebPushSubscription(ctx interface{}, arg interface{}) *Store_CreateWebPushSubscription_Call {
+	return &Store_CreateWebPushSubscription_Call{Call: _e.mock.On("CreateWebPushSubscription", ctx, arg)}
 }
 
-func (_c *Store_CreateWebPushSubscription_Call) Run(run func(ctx context.Context, userID int, expiration *time.Time, subscription []byte)) *Store_CreateWebPushSubscription_Call {
+func (_c *Store_CreateWebPushSubscription_Call) Run(run func(ctx context.Context, arg database.CreateWebPushSubscriptionParams)) *Store_CreateWebPushSubscription_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 int
+		var arg1 database.CreateWebPushSubscriptionParams
 		if args[1] != nil {
-			arg1 = args[1].(int)
-		}
-		var arg2 *time.Time
-		if args[2] != nil {
-			arg2 = args[2].(*time.Time)
-		}
-		var arg3 []byte
-		if args[3] != nil {
-			arg3 = args[3].([]byte)
+			arg1 = args[1].(database.CreateWebPushSubscriptionParams)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
-			arg3,
 		)
 	})
 	return _c
@@ -1236,7 +1224,7 @@ func (_c *Store_CreateWebPushSubscription_Call) Return(err error) *Store_CreateW
 	return _c
 }
 
-func (_c *Store_CreateWebPushSubscription_Call) RunAndReturn(run func(ctx context.Context, userID int, expiration *time.Time, subscription []byte) error) *Store_CreateWebPushSubscription_Call {
+func (_c *Store_CreateWebPushSubscription_Call) RunAndReturn(run func(ctx context.Context, arg database.CreateWebPushSubscriptionParams) error) *Store_CreateWebPushSubscription_Call {
 	_c.Call.Return(run)
 	return _c
 }
