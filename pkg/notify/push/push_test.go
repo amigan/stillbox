@@ -49,7 +49,7 @@ func newTestSender(t *testing.T) *testSender {
 	return &testSender{t: t, m: make(map[string]int)}
 }
 
-func (ts *testSender) Send(ctx context.Context, subs []database.GetWebPushSubscriptionsSubscribedRow, _ *alert.RenderedAlert) error {
+func (ts *testSender) SendAlertToSubscribers(ctx context.Context, subs []database.GetWebPushSubscriptionsSubscribedRow, _ *alert.RenderedAlert) error {
 	for _, rawSub := range subs {
 		sub, err := push.ReadWebPushSubscription(bytes.NewReader(rawSub.Subscription))
 		require.NoError(ts.t, err)
@@ -136,7 +136,7 @@ func TestSubscriptions(t *testing.T) {
 			sender := newTestSender(t)
 			st, ctx := s.makePushNotifier(t, sender)
 			ctx = entities.CtxWithServiceSubject(ctx, "notifiertest")
-			err := st.Dispatch(ctx, makeRA(strings.Split(tc.tgs, ",")))
+			err := st.DispatchAlerts(ctx, makeRA(strings.Split(tc.tgs, ",")))
 			if tc.expectErr != nil {
 				assert.Contains(t, err.Error(), tc.expectErr.Error())
 			} else {

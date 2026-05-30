@@ -44,7 +44,7 @@ func NewSlackWebhookBackend(cfg config.ConfigMap) (NotifierBackend, error) {
 	return swc, nil
 }
 
-func (be *slackWebhookBackend) Dispatch(ctx context.Context, ras *alert.RenderedAlertBatch) error {
+func (be *slackWebhookBackend) DispatchAlerts(ctx context.Context, ras *alert.RenderedAlertBatch) error {
 	type Attachment struct {
 		Title     string `json:"title"`
 		Text      string `json:"text"`

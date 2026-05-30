@@ -67,29 +67,25 @@ const (
 	ClientStillbox = "stillbox"
 )
 
-func (wps *webpushSender) ralToNotification(a *alert.RenderedAlert, client *string) WebNotification {
-	var rend notificationRenderer
+func (wps *webpushSender) renderedAlertToNotification(a *alert.RenderedAlert, client *string) WebNotification {
+	var rend notificationRenderer = stillboxNotificationRenderer{}
 	if client != nil {
 		switch *client {
 		case ClientStillbox:
-			fallthrough
 		default:
-			rend = &stillboxNotificationRenderer{}
 		}
-	} else {
-		rend = &stillboxNotificationRenderer{}
 	}
 
-	return rend.Render(wps, a)
+	return rend.AlertToNotification(wps, a)
 }
 
 type notificationRenderer interface {
-	Render(*webpushSender, *alert.RenderedAlert) WebNotification
+	AlertToNotification(*webpushSender, *alert.RenderedAlert) WebNotification
 }
 
 type stillboxNotificationRenderer struct{}
 
-func (*stillboxNotificationRenderer) Render(wps *webpushSender, a *alert.RenderedAlert) WebNotification {
+func (stillboxNotificationRenderer) AlertToNotification(wps *webpushSender, a *alert.RenderedAlert) WebNotification {
 	return WebNotification{
 		Notification: Notification{
 			Title:     a.Subject,
@@ -117,24 +113,43 @@ func (vk *vapidKeys) generate() (err error) {
 
 type WebPushSubscription struct {
 	webpush.Subscription
-	Expiration *time.Time `json:"expirationTime,omitempty"`
-	Client     *string    `json:"client,omitempty"`
 
+	// expirationTime is not included in SherClockHolmes/webpush for some reason.
+	Expiration *time.Time `json:"expirationTime,omitempty"`
+
+	// Subscriptions are effectively keyed by their raw json, so we store this here to be able to
+	// recover exactly what came out of the DB
 	raw json.RawMessage `json:"-"`
 }
 
-func (wps *webpushSender) Send(ctx context.Context, subs []database.GetWebPushSubscriptionsSubscribedRow, al *alert.RenderedAlert) error {
+func (wps *webpushSender) SendAlertToSubscribers(ctx context.Context, subs []database.GetWebPushSubscriptionsSubscribedRow, al *alert.RenderedAlert) error {
 	var me error
 
+	renderCache := make(map[string][]byte)
+
 	for _, sub := range subs {
-		rendAlert, err := json.Marshal(wps.ralToNotification(al, sub.Client))
-		if err != nil {
-			me = multierror.Append(me, err)
-			continue
+		// Different clients may want different payloads. For example, Angular's service worker
+		// has specific action configurations that may not apply to other clients.
+		client := ""
+		if sub.Client != nil {
+			client = *sub.Client
+		}
+
+		rendAlert, cached := renderCache[client]
+		if !cached {
+			var err error
+			notif := wps.renderedAlertToNotification(al, sub.Client)
+			rendAlert, err = json.Marshal(notif)
+			if err != nil {
+				me = multierror.Append(me, err)
+				continue
+			}
+
+			renderCache[client] = rendAlert
 		}
 
 		var wpSub webpush.Subscription
-		err = json.Unmarshal(sub.Subscription, &wpSub)
+		err := json.Unmarshal(sub.Subscription, &wpSub)
 		if err != nil {
 			me = multierror.Append(me, err)
 			continue

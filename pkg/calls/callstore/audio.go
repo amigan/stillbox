@@ -249,13 +249,16 @@ var _ json.Unmarshaler = (*AudioRefList)(nil)
 
 func (sb *audioBackends) CallAudio(ctx context.Context, call *calls.CallAudio, audioRef AudioRefJSON, opts *CallAudioOptions) (err error) {
 	var refm AudioRefList
+
+	if opts != nil && opts.audioRefOut != nil  {
+		refm = opts.audioRefOut
+	} else {
+		refm = make(AudioRefList)
+	}
+
 	err = json.Unmarshal(audioRef, &refm)
 	if err != nil {
 		return
-	}
-
-	if opts != nil && opts.audioRefOut != nil {
-		opts.audioRefOut = refm
 	}
 
 	for backend, location := range refm {

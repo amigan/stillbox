@@ -21,7 +21,7 @@ type Notifier interface {
 // A NotifierBackend actually dispatches the notiication to the recipients.
 type NotifierBackend interface {
 	// Dispatch sends the rendered alerts out to recipients.
-	Dispatch(ctx context.Context, renderedAlerts *alert.RenderedAlertBatch) error
+	DispatchAlerts(ctx context.Context, renderedAlerts *alert.RenderedAlertBatch) error
 }
 
 type notifier struct {
@@ -136,7 +136,7 @@ func (n *notifier) Send(ctx context.Context, alerts []alert.Alert) error {
 	}
 
 	for _, be := range n.backends {
-		err := be.Dispatch(ctx, rab)
+		err := be.DispatchAlerts(ctx, rab)
 		if err != nil {
 			return err
 		}

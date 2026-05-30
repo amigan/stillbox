@@ -34,7 +34,7 @@ type PushNotifier interface {
 	VAPIDPublicKey() string
 
 	// Subscribe stores a user's subscription.
-	WebPushSubscribe(ctx context.Context, sub *WebPushSubscription) error
+	WebPushSubscribe(ctx context.Context, client *string, sub *WebPushSubscription) error
 
 	// Subscribe stores a new subscription set for the user.
 	Subscribe(ctx context.Context, sub *SubscriptionSet) error
@@ -171,7 +171,7 @@ type pushNotifier struct {
 }
 
 type Sender interface {
-	Send(ctx context.Context, subs []database.GetWebPushSubscriptionsSubscribedRow, al *alert.RenderedAlert) error
+	SendAlertToSubscribers(ctx context.Context, subs []database.GetWebPushSubscriptionsSubscribedRow, al *alert.RenderedAlert) error
 }
 
 type pushNotifierOption func(*pushNotifier)
@@ -188,7 +188,7 @@ func (pn *pushNotifier) VAPIDPublicKey() string {
 	return pn.keys.Public
 }
 
-func (pn *pushNotifier) Dispatch(ctx context.Context, renderedAlerts *alert.RenderedAlertBatch) error {
+func (pn *pushNotifier) DispatchAlerts(ctx context.Context, renderedAlerts *alert.RenderedAlertBatch) error {
 	// XXX This must be made to use an iterator!
 	for _, al := range renderedAlerts.Alerts {
 		notifySubs, err := pn.db.GetWebPushSubscriptionsSubscribed(ctx, int32(al.TGID.System), int32(al.TGID.Talkgroup))
@@ -196,7 +196,7 @@ func (pn *pushNotifier) Dispatch(ctx context.Context, renderedAlerts *alert.Rend
 			log.Error().Err(err).Int32("sys", al.Talkgroup.SystemID).Int32("tgid", al.Talkgroup.TGID).Msg("getSubscriptionsSubscribed")
 			continue
 		}
-		err = pn.webPush.Send(ctx, notifySubs, &al)
+		err = pn.webPush.SendAlertToSubscribers(ctx, notifySubs, &al)
 		if err != nil {
 			log.Error().Err(err).Int32("sys", al.Talkgroup.SystemID).Int32("tgid", al.Talkgroup.TGID).Msg("send")
 		}
@@ -204,7 +204,7 @@ func (pn *pushNotifier) Dispatch(ctx context.Context, renderedAlerts *alert.Rend
 	return nil
 }
 
-func (pn *pushNotifier) WebPushSubscribe(ctx context.Context, sub *WebPushSubscription) error {
+func (pn *pushNotifier) WebPushSubscribe(ctx context.Context, client *string, sub *WebPushSubscription) error {
 	user, err := users.UserCheck(ctx, authz.UseResource(entities.ResourceWebPushSub), "create")
 	if err != nil {
 		return err
@@ -214,7 +214,7 @@ func (pn *pushNotifier) WebPushSubscribe(ctx context.Context, sub *WebPushSubscr
 		UserID:       user.ID.Int(),
 		Expiration:   sub.Expiration,
 		Subscription: sub.raw,
-		Client:       sub.Client,
+		Client:       client,
 	})
 }
 

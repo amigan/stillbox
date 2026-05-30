@@ -19,6 +19,7 @@ func (pa *pushAPI) Subrouter() http.Handler {
 
 	r.Get("/vapid", pa.getVAPIDPubkey)
 	r.Post("/subscribe", pa.subscribeWebPush)
+	r.Post("/subscribe/{client}", pa.subscribeWebPush)
 	r.Get("/subscriptions", pa.getSubscriptions)
 	r.Delete("/subscriptions", pa.unsubscribe(false))
 	r.Post("/subscriptions", pa.subscribe(false))
@@ -145,6 +146,20 @@ func (pa *pushAPI) getVAPIDPubkey(w http.ResponseWriter, r *http.Request) {
 func (pa *pushAPI) subscribeWebPush(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	param := struct {
+		Client string `param:"client"`
+	}{}
+
+	err := decodeParams(&param, r)
+	if err != nil {
+		return
+	}
+
+	var client *string
+	if param.Client != "" {
+		client = &param.Client
+	}
+
 	contentType := strings.Split(r.Header.Get("Content-Type"), ";")[0]
 	switch contentType {
 	case "application/json", "":
@@ -159,7 +174,7 @@ func (pa *pushAPI) subscribeWebPush(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = pa.push.WebPushSubscribe(ctx, sub)
+	err = pa.push.WebPushSubscribe(ctx, client, sub)
 	if err != nil {
 		wErr(w, r, autoError(err))
 		return
