@@ -1,23 +1,48 @@
-<section class="subHeader">
-  <button class="sbButton" (click)="pushSubscribe()" [disabled]="loading">
-    <mat-icon>notifications</mat-icon>
-    Enable Push
-  </button>
-  <button class="sbButton warn" (click)="clearAll()" [disabled]="loading">
-    <mat-icon>notifications_off</mat-icon>
-    Clear All
-  </button>
-</section>
-<div class="filterSticky">
-  <label class="filterWrap">
-    <mat-icon>search</mat-icon>
-    <input
-      type="text"
-      placeholder="Filter talkgroups"
-      (input)="setFilter($event)"
-      [disabled]="loading"
-    />
-  </label>
+<div class="subscribeToolbar">
+  <section class="subHeader">
+    <button class="sbButton" (click)="pushSubscribe()" [disabled]="loading">
+      <mat-icon>notifications</mat-icon>
+      Enable Push
+    </button>
+    <button class="sbButton warn" (click)="clearAll()" [disabled]="loading">
+      <mat-icon>notifications_off</mat-icon>
+      Clear All
+    </button>
+  </section>
+  <div class="filterSticky">
+    <label class="filterWrap">
+      <mat-icon>search</mat-icon>
+      <input
+        #filterInput
+        type="text"
+        placeholder="Filter talkgroups"
+        (input)="setFilter($event)"
+        [disabled]="loading"
+      />
+      @if (hasFilter$ | async) {
+        <button
+          type="button"
+          class="filterClear"
+          (click)="clearFilter(filterInput)"
+          [disabled]="loading"
+          aria-label="Clear filter"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </label>
+    @if (hasFilter$ | async) {
+      <button
+        type="button"
+        class="sbButton subscribeFiltered"
+        (click)="subscribeFiltered()"
+        [disabled]="loading"
+      >
+        <mat-icon>playlist_add_check</mat-icon>
+        Subscribe all matching
+      </button>
+    }
+  </div>
 </div>
 
 @if (errorMessage) {
@@ -31,7 +56,7 @@
       <section class="systemCard">
         <header class="systemHeader">
           <div class="titleBlock">
-            <h3>System {{ system.systemId }}</h3>
+            <h3>{{ system.systemName }}</h3>
             <p>{{ system.subscribedCount }} / {{ system.total }} subscribed</p>
           </div>
           <button class="sbButton" (click)="toggleSystem(system)" [disabled]="loading">

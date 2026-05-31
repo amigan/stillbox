@@ -9,6 +9,7 @@ export interface TGSubscription {
   tg: TGID;
   alphaTag: string;
   name?: string;
+  systemName?: string;
   tgGroup?: string;
   tags?: string[];
   subscribed: boolean;
@@ -28,6 +29,16 @@ export interface SubscriptionSet {
   // If systems is nil, it unsubscribes everything.
   // If systems is not null, it unsubscribes those systems *AND* and talkgroups under them.
   unsubscribeAll: boolean | null | undefined;
+}
+
+/**
+ * JSON for push.SubscriptionSet (GET/POST body). Matches Go: talkgroups.ID
+ * marshals each entry as "system:tgid" string; systems are numeric IDs.
+ */
+export interface SubscriptionSetJson {
+  talkgroups?: string[];
+  systems?: number[];
+  unsubscribeAll?: boolean | null;
 }
 
 @Injectable({
@@ -96,25 +107,95 @@ export class PushService {
   }
 
   getSubscriptions(): Observable<SubscriptionSet> {
-    return this.http.get<SubscriptionSet>('/api/push/subscriptions');
+    return this.http
+      .get<SubscriptionSetJson>('/api/push/subscriptions')
+      .pipe(map((body) => this.normalizeSubscriptionSetJson(body)));
   }
 
   private tgidKey(tg: TGID): string {
     return `${tg.sys}:${tg.tg}`;
   }
 
+  /** Turn wire SubscriptionSetJson into internal SubscriptionSet (TGID[]). */
+  private normalizeSubscriptionSetJson(
+    body: SubscriptionSetJson | null | undefined,
+  ): SubscriptionSet {
+    if (!body || typeof body !== 'object') {
+      return {
+        talkgroups: [],
+        systems: [],
+        unsubscribeAll: null,
+      };
+    }
+    return {
+      talkgroups: this.parseTalkgroupIdList(body.talkgroups),
+      systems: this.parseSystemIdList(body.systems),
+      unsubscribeAll: body.unsubscribeAll ?? null,
+    };
+  }
+
+  private parseTalkgroupIdList(raw: unknown): TGID[] {
+    if (!raw || !Array.isArray(raw)) {
+      return [];
+    }
+    const out: TGID[] = [];
+    for (const item of raw) {
+      const id = this.parseOneTalkgroupId(item);
+      if (id) {
+        out.push(id);
+      }
+    }
+    return out;
+  }
+
+  private parseOneTalkgroupId(item: unknown): TGID | null {
+    if (typeof item === 'string') {
+      const parts = item.split(':');
+      if (parts.length < 2) {
+        return null;
+      }
+      const sys = Number(parts[0]);
+      const tg = Number(parts[parts.length - 1]);
+      if (!Number.isFinite(sys) || !Number.isFinite(tg)) {
+        return null;
+      }
+      return { sys, tg };
+    }
+    if (item && typeof item === 'object' && 'sys' in item && 'tg' in item) {
+      const rec = item as { sys: unknown; tg: unknown };
+      const sys = Number(rec.sys);
+      const tg = Number(rec.tg);
+      if (!Number.isFinite(sys) || !Number.isFinite(tg)) {
+        return null;
+      }
+      return { sys, tg };
+    }
+    return null;
+  }
+
+  private parseSystemIdList(raw: unknown): number[] {
+    if (!raw || !Array.isArray(raw)) {
+      return [];
+    }
+    const out: number[] = [];
+    for (const item of raw) {
+      if (typeof item === 'number' && Number.isFinite(item)) {
+        out.push(item);
+        continue;
+      }
+      if (typeof item === 'string') {
+        const n = parseInt(item, 10);
+        if (Number.isFinite(n)) {
+          out.push(n);
+        }
+      }
+    }
+    return out;
+  }
+
   subscriptions$(): Observable<TGSubscription[]> {
     // combine the talkgroup list and the subscription map
-    const tgs$ = this.tgSvc
-      .getTalkgroupsPag({
-        page: 1,
-        perPage: 10000,
-        filter: null,
-      })
-      .pipe(
-        map((res) => res.talkgroups),
-        catchError(() => of([])),
-      );
+    const tgs$ = this.tgSvc.allTalkgroups().pipe(catchError(() => of([])));
     const subs$ = this.getSubscriptions().pipe(
       catchError(() =>
         of({
@@ -144,6 +225,7 @@ export class PushService {
             tg: tgid,
             alphaTag: tg.alphaTag,
             name: tg.name,
+            systemName: tg.system?.name,
             tgGroup: tg.tgGroup,
             tags: tg.tags,
             subscribed: tgSubs.has(this.tgidKey(tgid)) || sysSub,

@@ -1,7 +1,16 @@
 import { Component } from '@angular/core';
 import { PushService, TGSubscription } from '../push.service';
 import { MatIcon } from '@angular/material/icon';
-import { BehaviorSubject, catchError, finalize, map, Observable, of, switchMap } from 'rxjs';
+import {
+  BehaviorSubject,
+  catchError,
+  finalize,
+  map,
+  Observable,
+  of,
+  switchMap,
+  take,
+} from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { TGID } from '../../talkgroup';
 
@@ -11,6 +20,7 @@ interface TalkgroupSubscriptionView extends TGSubscription {
 
 interface SystemSubscriptionView {
   systemId: number;
+  systemName: string;
   talkgroups: TalkgroupSubscriptionView[];
   total: number;
   subscribedCount: number;
@@ -35,6 +45,7 @@ export class PushSubscribeComponent {
   loading = false;
   errorMessage = '';
   vm$!: Observable<SystemSubscriptionView[]>;
+  readonly hasFilter$ = this.filter$.pipe(map((f) => f.length > 0));
 
   constructor(public pushSvc: PushService) {}
 
@@ -63,6 +74,50 @@ export class PushSubscribeComponent {
   setFilter(ev: Event) {
     const value = (ev.target as HTMLInputElement).value ?? '';
     this.filter$.next(value.trim().toLowerCase());
+  }
+
+  clearFilter(input: HTMLInputElement) {
+    input.value = '';
+    this.filter$.next('');
+  }
+
+  subscribeFiltered() {
+    const filter = this.filter$.value;
+    if (!filter) {
+      return;
+    }
+    this.errorMessage = '';
+    this.loading = true;
+    this.pushSvc
+      .subscriptions$()
+      .pipe(
+        take(1),
+        switchMap((subs) => {
+          const talkgroups = subs
+            .filter((sub) => this.matchesTalkgroupFilter(sub, filter))
+            .map((sub) => sub.tg);
+          const seen = new Set<string>();
+          const unique = talkgroups.filter((tg) => {
+            const k = this.tgKey(tg);
+            if (seen.has(k)) {
+              return false;
+            }
+            seen.add(k);
+            return true;
+          });
+          return this.pushSvc.subscribeSubscriptions({
+            talkgroups: unique,
+            systems: [],
+            unsubscribeAll: null,
+          });
+        }),
+        finalize(() => (this.loading = false)),
+      )
+      .subscribe({
+        next: () => this.refresh(),
+        error: () =>
+          (this.errorMessage = 'Failed to subscribe filtered talkgroups.'),
+      });
   }
 
   toggleSystem(system: SystemSubscriptionView) {
@@ -163,6 +218,18 @@ export class PushSubscribeComponent {
     return `${tg.sys}:${tg.tg}`;
   }
 
+  private matchesTalkgroupFilter(sub: TGSubscription, filter: string): boolean {
+    if (!filter) {
+      return true;
+    }
+    const alphaTag = (sub.alphaTag ?? '').trim();
+    const name = (sub.name ?? '').trim();
+    const tgGroup = (sub.tgGroup ?? '').trim();
+    const tags = (sub.tags ?? []).join(' ').trim();
+    const haystack = `${alphaTag} ${name} ${tgGroup} ${tags}`.toLowerCase();
+    return haystack.includes(filter);
+  }
+
   private buildViewModel(
     subs: TGSubscription[],
     filter: string,
@@ -170,14 +237,12 @@ export class PushSubscribeComponent {
     const grouped = new Map<number, TalkgroupSubscriptionView[]>();
 
     for (const sub of subs) {
+      if (filter && !this.matchesTalkgroupFilter(sub, filter)) {
+        continue;
+      }
       const alphaTag = (sub.alphaTag ?? '').trim();
       const name = (sub.name ?? '').trim();
       const tgGroup = (sub.tgGroup ?? '').trim();
-      const tags = (sub.tags ?? []).join(' ').trim();
-      const haystack = `${alphaTag} ${name} ${tgGroup} ${tags}`.toLowerCase();
-      if (filter && !haystack.includes(filter)) {
-        continue;
-      }
       const tgRow: TalkgroupSubscriptionView = {
         ...sub,
         alphaTag,
@@ -199,13 +264,17 @@ export class PushSubscribeComponent {
 
     return [...grouped.entries()]
       .map(([systemId, talkgroups]) => {
+        const systemName =
+          talkgroups.find((tg) => (tg.systemName ?? '').trim())?.systemName?.trim() ??
+          `System ${systemId}`;
         const sortedTalkgroups = [...talkgroups].sort((a, b) =>
-          (a.alphaTag ?? '').localeCompare(b.alphaTag ?? ''),
+          a.tg.tg - b.tg.tg,
         );
         const subscribedCount = sortedTalkgroups.filter((tg) => tg.subscribed).length;
         const total = sortedTalkgroups.length;
         return <SystemSubscriptionView>{
           systemId,
+          systemName,
           talkgroups: sortedTalkgroups,
           total,
           subscribedCount,
