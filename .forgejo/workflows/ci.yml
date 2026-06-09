@@ -55,3 +55,13 @@ jobs:
         with:
           name: coverage.html
           path: coverage.html
+  build-ui:
+    runs-on: docker
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup-node
+        uses: actions/setup-node@v6
+      - name: build web
+        run: make web
+
