@@ -1,6 +1,6 @@
-//go:build noclient
+//go:build !noclient
 
-package client
+package ui
 
 import (
 	"embed"
@@ -8,4 +8,5 @@ import (
 
 const Prefix = "stillbox/dist/stillbox/browser"
 
+//go:embed stillbox/dist/stillbox/browser
 var Client embed.FS

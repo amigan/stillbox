@@ -12,9 +12,8 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/internal/common"
-	"dynatron.me/x/stillbox/pkg/nexus/client"
 	"dynatron.me/x/stillbox/pkg/pb"
-	restclient "dynatron.me/x/stillbox/pkg/rest/client"
+	"dynatron.me/x/stillbox/client/stillbox-go"
 
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/posflag"
@@ -87,7 +86,7 @@ func main() {
 		err = cl.Dial()
 		switch err {
 		case nil:
-		case client.ErrUnauthorized:
+		case stillbox.ErrUnauthorized:
 			if attempts == 0 || attempts > 10{
 				log.Fatal(err)
 			}
@@ -118,13 +117,13 @@ func backoff() {
 	attempts++
 }
 
-func makeClient(baseURL *url.URL, token string) (client.Nexus, error) {
-	rc, err := restclient.New(restclient.BaseURL(baseURL), restclient.WithAuthBearer(token))
+func makeClient(baseURL *url.URL, token string) (stillbox.NexusClient, error) {
+	rc, err := stillbox.NewRESTClient(stillbox.BaseURL(baseURL), stillbox.WithAuthBearer(token))
 	if err != nil {
 		return nil, err
 	}
 
-	cl, err := client.New(rc)
+	cl, err := stillbox.NewNexusClient(rc)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +131,7 @@ func makeClient(baseURL *url.URL, token string) (client.Nexus, error) {
 	return cl, nil
 }
 
-func do(ctx context.Context, cl client.Nexus, t Transcriber) error {
+func do(ctx context.Context, cl stillbox.NexusClient, t Transcriber) error {
 	for {
 		m, err := cl.ReadMessage()
 		if err != nil {

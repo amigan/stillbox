@@ -1,4 +1,4 @@
-package client
+package stillbox
 
 import (
 	"context"
@@ -15,7 +15,7 @@ type JWT struct {
 	JWT string `json:"jwt"`
 }
 
-func (c *client) Login(ctx context.Context, username, password string) (*JWT, error) {
+func (c *restClient) Login(ctx context.Context, username, password string) (*JWT, error) {
 	form := url.Values{}
 	form.Add("username", username)
 	form.Add("password", password)

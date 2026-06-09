@@ -1,4 +1,4 @@
-package client
+package stillbox
 
 import (
 	"context"
@@ -19,7 +19,7 @@ type adminClient interface {
 
 type MoveProgressCallback func(callstore.MoveProgressMsg)
 
-func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, progressCb MoveProgressCallback) error {
+func (c *restClient) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, progressCb MoveProgressCallback) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -86,7 +86,7 @@ func (c *client) MoveCalls(ctx context.Context, p *callstore.MoveCallParams, pro
 	}
 }
 
-func (c *client) CallsGC(ctx context.Context) error {
+func (c *restClient) CallsGC(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -116,7 +116,7 @@ func (c *client) CallsGC(ctx context.Context) error {
 
 type FsckProgressCallback func(callstore.FsckReport)
 
-func (c *client) CallsFsck(ctx context.Context, p *callstore.FsckParams, progressCb FsckProgressCallback) error {
+func (c *restClient) CallsFsck(ctx context.Context, p *callstore.FsckParams, progressCb FsckProgressCallback) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 

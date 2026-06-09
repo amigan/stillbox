@@ -10,7 +10,7 @@ import (
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/config"
-	"dynatron.me/x/stillbox/pkg/rest/client"
+	"dynatron.me/x/stillbox/client/stillbox-go"
 	"github.com/mattn/go-isatty"
 	"github.com/schollz/progressbar/v3"
 	"github.com/urfave/cli/v3"
@@ -110,7 +110,7 @@ func moveCommand(cfg *config.Config) *cli.Command {
 				progressCb = prog.textCb
 			}
 
-			c, err := client.New(client.UnixSocket(*cfg.Server.AdminSocket))
+			c, err := stillbox.NewRESTClient(stillbox.UnixSocket(*cfg.Server.AdminSocket))
 			if err != nil {
 				return err
 			}
@@ -152,7 +152,7 @@ func gcCommand(cfg *config.Config) *cli.Command {
 				return fmt.Errorf("no admin socket configured")
 			}
 
-			c, err := client.New(client.UnixSocket(*cfg.Server.AdminSocket))
+			c, err := stillbox.NewRESTClient(stillbox.UnixSocket(*cfg.Server.AdminSocket))
 			if err != nil {
 				return err
 			}
@@ -177,7 +177,7 @@ func fsckCommand(cfg *config.Config) *cli.Command {
 				return fmt.Errorf("no admin socket configured")
 			}
 
-			c, err := client.New(client.UnixSocket(*cfg.Server.AdminSocket))
+			c, err := stillbox.NewRESTClient(stillbox.UnixSocket(*cfg.Server.AdminSocket))
 			if err != nil {
 				return err
 			}
