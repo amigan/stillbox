@@ -1,4 +1,4 @@
-package client
+package stillbox
 
 import (
 	"errors"
@@ -9,7 +9,6 @@ import (
 
 	"dynatron.me/x/stillbox/internal/common"
 	"dynatron.me/x/stillbox/pkg/pb"
-	"dynatron.me/x/stillbox/pkg/rest/client"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/gorilla/websocket"
@@ -19,7 +18,7 @@ var (
 	ErrUnauthorized = errors.New("unauthorized; check credentials")
 )
 
-type Nexus interface {
+type NexusClient interface {
 	Close() error
 	Dial() error
 	Live(state pb.LiveState, calls, transcripts bool) error
@@ -30,7 +29,7 @@ type Nexus interface {
 }
 
 type nexusClient struct {
-	rc  client.Client
+	rc  RestClient
 	wsu *url.URL
 	wsc *websocket.Conn
 }
@@ -39,7 +38,7 @@ var (
 	ErrNexusClosed = errors.New("connection closed")
 )
 
-func New(restClient client.Client) (*nexusClient, error) {
+func NewNexusClient(restClient RestClient) (*nexusClient, error) {
 	c := &nexusClient{
 		rc: restClient,
 	}

@@ -1,0 +1,302 @@
+:host {
+  display: block;
+}
+
+.subscribeToolbar {
+  margin-bottom: 1rem;
+}
+
+.subHeader {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.filterSticky {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.subscribeFiltered {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.filterWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--grey-light, #cccccc);
+  border-radius: 0.5rem;
+}
+
+.filterWrap > mat-icon:first-of-type {
+  flex-shrink: 0;
+}
+
+.filterWrap input {
+  border: none;
+  background: transparent;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 0;
+  color: inherit;
+}
+
+.filterWrap input:focus {
+  outline: none;
+}
+
+.filterClear {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  margin: 0 0 0 auto;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  line-height: 1;
+}
+
+.filterClear mat-icon {
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.filterClear:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.filterClear:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.systemList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.systemCard {
+  border: 1px solid var(--grey-light, #cccccc);
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+}
+
+.systemHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.titleBlock h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.titleBlock p {
+  margin: 0.2rem 0 0;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+.tgList {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.5rem;
+}
+
+.tgBtn {
+  border: 1px solid var(--grey-light, #555353);
+  background: #2d2d2d;
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.tgBtn small {
+  opacity: 0.8;
+}
+
+.directSub {
+  border-color: var(--accent, #3f51b5);
+  background: rgba(63, 81, 181, 0.2);
+}
+
+.inheritedSub {
+  border-style: dashed;
+  opacity: 0.9;
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.notSub {
+  background: #6a6363;
+}
+
+.warn {
+  border-color: #a33;
+}
+
+.partial,
+.empty,
+.error {
+  margin: 0.6rem 0 0;
+  font-size: 0.9rem;
+}
+
+.error {
+  color: #a33;
+}
+
+@media (min-width: 769px) {
+  :host {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 1rem 1.5rem;
+    box-sizing: border-box;
+  }
+
+  .subscribeToolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.75rem;
+  }
+
+  .subHeader {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .filterSticky {
+    flex: 1 1 240px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .filterWrap {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 42rem;
+  }
+
+  .subscribeFiltered {
+    flex: 0 0 auto;
+    align-self: center;
+    white-space: nowrap;
+  }
+
+  .systemList {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .systemCard {
+    padding: 1rem 1.1rem;
+  }
+
+  .tgList {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .subscribeToolbar {
+    margin-bottom: 0.5rem;
+  }
+
+  .subHeader {
+    position: static;
+    background: transparent;
+    padding: 0;
+    margin-bottom: 0.5rem;
+    border-bottom: none;
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .subHeader .sbButton {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .filterSticky {
+    position: fixed;
+    top: var(--mobile-sticky-top, 56px);
+    left: 0;
+    right: 0;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 30;
+    background: var(--page-bg, #1f1f1f);
+    padding: 0.35rem 0.5rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--grey-light, #3f3f3f);
+  }
+
+  .filterWrap {
+    width: 100%;
+    display: flex;
+    box-sizing: border-box;
+    border-radius: 0.5rem;
+    padding: 0.45rem 0.55rem;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .filterWrap input {
+    min-width: 0;
+    flex: 1 1 0;
+    width: 0;
+  }
+
+  .subscribeFiltered {
+    width: 100%;
+    align-self: stretch;
+  }
+
+  .systemList {
+    padding-top: 0;
+  }
+
+}

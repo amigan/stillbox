@@ -1,4 +1,4 @@
-package client
+package stillbox
 
 import (
 	"bytes"
@@ -19,14 +19,14 @@ var (
 	APIClientUA = version.HttpString("go-api-client")
 )
 
-type Client interface {
+type RestClient interface {
 	BaseURL() *url.URL
 	HTTPClient() *http.Client
 	adminClient
 	Login(ctx context.Context, username, password string) (*JWT, error)
 }
 
-type client struct {
+type restClient struct {
 	unixSocket *string
 	baseURL    *url.URL
 	hc         http.Client
@@ -34,18 +34,18 @@ type client struct {
 	debug      io.Writer
 }
 
-func (c *client) HTTPClient() *http.Client {
+func (c *restClient) HTTPClient() *http.Client {
 	return &c.hc
 }
 
-func (c *client) BaseURL() *url.URL {
+func (c *restClient) BaseURL() *url.URL {
 	return c.baseURL
 }
 
-type ClientOption func(*client)
+type ClientOption func(*restClient)
 
 func UnixSocket(p string) ClientOption {
-	return func(c *client) {
+	return func(c *restClient) {
 		c.unixSocket = &p
 		baseURL, err := url.Parse("http://unix")
 		if err != nil {
@@ -57,25 +57,25 @@ func UnixSocket(p string) ClientOption {
 }
 
 func BaseURL(u *url.URL) ClientOption {
-	return func(c *client) {
+	return func(c *restClient) {
 		c.baseURL = u
 	}
 }
 
 func Debug(w io.Writer) ClientOption {
-	return func(c *client) {
+	return func(c *restClient) {
 		c.debug = w
 	}
 }
 
 func WithCookieJar(jar http.CookieJar) ClientOption {
-	return func(c *client) {
+	return func(c *restClient) {
 		c.hc.Jar = jar
 	}
 }
 
 func WithAuthBearer(token string) ClientOption {
-	return func(c *client) {
+	return func(c *restClient) {
 		cj, err := cookiejar.New(nil)
 		if err != nil {
 			panic(err)
@@ -100,7 +100,7 @@ func (d *debugCloser) Close() error {
 	return d.cl.Close()
 }
 
-func (c *client) debugTee(resp *http.Response) {
+func (c *restClient) debugTee(resp *http.Response) {
 	if c.debug != nil {
 		cl := &debugCloser{
 			cl: resp.Body,
@@ -111,7 +111,7 @@ func (c *client) debugTee(resp *http.Response) {
 }
 
 // do fills in headers and executes the request.
-func (c *client) do(req *http.Request) (*http.Response, error) {
+func (c *restClient) do(req *http.Request) (*http.Response, error) {
 	if c.headers != nil {
 		for h, v := range c.headers {
 			for _, ve := range v {
@@ -123,8 +123,8 @@ func (c *client) do(req *http.Request) (*http.Response, error) {
 	return c.hc.Do(req)
 }
 
-func New(options ...ClientOption) (c *client, err error) {
-	c = &client{
+func NewRESTClient(options ...ClientOption) (c *restClient, err error) {
+	c = &restClient{
 		hc: *http.DefaultClient,
 	}
 
@@ -143,7 +143,7 @@ func New(options ...ClientOption) (c *client, err error) {
 	return c, nil
 }
 
-func (c *client) url(path string) (*url.URL, error) {
+func (c *restClient) url(path string) (*url.URL, error) {
 	u, err := url.Parse(path)
 	if err != nil {
 		return nil, err
@@ -152,11 +152,11 @@ func (c *client) url(path string) (*url.URL, error) {
 	return c.baseURL.ResolveReference(u), nil
 }
 
-func (c *client) POST(ctx context.Context, endpoint string, body any) (*http.Request, error) {
+func (c *restClient) POST(ctx context.Context, endpoint string, body any) (*http.Request, error) {
 	return c.newRequest(ctx, http.MethodPost, endpoint, body)
 }
 
-func (c *client) newRequest(ctx context.Context, method, endpoint string, body any) (*http.Request, error) {
+func (c *restClient) newRequest(ctx context.Context, method, endpoint string, body any) (*http.Request, error) {
 	u, err := c.url(endpoint)
 	if err != nil {
 		return nil, err

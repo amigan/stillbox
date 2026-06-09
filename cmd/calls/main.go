@@ -13,9 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/nexus/client"
 	"dynatron.me/x/stillbox/pkg/pb"
-	restclient "dynatron.me/x/stillbox/pkg/rest/client"
+	"dynatron.me/x/stillbox/client/stillbox-go"
 	"golang.org/x/term"
 )
 
@@ -76,7 +75,7 @@ func main() {
 	getCreds()
 
 	u := url.URL{Scheme: "http" + secureSuffix(), Host: *addr}
-	rc, err := restclient.New(restclient.BaseURL(&u))
+	rc, err := stillbox.NewRESTClient(stillbox.BaseURL(&u))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,7 +86,7 @@ func main() {
 	}
 	// userAgent(loginReq.Header)
 
-	cl, err := client.New(rc)
+	cl, err := stillbox.NewNexusClient(rc)
 	if err != nil {
 		log.Fatal(err)
 	}
