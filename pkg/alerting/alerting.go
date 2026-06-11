@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"dynatron.me/x/stillbox/pkg/alerting/alert"
+	"dynatron.me/x/stillbox/pkg/alerting/alertstore"
 	"dynatron.me/x/stillbox/pkg/authz"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/calls"
@@ -39,6 +40,7 @@ const (
 	NotificationSubject = "Stillbox Alert"
 	DefaultRenotify     = 30 * time.Minute
 	alerterTickInterval = time.Minute
+	pruneTickInterval   = time.Hour * 24
 )
 
 type Alerter interface {
@@ -63,6 +65,7 @@ type alerter struct {
 	renotify   time.Duration
 	notifier   notify.Notifier
 	tgCache    tgstore.Store
+	alertStore alertstore.Store
 	ignoreList map[talkgroups.ID]int
 	metrics    metrics.Metrics
 	aMetrics   alertMetrics
@@ -113,6 +116,12 @@ func WithMetrics(met metrics.Metrics) AlertOption {
 	}
 }
 
+func WithAlertStore(st alertstore.Store) AlertOption {
+	return func(a *alerter) {
+		a.alertStore = st
+	}
+}
+
 // New creates a new Alerter using the provided configuration.
 func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerter {
 	if !cfg.Enable {
@@ -151,6 +160,27 @@ func New(cfg config.Alerting, tgCache tgstore.Store, opts ...AlertOption) Alerte
 	return as
 }
 
+func (as *alerter) pruneInterval() time.Duration {
+	if as.cfg.PruneIntervalDays > 0 {
+		return time.Duration(as.cfg.PruneIntervalDays) * time.Hour * 24
+	}
+
+	return 7 * time.Hour * 24
+}
+
+func (as *alerter) doAlertPrune(ctx context.Context) error {
+	count, err := as.alertStore.PruneAlerts(ctx, time.Now().Add(-1*as.pruneInterval()))
+	if err != nil {
+		return err
+	}
+
+	if count > 0 {
+		log.Info().Int64("alerts", count).Msg("alerts pruned")
+	}
+
+	return nil
+}
+
 func (as *alerter) reload() {
 	if as.cfg.Renotify != nil {
 		as.renotify = as.cfg.Renotify.Duration()
@@ -175,20 +205,32 @@ func (as *alerter) Go(ctx context.Context) {
 		log.Error().Err(err).Msg("backfill")
 	}
 
+	err = as.doAlertPrune(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("alert prune")
+	}
+
 	as.score(time.Now())
-	ticker := time.NewTicker(alerterTickInterval)
+	alertTicker := time.NewTicker(alerterTickInterval)
+	pruneTicker := time.NewTicker(pruneTickInterval)
 
 	for {
 		select {
-		case now := <-ticker.C:
+		case now := <-alertTicker.C:
 			as.score(now)
 			err := as.notify(ctx)
 			if err != nil {
 				log.Error().Err(err).Msg("notify")
 			}
 			as.cleanCache()
+		case <-pruneTicker.C:
+			err := as.doAlertPrune(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("alert prune")
+			}
 		case <-ctx.Done():
-			ticker.Stop()
+			alertTicker.Stop()
+			pruneTicker.Stop()
 			return
 		}
 	}
@@ -241,20 +283,28 @@ func (as *alerter) eval(ctx context.Context, now time.Time, testMode bool) ([]al
 
 				as.alertCache[s.ID] = a
 
-				if !testMode && as.aMetrics.AlertCount != nil {
-					as.aMetrics.AlertCount.Add(1)
+				if a.Suppressed {
+					continue
+				}
+				if as.cfg.MaxContext > 0 {
+					err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, as.cfg.CallLengthThreshold, as.cfg.ContextLookback)
+					if err != nil {
+						log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("fill transcript context")
+					}
 				}
 
-				if !a.Suppressed {
-					if as.cfg.MaxContext > 0 {
-						err := a.FillTranscriptContext(ctx, as.cfg.MaxContext, as.cfg.CallLengthThreshold, as.cfg.ContextLookback)
-						if err != nil {
-							log.Error().Str("talkgroup", a.Score.ID.String()).Err(err).Msg("fill transcript context")
-						}
+				if !testMode {
+					err = as.alertStore.AddAlert(ctx, &a)
+					if err != nil {
+						return nil, fmt.Errorf("addAlert: %w", err)
 					}
 
-					notifications = append(notifications, a)
+					if as.aMetrics.AlertCount != nil {
+						as.aMetrics.AlertCount.Add(1)
+					}
 				}
+
+				notifications = append(notifications, a)
 			}
 		}
 	}
@@ -342,7 +392,7 @@ func (as *alerter) scoredTGs() []talkgroups.ID {
 }
 
 // packedScoredTGs gets a list of TGID tuples.
-func (as *alerter) scoredTGsTuple() (tgs database.TGTuples) {
+func (as *alerter) scoredTGsTuple() (tgs database.TGTuplesU) {
 	tgs = database.MakeTGTuples(len(as.scores))
 	for _, s := range as.scores {
 		tgs.Append(s.ID.System, s.ID.Talkgroup)

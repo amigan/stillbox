@@ -102,10 +102,7 @@ export class SelectIncidentDialogComponent implements OnInit, OnDestroy {
     this.sub.unsubscribe();
   }
 
-  private buildParams(
-    filter: string,
-    page: number,
-  ): IncidentsListParams {
+  private buildParams(filter: string, page: number): IncidentsListParams {
     const trimmed = filter.trim();
     return {
       start: null,

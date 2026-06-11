@@ -14,6 +14,7 @@ import (
 )
 
 type Querier interface {
+	AddAlert(ctx context.Context, arg AddAlertParams) error
 	AddCall(ctx context.Context, arg AddCallParams) error
 	AddLearnedTalkgroup(ctx context.Context, arg AddLearnedTalkgroupParams) (Talkgroup, error)
 	AddRefJournal(ctx context.Context, arg AddRefJournalParams) (int64, error)
@@ -26,9 +27,13 @@ type Querier interface {
 	CreateShare(ctx context.Context, arg CreateShareParams) error
 	CreateSystem(ctx context.Context, iD int, name string, learned bool) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	CreateWebPushSubscription(ctx context.Context, arg CreateWebPushSubscriptionParams) error
 	DeleteAPIKey(ctx context.Context, apiKey *string) error
 	DeleteCall(ctx context.Context, id uuid.UUID) error
+	DeleteExpiredPushSubscriptions(ctx context.Context) (int64, error)
 	DeleteIncident(ctx context.Context, id uuid.UUID) error
+	DeletePushSubscriptionByID(ctx context.Context, id int64) error
+	DeletePushSubscriptionBySub(ctx context.Context, subscription []byte) error
 	DeleteSetting(ctx context.Context, name string) error
 	DeleteShare(ctx context.Context, id string) error
 	DeleteSystem(ctx context.Context, id int) error
@@ -38,6 +43,7 @@ type Querier interface {
 	DisableUser(ctx context.Context, username string) error
 	DropRefJournal(ctx context.Context, id int64) error
 	GetAPIKey(ctx context.Context, key *string, jwtID pgtype.UUID, kind int) (GetAPIKeyRow, error)
+	GetAlertByURLTag(ctx context.Context, urlTag *string) (Alert, error)
 	GetAllTalkgroupTags(ctx context.Context) ([]string, error)
 	GetAppPrefs(ctx context.Context, appName string, uid int) ([]byte, error)
 	GetCall(ctx context.Context, id uuid.UUID) (GetCallRow, error)
@@ -55,6 +61,7 @@ type Querier interface {
 	GetIncidentOwner(ctx context.Context, id uuid.UUID) (int, error)
 	GetIncidentTalkgroups(ctx context.Context, incidentID uuid.UUID) ([]GetIncidentTalkgroupsRow, error)
 	GetPrunableAudioRefs(ctx context.Context, partitionStart time.Time, partitionEnd time.Time) ([]GetPrunableAudioRefsRow, error)
+	GetPushSubscriptions(ctx context.Context) ([]GetPushSubscriptionsRow, error)
 	GetRefJournal(ctx context.Context, arg GetRefJournalParams) ([]AudioRefJournal, error)
 	GetSetting(ctx context.Context, name string) ([]byte, error)
 	GetShare(ctx context.Context, id string) (Share, error)
@@ -62,8 +69,10 @@ type Querier interface {
 	GetSharesPCount(ctx context.Context, ownerID *int32) (int64, error)
 	GetSweptCallsWithRef(ctx context.Context) ([]GetSweptCallsWithRefRow, error)
 	GetSystemName(ctx context.Context, systemID int) (string, error)
+	GetSystemSubscriptions(ctx context.Context, userID int) ([]int32, error)
 	GetTalkgroup(ctx context.Context, systemID int32, tGID int32) (GetTalkgroupRow, error)
 	GetTalkgroupIDsByTags(ctx context.Context, allTags []string, anyTags []string, notAnyTags []string) ([]GetTalkgroupIDsByTagsRow, error)
+	GetTalkgroupSubscriptions(ctx context.Context, userID int) ([]GetTalkgroupSubscriptionsRow, error)
 	GetTalkgroupTags(ctx context.Context, systemID int32, tGID int32) ([]string, error)
 	GetTalkgroups(ctx context.Context, system *int32, withIgnored bool, filter *string) ([]GetTalkgroupsRow, error)
 	GetTalkgroupsCount(ctx context.Context, system *int32, withIgnored bool, filter *string) (int64, error)
@@ -74,11 +83,13 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id int) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUsers(ctx context.Context) ([]User, error)
+	GetWebPushSubscriptionsSubscribed(ctx context.Context, systemID int32, tGID int32) ([]GetWebPushSubscriptionsSubscribedRow, error)
 	IncrementRefJournal(ctx context.Context, id int64) error
 	ListCallsCount(ctx context.Context, arg ListCallsCountParams) (int64, error)
 	ListCallsP(ctx context.Context, arg ListCallsPParams) ([]ListCallsPRow, error)
 	ListIncidentsCount(ctx context.Context, start *time.Time, end *time.Time, filter *string) (int64, error)
 	ListIncidentsP(ctx context.Context, arg ListIncidentsPParams) ([]ListIncidentsPRow, error)
+	PruneAlerts(ctx context.Context, before time.Time) (int64, error)
 	PruneShares(ctx context.Context) error
 	RecordUserLogin(ctx context.Context, username string, lastLoginAt *time.Time, lastLoginFrom *netip.Addr) error
 	RemoveFromIncident(ctx context.Context, iD uuid.UUID, callIds []uuid.UUID) error
@@ -93,11 +104,19 @@ type Querier interface {
 	SetTalkgroupTags(ctx context.Context, tags []string, systemID int32, tGID int32) error
 	StoreDeletedTGVersion(ctx context.Context, systemID *int32, tGID *int32, submitter *int32) error
 	StoreTGVersion(ctx context.Context, arg []StoreTGVersionParams) *StoreTGVersionBatchResults
+	SubscribeSystems(ctx context.Context, userID int, systemIds []int32) error
+	SubscribeTalkgroups(ctx context.Context, userID int, systemIds []int32, tgids []int32) error
 	// This is used to sweep calls that are part of an incident prior to pruning a partition.
 	SweepCalls(ctx context.Context, rangeStart time.Time, rangeEnd time.Time) (int64, error)
+	UnsubscribeAllSystems(ctx context.Context, userID int) (int64, error)
+	UnsubscribeAllTalkgroups(ctx context.Context, userID int) (int64, error)
+	UnsubscribeSystems(ctx context.Context, userID int, systemIds []int32) (int64, error)
+	UnsubscribeTGsInSystems(ctx context.Context, userID int, systemIds []int32) (int64, error)
+	UnsubscribeTalkgroups(ctx context.Context, userID int, tgs []TGID) (int64, error)
 	UpdateCallIncidentNotes(ctx context.Context, notes []byte, incidentID uuid.UUID, callID uuid.UUID) error
 	UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error)
 	UpdatePassword(ctx context.Context, username string, password string) error
+	UpdatePushSubscription(ctx context.Context, newSubscription []byte, userID int, oldSubscription []byte) (int64, error)
 	UpdateTalkgroup(ctx context.Context, arg UpdateTalkgroupParams) (Talkgroup, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpsertTalkgroup(ctx context.Context, arg []UpsertTalkgroupParams) *UpsertTalkgroupBatchResults

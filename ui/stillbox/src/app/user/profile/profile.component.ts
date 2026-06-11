@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { PasswdComponent } from '../passwd/passwd.component';
 import { AuthService } from '../../login/auth.service';
 import { UserService } from '../user.service';
+import { PushSubscribeComponent } from '../../notify/subscribe/subscribe.component';
 
 @Component({
   selector: 'app-profile',

@@ -42,6 +42,8 @@ Primary differences:
 
    We use [go-trending](https://github.com/codesuki/go-trending) to implement this.
 
+   Notifications are via Web Push notifications or Slack-compatible webhooks (tested with Prosody mod_slack_webhooks).
+
  - [x] "Native" flutter client (Calls) for Android/iOS/macOS/Linux/Windows (in progress)
 
    This client, as of this writing, works for listening linearly only. More functionality to come. Currently available [here](https://github.com/amigan/calls).

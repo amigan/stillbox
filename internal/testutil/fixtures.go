@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -80,6 +81,20 @@ func SmallMP3() []byte {
 	return smallMP3
 }
 
+func webpushSubscription(s string) string {
+	d := struct {
+		Endpoint string `json:"endpoint"`
+	}{
+		Endpoint: s,
+	}
+	ma, err := json.Marshal(&d)
+	if err != nil {
+		panic(err)
+	}
+
+	return "!!binary \"" + base64.StdEncoding.EncodeToString(ma) + "\""
+}
+
 func primeBlobs() {
 	dmOnce.Do(func() {
 		smallMP3 := SmallMP3()
@@ -88,9 +103,10 @@ func primeBlobs() {
 			"smallMP3": "!!binary \"" + base64.StdEncoding.EncodeToString(smallMP3) + "\"",
 		}
 		templateFuncs = template.FuncMap{
-			"uuid":   uidList.getUUID,
-			"time":   uidList.getTime,
-			"pwhash": users.HashPassword,
+			"uuid":        uidList.getUUID,
+			"time":        uidList.getTime,
+			"pwhash":      users.HashPassword,
+			"webpush_sub": webpushSubscription,
 			"now": func() string {
 				return time.Now().Format(time.RFC3339Nano)
 			},
@@ -216,6 +232,9 @@ func (db *DB) loadFixtures(ctx context.Context) error {
 		{"calls", database.Call{}, nil},
 		{"incidents", database.Incident{}, nil},
 		{"incidents_calls", database.IncidentsCall{}, nil},
+		{"system_notification_subscriptions", database.SystemNotificationSubscription{}, nil},
+		{"talkgroup_notification_subscriptions", database.TalkgroupNotificationSubscription{}, nil},
+		{"webpush_subscriptions", database.WebpushSubscription{}, common.PtrTo("id")},
 	}
 
 	for _, table := range tps {

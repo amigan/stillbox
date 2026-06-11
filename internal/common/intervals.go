@@ -3,6 +3,8 @@ package common
 import (
 	"fmt"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const (
@@ -145,4 +147,29 @@ func (p Interval) IsValid() bool {
 	}
 
 	return false
+}
+
+type TimeRange struct {
+	Begin time.Time `json:"begin"`
+	End   time.Time `json:"end"`
+}
+
+func (t *TimeRange) TSTZRange() pgtype.Range[pgtype.Timestamptz] {
+	if t == nil {
+		return pgtype.Range[pgtype.Timestamptz]{Valid: false}
+	}
+
+	return pgtype.Range[pgtype.Timestamptz]{
+		Lower: pgtype.Timestamptz{
+			Time:  t.Begin,
+			Valid: true,
+		},
+		Upper: pgtype.Timestamptz{
+			Time:  t.End,
+			Valid: true,
+		},
+		LowerType: pgtype.Inclusive,
+		UpperType: pgtype.Inclusive,
+		Valid:     true,
+	}
 }

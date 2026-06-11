@@ -156,6 +156,10 @@ export class TalkgroupService {
     return this.tags$;
   }
 
+  allTalkgroups(): Observable<Talkgroup[]> {
+    return this.tgs$;
+  }
+
   exportTGs(
     type: string,
     sysID: number,

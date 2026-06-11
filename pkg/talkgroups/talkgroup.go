@@ -59,9 +59,30 @@ var _ encoding.TextUnmarshaler = (*ID)(nil)
 
 var ErrBadTG = errors.New("bad talkgroup format")
 
+func (tid *ID) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%d:%d"`, tid.System, tid.Talkgroup)), nil
+}
+
 func (tid *ID) UnmarshalJSON(j []byte) error {
-	// this is a dirty hack since we cannot implement both TextUnmarshaler
+	// this is all a dirty hack since we cannot implement both TextUnmarshaler
 	// and json.Unmarshaler at the same time. sigh.
+
+	// at least quote, numeral, quote at the bare minimum
+	if len(j) < 3 {
+		return ErrBadTG
+	}
+
+	// check if it's a string
+	if j[0] == '"' && j[len(j)-1] == '"' {
+		var str string
+		err := json.Unmarshal(j, &str)
+		if err != nil {
+			return err
+		}
+
+		return tid.UnmarshalText([]byte(str))
+	}
+
 	v := &struct {
 		System    uint32 `json:"sys"`
 		Talkgroup uint32 `json:"tg"`
@@ -77,6 +98,7 @@ func (tid *ID) UnmarshalJSON(j []byte) error {
 	}
 
 	tid.System, tid.Talkgroup = v.System, v.Talkgroup
+
 	return nil
 }
 
@@ -118,13 +140,25 @@ func (id *ID) UnmarshalYAML(node *yaml.Node) error {
 
 type IDs []ID
 
-func (t IDs) Tuples() database.TGTuples {
+func (t IDs) UTuples() database.TGTuplesU {
 	sys := make([]uint32, len(t))
 	tg := make([]uint32, len(t))
 
 	for i := range t {
 		sys[i] = t[i].System
 		tg[i] = t[i].Talkgroup
+	}
+
+	return database.TGTuplesU{sys, tg}
+}
+
+func (t IDs) Tuples() database.TGTuples {
+	sys := make([]int32, len(t))
+	tg := make([]int32, len(t))
+
+	for i := range t {
+		sys[i] = int32(t[i].System)
+		tg[i] = int32(t[i].Talkgroup)
 	}
 
 	return database.TGTuples{sys, tg}
@@ -144,4 +178,20 @@ func TG[T intId, U intId](sys T, tgid U) ID {
 func (t ID) String() string {
 	return fmt.Sprintf("%d:%d", t.System, t.Talkgroup)
 
+}
+
+// TGIDs creates IDs from its string "sys:tg" arguments. It is primarily intended for tests.
+func TGIDs(s ...string) IDs {
+	r := make(IDs, 0, len(s))
+	for _, idS := range s {
+		var id ID
+		err := id.UnmarshalText([]byte(idS))
+		if err != nil {
+			panic(err)
+		}
+
+		r = append(r, id)
+	}
+
+	return r
 }

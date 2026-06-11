@@ -1,0 +1,82 @@
+-- name: CreateWebPushSubscription :exec
+INSERT INTO webpush_subscriptions(
+	user_id,
+	created_at,
+	updated_at,
+	expiration,
+	subscription,
+	client
+) VALUES (
+	@user_id,
+	NOW(),
+	NOW(),
+	sqlc.narg('expiration'),
+	@subscription,
+	@client
+);
+
+-- name: UpdatePushSubscription :execrows
+UPDATE webpush_subscriptions
+SET
+	updated_at = NOW(),
+	subscription = @new_subscription
+WHERE
+	user_id = @user_id AND
+	subscription = @old_subscription;
+
+	-- name: DeletePushSubscription :execrows
+DELETE FROM webpush_subscriptions WHERE user_id = @user_id AND subscription = @subscription;
+
+-- name: GetPushSubscriptions :many
+SELECT id, user_id, client, subscription FROM webpush_subscriptions
+WHERE
+	expiration IS NULL OR expiration > NOW();
+
+-- name: DeletePushSubscriptionByID :exec
+DELETE FROM webpush_subscriptions WHERE id = @id;
+
+-- name: DeletePushSubscriptionBySub :exec
+DELETE FROM webpush_subscriptions WHERE subscription = @subscription;
+
+-- name: DeleteExpiredPushSubscriptions :execrows
+DELETE FROM webpush_subscriptions WHERE expiration IS NOT NULL AND expiration < NOW();
+
+-- name: GetWebPushSubscriptionsSubscribed :many
+SELECT DISTINCT
+	wps.id, wps.user_id, wps.subscription, wps.client
+FROM webpush_subscriptions wps
+LEFT OUTER JOIN talkgroup_notification_subscriptions tgns ON (wps.user_id = tgns.user_id)
+LEFT OUTER JOIN system_notification_subscriptions sns ON (wps.user_id = sns.user_id)
+WHERE
+	(tgns.system_id = @system_id AND tgns.tgid = @tgid) OR
+	(sns.system_id = @system_id);
+
+-- name: SubscribeTalkgroups :exec
+INSERT INTO talkgroup_notification_subscriptions (user_id, system_id, tgid) VALUES (
+	@user_id, UNNEST(@system_ids::INT4[]), UNNEST(@tgids::INT4[])
+) ON CONFLICT DO NOTHING;
+
+-- name: SubscribeSystems :exec
+INSERT INTO system_notification_subscriptions (user_id, system_id) VALUES (@user_id, UNNEST(@system_ids::INT4[]))
+ON CONFLICT DO NOTHING;
+
+-- name: UnsubscribeTalkgroups :execrows
+DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id AND (system_id, tgid) = ANY(@tgs::talkgroup_tuple[]);
+
+-- name: UnsubscribeAllTalkgroups :execrows
+DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id;
+
+-- name: UnsubscribeAllSystems :execrows
+DELETE FROM system_notification_subscriptions WHERE user_id = @user_id;
+
+-- name: UnsubscribeSystems :execrows
+DELETE FROM system_notification_subscriptions WHERE user_id = @user_id AND system_id = ANY(@system_ids::INT4[]);
+
+-- name: GetTalkgroupSubscriptions :many
+SELECT system_id, tgid FROM talkgroup_notification_subscriptions WHERE user_id = @user_id;
+
+-- name: GetSystemSubscriptions :many
+SELECT system_id::INT4 FROM system_notification_subscriptions WHERE user_id = @user_id;
+
+-- name: UnsubscribeTGsInSystems :execrows
+DELETE FROM talkgroup_notification_subscriptions WHERE user_id = @user_id AND system_id = ANY(@system_ids::INT4[]);

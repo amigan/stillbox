@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	gonanoid "github.com/matoous/go-nanoid"
 	"github.com/urfave/cli/v3"
 )
 
@@ -189,4 +190,10 @@ func CryptRandSeq(n int) string {
 			result += string(rune(n))
 		}
 	}
+}
+
+const nanoIDAlphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func NanoID(n int) string {
+	return gonanoid.MustGenerate(nanoIDAlphabet, n)
 }

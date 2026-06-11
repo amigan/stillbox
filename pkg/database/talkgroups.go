@@ -5,11 +5,17 @@ import (
 )
 
 type talkgroupQuerier interface {
-	GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuples) ([]GetTalkgroupsRow, error)
-	BulkSetTalkgroupTags(ctx context.Context, tgs TGTuples, tags []string) error
+	GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuplesU) ([]GetTalkgroupsRow, error)
+	BulkSetTalkgroupTags(ctx context.Context, tgs TGTuplesU, tags []string) error
 }
 
-type TGTuples [2][]uint32
+type TGTuplesU [2][]uint32
+type TGTuples [2][]int32
+
+type TGID struct {
+	System    uint32 `db:"system"`
+	Talkgroup uint32 `db:"tg"`
+}
 
 func IsTGConstraintViolation(e error) bool {
 	return IsConstraintViolation(e, TGConstraintName)
@@ -19,14 +25,14 @@ func IsSystemConstraintViolation(e error) bool {
 	return IsConstraintViolation(e, SysConstraintName)
 }
 
-func MakeTGTuples(cap int) TGTuples {
+func MakeTGTuples(cap int) TGTuplesU {
 	return [2][]uint32{
 		make([]uint32, 0, cap),
 		make([]uint32, 0, cap),
 	}
 }
 
-func (t *TGTuples) Append(sys, tg uint32) {
+func (t *TGTuplesU) Append(sys, tg uint32) {
 	t[0] = append(t[0], sys)
 	t[1] = append(t[1], tg)
 }
@@ -39,7 +45,7 @@ FROM talkgroups tg
 JOIN systems sys ON tg.system_id = sys.id
 JOIN UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) ON (tg.system_id = tgt.sys AND tg.tgid = tgt.tg);`
 
-func (q *Queries) GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuples) ([]GetTalkgroupsRow, error) {
+func (q *Queries) GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuplesU) ([]GetTalkgroupsRow, error) {
 	rows, err := q.db.Query(ctx, getTalkgroupsBySysTGID, ids[0], ids[1])
 	if err != nil {
 		return nil, err
@@ -78,7 +84,7 @@ func (q *Queries) GetTalkgroupsBySysTGID(ctx context.Context, ids TGTuples) ([]G
 
 const bulkSetTalkgroupTags = `UPDATE talkgroups tg SET tags = $3 FROM UNNEST($1::INT4[], $2::INT4[]) AS tgt(sys, tg) WHERE (tg.system_id = tgt.sys AND tg.tgid = tgt.tg);`
 
-func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, tgs TGTuples, tags []string) error {
+func (q *Queries) BulkSetTalkgroupTags(ctx context.Context, tgs TGTuplesU, tags []string) error {
 	_, err := q.db.Exec(ctx, bulkSetTalkgroupTags, tgs[0], tgs[1], tags)
 	return err
 }

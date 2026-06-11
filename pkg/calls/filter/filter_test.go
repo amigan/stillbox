@@ -34,18 +34,7 @@ func stv(s string) *calls.Call {
 type tagSet map[string]string
 
 func tgids(s ...string) talkgroups.IDs {
-	r := make(talkgroups.IDs, 0, len(s))
-	for _, idS := range s {
-		var id talkgroups.ID
-		err := id.UnmarshalText([]byte(idS))
-		if err != nil {
-			panic(err)
-		}
-
-		r = append(r, id)
-	}
-
-	return r
+	return talkgroups.TGIDs(s...)
 }
 
 func stg(s string) []string {

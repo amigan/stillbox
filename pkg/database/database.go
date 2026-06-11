@@ -157,7 +157,7 @@ func NewClient(ctx context.Context, conf config.DB) (*Postgres, error) {
 			}
 		}
 
-		return nil
+		return RegisterDataTypes(ctx, conn)
 	}
 
 	if conf.LogQueries {
@@ -178,6 +178,23 @@ func NewClient(ctx context.Context, conf config.DB) (*Postgres, error) {
 	}
 
 	return db, nil
+}
+
+func RegisterDataTypes(ctx context.Context, conn *pgx.Conn) error {
+	dataTypeNames := []string{
+		"talkgroup_tuple",
+		"_talkgroup_tuple",
+	}
+
+	for _, typeName := range dataTypeNames {
+		dataType, err := conn.LoadType(ctx, typeName)
+		if err != nil {
+			return err
+		}
+		conn.TypeMap().RegisterType(dataType)
+	}
+
+	return nil
 }
 
 type dBCtxKey string

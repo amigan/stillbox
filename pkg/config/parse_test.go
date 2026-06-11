@@ -65,10 +65,12 @@ var expCfg = &Config{
 	},
 
 	Notify: Notify{
-		NotifyService{
-			Provider: "slackwebhook",
-			Config: map[string]any{
-				"webhookURL": "https://hook",
+		Backends: []NotifyService{
+			{
+				Provider: "slackwebhook",
+				Config: map[string]any{
+					"webhookURL": "https://hook",
+				},
 			},
 		},
 	},
@@ -128,10 +130,12 @@ var expCfg2 = &Config{
 	},
 
 	Notify: Notify{
-		NotifyService{
-			Provider: "slackwebhook",
-			Config: map[string]any{
-				"webhookURL": "https://hook",
+		Backends: []NotifyService{
+			{
+				Provider: "slackwebhook",
+				Config: map[string]any{
+					"webhookURL": "https://hook",
+				},
 			},
 		},
 	},

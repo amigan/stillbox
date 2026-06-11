@@ -12,7 +12,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { TalkgroupService, TalkgroupsPaginated } from '../talkgroups.service';
 import { TGID, Talkgroup, iconMapping } from '../../talkgroup';
 import { ActivatedRoute } from '@angular/router';
-import { RouterModule, RouterLink } from '@angular/router';
+import { RouterModule } from '@angular/router';
 
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -28,15 +28,10 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Observable, Subscription } from 'rxjs';
 import {
-  MAT_DIALOG_DATA,
   MatDialog,
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogRef,
-  MatDialogTitle,
 } from '@angular/material/dialog';
 import { TalkgroupRecordComponent } from '../talkgroup-record/talkgroup-record.component';
+import { User, UserService } from '../../user/user.service';
 
 @Pipe({
   standalone: true,
@@ -98,14 +93,13 @@ export class TalkgroupTableComponent {
     'select',
     'icon',
     'sysID',
+    'tgid',
     'sysName',
     'group',
     'name',
     'alphaTag',
-    'tgid',
     'tags',
     'learned',
-    'edit',
   ];
   selection = new SelectionModel<Talkgroup>(true, []);
   private resetPageSub!: Subscription;
@@ -113,8 +107,9 @@ export class TalkgroupTableComponent {
   @ViewChild('paginator') paginator!: MatPaginator;
   suppress = false;
   dialog = inject(MatDialog);
+  private self!: User;
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(private route: ActivatedRoute, public userSvc: UserService) {}
 
   setPage(p: PageEvent) {
     // don't needlessly request page 0 if we were asked merely to reset the state of the control
@@ -131,6 +126,10 @@ export class TalkgroupTableComponent {
       this.selection.clear();
       this.suppress = false;
     });
+
+    if (this.userSvc.selfUser()?.isAdmin) {
+      this.columns.push('edit');
+    }
 
     this.prefsService.get('tgsPerPage').subscribe((tgpp) => {
       this.perPage = tgpp;

@@ -78,7 +78,7 @@ type Store interface {
 	Hint(ctx context.Context, tgs []tgsp.ID) error
 
 	// Load loads the provided talkgroup ID tuples into the Store.
-	Load(ctx context.Context, tgs database.TGTuples) error
+	Load(ctx context.Context, tgs database.TGTuplesU) error
 
 	// Invalidate invalidates any caching in the Store.
 	Invalidate()
@@ -283,7 +283,7 @@ func (t *cache) Hint(ctx context.Context, tgs []tgsp.ID) error {
 	}
 
 	t.RLock()
-	var toLoad database.TGTuples
+	var toLoad database.TGTuplesU
 	for _, tg := range tgs {
 		_, ok := t.tgs[tg]
 		if !ok {
@@ -401,7 +401,7 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 			}
 		}
 
-		tgRecords, err := db.GetTalkgroupsBySysTGID(ctx, toGet.Tuples())
+		tgRecords, err := db.GetTalkgroupsBySysTGID(ctx, toGet.UTuples())
 		if err != nil {
 			return nil, err
 		}
@@ -461,7 +461,7 @@ func (t *cache) TGs(ctx context.Context, tgs tgsp.IDs, opts ...Option) ([]*tgsp.
 	return addToCacheAndRowList(t, resultList, tgRecords), nil
 }
 
-func (t *cache) Load(ctx context.Context, tgs database.TGTuples) error {
+func (t *cache) Load(ctx context.Context, tgs database.TGTuplesU) error {
 	// No need for RBAC checks since this merely primes the cache and returns nothing.
 	tgRecords, err := t.db.GetTalkgroupsBySysTGID(ctx, tgs)
 	if err != nil {
@@ -949,4 +949,13 @@ func (t *cache) TGsByTags(ctx context.Context, tagsAll, tagsAny, tagsNot []strin
 	}
 
 	return res, nil
+}
+
+func TGsToDBTGs(tgs tgsp.IDs) []database.TGID {
+	r := make([]database.TGID, len(tgs))
+	for i := range tgs {
+		r[i] = database.TGID(tgs[i])
+	}
+
+	return r
 }

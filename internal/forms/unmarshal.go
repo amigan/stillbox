@@ -331,6 +331,9 @@ func Unmarshal(r *http.Request, dest any, opts ...Option) error {
 		switch err {
 		case io.EOF:
 			if o.acceptEmptyBody {
+				if o.emptyBodyRes != nil {
+					*o.emptyBodyRes = true
+				}
 				return nil
 			}
 			fallthrough

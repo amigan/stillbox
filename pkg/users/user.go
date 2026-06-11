@@ -40,6 +40,7 @@ func From(ctx context.Context) (*User, error) {
 	return FromSubject(sub)
 }
 
+// UserCheck is like authz.Check but also returns the *User. It accepts a '+' delimited list of accepted actions as a string (like "read+delete+create")
 func UserCheck(ctx context.Context, rsc entities.Resource, actions string) (*User, error) {
 	acts := strings.Split(actions, "+")
 	subj, err := authz.FromCtx(ctx).Check(ctx, rsc, authz.WithActions(acts...))

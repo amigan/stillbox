@@ -667,8 +667,9 @@ func (x *Error) GetCommand() *Command {
 type Notification struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DateTime      *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=date_time,json=dateTime,proto3" json:"date_time,omitempty"`
-	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
-	ActionUrl     string                 `protobuf:"bytes,3,opt,name=action_url,json=actionUrl,proto3" json:"action_url,omitempty"`
+	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Msg           string                 `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
+	ActionUrl     string                 `protobuf:"bytes,4,opt,name=action_url,json=actionUrl,proto3" json:"action_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -708,6 +709,13 @@ func (x *Notification) GetDateTime() *timestamppb.Timestamp {
 		return x.DateTime
 	}
 	return nil
+}
+
+func (x *Notification) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
 }
 
 func (x *Notification) GetMsg() string {
@@ -1450,12 +1458,13 @@ const file_stillbox_proto_rawDesc = "" +
 	"\x03msg\x18\x01 \x01(\tR\x03msg\"J\n" +
 	"\x05Error\x12\x14\n" +
 	"\x05error\x18\x01 \x01(\tR\x05error\x12+\n" +
-	"\acommand\x18\x02 \x01(\v2\x11.stillbox.CommandR\acommand\"x\n" +
+	"\acommand\x18\x02 \x01(\v2\x11.stillbox.CommandR\acommand\"\x8e\x01\n" +
 	"\fNotification\x127\n" +
-	"\tdate_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\bdateTime\x12\x10\n" +
-	"\x03msg\x18\x02 \x01(\tR\x03msg\x12\x1d\n" +
+	"\tdate_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\bdateTime\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x10\n" +
+	"\x03msg\x18\x03 \x01(\tR\x03msg\x12\x1d\n" +
 	"\n" +
-	"action_url\x18\x03 \x01(\tR\tactionUrl\"\xf0\x02\n" +
+	"action_url\x18\x04 \x01(\tR\tactionUrl\"\xf0\x02\n" +
 	"\aCommand\x12\"\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\x03H\x01R\tcommandId\x88\x01\x01\x123\n" +

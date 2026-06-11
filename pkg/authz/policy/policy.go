@@ -68,8 +68,20 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Preset: PresetDeleteOwn},
 					&restrict.Permission{Preset: PresetReadOwn},
 				},
+				entities.ResourceAlert: {
+					&restrict.Permission{Action: entities.ActionRead},
+				},
 				entities.ResourceNexus: {
 					&restrict.Permission{Action: entities.ActionConnect},
+				},
+				entities.ResourcePushSub: {
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionDelete}, // all queries limited to subject user ID
+				},
+				entities.ResourceWebPushSub: {
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionDelete}, // all queries limited to subject user ID
 				},
 			},
 		},
@@ -157,6 +169,8 @@ var Policy = &restrict.PolicyDefinition{
 				},
 				entities.ResourceAlert: {
 					&restrict.Permission{Action: entities.ActionRead},
+					&restrict.Permission{Action: entities.ActionCreate},
+					&restrict.Permission{Action: entities.ActionDelete},
 					&restrict.Permission{Action: entities.ActionSimulate},
 					&restrict.Permission{Action: entities.ActionTestNotify},
 				},
@@ -171,6 +185,10 @@ var Policy = &restrict.PolicyDefinition{
 					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Action: entities.ActionUpdate},
 					&restrict.Permission{Action: entities.ActionDelete},
+				},
+				entities.ResourcePushSub: {
+					&restrict.Permission{Action: entities.ActionDelete},
+					&restrict.Permission{Action: entities.ActionRead},
 				},
 			},
 		},

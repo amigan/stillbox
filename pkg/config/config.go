@@ -104,6 +104,7 @@ type Alerting struct {
 	MaxContext          uint                `yaml:"maxContext" form:"maxContext"`
 	CallLengthThreshold jsontypes.Duration  `yaml:"callLengthThreshold" form:"callLengthThreshold" default:"4s"`
 	ContextLookback     jsontypes.Duration  `yaml:"contextLookback" form:"contextLookback" default:"10m"`
+	PruneIntervalDays   uint                `yaml:"pruneIntervalDays" form:"pruneIntervalDays"`
 }
 
 type Relay struct {
@@ -112,13 +113,15 @@ type Relay struct {
 	Required bool   `yaml:"required"`
 }
 
-type Notify []NotifyService
+type Notify struct {
+	SubjectTemplate *string         `yaml:"subjectTemplate" json:"subjectTemplate"`
+	BodyTemplate    *string         `yaml:"bodyTemplate" json:"bodyTemplate"`
+	Backends        []NotifyService `yaml:"backends" json:"backends"`
+}
 
 type NotifyService struct {
-	Provider        string    `yaml:"provider" json:"provider"`
-	SubjectTemplate *string   `yaml:"subjectTemplate" json:"subjectTemplate"`
-	BodyTemplate    *string   `yaml:"bodyTemplate" json:"bodyTemplate"`
-	Config          ConfigMap `yaml:"config" json:"config"`
+	Provider string    `yaml:"provider" json:"provider"`
+	Config   ConfigMap `yaml:"config" json:"config"`
 }
 
 type IngestFilter struct {

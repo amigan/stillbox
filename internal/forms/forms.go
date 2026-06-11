@@ -21,6 +21,7 @@ type options struct {
 	parseLocal         bool
 	acceptBlank        bool
 	acceptEmptyBody    bool
+	emptyBodyRes       *bool
 	maxMultipartMemory int64
 	defaultOmitEmpty   bool
 }
@@ -48,6 +49,14 @@ func WithAcceptBlank() Option {
 func WithAcceptEmptyBody() Option {
 	return func(o *options) {
 		o.acceptEmptyBody = true
+	}
+}
+
+// WithAcceptEmptyBodyResult is like WithAcceptEmptyBodyResult but stores whether it was empty in *res.
+func WithAcceptEmptyBodyResult(res *bool) Option {
+	return func(o *options) {
+		o.acceptEmptyBody = true
+		o.emptyBodyRes = res
 	}
 }
 

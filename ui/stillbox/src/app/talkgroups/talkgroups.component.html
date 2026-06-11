@@ -20,20 +20,20 @@
     }
   </mat-form-field>
   <div class="addTag"></div>
-  <div class="impExp">
+  <div class="buttonBar">
+    <button matIconButton class="sbButton" [class.hidden]="!talkgroupTable.selection.hasValue()"><mat-icon>playlist_add</mat-icon></button>
     <button class="sbButton" [routerLink]="'/talkgroups/import'">Import</button>
     <button class="sbButton" [routerLink]="'/talkgroups/export'">Export</button>
   </div>
 </div>
-@if (tgs) {
   <talkgroup-table
+    [class.hidden]="tgs === null || tgs === undefined"
+    #talkgroupTable
     [talkgroups]="tgs"
     [resetPage]="pageReset.asObservable()"
     (switchPage)="switchPage($event)"
     (changeFilter)="changeFilter($event)"
   ></talkgroup-table>
-} @else {
-  <div class="spinner">
+  <div class="spinner" [class.hidden]="!(tgs === null || tgs === undefined)">
     <mat-spinner></mat-spinner>
   </div>
-}

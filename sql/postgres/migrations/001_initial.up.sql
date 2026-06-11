@@ -53,6 +53,11 @@ CREATE TABLE IF NOT EXISTS talkgroups(
 	UNIQUE (system_id, tgid)
 );
 
+CREATE TYPE talkgroup_tuple AS (
+	system INT4,
+	tg INT4
+);
+
 CREATE INDEX talkgroups_system_tgid_idx ON talkgroups (system_id, tgid);
 
 CREATE INDEX IF NOT EXISTS talkgroup_id_tags ON talkgroups USING GIN (tags);
@@ -77,6 +82,20 @@ CREATE TABLE IF NOT EXISTS talkgroup_versions(
 	weight REAL,
 	learned BOOLEAN,
 	ignored BOOLEAN
+);
+
+CREATE TABLE IF NOT EXISTS alerts(
+	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	time TIMESTAMPTZ NOT NULL, 
+	tgid INTEGER NOT NULL,
+	system_id INTEGER REFERENCES systems(id) NOT NULL,
+	weight REAL,
+	score REAL,
+	orig_score REAL,
+	notified BOOLEAN NOT NULL DEFAULT 'false',
+	metadata JSONB,
+	context_window TSTZRANGE,
+	url_tag TEXT UNIQUE
 );
 
 CREATE TYPE audio_mime AS ENUM ('audio/mpeg', 'audio/wav');
@@ -194,3 +213,36 @@ CREATE TABLE IF NOT EXISTS audio_ref_journal(
 	CHECK(ref IS NOT NULL OR call_id IS NOT NULL),
 	UNIQUE NULLS NOT DISTINCT (call_id, backend, ref)
 );
+
+CREATE TABLE IF NOT EXISTS webpush_subscriptions(
+	id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+	user_id INTEGER REFERENCES users(id) NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL,
+	expiration TIMESTAMPTZ,
+	subscription JSONB NOT NULL,
+	client TEXT,
+	UNIQUE(subscription)
+);
+
+CREATE INDEX IF NOT EXISTS webpush_subscriptions_user_id_idx ON webpush_subscriptions(user_id);
+
+CREATE TABLE IF NOT EXISTS talkgroup_notification_subscriptions(
+	user_id INTEGER REFERENCES users(id),
+	system_id INT4 NOT NULL,
+	tgid INT4 NOT NULL,
+	PRIMARY KEY(user_id, system_id, tgid),
+	FOREIGN KEY (system_id, tgid) REFERENCES talkgroups (system_id, tgid)
+);
+
+CREATE INDEX IF NOT EXISTS talkgroup_notification_subscriptions_system_id_tgid_idx ON talkgroup_notification_subscriptions(system_id, tgid);
+
+CREATE INDEX IF NOT EXISTS talkgroup_notification_subscriptions_user_id ON talkgroup_notification_subscriptions(user_id);
+
+CREATE TABLE IF NOT EXISTS system_notification_subscriptions(
+	user_id INTEGER REFERENCES users(id),
+	system_id INTEGER REFERENCES systems(id),
+	PRIMARY KEY (user_id, system_id)
+);
+
+CREATE INDEX IF NOT EXISTS system_notification_subscriptions_system_idx ON system_notification_subscriptions(system_id);

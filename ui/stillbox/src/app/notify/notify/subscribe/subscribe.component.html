@@ -1,0 +1,101 @@
+<div class="subscribeToolbar">
+  <section class="subHeader">
+    <button class="sbButton" (click)="pushSubscribe()" [disabled]="loading">
+      <mat-icon>notifications</mat-icon>
+      Enable Push
+    </button>
+    <button class="sbButton warn" (click)="clearAll()" [disabled]="loading">
+      <mat-icon>notifications_off</mat-icon>
+      Clear All
+    </button>
+  </section>
+  <div class="filterSticky">
+    <label class="filterWrap">
+      <mat-icon>search</mat-icon>
+      <input
+        #filterInput
+        type="text"
+        placeholder="Filter talkgroups"
+        (input)="setFilter($event)"
+        [disabled]="loading"
+      />
+      @if (hasFilter$ | async) {
+        <button
+          type="button"
+          class="filterClear"
+          (click)="clearFilter(filterInput)"
+          [disabled]="loading"
+          aria-label="Clear filter"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </label>
+    @if (hasFilter$ | async) {
+      <button
+        type="button"
+        class="sbButton subscribeFiltered"
+        (click)="subscribeFiltered()"
+        [disabled]="loading"
+      >
+        <mat-icon>playlist_add_check</mat-icon>
+        Subscribe all matching
+      </button>
+    }
+  </div>
+</div>
+
+@if (errorMessage) {
+  <p class="error">{{ errorMessage }}</p>
+}
+
+<div class="systemList">
+  @let systems = vm$ | async;
+  @if (systems && systems.length > 0) {
+    @for (system of systems; track trackSystem($index, system)) {
+      <section class="systemCard">
+        <header class="systemHeader">
+          <div class="titleBlock">
+            <h3>{{ system.systemName }}</h3>
+            <p>{{ system.subscribedCount }} / {{ system.total }} subscribed</p>
+          </div>
+          <button class="sbButton" (click)="toggleSystem(system)" [disabled]="loading">
+            <mat-icon>
+              {{ system.allSubscribed ? 'notifications_off' : 'notifications_active' }}
+            </mat-icon>
+            {{ system.allSubscribed ? 'Unsubscribe System' : 'Subscribe System' }}
+          </button>
+        </header>
+
+        @if (system.someSubscribed) {
+          <p class="partial">Partially subscribed</p>
+        }
+
+        <div class="tgList">
+          @for (tg of system.talkgroups; track trackTalkgroup($index, tg)) {
+            <button
+              class="tgBtn"
+              [class.directSub]="tg.subscribed && !tg.viaSystemSub"
+              [class.inheritedSub]="tg.viaSystemSub"
+              [class.notSub]="!tg.subscribed"
+              [disabled]="loading || tg.viaSystemSub"
+              (click)="toggleTalkgroup(tg)"
+              [attr.title]="tooltipForTalkgroup(tg)"
+            >
+              <span>{{ talkgroupLabel(tg) }}</span>
+              @if (tg.viaSystemSub) {
+                <small>Inherited</small>
+              } @else if (tg.subscribed) {
+                <small>Subscribed</small>
+              } @else {
+                <small>Not subscribed</small>
+              }
+            </button>
+          }
+        </div>
+      </section>
+    }
+  } @else {
+    <p class="empty">No matching talkgroups found.</p>
+  }
+</div>

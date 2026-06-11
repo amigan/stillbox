@@ -296,7 +296,7 @@ export class CallsComponent {
     if (p.pageSize == 0) {
       p.pageSize = this.curPage.pageSize;
     }
-    if (!dontClear) {
+    if (!dontClear && this.callsTable) {
       this.callsTable.selection?.clear();
     }
     this.curPage = p;
