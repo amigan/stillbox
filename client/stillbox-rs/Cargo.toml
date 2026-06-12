@@ -1,0 +1,19 @@
+[package]
+name = "stillbox-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+constcat = "0.6.1"
+protobuf = "3.7.2"
+reqwest = { version = "0.13.4", features = ["cookies", "form", "json", "multipart"] }
+reqwest-websocket = "0.6.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+tokio = { version = "1", features = ["full"] }
+tokio-macros = "2.7.0"
+url = "2.5.8"
+
+[build-dependencies]
+protobuf-codegen = "3.7.2"
+protoc-rust = "2.28.0"

@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"dynatron.me/x/stillbox/ui"
+	"dynatron.me/x/stillbox/client"
 	"dynatron.me/x/stillbox/internal/version"
 	"dynatron.me/x/stillbox/pkg/authz/entities"
 	"dynatron.me/x/stillbox/pkg/config"
@@ -33,7 +33,7 @@ func (s *Server) setupRoutes(ctx context.Context) error {
 
 	r := s.r
 
-	clientRoot, err := fs.Sub(ui.Client, ui.Prefix)
+	clientRoot, err := fs.Sub(client.Web, client.Prefix)
 	if err != nil {
 		panic(err)
 	}
