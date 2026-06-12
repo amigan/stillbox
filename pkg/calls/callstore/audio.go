@@ -714,7 +714,7 @@ func CallAudioFromCAIDRow(id uuid.UUID, row database.GetCallAudioByIDRow) *calls
 		ID:        id,
 		CallDate:  jsontypes.Time(row.CallDate),
 		AudioName: row.AudioName,
-		AudioType: (*string)(&row.AudioType.AudioMIME),
+		AudioType: (*string)(row.AudioType),
 		AudioBlob: row.AudioBlob,
 	}
 }

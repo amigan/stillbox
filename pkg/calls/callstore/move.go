@@ -80,7 +80,7 @@ func GetCallAudioRowToSkinnyCallAudio(row *database.GetCallAudioRow) *calls.Call
 		ID:        row.ID,
 		CallDate:  jsontypes.Time(row.CallDate),
 		AudioName: row.AudioName,
-		AudioType: (*string)(&row.AudioType.AudioMIME),
+		AudioType: (*string)(row.AudioType),
 	}
 }
 

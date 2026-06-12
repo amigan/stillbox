@@ -216,7 +216,7 @@ func toAddCallParams(call *calls.Call, audioRef AudioRefJSON, audioBlob []byte) 
 		CallDate:    call.DateTime,
 		AudioName:   common.NilIfZero(call.AudioName),
 		AudioBlob:   audioBlob,
-		AudioType:   audioMimeFromString(call.AudioType),
+		AudioType:   (*database.AudioMIME)(&call.AudioType),
 		AudioRef:    audioRef,
 		Duration:    call.Duration.MsInt32Ptr(),
 		Frequency:   call.Frequency,
@@ -383,19 +383,11 @@ func (s *store) CallAudio(ctx context.Context, id uuid.UUID, opts ...CallAudioOp
 		return nil, err
 	}
 
-	audioMime := func(a database.NullAudioMIME) *string {
-		if a.Valid {
-			return common.PtrTo(string(a.AudioMIME))
-		}
-
-		return nil
-	}
-
 	call := &calls.CallAudio{
 		ID:        id,
 		CallDate:  jsontypes.Time(dbCall.CallDate),
 		AudioName: dbCall.AudioName,
-		AudioType: audioMime(dbCall.AudioType),
+		AudioType: (*string)(dbCall.AudioType),
 		AudioBlob: dbCall.AudioBlob,
 	}
 
@@ -455,7 +447,7 @@ func (s *store) CompleteCalls(ctx context.Context, ids jsontypes.UUIDs) ([]*call
 			DateTime:       c.CallDate,
 			Audio:          callAud.AudioBlob,
 			AudioName:      common.ZeroIfNil(c.AudioName),
-			AudioType:      string(c.AudioType.AudioMIME),
+			AudioType:      common.ZeroIfNil((*string)(c.AudioType)),
 			Duration:       calls.CallDuration(time.Duration(common.ZeroIfNil(c.Duration)) * time.Millisecond),
 			Frequency:      c.Frequency,
 			Frequencies:    c.Frequencies,
@@ -497,7 +489,7 @@ func (s *store) Call(ctx context.Context, id uuid.UUID) (*calls.Call, error) {
 		Talkgroup:      c.Talkgroup,
 		DateTime:       c.CallDate,
 		AudioName:      common.ZeroIfNil(c.AudioName),
-		AudioType:      string(c.AudioType.AudioMIME),
+		AudioType:      common.ZeroIfNil((*string)(c.AudioType)),
 		Duration:       calls.CallDuration(time.Duration(common.ZeroIfNil(c.Duration)) * time.Millisecond),
 		Frequency:      c.Frequency,
 		Frequencies:    c.Frequencies,
