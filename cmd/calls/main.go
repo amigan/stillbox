@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/client/stillbox-go"
+	"dynatron.me/x/stillbox/pkg/pb"
 	"golang.org/x/term"
 )
 

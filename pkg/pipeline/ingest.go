@@ -42,6 +42,7 @@ type pipeMetrics struct {
 type Pipeline interface {
 	HUPCtx(context.Context, *config.Config)
 	PublicRoutes(chi.Router)
+	Ingest(ctx context.Context, call *calls.Call) error
 	Shutdown()
 }
 

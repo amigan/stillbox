@@ -193,19 +193,14 @@ func Make(call *Call, shouldStore bool) (*Call, error) {
 	return call, nil
 }
 
-func toInt64Slice(s []int) []int64 {
-	n := make([]int64, len(s))
-	for i := range s {
-		n[i] = int64(s[i])
+func toIntSlice[I int32 | int64 | int, J int32 | int64 | int](s []I) []J {
+	if s == nil {
+		return nil
 	}
 
-	return n
-}
-
-func toInt32Slice(s []int) []int32 {
-	n := make([]int32, len(s))
+	n := make([]J, len(s))
 	for i := range s {
-		n[i] = int32(s[i])
+		n[i] = J(s[i])
 	}
 
 	return n
@@ -228,11 +223,28 @@ func (c *Call) ToPB() *pb.Call {
 		TalkerAlias: c.TalkerAlias,
 		Source:      int32(c.Source),
 		Frequency:   int64(c.Frequency),
-		Frequencies: toInt64Slice(c.Frequencies),
-		Patches:     toInt32Slice(c.Patches),
+		Frequencies: toIntSlice[int, int64](c.Frequencies),
+		Patches:     toIntSlice[int, int32](c.Patches),
 		Duration:    c.Duration.MsInt32Ptr(),
 		Audio:       c.Audio,
 	}
+}
+
+func FromPBCall(pbc *pb.Call, submitter users.UserID, shouldStore bool) (*Call, error) {
+	return Make(&Call{
+		Submitter:   &submitter,
+		System:      int(pbc.System),
+		Talkgroup:   int(pbc.Talkgroup),
+		DateTime:    pbc.DateTime.AsTime(),
+		AudioName:   pbc.AudioName,
+		Audio:       pbc.Audio,
+		AudioType:   pbc.AudioType,
+		Frequency:   int(pbc.Frequency),
+		Frequencies: toIntSlice[int64, int](pbc.Frequencies),
+		Patches:     toIntSlice[int32, int](pbc.Patches),
+		TalkerAlias: pbc.TalkerAlias,
+		Source:      int(pbc.Source),
+	}, shouldStore)
 }
 
 func (c *Call) computeLength() (err error) {

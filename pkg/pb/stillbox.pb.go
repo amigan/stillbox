@@ -742,6 +742,7 @@ type Command struct {
 	//	*Command_TgCommand
 	//	*Command_RegisterCommand
 	//	*Command_SetTranscript
+	//	*Command_UploadCall
 	Command       isCommand_Command `protobuf_oneof:"command"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -836,6 +837,15 @@ func (x *Command) GetSetTranscript() *SetTranscript {
 	return nil
 }
 
+func (x *Command) GetUploadCall() *UploadCall {
+	if x != nil {
+		if x, ok := x.Command.(*Command_UploadCall); ok {
+			return x.UploadCall
+		}
+	}
+	return nil
+}
+
 type isCommand_Command interface {
 	isCommand_Command()
 }
@@ -860,6 +870,10 @@ type Command_SetTranscript struct {
 	SetTranscript *SetTranscript `protobuf:"bytes,6,opt,name=set_transcript,json=setTranscript,proto3,oneof"`
 }
 
+type Command_UploadCall struct {
+	UploadCall *UploadCall `protobuf:"bytes,7,opt,name=upload_call,json=uploadCall,proto3,oneof"`
+}
+
 func (*Command_LiveCommand) isCommand_Command() {}
 
 func (*Command_SearchCommand) isCommand_Command() {}
@@ -869,6 +883,8 @@ func (*Command_TgCommand) isCommand_Command() {}
 func (*Command_RegisterCommand) isCommand_Command() {}
 
 func (*Command_SetTranscript) isCommand_Command() {}
+
+func (*Command_UploadCall) isCommand_Command() {}
 
 type TalkgroupInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1406,6 +1422,58 @@ func (x *SetTranscript) GetElapsedMs() int64 {
 	return 0
 }
 
+type UploadCall struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Call          *Call                  `protobuf:"bytes,1,opt,name=call,proto3" json:"call,omitempty"`
+	DontStore     *bool                  `protobuf:"varint,2,opt,name=dontStore,proto3,oneof" json:"dontStore,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UploadCall) Reset() {
+	*x = UploadCall{}
+	mi := &file_stillbox_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UploadCall) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UploadCall) ProtoMessage() {}
+
+func (x *UploadCall) ProtoReflect() protoreflect.Message {
+	mi := &file_stillbox_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UploadCall.ProtoReflect.Descriptor instead.
+func (*UploadCall) Descriptor() ([]byte, []int) {
+	return file_stillbox_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *UploadCall) GetCall() *Call {
+	if x != nil {
+		return x.Call
+	}
+	return nil
+}
+
+func (x *UploadCall) GetDontStore() bool {
+	if x != nil && x.DontStore != nil {
+		return *x.DontStore
+	}
+	return false
+}
+
 var File_stillbox_proto protoreflect.FileDescriptor
 
 const file_stillbox_proto_rawDesc = "" +
@@ -1464,7 +1532,7 @@ const file_stillbox_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x10\n" +
 	"\x03msg\x18\x03 \x01(\tR\x03msg\x12\x1d\n" +
 	"\n" +
-	"action_url\x18\x04 \x01(\tR\tactionUrl\"\xf0\x02\n" +
+	"action_url\x18\x04 \x01(\tR\tactionUrl\"\xa9\x03\n" +
 	"\aCommand\x12\"\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\x03H\x01R\tcommandId\x88\x01\x01\x123\n" +
@@ -1473,7 +1541,9 @@ const file_stillbox_proto_rawDesc = "" +
 	"\n" +
 	"tg_command\x18\x04 \x01(\v2\x13.stillbox.TalkgroupH\x00R\ttgCommand\x12?\n" +
 	"\x10register_command\x18\x05 \x01(\v2\x12.stillbox.RegisterH\x00R\x0fregisterCommand\x12@\n" +
-	"\x0eset_transcript\x18\x06 \x01(\v2\x17.stillbox.SetTranscriptH\x00R\rsetTranscriptB\t\n" +
+	"\x0eset_transcript\x18\x06 \x01(\v2\x17.stillbox.SetTranscriptH\x00R\rsetTranscript\x127\n" +
+	"\vupload_call\x18\a \x01(\v2\x14.stillbox.UploadCallH\x00R\n" +
+	"uploadCallB\t\n" +
 	"\acommandB\r\n" +
 	"\v_command_id\"\xf2\x02\n" +
 	"\rTalkgroupInfo\x12#\n" +
@@ -1533,7 +1603,13 @@ const file_stillbox_proto_rawDesc = "" +
 	"transcript\x12\"\n" +
 	"\n" +
 	"elapsed_ms\x18\x03 \x01(\x03H\x00R\telapsedMs\x88\x01\x01B\r\n" +
-	"\v_elapsed_ms*7\n" +
+	"\v_elapsed_ms\"a\n" +
+	"\n" +
+	"UploadCall\x12\"\n" +
+	"\x04call\x18\x01 \x01(\v2\x0e.stillbox.CallR\x04call\x12!\n" +
+	"\tdontStore\x18\x02 \x01(\bH\x00R\tdontStore\x88\x01\x01B\f\n" +
+	"\n" +
+	"_dontStore*7\n" +
 	"\tLiveState\x12\x0e\n" +
 	"\n" +
 	"LS_STOPPED\x10\x00\x12\v\n" +
@@ -1553,7 +1629,7 @@ func file_stillbox_proto_rawDescGZIP() []byte {
 }
 
 var file_stillbox_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_stillbox_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_stillbox_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_stillbox_proto_goTypes = []any{
 	(LiveState)(0),                // 0: stillbox.LiveState
 	(*Message)(nil),               // 1: stillbox.Message
@@ -1573,8 +1649,9 @@ var file_stillbox_proto_goTypes = []any{
 	(*Search)(nil),                // 15: stillbox.Search
 	(*ServerInfo)(nil),            // 16: stillbox.ServerInfo
 	(*SetTranscript)(nil),         // 17: stillbox.SetTranscript
-	(*timestamppb.Timestamp)(nil), // 18: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),       // 19: google.protobuf.Struct
+	(*UploadCall)(nil),            // 18: stillbox.UploadCall
+	(*timestamppb.Timestamp)(nil), // 19: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),       // 20: google.protobuf.Struct
 }
 var file_stillbox_proto_depIdxs = []int32{
 	2,  // 0: stillbox.Message.response:type_name -> stillbox.CommandResponse
@@ -1585,26 +1662,28 @@ var file_stillbox_proto_depIdxs = []int32{
 	7,  // 5: stillbox.Message.error:type_name -> stillbox.Error
 	5,  // 6: stillbox.Message.hello:type_name -> stillbox.Hello
 	10, // 7: stillbox.CommandResponse.tg_info:type_name -> stillbox.TalkgroupInfo
-	18, // 8: stillbox.Call.date_time:type_name -> google.protobuf.Timestamp
+	19, // 8: stillbox.Call.date_time:type_name -> google.protobuf.Timestamp
 	16, // 9: stillbox.Hello.server_info:type_name -> stillbox.ServerInfo
 	9,  // 10: stillbox.Error.command:type_name -> stillbox.Command
-	18, // 11: stillbox.Notification.date_time:type_name -> google.protobuf.Timestamp
+	19, // 11: stillbox.Notification.date_time:type_name -> google.protobuf.Timestamp
 	11, // 12: stillbox.Command.live_command:type_name -> stillbox.Live
 	15, // 13: stillbox.Command.search_command:type_name -> stillbox.Search
 	13, // 14: stillbox.Command.tg_command:type_name -> stillbox.Talkgroup
 	12, // 15: stillbox.Command.register_command:type_name -> stillbox.Register
 	17, // 16: stillbox.Command.set_transcript:type_name -> stillbox.SetTranscript
-	13, // 17: stillbox.TalkgroupInfo.tg:type_name -> stillbox.Talkgroup
-	19, // 18: stillbox.TalkgroupInfo.metadata:type_name -> google.protobuf.Struct
-	0,  // 19: stillbox.Live.state:type_name -> stillbox.LiveState
-	14, // 20: stillbox.Live.filter:type_name -> stillbox.Filter
-	13, // 21: stillbox.Filter.talkgroups:type_name -> stillbox.Talkgroup
-	13, // 22: stillbox.Filter.talkgroups_not:type_name -> stillbox.Talkgroup
-	23, // [23:23] is the sub-list for method output_type
-	23, // [23:23] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	18, // 17: stillbox.Command.upload_call:type_name -> stillbox.UploadCall
+	13, // 18: stillbox.TalkgroupInfo.tg:type_name -> stillbox.Talkgroup
+	20, // 19: stillbox.TalkgroupInfo.metadata:type_name -> google.protobuf.Struct
+	0,  // 20: stillbox.Live.state:type_name -> stillbox.LiveState
+	14, // 21: stillbox.Live.filter:type_name -> stillbox.Filter
+	13, // 22: stillbox.Filter.talkgroups:type_name -> stillbox.Talkgroup
+	13, // 23: stillbox.Filter.talkgroups_not:type_name -> stillbox.Talkgroup
+	3,  // 24: stillbox.UploadCall.call:type_name -> stillbox.Call
+	25, // [25:25] is the sub-list for method output_type
+	25, // [25:25] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_stillbox_proto_init() }
@@ -1631,17 +1710,19 @@ func file_stillbox_proto_init() {
 		(*Command_TgCommand)(nil),
 		(*Command_RegisterCommand)(nil),
 		(*Command_SetTranscript)(nil),
+		(*Command_UploadCall)(nil),
 	}
 	file_stillbox_proto_msgTypes[9].OneofWrappers = []any{}
 	file_stillbox_proto_msgTypes[10].OneofWrappers = []any{}
 	file_stillbox_proto_msgTypes[16].OneofWrappers = []any{}
+	file_stillbox_proto_msgTypes[17].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stillbox_proto_rawDesc), len(file_stillbox_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   17,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

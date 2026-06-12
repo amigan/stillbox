@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/config"
 	"dynatron.me/x/stillbox/pkg/metrics"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
@@ -31,6 +32,12 @@ type nexus struct {
 	metrics nexMetrics
 
 	transcriptWorkers workers.Manager
+
+	ing Ingestor
+}
+
+type Ingestor interface {
+	Ingest(ctx context.Context, call *calls.Call) error
 }
 
 type nexMetrics struct {
@@ -43,6 +50,8 @@ type Nexus interface {
 	Transcriber() workers.Manager
 	Go(ctx context.Context)
 	HUP(*config.Config)
+
+	InjectIngestor(Ingestor)
 }
 
 var _ Nexus = (*nexus)(nil)
@@ -57,6 +66,10 @@ func (n *nexus) HUP(cfg *config.Config) {
 	if n.transcriptWorkers != nil {
 		n.transcriptWorkers.HUP(cfg.Transcription)
 	}
+}
+
+func (n *nexus) InjectIngestor(ing Ingestor) {
+	n.ing = ing
 }
 
 func New(transcriptCfg config.Workers, tgst tgstore.Store, met metrics.Metrics) (*nexus, error) {

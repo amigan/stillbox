@@ -4,11 +4,15 @@ import (
 	"context"
 	"time"
 
+	"dynatron.me/x/stillbox/pkg/authz"
+	"dynatron.me/x/stillbox/pkg/authz/entities"
+	"dynatron.me/x/stillbox/pkg/calls"
 	tgfilter "dynatron.me/x/stillbox/pkg/calls/filter"
 	"dynatron.me/x/stillbox/pkg/nexus/broadcast"
 	"dynatron.me/x/stillbox/pkg/pb"
 	"dynatron.me/x/stillbox/pkg/talkgroups"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
+	"dynatron.me/x/stillbox/pkg/users"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -49,6 +53,8 @@ func (c *client) HandleCommand(ctx context.Context, cmd *pb.Command) {
 			elapsed = time.Duration(*cc.SetTranscript.ElapsedMs) * time.Millisecond
 		}
 		log.Debug().Err(err).Str("call", cc.SetTranscript.Id).Str("worker", c.NetConn().RemoteAddr().String()).Str("elapsed", elapsed.String()).Msg("transcript set")
+	case *pb.Command_UploadCall:
+		err = c.UploadCall(ctx, cc.UploadCall)
 	default:
 		log.Error().Msgf("unknown command %#v", cmd)
 	}
@@ -153,4 +159,23 @@ func (c *client) Live(ctx context.Context, cmd *pb.Live) error {
 	c.subscriptions.Subscribe(cmd.Transcripts, broadcast.BcastTranscription)
 
 	return nil
+}
+
+func (c *client) UploadCall(ctx context.Context, uc *pb.UploadCall) error {
+	user, err := users.UserCheck(ctx, authz.UseResource(entities.ResourceCall), entities.ActionCreate)
+	if err != nil {
+		return err
+	}
+
+	dontStore := false
+	if uc.DontStore != nil && *uc.DontStore {
+		dontStore = true
+	}
+
+	call, err := calls.FromPBCall(uc.Call, user.ID, dontStore)
+	if err != nil {
+		return err
+	}
+
+	return c.nexus.ing.Ingest(ctx, call)
 }

@@ -166,6 +166,8 @@ func New(ctx context.Context, cfg *config.Configuration) (*Server, error) {
 		return nil, err
 	}
 
+	nex.InjectIngestor(srv.pipeline)
+
 	srv.rest = rest.New(cfg.Server.BaseURL.URL(), nex, srv.auth, pushSvc)
 
 	r.Use(middleware.RequestID)
