@@ -6,7 +6,7 @@ import (
 	"embed"
 )
 
-const Prefix = "web/dist/stillbox/browser"
+const Prefix = "stillbox-ng/dist/stillbox/browser"
 
-//go:embed web/dist/stillbox/browser
+//go:embed stillbox-ng/dist/stillbox/browser
 var Web embed.FS

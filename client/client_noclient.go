@@ -6,6 +6,6 @@ import (
 	"embed"
 )
 
-const Prefix = "web/dist/stillbox/browser"
+const Prefix = "stillbox-ng/dist/stillbox/browser"
 
 var Web embed.FS
