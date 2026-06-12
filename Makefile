@@ -4,26 +4,26 @@ BUILDDATE!=date '+%Y%m%d'
 LDFLAGS=-ldflags="-X '${VPKG}.Version=${VER}' -X '${VPKG}.Built=${BUILDDATE}'"
 GOFLAGS=-v
 
-all: client/stillbox/dist
+all: client/web/dist
 	go build -o stillbox ${GOFLAGS} ${LDFLAGS} ./cmd/stillbox/
 	go build -o calls ${GOFLAGS} ${LDFLAGS} ./cmd/calls/
 
 pprof:
 	go build -o stillbox-pprof ${GOFLAGS} ${LDFLAGS} -tags pprof ./cmd/stillbox
 
-client/stillbox/dist:
-	cd client/stillbox && npm install && ng build -c production
+client/web/dist:
+	cd client/web && npm install && ng build -c production
 
 web: web-install web-build
 
 web-build:
-	cd client/stillbox && node_modules/.bin/ng build -c production
+	cd client/web && node_modules/.bin/ng build -c production
 
 web-install:
-	cd client/stillbox && npm install
+	cd client/web && npm install
 
 clean:
-	rm -rf client/calls/ client/stillbox/dist/ client/stillbox/node_modules/
+	rm -rf client/calls/ client/web/dist/ client/web/node_modules/
 	rm -f stillbox calls stillbox-pprof
 
 generate:
