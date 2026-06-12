@@ -196,17 +196,6 @@ func FromCtx(ctx context.Context) Store {
 	return s
 }
 
-func audioMimeFromString(s string) database.NullAudioMIME {
-	if s == "" {
-		return database.NullAudioMIME{}
-	}
-
-	return database.NullAudioMIME{
-		AudioMIME: database.AudioMIME(s),
-		Valid:     true,
-	}
-}
-
 func toAddCallParams(call *calls.Call, audioRef AudioRefJSON, audioBlob []byte) database.AddCallParams {
 	return database.AddCallParams{
 		ID:          call.ID,

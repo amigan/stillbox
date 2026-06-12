@@ -70,7 +70,7 @@ type Store_CreateSystem_Call struct {
 //   - id int
 //   - name string
 //   - learned bool
-func (_e *Store_Expecter) CreateSystem(ctx interface{}, id interface{}, name interface{}, learned interface{}) *Store_CreateSystem_Call {
+func (_e *Store_Expecter) CreateSystem(ctx any, id any, name any, learned any) *Store_CreateSystem_Call {
 	return &Store_CreateSystem_Call{Call: _e.mock.On("CreateSystem", ctx, id, name, learned)}
 }
 
@@ -137,7 +137,7 @@ type Store_DeleteSystem_Call struct {
 // DeleteSystem is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int
-func (_e *Store_Expecter) DeleteSystem(ctx interface{}, id interface{}) *Store_DeleteSystem_Call {
+func (_e *Store_Expecter) DeleteSystem(ctx any, id any) *Store_DeleteSystem_Call {
 	return &Store_DeleteSystem_Call{Call: _e.mock.On("DeleteSystem", ctx, id)}
 }
 
@@ -194,7 +194,7 @@ type Store_DeleteTG_Call struct {
 // DeleteTG is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id talkgroups.ID
-func (_e *Store_Expecter) DeleteTG(ctx interface{}, id interface{}) *Store_DeleteTG_Call {
+func (_e *Store_Expecter) DeleteTG(ctx any, id any) *Store_DeleteTG_Call {
 	return &Store_DeleteTG_Call{Call: _e.mock.On("DeleteTG", ctx, id)}
 }
 
@@ -239,7 +239,7 @@ type Store_HUP_Call struct {
 
 // HUP is a helper method to define mock.On call
 //   - config1 *config.Config
-func (_e *Store_Expecter) HUP(config1 interface{}) *Store_HUP_Call {
+func (_e *Store_Expecter) HUP(config1 any) *Store_HUP_Call {
 	return &Store_HUP_Call{Call: _e.mock.On("HUP", config1)}
 }
 
@@ -291,7 +291,7 @@ type Store_Hint_Call struct {
 // Hint is a helper method to define mock.On call
 //   - ctx context.Context
 //   - tgs []talkgroups.ID
-func (_e *Store_Expecter) Hint(ctx interface{}, tgs interface{}) *Store_Hint_Call {
+func (_e *Store_Expecter) Hint(ctx any, tgs any) *Store_Hint_Call {
 	return &Store_Hint_Call{Call: _e.mock.On("Hint", ctx, tgs)}
 }
 
@@ -381,7 +381,7 @@ type Store_LearnSystem_Call struct {
 // LearnSystem is a helper method to define mock.On call
 //   - ctx context.Context
 //   - call *calls.Call
-func (_e *Store_Expecter) LearnSystem(ctx interface{}, call interface{}) *Store_LearnSystem_Call {
+func (_e *Store_Expecter) LearnSystem(ctx any, call any) *Store_LearnSystem_Call {
 	return &Store_LearnSystem_Call{Call: _e.mock.On("LearnSystem", ctx, call)}
 }
 
@@ -449,7 +449,7 @@ type Store_LearnTG_Call struct {
 // LearnTG is a helper method to define mock.On call
 //   - ctx context.Context
 //   - call *calls.Call
-func (_e *Store_Expecter) LearnTG(ctx interface{}, call interface{}) *Store_LearnTG_Call {
+func (_e *Store_Expecter) LearnTG(ctx any, call any) *Store_LearnTG_Call {
 	return &Store_LearnTG_Call{Call: _e.mock.On("LearnTG", ctx, call)}
 }
 
@@ -506,7 +506,7 @@ type Store_Load_Call struct {
 // Load is a helper method to define mock.On call
 //   - ctx context.Context
 //   - tgs database.TGTuplesU
-func (_e *Store_Expecter) Load(ctx interface{}, tgs interface{}) *Store_Load_Call {
+func (_e *Store_Expecter) Load(ctx any, tgs any) *Store_Load_Call {
 	return &Store_Load_Call{Call: _e.mock.On("Load", ctx, tgs)}
 }
 
@@ -597,7 +597,7 @@ type Store_RegisterFilter_Call struct {
 
 // RegisterFilter is a helper method to define mock.On call
 //   - filter tgstore.Filter
-func (_e *Store_Expecter) RegisterFilter(filter interface{}) *Store_RegisterFilter_Call {
+func (_e *Store_Expecter) RegisterFilter(filter any) *Store_RegisterFilter_Call {
 	return &Store_RegisterFilter_Call{Call: _e.mock.On("RegisterFilter", filter)}
 }
 
@@ -658,7 +658,7 @@ type Store_SystemName_Call struct {
 // SystemName is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int
-func (_e *Store_Expecter) SystemName(ctx interface{}, id interface{}) *Store_SystemName_Call {
+func (_e *Store_Expecter) SystemName(ctx any, id any) *Store_SystemName_Call {
 	return &Store_SystemName_Call{Call: _e.mock.On("SystemName", ctx, id)}
 }
 
@@ -693,11 +693,11 @@ func (_c *Store_SystemName_Call) RunAndReturn(run func(ctx context.Context, id i
 // SystemTGs provides a mock function for the type Store
 func (_mock *Store) SystemTGs(ctx context.Context, systemID int, opts ...tgstore.Option) ([]*talkgroups.Talkgroup, error) {
 	// tgstore.Option
-	_va := make([]interface{}, len(opts))
+	_va := make([]any, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
 	}
-	var _ca []interface{}
+	var _ca []any
 	_ca = append(_ca, ctx, systemID)
 	_ca = append(_ca, _va...)
 	ret := _mock.Called(_ca...)
@@ -735,9 +735,9 @@ type Store_SystemTGs_Call struct {
 //   - ctx context.Context
 //   - systemID int
 //   - opts ...tgstore.Option
-func (_e *Store_Expecter) SystemTGs(ctx interface{}, systemID interface{}, opts ...interface{}) *Store_SystemTGs_Call {
+func (_e *Store_Expecter) SystemTGs(ctx any, systemID any, opts ...any) *Store_SystemTGs_Call {
 	return &Store_SystemTGs_Call{Call: _e.mock.On("SystemTGs",
-		append([]interface{}{ctx, systemID}, opts...)...)}
+		append([]any{ctx, systemID}, opts...)...)}
 }
 
 func (_c *Store_SystemTGs_Call) Run(run func(ctx context.Context, systemID int, opts ...tgstore.Option)) *Store_SystemTGs_Call {
@@ -813,7 +813,7 @@ type Store_TG_Call struct {
 // TG is a helper method to define mock.On call
 //   - ctx context.Context
 //   - tg talkgroups.ID
-func (_e *Store_Expecter) TG(ctx interface{}, tg interface{}) *Store_TG_Call {
+func (_e *Store_Expecter) TG(ctx any, tg any) *Store_TG_Call {
 	return &Store_TG_Call{Call: _e.mock.On("TG", ctx, tg)}
 }
 
@@ -848,11 +848,11 @@ func (_c *Store_TG_Call) RunAndReturn(run func(ctx context.Context, tg talkgroup
 // TGs provides a mock function for the type Store
 func (_mock *Store) TGs(ctx context.Context, tgs talkgroups.IDs, opts ...tgstore.Option) ([]*talkgroups.Talkgroup, error) {
 	// tgstore.Option
-	_va := make([]interface{}, len(opts))
+	_va := make([]any, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
 	}
-	var _ca []interface{}
+	var _ca []any
 	_ca = append(_ca, ctx, tgs)
 	_ca = append(_ca, _va...)
 	ret := _mock.Called(_ca...)
@@ -890,9 +890,9 @@ type Store_TGs_Call struct {
 //   - ctx context.Context
 //   - tgs talkgroups.IDs
 //   - opts ...tgstore.Option
-func (_e *Store_Expecter) TGs(ctx interface{}, tgs interface{}, opts ...interface{}) *Store_TGs_Call {
+func (_e *Store_Expecter) TGs(ctx any, tgs any, opts ...any) *Store_TGs_Call {
 	return &Store_TGs_Call{Call: _e.mock.On("TGs",
-		append([]interface{}{ctx, tgs}, opts...)...)}
+		append([]any{ctx, tgs}, opts...)...)}
 }
 
 func (_c *Store_TGs_Call) Run(run func(ctx context.Context, tgs talkgroups.IDs, opts ...tgstore.Option)) *Store_TGs_Call {
@@ -970,7 +970,7 @@ type Store_TGsByTags_Call struct {
 //   - tagsAll []string
 //   - tagsAny []string
 //   - tagsNot []string
-func (_e *Store_Expecter) TGsByTags(ctx interface{}, tagsAll interface{}, tagsAny interface{}, tagsNot interface{}) *Store_TGsByTags_Call {
+func (_e *Store_Expecter) TGsByTags(ctx any, tagsAll any, tagsAny any, tagsNot any) *Store_TGsByTags_Call {
 	return &Store_TGsByTags_Call{Call: _e.mock.On("TGsByTags", ctx, tagsAll, tagsAny, tagsNot)}
 }
 
@@ -1047,7 +1047,7 @@ type Store_Tags_Call struct {
 
 // Tags is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Store_Expecter) Tags(ctx interface{}) *Store_Tags_Call {
+func (_e *Store_Expecter) Tags(ctx any) *Store_Tags_Call {
 	return &Store_Tags_Call{Call: _e.mock.On("Tags", ctx)}
 }
 
@@ -1087,7 +1087,7 @@ type Store_UnregisterFilter_Call struct {
 
 // UnregisterFilter is a helper method to define mock.On call
 //   - filter tgstore.Filter
-func (_e *Store_Expecter) UnregisterFilter(filter interface{}) *Store_UnregisterFilter_Call {
+func (_e *Store_Expecter) UnregisterFilter(filter any) *Store_UnregisterFilter_Call {
 	return &Store_UnregisterFilter_Call{Call: _e.mock.On("UnregisterFilter", filter)}
 }
 
@@ -1150,7 +1150,7 @@ type Store_UpdateTG_Call struct {
 // UpdateTG is a helper method to define mock.On call
 //   - ctx context.Context
 //   - input database.UpdateTalkgroupParams
-func (_e *Store_Expecter) UpdateTG(ctx interface{}, input interface{}) *Store_UpdateTG_Call {
+func (_e *Store_Expecter) UpdateTG(ctx any, input any) *Store_UpdateTG_Call {
 	return &Store_UpdateTG_Call{Call: _e.mock.On("UpdateTG", ctx, input)}
 }
 
@@ -1219,7 +1219,7 @@ type Store_UpsertTGs_Call struct {
 //   - ctx context.Context
 //   - system int
 //   - input []database.UpsertTalkgroupParams
-func (_e *Store_Expecter) UpsertTGs(ctx interface{}, system interface{}, input interface{}) *Store_UpsertTGs_Call {
+func (_e *Store_Expecter) UpsertTGs(ctx any, system any, input any) *Store_UpsertTGs_Call {
 	return &Store_UpsertTGs_Call{Call: _e.mock.On("UpsertTGs", ctx, system, input)}
 }
 
@@ -1282,7 +1282,7 @@ type Store_Weight_Call struct {
 //   - ctx context.Context
 //   - id talkgroups.ID
 //   - t time.Time
-func (_e *Store_Expecter) Weight(ctx interface{}, id interface{}, t interface{}) *Store_Weight_Call {
+func (_e *Store_Expecter) Weight(ctx any, id any, t any) *Store_Weight_Call {
 	return &Store_Weight_Call{Call: _e.mock.On("Weight", ctx, id, t)}
 }
 
