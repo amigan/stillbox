@@ -93,6 +93,10 @@ func (c *nexusClient) sendCommand(cmd *pb.Command) error {
 		return err
 	}
 
+	if c.wsc == nil {
+		return ErrNexusClosed
+	}
+
 	return c.wsc.WriteMessage(websocket.BinaryMessage, mm)
 }
 
