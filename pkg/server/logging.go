@@ -139,6 +139,10 @@ func (l *Logger) fieldNameFormat(i any) string {
 }
 
 func (l *Logger) fieldValueFormat(i any) string {
+	if l == nil {
+		return ""
+	}
+
 	color := colorNone
 	switch l.lastFieldName {
 	case "method":

@@ -76,6 +76,18 @@ func (c *client) SendError(cmd *pb.Command, err error) {
 	_ = c.Send(e)
 }
 
+// SendResponse will fill in the Command ID from the context, if present.
+func (c *client) SendResponse(ctx context.Context, response *pb.CommandResponse) error {
+	return c.Send(&pb.Message{
+		ToClientMessage: &pb.Message_Response{
+			Response: &pb.CommandResponse{
+				CommandId:       CommandID(ctx),
+				CommandResponse: response.CommandResponse,
+			},
+		},
+	})
+}
+
 func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 	tgi, err := tgstore.FromCtx(ctx).TG(ctx, talkgroups.TG(tg.System, tg.Talkgroup))
 	if err != nil {
@@ -105,18 +117,9 @@ func (c *client) Talkgroup(ctx context.Context, tg *pb.Talkgroup) error {
 		SystemName: tgi.System.Name,
 	}
 
-	_ = c.Send(&pb.Message{
-		ToClientMessage: &pb.Message_Response{
-			Response: &pb.CommandResponse{
-				CommandId: CommandID(ctx),
-				CommandResponse: &pb.CommandResponse_TgInfo{
-					TgInfo: resp,
-				},
-			},
-		},
+	return c.SendResponse(ctx, &pb.CommandResponse{
+		CommandResponse: &pb.CommandResponse_TgInfo{TgInfo: resp},
 	})
-
-	return nil
 }
 
 func (c *client) Register(ctx context.Context, cmd *pb.Register) error {
