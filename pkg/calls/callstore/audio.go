@@ -354,7 +354,7 @@ func (ab *audioBackends) PruneBackendRefs(ctx context.Context, beName string, pr
 		return nil
 	}
 
-	// setup the prune job is this backend requires us to batch deletes
+	// setup the prune job if this backend requires us to batch deletes
 	if p, isBatchPruner := be.AudioBackend.(BatchPruner); isBatchPruner {
 		pj, err := p.NewPruneJob(ctx)
 		if err != nil {
@@ -618,6 +618,15 @@ func (s *store) MakeBackends(ctx context.Context, fc tgstore.FilterCache, met me
 func (s *store) PruneAudioPrefix(ctx context.Context, tx database.Store, partPrefix string, pStart, pEnd time.Time) error {
 	if s.audioBackends.disablePrune || s.audioBackends.Count() < 1 {
 		return nil
+	}
+
+	scwf, err := tx.GetSweptCallsWithRef(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(scwf) > 0 {
+		return fmt.Errorf("swept calls contains %d backend-referenced calls", len(scwf))
 	}
 
 	prunableRefs, err := tx.GetPrunableAudioRefs(ctx, pStart, pEnd)
