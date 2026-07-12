@@ -152,7 +152,7 @@ func (rj *ruleJob) lifecycleConfig() *lifecycle.Configuration {
 func (rj *ruleJob) addRmRule(prefix string) error {
 	ruleID := s3ruleID(prefix)
 
-	log.Debug().Str("prefix", prefix).Msg("add rm rule")
+	log.Info().Str("prefix", prefix).Msg("add s3 rm lifecycle rule")
 	lr := lifecycle.Rule{
 		ID:     ruleID,
 		Status: "Enabled",
