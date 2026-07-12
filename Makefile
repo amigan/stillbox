@@ -12,7 +12,7 @@ pprof:
 	go build -o stillbox-pprof ${GOFLAGS} ${LDFLAGS} -tags pprof ./cmd/stillbox
 
 client/stillbox-ng/dist:
-	cd client/stillbox-ng && npm install && ng build -c production
+	cd client/stillbox-ng && npm install && node_modules/.bin/ng build -c production
 
 web: web-install web-build
 
