@@ -155,7 +155,7 @@ func (h *RdioHTTP) routeCallUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debug().Int("system", cur.System).Int("tgid", cur.Talkgroup).Str("duration", call.Duration.Duration().String()).Str("sub", submitter.Username).Msg("ingested")
+	log.Debug().Int("system", cur.System).Int("tgid", cur.Talkgroup).Str("duration", call.Duration.Duration().String()).Str("sub", submitter.Username).Bool("filtered", call.Filtered()).Msg("ingested")
 
 	written, err := w.Write([]byte("Call imported successfully."))
 	if err != nil {

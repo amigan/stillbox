@@ -232,7 +232,7 @@ func (wm *workerManager) Dispatch(ctx context.Context, msg broadcast.Message) er
 	}
 
 	if !msg.BroadcastType().Has(broadcast.BcastCall) ||
-		!msg.ShouldStore() ||
+		msg.Filtered() ||
 		duration < time.Duration(wm.cfg.AtLeastSeconds)*time.Second ||
 		!wm.filter.Test(ctx, msg) {
 		return nil

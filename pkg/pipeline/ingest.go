@@ -142,6 +142,7 @@ func (p *pipe) testIngest(ctx context.Context, call *calls.Call) bool {
 func (p *pipe) Ingest(ctx context.Context, call *calls.Call) error {
 	if !p.testIngest(ctx, call) {
 		p.metrics.FilteredCallsCount.Add(1)
+		call.SetFiltered()
 		return nil
 	}
 

@@ -67,8 +67,8 @@ type CallTranscription struct {
 	Transcript *string       `json:"transcript"`
 }
 
-func (*CallTranscription) ShouldStore() bool {
-	return true
+func (*CallTranscription) Filtered() bool {
+	return false
 }
 
 func (*CallTranscription) BroadcastType() broadcast.Type {
@@ -129,7 +129,7 @@ type Call struct {
 	Transcript     *string       `json:"transcript,omitempty" relayOut:"transcript,omitempty"`
 	MissingAudio   *bool         `json:"missingAudio,omitempty" relayOut:"missingAudio,omitempty"`
 
-	shouldStore bool `json:"-"`
+	filtered bool `json:"-"`
 }
 
 func (c *Call) ToCallAudio() *CallAudio {
@@ -168,8 +168,12 @@ func (c *Call) String() string {
 	return fmt.Sprintf("%s to %d%s", c.AudioName, c.Talkgroup, from)
 }
 
-func (c *Call) ShouldStore() bool {
-	return c.shouldStore
+func (c *Call) Filtered() bool {
+	return c.filtered
+}
+
+func (c *Call) SetFiltered() {
+	c.filtered = true
 }
 
 func (c *Call) SetShareURL(baseURL url.URL, shareID string) {
@@ -187,7 +191,7 @@ func Make(call *Call, shouldStore bool) (*Call, error) {
 		return nil, err
 	}
 
-	call.shouldStore = shouldStore
+	call.filtered = !shouldStore
 	call.ID = uuid.New()
 
 	return call, nil

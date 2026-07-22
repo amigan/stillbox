@@ -153,6 +153,16 @@ func (l *Logger) fieldValueFormat(i any) string {
 		color = colorBlue
 	}
 
+	// hack around zerolog's json bool rendering
+	// so we don't print [de ad be ef ca fe] strings
+	switch b := i.(type) {
+	case []byte:
+		switch string(b) {
+		case "true", "false":
+			return string(b)
+		}
+	}
+
 	l.lastFieldName = ""
 
 	if color == colorNone {
