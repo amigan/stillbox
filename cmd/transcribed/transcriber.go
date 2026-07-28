@@ -150,7 +150,7 @@ func (t *transcriber) transcribe(call *pb.Call) (*Transcription, error) {
 
 		f32le = f32w.Buffer()
 	default:
-		return nil, fmt.Errorf("unknwon audio mime type %s", call.AudioType)
+		return nil, fmt.Errorf("unknown audio mime type %s", call.AudioType)
 	}
 
 	ctx.ResetTimings()
