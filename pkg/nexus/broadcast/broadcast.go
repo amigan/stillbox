@@ -40,5 +40,5 @@ func (t *Type) Subscribe(sif bool, bct Type) {
 type Envelope interface {
 	TalkgroupTuple() talkgroups.ID
 	PatchTGs() []int
-	ShouldStore() bool
+	Filtered() bool
 }

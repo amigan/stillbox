@@ -73,7 +73,6 @@ func TestRelay(t *testing.T) {
 			cur := new(sources.CallUploadRequest)
 			err = forms.Unmarshal(r, cur, forms.WithAcceptBlank())
 			require.NoError(t, err, "server unmarshal")
-			cur.DontStore = true
 
 			assert.Equal(t, tc.apiKey, cur.Key)
 

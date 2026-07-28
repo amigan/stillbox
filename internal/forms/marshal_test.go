@@ -104,7 +104,6 @@ func TestMarshal(t *testing.T) {
 
 				cur := new(sources.CallUploadRequest)
 				serr = forms.Unmarshal(r, cur, forms.WithAcceptBlank())
-				cur.DontStore = true
 				if serr != nil {
 					t.Log("unmarshal", serr)
 					return

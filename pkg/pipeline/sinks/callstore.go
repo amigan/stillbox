@@ -6,8 +6,6 @@ import (
 	"dynatron.me/x/stillbox/pkg/calls"
 	"dynatron.me/x/stillbox/pkg/calls/callstore"
 	"dynatron.me/x/stillbox/pkg/talkgroups/tgstore"
-
-	"github.com/rs/zerolog/log"
 )
 
 type CallstoreSink struct {
@@ -24,8 +22,7 @@ func (s *CallstoreSink) Name() string {
 }
 
 func (s *CallstoreSink) Call(ctx context.Context, call *calls.Call) error {
-	if !call.ShouldStore() {
-		log.Debug().Str("call", call.String()).Msg("received dontStore call")
+	if call.Filtered() {
 		return nil
 	}
 
