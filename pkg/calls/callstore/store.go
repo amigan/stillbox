@@ -297,12 +297,12 @@ func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
 		return db.InTx(ctx, func(tx database.Store) error {
 			_, err := tgs.LearnTG(ctx, call)
 			if err != nil {
-				return fmt.Errorf("learn tg: %w", err)
+				return fmt.Errorf("learn tg(%s): %w", call.TalkgroupTuple().String(), err)
 			}
 
 			err = tx.AddCall(ctx, params)
 			if err != nil {
-				return fmt.Errorf("learn tg retry: %w", err)
+				return fmt.Errorf("learn tg retry(%s): %w", call.TalkgroupTuple().String(), err)
 			}
 
 			return nil
