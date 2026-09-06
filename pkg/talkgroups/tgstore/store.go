@@ -69,7 +69,7 @@ type Store interface {
 	DeleteSystem(ctx context.Context, id int) error
 
 	// SystemName retrieves a system name from the store. It returns the record and whether one was found.
-	SystemName(ctx context.Context, id int) (string, bool)
+	SystemName(ctx context.Context, id int) (string, bool, error)
 
 	// Tags returns all distinct tags.
 	Tags(ctx context.Context) ([]string, error)
@@ -521,10 +521,10 @@ func (t *cache) TG(ctx context.Context, tg tgsp.ID) (*tgsp.Talkgroup, error) {
 	return rowToTalkgroup(record), nil
 }
 
-func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) {
-	_, err := authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionRead))
+func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool, err error) {
+	_, err = authz.Check(ctx, authz.UseResource(entities.ResourceTalkgroup), authz.WithActions(entities.ActionRead))
 	if err != nil {
-		return "", false
+		return "", false, err
 	}
 
 	t.RLock()
@@ -534,17 +534,17 @@ func (t *cache) SystemName(ctx context.Context, id int) (name string, has bool) 
 	if !has {
 		sys, err := t.db.GetSystemName(ctx, id)
 		if err != nil {
-			return "", false
+			return "", false, err
 		}
 
 		t.Lock()
 		t.systems[id] = sys
 		t.Unlock()
 
-		return sys, true
+		return sys, true, nil
 	}
 
-	return n, has
+	return n, has, nil
 }
 
 func (t *cache) RecompileFilters(ctx context.Context, tags []string) error {
@@ -574,9 +574,9 @@ func (t *cache) UpdateTG(ctx context.Context, input database.UpdateTalkgroupPara
 		return nil, err
 	}
 
-	sysName, has := t.SystemName(ctx, int(*input.SystemID))
+	sysName, has, err := t.SystemName(ctx, int(*input.SystemID))
 	if !has {
-		return nil, ErrNoSuchSystem
+		return nil, err
 	}
 
 	var affectedTags []string
@@ -713,7 +713,10 @@ func (t *cache) LearnTG(ctx context.Context, c *calls.Call) (*tgsp.Talkgroup, er
 
 	db := t.db
 
-	sys, has := t.SystemName(ctx, c.System)
+	sys, has, err := t.SystemName(ctx, c.System)
+	if err != nil {
+		return nil, err
+	}
 	if !has {
 		err := t.LearnSystem(ctx, c)
 		if err != nil {
@@ -755,9 +758,9 @@ func (t *cache) UpsertTGs(ctx context.Context, system int, input []database.Upse
 	}
 
 	db := t.db
-	sysName, hasSys := t.SystemName(ctx, system)
+	sysName, hasSys, err := t.SystemName(ctx, system)
 	if !hasSys {
-		return nil, ErrNoSuchSystem
+		return nil, err
 	}
 	sys := database.System{
 		ID:   system,

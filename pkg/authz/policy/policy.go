@@ -95,6 +95,7 @@ var Policy = &restrict.PolicyDefinition{
 					// for learning TGs
 					&restrict.Permission{Action: entities.ActionCreate},
 					&restrict.Permission{Action: entities.ActionUpdate},
+					&restrict.Permission{Action: entities.ActionRead},
 				},
 				entities.ResourceNexus: {
 					&restrict.Permission{Action: entities.ActionConnect},

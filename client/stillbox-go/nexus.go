@@ -23,7 +23,7 @@ type NexusClient interface {
 	Dial() error
 	Live(state pb.LiveState, calls, transcripts bool) error
 	Shutdown() error
-	Register() error
+	Register(workerKey string) error
 	ReadMessage() (*pb.Message, error)
 	SetTranscript(id, transcript string, elapsed time.Duration) error
 }
@@ -112,11 +112,12 @@ func (c *nexusClient) Live(state pb.LiveState, calls, transcripts bool) error {
 	})
 }
 
-func (c *nexusClient) Register() error {
+func (c *nexusClient) Register(workerKey string) error {
 	return c.sendCommand(&pb.Command{
 		Command: &pb.Command_RegisterCommand{
 			RegisterCommand: &pb.Register{
 				TranscriptWorker: true,
+				WorkerKey: workerKey,
 			},
 		},
 	})

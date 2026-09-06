@@ -41,14 +41,9 @@ func (_m *DBTX) EXPECT() *DBTX_Expecter {
 
 // Exec provides a mock function for the type DBTX
 func (_mock *DBTX) Exec(context1 context.Context, s string, ifaceVals ...interface{}) (pgconn.CommandTag, error) {
-	// interface{}
-	_va := make([]any, len(ifaceVals))
-	for _i := range ifaceVals {
-		_va[_i] = ifaceVals[_i]
-	}
-	var _ca []any
+	var _ca []interface{}
 	_ca = append(_ca, context1, s)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, ifaceVals...)
 	ret := _mock.Called(_ca...)
 
 	if len(ret) == 0 {
@@ -82,9 +77,9 @@ type DBTX_Exec_Call struct {
 //   - context1 context.Context
 //   - s string
 //   - ifaceVals ...interface{}
-func (_e *DBTX_Expecter) Exec(context1 any, s any, ifaceVals ...any) *DBTX_Exec_Call {
+func (_e *DBTX_Expecter) Exec(context1 interface{}, s interface{}, ifaceVals ...interface{}) *DBTX_Exec_Call {
 	return &DBTX_Exec_Call{Call: _e.mock.On("Exec",
-		append([]any{context1, s}, ifaceVals...)...)}
+		append([]interface{}{context1, s}, ifaceVals...)...)}
 }
 
 func (_c *DBTX_Exec_Call) Run(run func(context1 context.Context, s string, ifaceVals ...interface{})) *DBTX_Exec_Call {
@@ -126,14 +121,9 @@ func (_c *DBTX_Exec_Call) RunAndReturn(run func(context1 context.Context, s stri
 
 // Query provides a mock function for the type DBTX
 func (_mock *DBTX) Query(context1 context.Context, s string, ifaceVals ...interface{}) (pgx.Rows, error) {
-	// interface{}
-	_va := make([]any, len(ifaceVals))
-	for _i := range ifaceVals {
-		_va[_i] = ifaceVals[_i]
-	}
-	var _ca []any
+	var _ca []interface{}
 	_ca = append(_ca, context1, s)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, ifaceVals...)
 	ret := _mock.Called(_ca...)
 
 	if len(ret) == 0 {
@@ -169,9 +159,9 @@ type DBTX_Query_Call struct {
 //   - context1 context.Context
 //   - s string
 //   - ifaceVals ...interface{}
-func (_e *DBTX_Expecter) Query(context1 any, s any, ifaceVals ...any) *DBTX_Query_Call {
+func (_e *DBTX_Expecter) Query(context1 interface{}, s interface{}, ifaceVals ...interface{}) *DBTX_Query_Call {
 	return &DBTX_Query_Call{Call: _e.mock.On("Query",
-		append([]any{context1, s}, ifaceVals...)...)}
+		append([]interface{}{context1, s}, ifaceVals...)...)}
 }
 
 func (_c *DBTX_Query_Call) Run(run func(context1 context.Context, s string, ifaceVals ...interface{})) *DBTX_Query_Call {
@@ -213,14 +203,9 @@ func (_c *DBTX_Query_Call) RunAndReturn(run func(context1 context.Context, s str
 
 // QueryRow provides a mock function for the type DBTX
 func (_mock *DBTX) QueryRow(context1 context.Context, s string, ifaceVals ...interface{}) pgx.Row {
-	// interface{}
-	_va := make([]any, len(ifaceVals))
-	for _i := range ifaceVals {
-		_va[_i] = ifaceVals[_i]
-	}
-	var _ca []any
+	var _ca []interface{}
 	_ca = append(_ca, context1, s)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, ifaceVals...)
 	ret := _mock.Called(_ca...)
 
 	if len(ret) == 0 {
@@ -247,9 +232,9 @@ type DBTX_QueryRow_Call struct {
 //   - context1 context.Context
 //   - s string
 //   - ifaceVals ...interface{}
-func (_e *DBTX_Expecter) QueryRow(context1 any, s any, ifaceVals ...any) *DBTX_QueryRow_Call {
+func (_e *DBTX_Expecter) QueryRow(context1 interface{}, s interface{}, ifaceVals ...interface{}) *DBTX_QueryRow_Call {
 	return &DBTX_QueryRow_Call{Call: _e.mock.On("QueryRow",
-		append([]any{context1, s}, ifaceVals...)...)}
+		append([]interface{}{context1, s}, ifaceVals...)...)}
 }
 
 func (_c *DBTX_QueryRow_Call) Run(run func(context1 context.Context, s string, ifaceVals ...interface{})) *DBTX_QueryRow_Call {
@@ -316,7 +301,7 @@ type DBTX_SendBatch_Call struct {
 // SendBatch is a helper method to define mock.On call
 //   - context1 context.Context
 //   - batch *pgx.Batch
-func (_e *DBTX_Expecter) SendBatch(context1 any, batch any) *DBTX_SendBatch_Call {
+func (_e *DBTX_Expecter) SendBatch(context1 interface{}, batch interface{}) *DBTX_SendBatch_Call {
 	return &DBTX_SendBatch_Call{Call: _e.mock.On("SendBatch", context1, batch)}
 }
 

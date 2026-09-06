@@ -33,9 +33,9 @@ var rrRE = regexp.MustCompile(`DEC\s+HEX\s+Mode\s+Alpha Tag\s+Description\s+Tag`
 func (rr *Driver) ImportTalkgroups(ctx context.Context, sys int, r io.Reader) ([]talkgroups.Talkgroup, error) {
 	sc := bufio.NewScanner(r)
 	tgs := make([]talkgroups.Talkgroup, 0, 8)
-	sysn, has := tgstore.FromCtx(ctx).SystemName(ctx, sys)
+	sysn, has, err := tgstore.FromCtx(ctx).SystemName(ctx, sys)
 	if !has {
-		return nil, tgstore.ErrNoSuchSystem
+		return nil, err
 	}
 
 	var groupName string

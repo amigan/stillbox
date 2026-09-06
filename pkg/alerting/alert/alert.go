@@ -132,7 +132,10 @@ func Make(ctx context.Context, score trending.Score[talkgroups.ID], origScore fl
 		d.TGName = tgRecord.String()
 		d.Talkgroup = tgRecord
 	default:
-		system, has := store.SystemName(ctx, int(score.ID.System))
+		system, has, err := store.SystemName(ctx, int(score.ID.System))
+		if err != nil {
+			return Alert{}, err
+		}
 		if has {
 			d.TGName = fmt.Sprintf("%s:%d", system, int(score.ID.Talkgroup))
 		} else {

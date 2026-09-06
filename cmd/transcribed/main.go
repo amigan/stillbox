@@ -132,6 +132,10 @@ func makeClient(baseURL *url.URL, token string) (stillbox.NexusClient, error) {
 }
 
 func do(ctx context.Context, cl stillbox.NexusClient, t Transcriber) error {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return err
+	}
 	for {
 		m, err := cl.ReadMessage()
 		if err != nil {
@@ -147,7 +151,7 @@ func do(ctx context.Context, cl stillbox.NexusClient, t Transcriber) error {
 			case *pb.Message_Hello:
 				si := v.Hello.ServerInfo
 				log.Printf("server says: welcome to %s %s built %s for %s database size %s", si.ServerName, si.Version, si.Built, si.Platform, si.DbSize)
-				err := cl.Register()
+				err := cl.Register(hostname)
 				if err != nil {
 					return err
 				}

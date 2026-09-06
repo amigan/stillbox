@@ -222,7 +222,6 @@ func toAddCallParams(call *calls.Call, audioRef AudioRefJSON, audioBlob []byte) 
 func (s *store) AddCall(ctx context.Context, call *calls.Call) (err error) {
 	defer func() {
 		if err != nil {
-			log.Error().Msg("inc err cnt")
 			s.metrics.IngestErrorCount.Inc()
 		}
 	}()

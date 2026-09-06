@@ -69,7 +69,7 @@ type Store_AddAlert_Call struct {
 // AddAlert is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.AddAlertParams
-func (_e *Store_Expecter) AddAlert(ctx any, arg any) *Store_AddAlert_Call {
+func (_e *Store_Expecter) AddAlert(ctx interface{}, arg interface{}) *Store_AddAlert_Call {
 	return &Store_AddAlert_Call{Call: _e.mock.On("AddAlert", ctx, arg)}
 }
 
@@ -126,7 +126,7 @@ type Store_AddCall_Call struct {
 // AddCall is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.AddCallParams
-func (_e *Store_Expecter) AddCall(ctx any, arg any) *Store_AddCall_Call {
+func (_e *Store_Expecter) AddCall(ctx interface{}, arg interface{}) *Store_AddCall_Call {
 	return &Store_AddCall_Call{Call: _e.mock.On("AddCall", ctx, arg)}
 }
 
@@ -192,7 +192,7 @@ type Store_AddLearnedTalkgroup_Call struct {
 // AddLearnedTalkgroup is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.AddLearnedTalkgroupParams
-func (_e *Store_Expecter) AddLearnedTalkgroup(ctx any, arg any) *Store_AddLearnedTalkgroup_Call {
+func (_e *Store_Expecter) AddLearnedTalkgroup(ctx interface{}, arg interface{}) *Store_AddLearnedTalkgroup_Call {
 	return &Store_AddLearnedTalkgroup_Call{Call: _e.mock.On("AddLearnedTalkgroup", ctx, arg)}
 }
 
@@ -258,7 +258,7 @@ type Store_AddRefJournal_Call struct {
 // AddRefJournal is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.AddRefJournalParams
-func (_e *Store_Expecter) AddRefJournal(ctx any, arg any) *Store_AddRefJournal_Call {
+func (_e *Store_Expecter) AddRefJournal(ctx interface{}, arg interface{}) *Store_AddRefJournal_Call {
 	return &Store_AddRefJournal_Call{Call: _e.mock.On("AddRefJournal", ctx, arg)}
 }
 
@@ -317,7 +317,7 @@ type Store_AddToIncident_Call struct {
 //   - incidentID uuid.UUID
 //   - callIds []uuid.UUID
 //   - notes [][]byte
-func (_e *Store_Expecter) AddToIncident(ctx any, incidentID any, callIds any, notes any) *Store_AddToIncident_Call {
+func (_e *Store_Expecter) AddToIncident(ctx interface{}, incidentID interface{}, callIds interface{}, notes interface{}) *Store_AddToIncident_Call {
 	return &Store_AddToIncident_Call{Call: _e.mock.On("AddToIncident", ctx, incidentID, callIds, notes)}
 }
 
@@ -385,7 +385,7 @@ type Store_BulkSetTalkgroupTags_Call struct {
 //   - ctx context.Context
 //   - tgs database.TGTuplesU
 //   - tags []string
-func (_e *Store_Expecter) BulkSetTalkgroupTags(ctx any, tgs any, tags any) *Store_BulkSetTalkgroupTags_Call {
+func (_e *Store_Expecter) BulkSetTalkgroupTags(ctx interface{}, tgs interface{}, tags interface{}) *Store_BulkSetTalkgroupTags_Call {
 	return &Store_BulkSetTalkgroupTags_Call{Call: _e.mock.On("BulkSetTalkgroupTags", ctx, tgs, tags)}
 }
 
@@ -457,7 +457,7 @@ type Store_CallInIncident_Call struct {
 //   - ctx context.Context
 //   - incidentID uuid.UUID
 //   - callID uuid.UUID
-func (_e *Store_Expecter) CallInIncident(ctx any, incidentID any, callID any) *Store_CallInIncident_Call {
+func (_e *Store_Expecter) CallInIncident(ctx interface{}, incidentID interface{}, callID interface{}) *Store_CallInIncident_Call {
 	return &Store_CallInIncident_Call{Call: _e.mock.On("CallInIncident", ctx, incidentID, callID)}
 }
 
@@ -529,7 +529,7 @@ type Store_CleanupSweptCalls_Call struct {
 //   - ctx context.Context
 //   - rangeStart time.Time
 //   - rangeEnd time.Time
-func (_e *Store_Expecter) CleanupSweptCalls(ctx any, rangeStart any, rangeEnd any) *Store_CleanupSweptCalls_Call {
+func (_e *Store_Expecter) CleanupSweptCalls(ctx interface{}, rangeStart interface{}, rangeEnd interface{}) *Store_CleanupSweptCalls_Call {
 	return &Store_CleanupSweptCalls_Call{Call: _e.mock.On("CleanupSweptCalls", ctx, rangeStart, rangeEnd)}
 }
 
@@ -602,7 +602,7 @@ type Store_CopyIntoFsckTempTable_Call struct {
 //   - tableName string
 //   - ids iter.Seq[uuid.UUID]
 //   - progressChan chan<- int64
-func (_e *Store_Expecter) CopyIntoFsckTempTable(ctx any, tableName any, ids any, progressChan any) *Store_CopyIntoFsckTempTable_Call {
+func (_e *Store_Expecter) CopyIntoFsckTempTable(ctx interface{}, tableName interface{}, ids interface{}, progressChan interface{}) *Store_CopyIntoFsckTempTable_Call {
 	return &Store_CopyIntoFsckTempTable_Call{Call: _e.mock.On("CopyIntoFsckTempTable", ctx, tableName, ids, progressChan)}
 }
 
@@ -680,7 +680,7 @@ type Store_CountRefJournal_Call struct {
 //   - missing *bool
 //   - since *time.Time
 //   - until *time.Time
-func (_e *Store_Expecter) CountRefJournal(ctx any, missing any, since any, until any) *Store_CountRefJournal_Call {
+func (_e *Store_Expecter) CountRefJournal(ctx interface{}, missing interface{}, since interface{}, until interface{}) *Store_CountRefJournal_Call {
 	return &Store_CountRefJournal_Call{Call: _e.mock.On("CountRefJournal", ctx, missing, since, until)}
 }
 
@@ -747,7 +747,7 @@ type Store_CreateAPIKey_Call struct {
 // CreateAPIKey is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.CreateAPIKeyParams
-func (_e *Store_Expecter) CreateAPIKey(ctx any, arg any) *Store_CreateAPIKey_Call {
+func (_e *Store_Expecter) CreateAPIKey(ctx interface{}, arg interface{}) *Store_CreateAPIKey_Call {
 	return &Store_CreateAPIKey_Call{Call: _e.mock.On("CreateAPIKey", ctx, arg)}
 }
 
@@ -812,7 +812,7 @@ type Store_CreateFsckTempTable_Call struct {
 
 // CreateFsckTempTable is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Store_Expecter) CreateFsckTempTable(ctx any) *Store_CreateFsckTempTable_Call {
+func (_e *Store_Expecter) CreateFsckTempTable(ctx interface{}) *Store_CreateFsckTempTable_Call {
 	return &Store_CreateFsckTempTable_Call{Call: _e.mock.On("CreateFsckTempTable", ctx)}
 }
 
@@ -873,7 +873,7 @@ type Store_CreateIncident_Call struct {
 // CreateIncident is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.CreateIncidentParams
-func (_e *Store_Expecter) CreateIncident(ctx any, arg any) *Store_CreateIncident_Call {
+func (_e *Store_Expecter) CreateIncident(ctx interface{}, arg interface{}) *Store_CreateIncident_Call {
 	return &Store_CreateIncident_Call{Call: _e.mock.On("CreateIncident", ctx, arg)}
 }
 
@@ -933,7 +933,7 @@ type Store_CreatePartition_Call struct {
 //   - partitionName string
 //   - start time.Time
 //   - end time.Time
-func (_e *Store_Expecter) CreatePartition(ctx any, parentTable any, partitionName any, start any, end any) *Store_CreatePartition_Call {
+func (_e *Store_Expecter) CreatePartition(ctx interface{}, parentTable interface{}, partitionName interface{}, start interface{}, end interface{}) *Store_CreatePartition_Call {
 	return &Store_CreatePartition_Call{Call: _e.mock.On("CreatePartition", ctx, parentTable, partitionName, start, end)}
 }
 
@@ -1005,7 +1005,7 @@ type Store_CreateShare_Call struct {
 // CreateShare is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.CreateShareParams
-func (_e *Store_Expecter) CreateShare(ctx any, arg any) *Store_CreateShare_Call {
+func (_e *Store_Expecter) CreateShare(ctx interface{}, arg interface{}) *Store_CreateShare_Call {
 	return &Store_CreateShare_Call{Call: _e.mock.On("CreateShare", ctx, arg)}
 }
 
@@ -1064,7 +1064,7 @@ type Store_CreateSystem_Call struct {
 //   - iD int
 //   - name string
 //   - learned bool
-func (_e *Store_Expecter) CreateSystem(ctx any, iD any, name any, learned any) *Store_CreateSystem_Call {
+func (_e *Store_Expecter) CreateSystem(ctx interface{}, iD interface{}, name interface{}, learned interface{}) *Store_CreateSystem_Call {
 	return &Store_CreateSystem_Call{Call: _e.mock.On("CreateSystem", ctx, iD, name, learned)}
 }
 
@@ -1140,7 +1140,7 @@ type Store_CreateUser_Call struct {
 // CreateUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.CreateUserParams
-func (_e *Store_Expecter) CreateUser(ctx any, arg any) *Store_CreateUser_Call {
+func (_e *Store_Expecter) CreateUser(ctx interface{}, arg interface{}) *Store_CreateUser_Call {
 	return &Store_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, arg)}
 }
 
@@ -1197,7 +1197,7 @@ type Store_CreateWebPushSubscription_Call struct {
 // CreateWebPushSubscription is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.CreateWebPushSubscriptionParams
-func (_e *Store_Expecter) CreateWebPushSubscription(ctx any, arg any) *Store_CreateWebPushSubscription_Call {
+func (_e *Store_Expecter) CreateWebPushSubscription(ctx interface{}, arg interface{}) *Store_CreateWebPushSubscription_Call {
 	return &Store_CreateWebPushSubscription_Call{Call: _e.mock.On("CreateWebPushSubscription", ctx, arg)}
 }
 
@@ -1346,7 +1346,7 @@ type Store_DeleteAPIKey_Call struct {
 // DeleteAPIKey is a helper method to define mock.On call
 //   - ctx context.Context
 //   - apiKey *string
-func (_e *Store_Expecter) DeleteAPIKey(ctx any, apiKey any) *Store_DeleteAPIKey_Call {
+func (_e *Store_Expecter) DeleteAPIKey(ctx interface{}, apiKey interface{}) *Store_DeleteAPIKey_Call {
 	return &Store_DeleteAPIKey_Call{Call: _e.mock.On("DeleteAPIKey", ctx, apiKey)}
 }
 
@@ -1403,7 +1403,7 @@ type Store_DeleteCall_Call struct {
 // DeleteCall is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
-func (_e *Store_Expecter) DeleteCall(ctx any, id any) *Store_DeleteCall_Call {
+func (_e *Store_Expecter) DeleteCall(ctx interface{}, id interface{}) *Store_DeleteCall_Call {
 	return &Store_DeleteCall_Call{Call: _e.mock.On("DeleteCall", ctx, id)}
 }
 
@@ -1468,7 +1468,7 @@ type Store_DeleteExpiredPushSubscriptions_Call struct {
 
 // DeleteExpiredPushSubscriptions is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Store_Expecter) DeleteExpiredPushSubscriptions(ctx any) *Store_DeleteExpiredPushSubscriptions_Call {
+func (_e *Store_Expecter) DeleteExpiredPushSubscriptions(ctx interface{}) *Store_DeleteExpiredPushSubscriptions_Call {
 	return &Store_DeleteExpiredPushSubscriptions_Call{Call: _e.mock.On("DeleteExpiredPushSubscriptions", ctx)}
 }
 
@@ -1520,7 +1520,7 @@ type Store_DeleteIncident_Call struct {
 // DeleteIncident is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
-func (_e *Store_Expecter) DeleteIncident(ctx any, id any) *Store_DeleteIncident_Call {
+func (_e *Store_Expecter) DeleteIncident(ctx interface{}, id interface{}) *Store_DeleteIncident_Call {
 	return &Store_DeleteIncident_Call{Call: _e.mock.On("DeleteIncident", ctx, id)}
 }
 
@@ -1577,7 +1577,7 @@ type Store_DeletePushSubscriptionByID_Call struct {
 // DeletePushSubscriptionByID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int64
-func (_e *Store_Expecter) DeletePushSubscriptionByID(ctx any, id any) *Store_DeletePushSubscriptionByID_Call {
+func (_e *Store_Expecter) DeletePushSubscriptionByID(ctx interface{}, id interface{}) *Store_DeletePushSubscriptionByID_Call {
 	return &Store_DeletePushSubscriptionByID_Call{Call: _e.mock.On("DeletePushSubscriptionByID", ctx, id)}
 }
 
@@ -1634,7 +1634,7 @@ type Store_DeletePushSubscriptionBySub_Call struct {
 // DeletePushSubscriptionBySub is a helper method to define mock.On call
 //   - ctx context.Context
 //   - subscription []byte
-func (_e *Store_Expecter) DeletePushSubscriptionBySub(ctx any, subscription any) *Store_DeletePushSubscriptionBySub_Call {
+func (_e *Store_Expecter) DeletePushSubscriptionBySub(ctx interface{}, subscription interface{}) *Store_DeletePushSubscriptionBySub_Call {
 	return &Store_DeletePushSubscriptionBySub_Call{Call: _e.mock.On("DeletePushSubscriptionBySub", ctx, subscription)}
 }
 
@@ -1691,7 +1691,7 @@ type Store_DeleteSetting_Call struct {
 // DeleteSetting is a helper method to define mock.On call
 //   - ctx context.Context
 //   - name string
-func (_e *Store_Expecter) DeleteSetting(ctx any, name any) *Store_DeleteSetting_Call {
+func (_e *Store_Expecter) DeleteSetting(ctx interface{}, name interface{}) *Store_DeleteSetting_Call {
 	return &Store_DeleteSetting_Call{Call: _e.mock.On("DeleteSetting", ctx, name)}
 }
 
@@ -1748,7 +1748,7 @@ type Store_DeleteShare_Call struct {
 // DeleteShare is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id string
-func (_e *Store_Expecter) DeleteShare(ctx any, id any) *Store_DeleteShare_Call {
+func (_e *Store_Expecter) DeleteShare(ctx interface{}, id interface{}) *Store_DeleteShare_Call {
 	return &Store_DeleteShare_Call{Call: _e.mock.On("DeleteShare", ctx, id)}
 }
 
@@ -1805,7 +1805,7 @@ type Store_DeleteSystem_Call struct {
 // DeleteSystem is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int
-func (_e *Store_Expecter) DeleteSystem(ctx any, id any) *Store_DeleteSystem_Call {
+func (_e *Store_Expecter) DeleteSystem(ctx interface{}, id interface{}) *Store_DeleteSystem_Call {
 	return &Store_DeleteSystem_Call{Call: _e.mock.On("DeleteSystem", ctx, id)}
 }
 
@@ -1863,7 +1863,7 @@ type Store_DeleteTalkgroup_Call struct {
 //   - ctx context.Context
 //   - systemID int32
 //   - tGID int32
-func (_e *Store_Expecter) DeleteTalkgroup(ctx any, systemID any, tGID any) *Store_DeleteTalkgroup_Call {
+func (_e *Store_Expecter) DeleteTalkgroup(ctx interface{}, systemID interface{}, tGID interface{}) *Store_DeleteTalkgroup_Call {
 	return &Store_DeleteTalkgroup_Call{Call: _e.mock.On("DeleteTalkgroup", ctx, systemID, tGID)}
 }
 
@@ -1925,7 +1925,7 @@ type Store_DeleteUser_Call struct {
 // DeleteUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - username string
-func (_e *Store_Expecter) DeleteUser(ctx any, username any) *Store_DeleteUser_Call {
+func (_e *Store_Expecter) DeleteUser(ctx interface{}, username interface{}) *Store_DeleteUser_Call {
 	return &Store_DeleteUser_Call{Call: _e.mock.On("DeleteUser", ctx, username)}
 }
 
@@ -1983,7 +1983,7 @@ type Store_DetachPartition_Call struct {
 //   - ctx context.Context
 //   - parentTable string
 //   - partitionName string
-func (_e *Store_Expecter) DetachPartition(ctx any, parentTable any, partitionName any) *Store_DetachPartition_Call {
+func (_e *Store_Expecter) DetachPartition(ctx interface{}, parentTable interface{}, partitionName interface{}) *Store_DetachPartition_Call {
 	return &Store_DetachPartition_Call{Call: _e.mock.On("DetachPartition", ctx, parentTable, partitionName)}
 }
 
@@ -2055,7 +2055,7 @@ type Store_DetailedCountRefJournal_Call struct {
 
 // DetailedCountRefJournal is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Store_Expecter) DetailedCountRefJournal(ctx any) *Store_DetailedCountRefJournal_Call {
+func (_e *Store_Expecter) DetailedCountRefJournal(ctx interface{}) *Store_DetailedCountRefJournal_Call {
 	return &Store_DetailedCountRefJournal_Call{Call: _e.mock.On("DetailedCountRefJournal", ctx)}
 }
 
@@ -2107,7 +2107,7 @@ type Store_DisableUser_Call struct {
 // DisableUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - username string
-func (_e *Store_Expecter) DisableUser(ctx any, username any) *Store_DisableUser_Call {
+func (_e *Store_Expecter) DisableUser(ctx interface{}, username interface{}) *Store_DisableUser_Call {
 	return &Store_DisableUser_Call{Call: _e.mock.On("DisableUser", ctx, username)}
 }
 
@@ -2164,7 +2164,7 @@ type Store_DropPartition_Call struct {
 // DropPartition is a helper method to define mock.On call
 //   - ctx context.Context
 //   - partitionName string
-func (_e *Store_Expecter) DropPartition(ctx any, partitionName any) *Store_DropPartition_Call {
+func (_e *Store_Expecter) DropPartition(ctx interface{}, partitionName interface{}) *Store_DropPartition_Call {
 	return &Store_DropPartition_Call{Call: _e.mock.On("DropPartition", ctx, partitionName)}
 }
 
@@ -2221,7 +2221,7 @@ type Store_DropRefJournal_Call struct {
 // DropRefJournal is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int64
-func (_e *Store_Expecter) DropRefJournal(ctx any, id any) *Store_DropRefJournal_Call {
+func (_e *Store_Expecter) DropRefJournal(ctx interface{}, id interface{}) *Store_DropRefJournal_Call {
 	return &Store_DropRefJournal_Call{Call: _e.mock.On("DropRefJournal", ctx, id)}
 }
 
@@ -2278,7 +2278,7 @@ type Store_DropTable_Call struct {
 // DropTable is a helper method to define mock.On call
 //   - ctx context.Context
 //   - tableName string
-func (_e *Store_Expecter) DropTable(ctx any, tableName any) *Store_DropTable_Call {
+func (_e *Store_Expecter) DropTable(ctx interface{}, tableName interface{}) *Store_DropTable_Call {
 	return &Store_DropTable_Call{Call: _e.mock.On("DropTable", ctx, tableName)}
 }
 
@@ -2345,7 +2345,7 @@ type Store_FsckRefs_Call struct {
 //   - ctx context.Context
 //   - tableName string
 //   - backend string
-func (_e *Store_Expecter) FsckRefs(ctx any, tableName any, backend any) *Store_FsckRefs_Call {
+func (_e *Store_Expecter) FsckRefs(ctx interface{}, tableName interface{}, backend interface{}) *Store_FsckRefs_Call {
 	return &Store_FsckRefs_Call{Call: _e.mock.On("FsckRefs", ctx, tableName, backend)}
 }
 
@@ -2418,7 +2418,7 @@ type Store_GetAPIKey_Call struct {
 //   - key *string
 //   - jwtID pgtype.UUID
 //   - kind int
-func (_e *Store_Expecter) GetAPIKey(ctx any, key any, jwtID any, kind any) *Store_GetAPIKey_Call {
+func (_e *Store_Expecter) GetAPIKey(ctx interface{}, key interface{}, jwtID interface{}, kind interface{}) *Store_GetAPIKey_Call {
 	return &Store_GetAPIKey_Call{Call: _e.mock.On("GetAPIKey", ctx, key, jwtID, kind)}
 }
 
@@ -2494,7 +2494,7 @@ type Store_GetAlertByURLTag_Call struct {
 // GetAlertByURLTag is a helper method to define mock.On call
 //   - ctx context.Context
 //   - urlTag *string
-func (_e *Store_Expecter) GetAlertByURLTag(ctx any, urlTag any) *Store_GetAlertByURLTag_Call {
+func (_e *Store_Expecter) GetAlertByURLTag(ctx interface{}, urlTag interface{}) *Store_GetAlertByURLTag_Call {
 	return &Store_GetAlertByURLTag_Call{Call: _e.mock.On("GetAlertByURLTag", ctx, urlTag)}
 }
 
@@ -2561,7 +2561,7 @@ type Store_GetAllTalkgroupTags_Call struct {
 
 // GetAllTalkgroupTags is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Store_Expecter) GetAllTalkgroupTags(ctx any) *Store_GetAllTalkgroupTags_Call {
+func (_e *Store_Expecter) GetAllTalkgroupTags(ctx interface{}) *Store_GetAllTalkgroupTags_Call {
 	return &Store_GetAllTalkgroupTags_Call{Call: _e.mock.On("GetAllTalkgroupTags", ctx)}
 }
 
@@ -2625,7 +2625,7 @@ type Store_GetAppPrefs_Call struct {
 //   - ctx context.Context
 //   - appName string
 //   - uid int
-func (_e *Store_Expecter) GetAppPrefs(ctx any, appName any, uid any) *Store_GetAppPrefs_Call {
+func (_e *Store_Expecter) GetAppPrefs(ctx interface{}, appName interface{}, uid interface{}) *Store_GetAppPrefs_Call {
 	return &Store_GetAppPrefs_Call{Call: _e.mock.On("GetAppPrefs", ctx, appName, uid)}
 }
 
@@ -2688,7 +2688,7 @@ type Store_GetAudioRefJournalCb_Call struct {
 //   - ctx context.Context
 //   - arg database.GetRefJournalParams
 //   - sendEntry func(database.AudioRefJournal)
-func (_e *Store_Expecter) GetAudioRefJournalCb(ctx any, arg any, sendEntry any) *Store_GetAudioRefJournalCb_Call {
+func (_e *Store_Expecter) GetAudioRefJournalCb(ctx interface{}, arg interface{}, sendEntry interface{}) *Store_GetAudioRefJournalCb_Call {
 	return &Store_GetAudioRefJournalCb_Call{Call: _e.mock.On("GetAudioRefJournalCb", ctx, arg, sendEntry)}
 }
 
@@ -2759,7 +2759,7 @@ type Store_GetCall_Call struct {
 // GetCall is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
-func (_e *Store_Expecter) GetCall(ctx any, id any) *Store_GetCall_Call {
+func (_e *Store_Expecter) GetCall(ctx interface{}, id interface{}) *Store_GetCall_Call {
 	return &Store_GetCall_Call{Call: _e.mock.On("GetCall", ctx, id)}
 }
 
@@ -2827,7 +2827,7 @@ type Store_GetCallAudio_Call struct {
 // GetCallAudio is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.GetCallAudioParams
-func (_e *Store_Expecter) GetCallAudio(ctx any, arg any) *Store_GetCallAudio_Call {
+func (_e *Store_Expecter) GetCallAudio(ctx interface{}, arg interface{}) *Store_GetCallAudio_Call {
 	return &Store_GetCallAudio_Call{Call: _e.mock.On("GetCallAudio", ctx, arg)}
 }
 
@@ -2893,7 +2893,7 @@ type Store_GetCallAudioByID_Call struct {
 // GetCallAudioByID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
-func (_e *Store_Expecter) GetCallAudioByID(ctx any, id any) *Store_GetCallAudioByID_Call {
+func (_e *Store_Expecter) GetCallAudioByID(ctx interface{}, id interface{}) *Store_GetCallAudioByID_Call {
 	return &Store_GetCallAudioByID_Call{Call: _e.mock.On("GetCallAudioByID", ctx, id)}
 }
 
@@ -2951,7 +2951,7 @@ type Store_GetCallAudioCb_Call struct {
 //   - ctx context.Context
 //   - arg database.GetCallAudioParams
 //   - cb func(*database.GetCallAudioRow) error
-func (_e *Store_Expecter) GetCallAudioCb(ctx any, arg any, cb any) *Store_GetCallAudioCb_Call {
+func (_e *Store_Expecter) GetCallAudioCb(ctx interface{}, arg interface{}, cb interface{}) *Store_GetCallAudioCb_Call {
 	return &Store_GetCallAudioCb_Call{Call: _e.mock.On("GetCallAudioCb", ctx, arg, cb)}
 }
 
@@ -3022,7 +3022,7 @@ type Store_GetCallAudioCount_Call struct {
 // GetCallAudioCount is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.GetCallAudioParams
-func (_e *Store_Expecter) GetCallAudioCount(ctx any, arg any) *Store_GetCallAudioCount_Call {
+func (_e *Store_Expecter) GetCallAudioCount(ctx interface{}, arg interface{}) *Store_GetCallAudioCount_Call {
 	return &Store_GetCallAudioCount_Call{Call: _e.mock.On("GetCallAudioCount", ctx, arg)}
 }
 
@@ -3092,7 +3092,7 @@ type Store_GetCallStatsByInterval_Call struct {
 //   - truncField string
 //   - start *time.Time
 //   - end *time.Time
-func (_e *Store_Expecter) GetCallStatsByInterval(ctx any, truncField any, start any, end any) *Store_GetCallStatsByInterval_Call {
+func (_e *Store_Expecter) GetCallStatsByInterval(ctx interface{}, truncField interface{}, start interface{}, end interface{}) *Store_GetCallStatsByInterval_Call {
 	return &Store_GetCallStatsByInterval_Call{Call: _e.mock.On("GetCallStatsByInterval", ctx, truncField, start, end)}
 }
 
@@ -3172,7 +3172,7 @@ type Store_GetCallStatsByTalkgroup_Call struct {
 //   - truncField string
 //   - start *time.Time
 //   - end *time.Time
-func (_e *Store_Expecter) GetCallStatsByTalkgroup(ctx any, truncField any, start any, end any) *Store_GetCallStatsByTalkgroup_Call {
+func (_e *Store_Expecter) GetCallStatsByTalkgroup(ctx interface{}, truncField interface{}, start interface{}, end interface{}) *Store_GetCallStatsByTalkgroup_Call {
 	return &Store_GetCallStatsByTalkgroup_Call{Call: _e.mock.On("GetCallStatsByTalkgroup", ctx, truncField, start, end)}
 }
 
@@ -3250,7 +3250,7 @@ type Store_GetCallSubmitter_Call struct {
 // GetCallSubmitter is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
-func (_e *Store_Expecter) GetCallSubmitter(ctx any, id any) *Store_GetCallSubmitter_Call {
+func (_e *Store_Expecter) GetCallSubmitter(ctx interface{}, id interface{}) *Store_GetCallSubmitter_Call {
 	return &Store_GetCallSubmitter_Call{Call: _e.mock.On("GetCallSubmitter", ctx, id)}
 }
 
@@ -3318,7 +3318,7 @@ type Store_GetCalls_Call struct {
 // GetCalls is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ids []uuid.UUID
-func (_e *Store_Expecter) GetCalls(ctx any, ids any) *Store_GetCalls_Call {
+func (_e *Store_Expecter) GetCalls(ctx interface{}, ids interface{}) *Store_GetCalls_Call {
 	return &Store_GetCalls_Call{Call: _e.mock.On("GetCalls", ctx, ids)}
 }
 
@@ -3383,7 +3383,7 @@ type Store_GetDatabaseSize_Call struct {
 
 // GetDatabaseSize is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Store_Expecter) GetDatabaseSize(ctx any) *Store_GetDatabaseSize_Call {
+func (_e *Store_Expecter) GetDatabaseSize(ctx interface{}) *Store_GetDatabaseSize_Call {
 	return &Store_GetDatabaseSize_Call{Call: _e.mock.On("GetDatabaseSize", ctx)}
 }
 
@@ -3444,7 +3444,7 @@ type Store_GetIncident_Call struct {
 // GetIncident is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
-func (_e *Store_Expecter) GetIncident(ctx any, id any) *Store_GetIncident_Call {
+func (_e *Store_Expecter) GetIncident(ctx interface{}, id interface{}) *Store_GetIncident_Call {
 	return &Store_GetIncident_Call{Call: _e.mock.On("GetIncident", ctx, id)}
 }
 
@@ -3510,7 +3510,7 @@ type Store_GetIncidentCallCount_Call struct {
 // GetIncidentCallCount is a helper method to define mock.On call
 //   - ctx context.Context
 //   - incidentID uuid.UUID
-func (_e *Store_Expecter) GetIncidentCallCount(ctx any, incidentID any) *Store_GetIncidentCallCount_Call {
+func (_e *Store_Expecter) GetIncidentCallCount(ctx interface{}, incidentID interface{}) *Store_GetIncidentCallCount_Call {
 	return &Store_GetIncidentCallCount_Call{Call: _e.mock.On("GetIncidentCallCount", ctx, incidentID)}
 }
 
@@ -3580,7 +3580,7 @@ type Store_GetIncidentCalls_Call struct {
 //   - iD uuid.UUID
 //   - offset int32
 //   - perPage *int32
-func (_e *Store_Expecter) GetIncidentCalls(ctx any, iD any, offset any, perPage any) *Store_GetIncidentCalls_Call {
+func (_e *Store_Expecter) GetIncidentCalls(ctx interface{}, iD interface{}, offset interface{}, perPage interface{}) *Store_GetIncidentCalls_Call {
 	return &Store_GetIncidentCalls_Call{Call: _e.mock.On("GetIncidentCalls", ctx, iD, offset, perPage)}
 }
 
@@ -3656,7 +3656,7 @@ type Store_GetIncidentOwner_Call struct {
 // GetIncidentOwner is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
-func (_e *Store_Expecter) GetIncidentOwner(ctx any, id any) *Store_GetIncidentOwner_Call {
+func (_e *Store_Expecter) GetIncidentOwner(ctx interface{}, id interface{}) *Store_GetIncidentOwner_Call {
 	return &Store_GetIncidentOwner_Call{Call: _e.mock.On("GetIncidentOwner", ctx, id)}
 }
 
@@ -3724,7 +3724,7 @@ type Store_GetIncidentTalkgroups_Call struct {
 // GetIncidentTalkgroups is a helper method to define mock.On call
 //   - ctx context.Context
 //   - incidentID uuid.UUID
-func (_e *Store_Expecter) GetIncidentTalkgroups(ctx any, incidentID any) *Store_GetIncidentTalkgroups_Call {
+func (_e *Store_Expecter) GetIncidentTalkgroups(ctx interface{}, incidentID interface{}) *Store_GetIncidentTalkgroups_Call {
 	return &Store_GetIncidentTalkgroups_Call{Call: _e.mock.On("GetIncidentTalkgroups", ctx, incidentID)}
 }
 
@@ -3793,7 +3793,7 @@ type Store_GetPrunableAudioRefs_Call struct {
 //   - ctx context.Context
 //   - partitionStart time.Time
 //   - partitionEnd time.Time
-func (_e *Store_Expecter) GetPrunableAudioRefs(ctx any, partitionStart any, partitionEnd any) *Store_GetPrunableAudioRefs_Call {
+func (_e *Store_Expecter) GetPrunableAudioRefs(ctx interface{}, partitionStart interface{}, partitionEnd interface{}) *Store_GetPrunableAudioRefs_Call {
 	return &Store_GetPrunableAudioRefs_Call{Call: _e.mock.On("GetPrunableAudioRefs", ctx, partitionStart, partitionEnd)}
 }
 
@@ -3865,7 +3865,7 @@ type Store_GetPushSubscriptions_Call struct {
 
 // GetPushSubscriptions is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Store_Expecter) GetPushSubscriptions(ctx any) *Store_GetPushSubscriptions_Call {
+func (_e *Store_Expecter) GetPushSubscriptions(ctx interface{}) *Store_GetPushSubscriptions_Call {
 	return &Store_GetPushSubscriptions_Call{Call: _e.mock.On("GetPushSubscriptions", ctx)}
 }
 
@@ -3928,7 +3928,7 @@ type Store_GetRefJournal_Call struct {
 // GetRefJournal is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.GetRefJournalParams
-func (_e *Store_Expecter) GetRefJournal(ctx any, arg any) *Store_GetRefJournal_Call {
+func (_e *Store_Expecter) GetRefJournal(ctx interface{}, arg interface{}) *Store_GetRefJournal_Call {
 	return &Store_GetRefJournal_Call{Call: _e.mock.On("GetRefJournal", ctx, arg)}
 }
 
@@ -3996,7 +3996,7 @@ type Store_GetSetting_Call struct {
 // GetSetting is a helper method to define mock.On call
 //   - ctx context.Context
 //   - name string
-func (_e *Store_Expecter) GetSetting(ctx any, name any) *Store_GetSetting_Call {
+func (_e *Store_Expecter) GetSetting(ctx interface{}, name interface{}) *Store_GetSetting_Call {
 	return &Store_GetSetting_Call{Call: _e.mock.On("GetSetting", ctx, name)}
 }
 
@@ -4062,7 +4062,7 @@ type Store_GetShare_Call struct {
 // GetShare is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id string
-func (_e *Store_Expecter) GetShare(ctx any, id any) *Store_GetShare_Call {
+func (_e *Store_Expecter) GetShare(ctx interface{}, id interface{}) *Store_GetShare_Call {
 	return &Store_GetShare_Call{Call: _e.mock.On("GetShare", ctx, id)}
 }
 
@@ -4130,7 +4130,7 @@ type Store_GetSharesP_Call struct {
 // GetSharesP is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.GetSharesPParams
-func (_e *Store_Expecter) GetSharesP(ctx any, arg any) *Store_GetSharesP_Call {
+func (_e *Store_Expecter) GetSharesP(ctx interface{}, arg interface{}) *Store_GetSharesP_Call {
 	return &Store_GetSharesP_Call{Call: _e.mock.On("GetSharesP", ctx, arg)}
 }
 
@@ -4196,7 +4196,7 @@ type Store_GetSharesPCount_Call struct {
 // GetSharesPCount is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ownerID *int32
-func (_e *Store_Expecter) GetSharesPCount(ctx any, ownerID any) *Store_GetSharesPCount_Call {
+func (_e *Store_Expecter) GetSharesPCount(ctx interface{}, ownerID interface{}) *Store_GetSharesPCount_Call {
 	return &Store_GetSharesPCount_Call{Call: _e.mock.On("GetSharesPCount", ctx, ownerID)}
 }
 
@@ -4263,7 +4263,7 @@ type Store_GetSweptCallsWithRef_Call struct {
 
 // GetSweptCallsWithRef is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Store_Expecter) GetSweptCallsWithRef(ctx any) *Store_GetSweptCallsWithRef_Call {
+func (_e *Store_Expecter) GetSweptCallsWithRef(ctx interface{}) *Store_GetSweptCallsWithRef_Call {
 	return &Store_GetSweptCallsWithRef_Call{Call: _e.mock.On("GetSweptCallsWithRef", ctx)}
 }
 
@@ -4324,7 +4324,7 @@ type Store_GetSystemName_Call struct {
 // GetSystemName is a helper method to define mock.On call
 //   - ctx context.Context
 //   - systemID int
-func (_e *Store_Expecter) GetSystemName(ctx any, systemID any) *Store_GetSystemName_Call {
+func (_e *Store_Expecter) GetSystemName(ctx interface{}, systemID interface{}) *Store_GetSystemName_Call {
 	return &Store_GetSystemName_Call{Call: _e.mock.On("GetSystemName", ctx, systemID)}
 }
 
@@ -4392,7 +4392,7 @@ type Store_GetSystemSubscriptions_Call struct {
 // GetSystemSubscriptions is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID int
-func (_e *Store_Expecter) GetSystemSubscriptions(ctx any, userID any) *Store_GetSystemSubscriptions_Call {
+func (_e *Store_Expecter) GetSystemSubscriptions(ctx interface{}, userID interface{}) *Store_GetSystemSubscriptions_Call {
 	return &Store_GetSystemSubscriptions_Call{Call: _e.mock.On("GetSystemSubscriptions", ctx, userID)}
 }
 
@@ -4461,7 +4461,7 @@ type Store_GetTablePartitions_Call struct {
 //   - ctx context.Context
 //   - schemaName string
 //   - tableName string
-func (_e *Store_Expecter) GetTablePartitions(ctx any, schemaName any, tableName any) *Store_GetTablePartitions_Call {
+func (_e *Store_Expecter) GetTablePartitions(ctx interface{}, schemaName interface{}, tableName interface{}) *Store_GetTablePartitions_Call {
 	return &Store_GetTablePartitions_Call{Call: _e.mock.On("GetTablePartitions", ctx, schemaName, tableName)}
 }
 
@@ -4533,7 +4533,7 @@ type Store_GetTalkgroup_Call struct {
 //   - ctx context.Context
 //   - systemID int32
 //   - tGID int32
-func (_e *Store_Expecter) GetTalkgroup(ctx any, systemID any, tGID any) *Store_GetTalkgroup_Call {
+func (_e *Store_Expecter) GetTalkgroup(ctx interface{}, systemID interface{}, tGID interface{}) *Store_GetTalkgroup_Call {
 	return &Store_GetTalkgroup_Call{Call: _e.mock.On("GetTalkgroup", ctx, systemID, tGID)}
 }
 
@@ -4608,7 +4608,7 @@ type Store_GetTalkgroupIDsByTags_Call struct {
 //   - allTags []string
 //   - anyTags []string
 //   - notAnyTags []string
-func (_e *Store_Expecter) GetTalkgroupIDsByTags(ctx any, allTags any, anyTags any, notAnyTags any) *Store_GetTalkgroupIDsByTags_Call {
+func (_e *Store_Expecter) GetTalkgroupIDsByTags(ctx interface{}, allTags interface{}, anyTags interface{}, notAnyTags interface{}) *Store_GetTalkgroupIDsByTags_Call {
 	return &Store_GetTalkgroupIDsByTags_Call{Call: _e.mock.On("GetTalkgroupIDsByTags", ctx, allTags, anyTags, notAnyTags)}
 }
 
@@ -4686,7 +4686,7 @@ type Store_GetTalkgroupSubscriptions_Call struct {
 // GetTalkgroupSubscriptions is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID int
-func (_e *Store_Expecter) GetTalkgroupSubscriptions(ctx any, userID any) *Store_GetTalkgroupSubscriptions_Call {
+func (_e *Store_Expecter) GetTalkgroupSubscriptions(ctx interface{}, userID interface{}) *Store_GetTalkgroupSubscriptions_Call {
 	return &Store_GetTalkgroupSubscriptions_Call{Call: _e.mock.On("GetTalkgroupSubscriptions", ctx, userID)}
 }
 
@@ -4755,7 +4755,7 @@ type Store_GetTalkgroupTags_Call struct {
 //   - ctx context.Context
 //   - systemID int32
 //   - tGID int32
-func (_e *Store_Expecter) GetTalkgroupTags(ctx any, systemID any, tGID any) *Store_GetTalkgroupTags_Call {
+func (_e *Store_Expecter) GetTalkgroupTags(ctx interface{}, systemID interface{}, tGID interface{}) *Store_GetTalkgroupTags_Call {
 	return &Store_GetTalkgroupTags_Call{Call: _e.mock.On("GetTalkgroupTags", ctx, systemID, tGID)}
 }
 
@@ -4830,7 +4830,7 @@ type Store_GetTalkgroups_Call struct {
 //   - system *int32
 //   - withIgnored bool
 //   - filter *string
-func (_e *Store_Expecter) GetTalkgroups(ctx any, system any, withIgnored any, filter any) *Store_GetTalkgroups_Call {
+func (_e *Store_Expecter) GetTalkgroups(ctx interface{}, system interface{}, withIgnored interface{}, filter interface{}) *Store_GetTalkgroups_Call {
 	return &Store_GetTalkgroups_Call{Call: _e.mock.On("GetTalkgroups", ctx, system, withIgnored, filter)}
 }
 
@@ -4908,7 +4908,7 @@ type Store_GetTalkgroupsBySysTGID_Call struct {
 // GetTalkgroupsBySysTGID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ids database.TGTuplesU
-func (_e *Store_Expecter) GetTalkgroupsBySysTGID(ctx any, ids any) *Store_GetTalkgroupsBySysTGID_Call {
+func (_e *Store_Expecter) GetTalkgroupsBySysTGID(ctx interface{}, ids interface{}) *Store_GetTalkgroupsBySysTGID_Call {
 	return &Store_GetTalkgroupsBySysTGID_Call{Call: _e.mock.On("GetTalkgroupsBySysTGID", ctx, ids)}
 }
 
@@ -4976,7 +4976,7 @@ type Store_GetTalkgroupsCount_Call struct {
 //   - system *int32
 //   - withIgnored bool
 //   - filter *string
-func (_e *Store_Expecter) GetTalkgroupsCount(ctx any, system any, withIgnored any, filter any) *Store_GetTalkgroupsCount_Call {
+func (_e *Store_Expecter) GetTalkgroupsCount(ctx interface{}, system interface{}, withIgnored interface{}, filter interface{}) *Store_GetTalkgroupsCount_Call {
 	return &Store_GetTalkgroupsCount_Call{Call: _e.mock.On("GetTalkgroupsCount", ctx, system, withIgnored, filter)}
 }
 
@@ -5054,7 +5054,7 @@ type Store_GetTalkgroupsP_Call struct {
 // GetTalkgroupsP is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.GetTalkgroupsPParams
-func (_e *Store_Expecter) GetTalkgroupsP(ctx any, arg any) *Store_GetTalkgroupsP_Call {
+func (_e *Store_Expecter) GetTalkgroupsP(ctx interface{}, arg interface{}) *Store_GetTalkgroupsP_Call {
 	return &Store_GetTalkgroupsP_Call{Call: _e.mock.On("GetTalkgroupsP", ctx, arg)}
 }
 
@@ -5122,7 +5122,7 @@ type Store_GetTalkgroupsWithAllTags_Call struct {
 // GetTalkgroupsWithAllTags is a helper method to define mock.On call
 //   - ctx context.Context
 //   - tags []string
-func (_e *Store_Expecter) GetTalkgroupsWithAllTags(ctx any, tags any) *Store_GetTalkgroupsWithAllTags_Call {
+func (_e *Store_Expecter) GetTalkgroupsWithAllTags(ctx interface{}, tags interface{}) *Store_GetTalkgroupsWithAllTags_Call {
 	return &Store_GetTalkgroupsWithAllTags_Call{Call: _e.mock.On("GetTalkgroupsWithAllTags", ctx, tags)}
 }
 
@@ -5190,7 +5190,7 @@ type Store_GetTalkgroupsWithAnyTags_Call struct {
 // GetTalkgroupsWithAnyTags is a helper method to define mock.On call
 //   - ctx context.Context
 //   - tags []string
-func (_e *Store_Expecter) GetTalkgroupsWithAnyTags(ctx any, tags any) *Store_GetTalkgroupsWithAnyTags_Call {
+func (_e *Store_Expecter) GetTalkgroupsWithAnyTags(ctx interface{}, tags interface{}) *Store_GetTalkgroupsWithAnyTags_Call {
 	return &Store_GetTalkgroupsWithAnyTags_Call{Call: _e.mock.On("GetTalkgroupsWithAnyTags", ctx, tags)}
 }
 
@@ -5258,7 +5258,7 @@ type Store_GetTranscriptsContext_Call struct {
 // GetTranscriptsContext is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.GetTranscriptsContextParams
-func (_e *Store_Expecter) GetTranscriptsContext(ctx any, arg any) *Store_GetTranscriptsContext_Call {
+func (_e *Store_Expecter) GetTranscriptsContext(ctx interface{}, arg interface{}) *Store_GetTranscriptsContext_Call {
 	return &Store_GetTranscriptsContext_Call{Call: _e.mock.On("GetTranscriptsContext", ctx, arg)}
 }
 
@@ -5324,7 +5324,7 @@ type Store_GetUserByID_Call struct {
 // GetUserByID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int
-func (_e *Store_Expecter) GetUserByID(ctx any, id any) *Store_GetUserByID_Call {
+func (_e *Store_Expecter) GetUserByID(ctx interface{}, id interface{}) *Store_GetUserByID_Call {
 	return &Store_GetUserByID_Call{Call: _e.mock.On("GetUserByID", ctx, id)}
 }
 
@@ -5390,7 +5390,7 @@ type Store_GetUserByUsername_Call struct {
 // GetUserByUsername is a helper method to define mock.On call
 //   - ctx context.Context
 //   - username string
-func (_e *Store_Expecter) GetUserByUsername(ctx any, username any) *Store_GetUserByUsername_Call {
+func (_e *Store_Expecter) GetUserByUsername(ctx interface{}, username interface{}) *Store_GetUserByUsername_Call {
 	return &Store_GetUserByUsername_Call{Call: _e.mock.On("GetUserByUsername", ctx, username)}
 }
 
@@ -5457,7 +5457,7 @@ type Store_GetUsers_Call struct {
 
 // GetUsers is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Store_Expecter) GetUsers(ctx any) *Store_GetUsers_Call {
+func (_e *Store_Expecter) GetUsers(ctx interface{}) *Store_GetUsers_Call {
 	return &Store_GetUsers_Call{Call: _e.mock.On("GetUsers", ctx)}
 }
 
@@ -5521,7 +5521,7 @@ type Store_GetWebPushSubscriptionsSubscribed_Call struct {
 //   - ctx context.Context
 //   - systemID int32
 //   - tGID int32
-func (_e *Store_Expecter) GetWebPushSubscriptionsSubscribed(ctx any, systemID any, tGID any) *Store_GetWebPushSubscriptionsSubscribed_Call {
+func (_e *Store_Expecter) GetWebPushSubscriptionsSubscribed(ctx interface{}, systemID interface{}, tGID interface{}) *Store_GetWebPushSubscriptionsSubscribed_Call {
 	return &Store_GetWebPushSubscriptionsSubscribed_Call{Call: _e.mock.On("GetWebPushSubscriptionsSubscribed", ctx, systemID, tGID)}
 }
 
@@ -5583,7 +5583,7 @@ type Store_InTx_Call struct {
 // InTx is a helper method to define mock.On call
 //   - context1 context.Context
 //   - fn func(database.Store) error
-func (_e *Store_Expecter) InTx(context1 any, fn any) *Store_InTx_Call {
+func (_e *Store_Expecter) InTx(context1 interface{}, fn interface{}) *Store_InTx_Call {
 	return &Store_InTx_Call{Call: _e.mock.On("InTx", context1, fn)}
 }
 
@@ -5640,7 +5640,7 @@ type Store_IncrementRefJournal_Call struct {
 // IncrementRefJournal is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int64
-func (_e *Store_Expecter) IncrementRefJournal(ctx any, id any) *Store_IncrementRefJournal_Call {
+func (_e *Store_Expecter) IncrementRefJournal(ctx interface{}, id interface{}) *Store_IncrementRefJournal_Call {
 	return &Store_IncrementRefJournal_Call{Call: _e.mock.On("IncrementRefJournal", ctx, id)}
 }
 
@@ -5706,7 +5706,7 @@ type Store_ListCallsCount_Call struct {
 // ListCallsCount is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.ListCallsCountParams
-func (_e *Store_Expecter) ListCallsCount(ctx any, arg any) *Store_ListCallsCount_Call {
+func (_e *Store_Expecter) ListCallsCount(ctx interface{}, arg interface{}) *Store_ListCallsCount_Call {
 	return &Store_ListCallsCount_Call{Call: _e.mock.On("ListCallsCount", ctx, arg)}
 }
 
@@ -5774,7 +5774,7 @@ type Store_ListCallsP_Call struct {
 // ListCallsP is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.ListCallsPParams
-func (_e *Store_Expecter) ListCallsP(ctx any, arg any) *Store_ListCallsP_Call {
+func (_e *Store_Expecter) ListCallsP(ctx interface{}, arg interface{}) *Store_ListCallsP_Call {
 	return &Store_ListCallsP_Call{Call: _e.mock.On("ListCallsP", ctx, arg)}
 }
 
@@ -5842,7 +5842,7 @@ type Store_ListIncidentsCount_Call struct {
 //   - start *time.Time
 //   - end *time.Time
 //   - filter *string
-func (_e *Store_Expecter) ListIncidentsCount(ctx any, start any, end any, filter any) *Store_ListIncidentsCount_Call {
+func (_e *Store_Expecter) ListIncidentsCount(ctx interface{}, start interface{}, end interface{}, filter interface{}) *Store_ListIncidentsCount_Call {
 	return &Store_ListIncidentsCount_Call{Call: _e.mock.On("ListIncidentsCount", ctx, start, end, filter)}
 }
 
@@ -5920,7 +5920,7 @@ type Store_ListIncidentsP_Call struct {
 // ListIncidentsP is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.ListIncidentsPParams
-func (_e *Store_Expecter) ListIncidentsP(ctx any, arg any) *Store_ListIncidentsP_Call {
+func (_e *Store_Expecter) ListIncidentsP(ctx interface{}, arg interface{}) *Store_ListIncidentsP_Call {
 	return &Store_ListIncidentsP_Call{Call: _e.mock.On("ListIncidentsP", ctx, arg)}
 }
 
@@ -5996,7 +5996,7 @@ type Store_PoolTx_Call struct {
 // PoolTx is a helper method to define mock.On call
 //   - ctx context.Context
 //   - opts pgx.TxOptions
-func (_e *Store_Expecter) PoolTx(ctx any, opts any) *Store_PoolTx_Call {
+func (_e *Store_Expecter) PoolTx(ctx interface{}, opts interface{}) *Store_PoolTx_Call {
 	return &Store_PoolTx_Call{Call: _e.mock.On("PoolTx", ctx, opts)}
 }
 
@@ -6062,7 +6062,7 @@ type Store_PruneAlerts_Call struct {
 // PruneAlerts is a helper method to define mock.On call
 //   - ctx context.Context
 //   - before time.Time
-func (_e *Store_Expecter) PruneAlerts(ctx any, before any) *Store_PruneAlerts_Call {
+func (_e *Store_Expecter) PruneAlerts(ctx interface{}, before interface{}) *Store_PruneAlerts_Call {
 	return &Store_PruneAlerts_Call{Call: _e.mock.On("PruneAlerts", ctx, before)}
 }
 
@@ -6118,7 +6118,7 @@ type Store_PruneShares_Call struct {
 
 // PruneShares is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Store_Expecter) PruneShares(ctx any) *Store_PruneShares_Call {
+func (_e *Store_Expecter) PruneShares(ctx interface{}) *Store_PruneShares_Call {
 	return &Store_PruneShares_Call{Call: _e.mock.On("PruneShares", ctx)}
 }
 
@@ -6172,7 +6172,7 @@ type Store_RecordUserLogin_Call struct {
 //   - username string
 //   - lastLoginAt *time.Time
 //   - lastLoginFrom *netip.Addr
-func (_e *Store_Expecter) RecordUserLogin(ctx any, username any, lastLoginAt any, lastLoginFrom any) *Store_RecordUserLogin_Call {
+func (_e *Store_Expecter) RecordUserLogin(ctx interface{}, username interface{}, lastLoginAt interface{}, lastLoginFrom interface{}) *Store_RecordUserLogin_Call {
 	return &Store_RecordUserLogin_Call{Call: _e.mock.On("RecordUserLogin", ctx, username, lastLoginAt, lastLoginFrom)}
 }
 
@@ -6240,7 +6240,7 @@ type Store_RemoveFromIncident_Call struct {
 //   - ctx context.Context
 //   - iD uuid.UUID
 //   - callIds []uuid.UUID
-func (_e *Store_Expecter) RemoveFromIncident(ctx any, iD any, callIds any) *Store_RemoveFromIncident_Call {
+func (_e *Store_Expecter) RemoveFromIncident(ctx interface{}, iD interface{}, callIds interface{}) *Store_RemoveFromIncident_Call {
 	return &Store_RemoveFromIncident_Call{Call: _e.mock.On("RemoveFromIncident", ctx, iD, callIds)}
 }
 
@@ -6311,7 +6311,7 @@ type Store_RestoreTalkgroupVersion_Call struct {
 // RestoreTalkgroupVersion is a helper method to define mock.On call
 //   - ctx context.Context
 //   - versionIds int
-func (_e *Store_Expecter) RestoreTalkgroupVersion(ctx any, versionIds any) *Store_RestoreTalkgroupVersion_Call {
+func (_e *Store_Expecter) RestoreTalkgroupVersion(ctx interface{}, versionIds interface{}) *Store_RestoreTalkgroupVersion_Call {
 	return &Store_RestoreTalkgroupVersion_Call{Call: _e.mock.On("RestoreTalkgroupVersion", ctx, versionIds)}
 }
 
@@ -6370,7 +6370,7 @@ type Store_SetAppPrefs_Call struct {
 //   - appName string
 //   - prefs []byte
 //   - uid int
-func (_e *Store_Expecter) SetAppPrefs(ctx any, appName any, prefs any, uid any) *Store_SetAppPrefs_Call {
+func (_e *Store_Expecter) SetAppPrefs(ctx interface{}, appName interface{}, prefs interface{}, uid interface{}) *Store_SetAppPrefs_Call {
 	return &Store_SetAppPrefs_Call{Call: _e.mock.On("SetAppPrefs", ctx, appName, prefs, uid)}
 }
 
@@ -6439,7 +6439,7 @@ type Store_SetCallAudio_Call struct {
 //   - iD uuid.UUID
 //   - audioRef []byte
 //   - audioBlob []byte
-func (_e *Store_Expecter) SetCallAudio(ctx any, iD any, audioRef any, audioBlob any) *Store_SetCallAudio_Call {
+func (_e *Store_Expecter) SetCallAudio(ctx interface{}, iD interface{}, audioRef interface{}, audioBlob interface{}) *Store_SetCallAudio_Call {
 	return &Store_SetCallAudio_Call{Call: _e.mock.On("SetCallAudio", ctx, iD, audioRef, audioBlob)}
 }
 
@@ -6516,7 +6516,7 @@ type Store_SetCallTranscript_Call struct {
 //   - ctx context.Context
 //   - iD uuid.UUID
 //   - transcript *string
-func (_e *Store_Expecter) SetCallTranscript(ctx any, iD any, transcript any) *Store_SetCallTranscript_Call {
+func (_e *Store_Expecter) SetCallTranscript(ctx interface{}, iD interface{}, transcript interface{}) *Store_SetCallTranscript_Call {
 	return &Store_SetCallTranscript_Call{Call: _e.mock.On("SetCallTranscript", ctx, iD, transcript)}
 }
 
@@ -6579,7 +6579,7 @@ type Store_SetRefJournalPrune_Call struct {
 //   - ctx context.Context
 //   - iD int64
 //   - pruneAfter *time.Time
-func (_e *Store_Expecter) SetRefJournalPrune(ctx any, iD any, pruneAfter any) *Store_SetRefJournalPrune_Call {
+func (_e *Store_Expecter) SetRefJournalPrune(ctx interface{}, iD interface{}, pruneAfter interface{}) *Store_SetRefJournalPrune_Call {
 	return &Store_SetRefJournalPrune_Call{Call: _e.mock.On("SetRefJournalPrune", ctx, iD, pruneAfter)}
 }
 
@@ -6643,7 +6643,7 @@ type Store_SetSetting_Call struct {
 //   - name string
 //   - updatedBy *int32
 //   - value []byte
-func (_e *Store_Expecter) SetSetting(ctx any, name any, updatedBy any, value any) *Store_SetSetting_Call {
+func (_e *Store_Expecter) SetSetting(ctx interface{}, name interface{}, updatedBy interface{}, value interface{}) *Store_SetSetting_Call {
 	return &Store_SetSetting_Call{Call: _e.mock.On("SetSetting", ctx, name, updatedBy, value)}
 }
 
@@ -6711,7 +6711,7 @@ type Store_SetSweptAudioAndClearRef_Call struct {
 //   - ctx context.Context
 //   - audioBlob []byte
 //   - iD uuid.UUID
-func (_e *Store_Expecter) SetSweptAudioAndClearRef(ctx any, audioBlob any, iD any) *Store_SetSweptAudioAndClearRef_Call {
+func (_e *Store_Expecter) SetSweptAudioAndClearRef(ctx interface{}, audioBlob interface{}, iD interface{}) *Store_SetSweptAudioAndClearRef_Call {
 	return &Store_SetSweptAudioAndClearRef_Call{Call: _e.mock.On("SetSweptAudioAndClearRef", ctx, audioBlob, iD)}
 }
 
@@ -6775,7 +6775,7 @@ type Store_SetSweptCallAudio_Call struct {
 //   - iD uuid.UUID
 //   - audioRef []byte
 //   - audioBlob []byte
-func (_e *Store_Expecter) SetSweptCallAudio(ctx any, iD any, audioRef any, audioBlob any) *Store_SetSweptCallAudio_Call {
+func (_e *Store_Expecter) SetSweptCallAudio(ctx interface{}, iD interface{}, audioRef interface{}, audioBlob interface{}) *Store_SetSweptCallAudio_Call {
 	return &Store_SetSweptCallAudio_Call{Call: _e.mock.On("SetSweptCallAudio", ctx, iD, audioRef, audioBlob)}
 }
 
@@ -6844,7 +6844,7 @@ type Store_SetTalkgroupTags_Call struct {
 //   - tags []string
 //   - systemID int32
 //   - tGID int32
-func (_e *Store_Expecter) SetTalkgroupTags(ctx any, tags any, systemID any, tGID any) *Store_SetTalkgroupTags_Call {
+func (_e *Store_Expecter) SetTalkgroupTags(ctx interface{}, tags interface{}, systemID interface{}, tGID interface{}) *Store_SetTalkgroupTags_Call {
 	return &Store_SetTalkgroupTags_Call{Call: _e.mock.On("SetTalkgroupTags", ctx, tags, systemID, tGID)}
 }
 
@@ -6913,7 +6913,7 @@ type Store_StoreDeletedTGVersion_Call struct {
 //   - systemID *int32
 //   - tGID *int32
 //   - submitter *int32
-func (_e *Store_Expecter) StoreDeletedTGVersion(ctx any, systemID any, tGID any, submitter any) *Store_StoreDeletedTGVersion_Call {
+func (_e *Store_Expecter) StoreDeletedTGVersion(ctx interface{}, systemID interface{}, tGID interface{}, submitter interface{}) *Store_StoreDeletedTGVersion_Call {
 	return &Store_StoreDeletedTGVersion_Call{Call: _e.mock.On("StoreDeletedTGVersion", ctx, systemID, tGID, submitter)}
 }
 
@@ -6982,7 +6982,7 @@ type Store_StoreTGVersion_Call struct {
 // StoreTGVersion is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg []database.StoreTGVersionParams
-func (_e *Store_Expecter) StoreTGVersion(ctx any, arg any) *Store_StoreTGVersion_Call {
+func (_e *Store_Expecter) StoreTGVersion(ctx interface{}, arg interface{}) *Store_StoreTGVersion_Call {
 	return &Store_StoreTGVersion_Call{Call: _e.mock.On("StoreTGVersion", ctx, arg)}
 }
 
@@ -7040,7 +7040,7 @@ type Store_SubscribeSystems_Call struct {
 //   - ctx context.Context
 //   - userID int
 //   - systemIds []int32
-func (_e *Store_Expecter) SubscribeSystems(ctx any, userID any, systemIds any) *Store_SubscribeSystems_Call {
+func (_e *Store_Expecter) SubscribeSystems(ctx interface{}, userID interface{}, systemIds interface{}) *Store_SubscribeSystems_Call {
 	return &Store_SubscribeSystems_Call{Call: _e.mock.On("SubscribeSystems", ctx, userID, systemIds)}
 }
 
@@ -7104,7 +7104,7 @@ type Store_SubscribeTalkgroups_Call struct {
 //   - userID int
 //   - systemIds []int32
 //   - tgids []int32
-func (_e *Store_Expecter) SubscribeTalkgroups(ctx any, userID any, systemIds any, tgids any) *Store_SubscribeTalkgroups_Call {
+func (_e *Store_Expecter) SubscribeTalkgroups(ctx interface{}, userID interface{}, systemIds interface{}, tgids interface{}) *Store_SubscribeTalkgroups_Call {
 	return &Store_SubscribeTalkgroups_Call{Call: _e.mock.On("SubscribeTalkgroups", ctx, userID, systemIds, tgids)}
 }
 
@@ -7181,7 +7181,7 @@ type Store_SweepCalls_Call struct {
 //   - ctx context.Context
 //   - rangeStart time.Time
 //   - rangeEnd time.Time
-func (_e *Store_Expecter) SweepCalls(ctx any, rangeStart any, rangeEnd any) *Store_SweepCalls_Call {
+func (_e *Store_Expecter) SweepCalls(ctx interface{}, rangeStart interface{}, rangeEnd interface{}) *Store_SweepCalls_Call {
 	return &Store_SweepCalls_Call{Call: _e.mock.On("SweepCalls", ctx, rangeStart, rangeEnd)}
 }
 
@@ -7252,7 +7252,7 @@ type Store_UnsubscribeAllSystems_Call struct {
 // UnsubscribeAllSystems is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID int
-func (_e *Store_Expecter) UnsubscribeAllSystems(ctx any, userID any) *Store_UnsubscribeAllSystems_Call {
+func (_e *Store_Expecter) UnsubscribeAllSystems(ctx interface{}, userID interface{}) *Store_UnsubscribeAllSystems_Call {
 	return &Store_UnsubscribeAllSystems_Call{Call: _e.mock.On("UnsubscribeAllSystems", ctx, userID)}
 }
 
@@ -7318,7 +7318,7 @@ type Store_UnsubscribeAllTalkgroups_Call struct {
 // UnsubscribeAllTalkgroups is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID int
-func (_e *Store_Expecter) UnsubscribeAllTalkgroups(ctx any, userID any) *Store_UnsubscribeAllTalkgroups_Call {
+func (_e *Store_Expecter) UnsubscribeAllTalkgroups(ctx interface{}, userID interface{}) *Store_UnsubscribeAllTalkgroups_Call {
 	return &Store_UnsubscribeAllTalkgroups_Call{Call: _e.mock.On("UnsubscribeAllTalkgroups", ctx, userID)}
 }
 
@@ -7385,7 +7385,7 @@ type Store_UnsubscribeSystems_Call struct {
 //   - ctx context.Context
 //   - userID int
 //   - systemIds []int32
-func (_e *Store_Expecter) UnsubscribeSystems(ctx any, userID any, systemIds any) *Store_UnsubscribeSystems_Call {
+func (_e *Store_Expecter) UnsubscribeSystems(ctx interface{}, userID interface{}, systemIds interface{}) *Store_UnsubscribeSystems_Call {
 	return &Store_UnsubscribeSystems_Call{Call: _e.mock.On("UnsubscribeSystems", ctx, userID, systemIds)}
 }
 
@@ -7457,7 +7457,7 @@ type Store_UnsubscribeTGsInSystems_Call struct {
 //   - ctx context.Context
 //   - userID int
 //   - systemIds []int32
-func (_e *Store_Expecter) UnsubscribeTGsInSystems(ctx any, userID any, systemIds any) *Store_UnsubscribeTGsInSystems_Call {
+func (_e *Store_Expecter) UnsubscribeTGsInSystems(ctx interface{}, userID interface{}, systemIds interface{}) *Store_UnsubscribeTGsInSystems_Call {
 	return &Store_UnsubscribeTGsInSystems_Call{Call: _e.mock.On("UnsubscribeTGsInSystems", ctx, userID, systemIds)}
 }
 
@@ -7529,7 +7529,7 @@ type Store_UnsubscribeTalkgroups_Call struct {
 //   - ctx context.Context
 //   - userID int
 //   - tgs []database.TGID
-func (_e *Store_Expecter) UnsubscribeTalkgroups(ctx any, userID any, tgs any) *Store_UnsubscribeTalkgroups_Call {
+func (_e *Store_Expecter) UnsubscribeTalkgroups(ctx interface{}, userID interface{}, tgs interface{}) *Store_UnsubscribeTalkgroups_Call {
 	return &Store_UnsubscribeTalkgroups_Call{Call: _e.mock.On("UnsubscribeTalkgroups", ctx, userID, tgs)}
 }
 
@@ -7593,7 +7593,7 @@ type Store_UpdateCallIncidentNotes_Call struct {
 //   - notes []byte
 //   - incidentID uuid.UUID
 //   - callID uuid.UUID
-func (_e *Store_Expecter) UpdateCallIncidentNotes(ctx any, notes any, incidentID any, callID any) *Store_UpdateCallIncidentNotes_Call {
+func (_e *Store_Expecter) UpdateCallIncidentNotes(ctx interface{}, notes interface{}, incidentID interface{}, callID interface{}) *Store_UpdateCallIncidentNotes_Call {
 	return &Store_UpdateCallIncidentNotes_Call{Call: _e.mock.On("UpdateCallIncidentNotes", ctx, notes, incidentID, callID)}
 }
 
@@ -7669,7 +7669,7 @@ type Store_UpdateIncident_Call struct {
 // UpdateIncident is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.UpdateIncidentParams
-func (_e *Store_Expecter) UpdateIncident(ctx any, arg any) *Store_UpdateIncident_Call {
+func (_e *Store_Expecter) UpdateIncident(ctx interface{}, arg interface{}) *Store_UpdateIncident_Call {
 	return &Store_UpdateIncident_Call{Call: _e.mock.On("UpdateIncident", ctx, arg)}
 }
 
@@ -7727,7 +7727,7 @@ type Store_UpdatePassword_Call struct {
 //   - ctx context.Context
 //   - username string
 //   - password string
-func (_e *Store_Expecter) UpdatePassword(ctx any, username any, password any) *Store_UpdatePassword_Call {
+func (_e *Store_Expecter) UpdatePassword(ctx interface{}, username interface{}, password interface{}) *Store_UpdatePassword_Call {
 	return &Store_UpdatePassword_Call{Call: _e.mock.On("UpdatePassword", ctx, username, password)}
 }
 
@@ -7800,7 +7800,7 @@ type Store_UpdatePushSubscription_Call struct {
 //   - newSubscription []byte
 //   - userID int
 //   - oldSubscription []byte
-func (_e *Store_Expecter) UpdatePushSubscription(ctx any, newSubscription any, userID any, oldSubscription any) *Store_UpdatePushSubscription_Call {
+func (_e *Store_Expecter) UpdatePushSubscription(ctx interface{}, newSubscription interface{}, userID interface{}, oldSubscription interface{}) *Store_UpdatePushSubscription_Call {
 	return &Store_UpdatePushSubscription_Call{Call: _e.mock.On("UpdatePushSubscription", ctx, newSubscription, userID, oldSubscription)}
 }
 
@@ -7876,7 +7876,7 @@ type Store_UpdateTalkgroup_Call struct {
 // UpdateTalkgroup is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.UpdateTalkgroupParams
-func (_e *Store_Expecter) UpdateTalkgroup(ctx any, arg any) *Store_UpdateTalkgroup_Call {
+func (_e *Store_Expecter) UpdateTalkgroup(ctx interface{}, arg interface{}) *Store_UpdateTalkgroup_Call {
 	return &Store_UpdateTalkgroup_Call{Call: _e.mock.On("UpdateTalkgroup", ctx, arg)}
 }
 
@@ -7942,7 +7942,7 @@ type Store_UpdateUser_Call struct {
 // UpdateUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg database.UpdateUserParams
-func (_e *Store_Expecter) UpdateUser(ctx any, arg any) *Store_UpdateUser_Call {
+func (_e *Store_Expecter) UpdateUser(ctx interface{}, arg interface{}) *Store_UpdateUser_Call {
 	return &Store_UpdateUser_Call{Call: _e.mock.On("UpdateUser", ctx, arg)}
 }
 
@@ -8001,7 +8001,7 @@ type Store_UpsertTalkgroup_Call struct {
 // UpsertTalkgroup is a helper method to define mock.On call
 //   - ctx context.Context
 //   - arg []database.UpsertTalkgroupParams
-func (_e *Store_Expecter) UpsertTalkgroup(ctx any, arg any) *Store_UpsertTalkgroup_Call {
+func (_e *Store_Expecter) UpsertTalkgroup(ctx interface{}, arg interface{}) *Store_UpsertTalkgroup_Call {
 	return &Store_UpsertTalkgroup_Call{Call: _e.mock.On("UpsertTalkgroup", ctx, arg)}
 }
 

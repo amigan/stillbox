@@ -43,11 +43,11 @@ func (_m *RBAC) EXPECT() *RBAC_Expecter {
 // Check provides a mock function for the type RBAC
 func (_mock *RBAC) Check(ctx context.Context, res restrict.Resource, opts ...authz.CheckOption) (entities.Subject, error) {
 	// authz.CheckOption
-	_va := make([]any, len(opts))
+	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
 	}
-	var _ca []any
+	var _ca []interface{}
 	_ca = append(_ca, ctx, res)
 	_ca = append(_ca, _va...)
 	ret := _mock.Called(_ca...)
@@ -85,9 +85,9 @@ type RBAC_Check_Call struct {
 //   - ctx context.Context
 //   - res restrict.Resource
 //   - opts ...authz.CheckOption
-func (_e *RBAC_Expecter) Check(ctx any, res any, opts ...any) *RBAC_Check_Call {
+func (_e *RBAC_Expecter) Check(ctx interface{}, res interface{}, opts ...interface{}) *RBAC_Check_Call {
 	return &RBAC_Check_Call{Call: _e.mock.On("Check",
-		append([]any{ctx, res}, opts...)...)}
+		append([]interface{}{ctx, res}, opts...)...)}
 }
 
 func (_c *RBAC_Check_Call) Run(run func(ctx context.Context, res restrict.Resource, opts ...authz.CheckOption)) *RBAC_Check_Call {
